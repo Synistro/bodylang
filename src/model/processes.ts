@@ -494,7 +494,7 @@ function caffeineTotals(tr: Trajectory, t: number) {
   return { blood, dose, cleared };
 }
 
-const caffeineHalfLifeH = (tr: Trajectory) => tr.scenario.caffeineHalfLifeH ?? tr.anthro.caffeineHalfLifeH;
+const caffeineHalfLifeH = (tr: Trajectory) => tr.anthro.caffeineHalfLifeH;
 const mg = (x: number) => `${Math.round(x)} mg`;
 
 function caffeineLine(tr: Trajectory, intake: Intake, t: number): DoseLine {

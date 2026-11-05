@@ -235,26 +235,6 @@ function entry(id: string, label: string, at: number, unit: "kcal" | "mg", total
   };
 }
 
-export interface Feelings {
-  full: number;
-  alert: number;
-  sleepy: number;
-  jittery: number;
-  hungry: number;
-  low: number;
-}
-
-export function feelingsAt(tr: Trajectory, t: number): Feelings {
-  return {
-    full: value(tr, "fullness", t),
-    alert: value(tr, "alertness", t),
-    sleepy: value(tr, "drowsy", t),
-    jittery: value(tr, "jitter", t),
-    hungry: value(tr, "hunger", t),
-    low: value(tr, "crash", t),
-  };
-}
-
 export interface Forecast {
   glucosePeak: { at: number; value: number } | null;
   glucoseSettles: number | null;

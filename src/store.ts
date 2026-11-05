@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { Action, BodyState, GuideStep, reduce, traceLine } from "./agent/actions";
 import { ORGAN_HOME } from "./look";
 import { DayDoc } from "./model/day";
-import { CAFFEINE, LANES } from "./model/params";
+import { LANES } from "./model/params";
 import type { MuscleGroup } from "./model/muscleGroups";
 import { ReplyLine } from "./model/narrate";
 import { followProcess, Process, processesAt } from "./model/processes";
@@ -92,8 +92,6 @@ export interface Fixing {
 
 export interface Derived {
   trajectory: Trajectory;
-  fastClearer: Trajectory;
-  slowClearer: Trajectory;
   whatIf: Trajectory | null;
 }
 
@@ -128,8 +126,6 @@ function derive(b: BodyState): Derived {
   const scenario: Scenario = { body: b.body, intakes: b.intakes, activities: b.activities, substances: b.substances, events: b.events, cycle: b.cycle };
   return {
     trajectory: simulate(scenario),
-    fastClearer: simulate({ ...scenario, caffeineHalfLifeH: CAFFEINE.halfLifeH.low, sensitivityScale: 1.3 }),
-    slowClearer: simulate({ ...scenario, caffeineHalfLifeH: CAFFEINE.halfLifeH.high, sensitivityScale: 0.72 }),
     whatIf: b.whatIf ? simulate({ ...scenario, activities: b.whatIf.activities }) : null,
   };
 }
@@ -246,13 +242,13 @@ let nextAskId = 1;
 // From here on, everything that changes the body changes the copy.
 export function enterAsk() {
   if (state.asking) return state.asking.id;
-  const { trajectory, fastClearer, slowClearer, whatIf } = state;
+  const { trajectory, whatIf } = state;
   const id = nextAskId++;
   state = {
     ...state,
     body: { ...state.body, whatIf: null },
     whatIf: null,
-    asking: { id, real: state.body, realDerived: { trajectory, fastClearer, slowClearer, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, moment: null, cancel: null },
+    asking: { id, real: state.body, realDerived: { trajectory, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, moment: null, cancel: null },
   };
   emit();
   return id;

@@ -14,7 +14,6 @@ export interface ReplyLine {
 }
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
-export const mmol = (mgDl: number) => (mgDl / 18.016).toFixed(1);
 
 // The scripted opening answer: one short caption, because the body and the panels carry the rest.
 export function openingReply(tr: Trajectory, now: number): ReplyLine[] {

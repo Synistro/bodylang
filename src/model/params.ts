@@ -50,7 +50,6 @@ export const GUT = {
   carbRatePerMin: 0.08, // fitted to the 75 g glucose test: peak near 40 min
   fatRatePerMin: 0.0115,
   proteinRatePerMin: 0.016,
-  waterRatePerMin: 0.09,
   caffeineRatePerMin: 0.11,
   alcoholRatePerMin: 0.05,
   carbBioavailability: 0.97,
@@ -68,7 +67,6 @@ export const GLUCOSE = {
   systemicShare: 0.74, // absorbed glucose that passes the liver on first pass
   fructoseShare: 0.5, // of sugar, as in table sugar. Whole fruit runs 0.6 to 0.67; an intake can say so
   fructoseToLiver: 0.9,
-  brainUseGPerMin: 0.1,
   hepaticOutputGPerMinPerKg: 0.0019,
   hepaticSuppression: 0.8,
   insulinEffectUpper: 30, // µU/mL above baseline for full hepatic suppression
@@ -152,7 +150,6 @@ export const CAFFEINE = {
   feltAboveMgL: 0.9,
   sleepConcernMgL: 0.8,
   bloodPressureGainMmHgPerMgL: 1.3,
-  kidneyShare: 0.03,
 } as const;
 
 export const ALCOHOL = {
@@ -690,7 +687,6 @@ export const MUSCLE_MASS_SHARE: Record<MuscleGroup, number> = {
 
 export const MUSCLE_RECOVERY = {
   workFallHalfLifeMin: 4,
-  fatigueRiseMin: 30,
   // Moran-Navarro 2017: recovery runs 24 to 48 h after hard sets, which a 12 h half-life matches.
   fatigueHalfLifeH: 12,
   // A curve (t/peak)^shape * exp(shape * (1 - t/peak)), peaking 48 h after the session. It gives

@@ -93,8 +93,6 @@ export interface Scenario {
   substances: CustomSubstance[];
   events?: BodyEvent[];
   cycle?: Cycle | null;
-  caffeineHalfLifeH?: number;
-  sensitivityScale?: number;
 }
 
 export interface Anthropometrics {
@@ -349,9 +347,8 @@ export function simulate(scenario: Scenario): Trajectory {
   const n = leadIn + DAY.minutes + 1;
   const series = Object.fromEntries(SERIES.map((s) => [s, new Float32Array(n)])) as Record<SeriesName, Float32Array>;
 
-  const halfLife = scenario.caffeineHalfLifeH ?? anthro.caffeineHalfLifeH;
-  const keCaffeine = Math.LN2 / (halfLife * 60);
-  const sensitivity = anthro.sensitivity * (scenario.sensitivityScale ?? 1);
+  const keCaffeine = Math.LN2 / (anthro.caffeineHalfLifeH * 60);
+  const { sensitivity } = anthro;
   const compensation = (INSULIN.sensitivity / sensitivity) ** INSULIN.resistanceCompensationPower;
   const activities = [...scenario.activities].sort((a, b) => a.from - b.from);
   // Sorted so the same events give the same bits, whatever order they were told in.
