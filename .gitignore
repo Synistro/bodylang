@@ -3,3 +3,5 @@ dist
 .DS_Store
 /pipeline/cache/
 /.venv-pipeline/
+__pycache__/
+/proofs/
