@@ -24,6 +24,7 @@ export interface Lane {
   values: Float32Array; // 0 to 1 of the lane's height, one sample every LANES.stepMin from LANES.from
   band: { low: number; high: number; label: string } | null; // the typical range on the same 0 to 1, for a level
   ghost: Float32Array | null; // your real day on the same scale, while exploring a what-if
+  sameAsYourDay?: boolean; // compared with your real day, and no different from it
   hypothetical: boolean; // only exists in a what-if
   read: (minute: number) => string; // what is there at that minute, with its unit or in words
   mark: { at: number; text: string; over: boolean } | null; // over: the thing has ended here, so nothing is drawn after it
@@ -277,6 +278,7 @@ function readingLane(tr: Trajectory, reading: Reading, now: number, system: Syst
       values,
       band,
       ghost,
+      sameAsYourDay: realCurve !== null && !differs,
       hypothetical: false,
       read: curve.textAt,
       mark: reading.forecastShort && forecastAt !== null ? { at: forecastAt, text: reading.forecastShort, over: emptyThere } : null,

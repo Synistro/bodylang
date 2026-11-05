@@ -121,4 +121,33 @@ describe("what the day panel shows", () => {
     const view = dayViewOf({ tr, now: hm(17), lanes: threadLanes(tr, hm(17)), muscles: null, walkthrough: walkthrough(steps), readings: null });
     expect(view.kind).toBe("today");
   });
+
+  it("while exploring, leaves your day off the chart and keeps what the question added", () => {
+    const yourDay = day([PIZZA]);
+    const beer = { ...PIZZA, id: "beer", label: "Beer", at: hm(18) };
+    const exploring = day([PIZZA, beer]);
+    const page = { tr: exploring, now: hm(19), muscles: null, walkthrough: null, readings: null, yourDay };
+    const view = dayViewOf({ ...page, lanes: threadLanes(exploring, hm(19)) });
+    if (view.kind !== "today") throw new Error(`expected today, got ${view.kind}`);
+    expect(view.moments.map((moment) => moment.label)).toEqual(["Beer"]);
+    expect(view.lanes.map((lane) => lane.label)).not.toContain("Pizza");
+  });
+
+  it("while exploring with nothing added, has nothing to say about your day", () => {
+    const yourDay = day([PIZZA]);
+    const view = dayViewOf({ tr: yourDay, now: hm(19), lanes: threadLanes(yourDay, hm(19)), muscles: null, walkthrough: null, readings: null, yourDay });
+    expect(view.kind).toBe("quiet");
+    if (view.kind === "quiet") expect(view.moments).toEqual([]);
+  });
+
+  it("while exploring, drops a curve the question didn't move and keeps one it did", () => {
+    const yourDay = day([PIZZA]);
+    const exploring = day([PIZZA, { ...PIZZA, id: "beer", label: "Beer", at: hm(18), alcoholG: 40 }]);
+    expect(systemLanes(yourDay, hm(19), "clearing", yourDay).every((lane) => lane.sameAsYourDay)).toBe(true);
+    const [lane] = systemLanes(exploring, hm(19), "clearing", yourDay);
+    const lanes = [{ ...lane, id: "moved", sameAsYourDay: false, ghost: lane.values, values: lane.values.map((value) => value * 0.5) }, { ...lane, id: "unmoved", sameAsYourDay: true }];
+    const view = dayViewOf({ tr: exploring, now: hm(19), lanes, muscles: null, walkthrough: null, readings: null, yourDay });
+    if (view.kind !== "today") throw new Error(`expected today, got ${view.kind}`);
+    expect(view.lanes.map((one) => one.id)).toEqual(["moved"]);
+  });
 });

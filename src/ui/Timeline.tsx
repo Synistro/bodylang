@@ -9,7 +9,7 @@ import type { Trajectory } from "../model/simulate";
 import { formatClock } from "../model/state";
 import type { Stage } from "../scene/stage";
 import { systemById } from "../model/systems";
-import { AppState, getState, goToStep, muscleMinute, releaseMoment, selectedProcess, setUi, showMuscleMinute, useStore } from "../store";
+import { AppState, getState, goToStep, muscleMinute, releaseMoment, selectedProcess, setUi, showMuscleMinute, useStore, yourDayWhileAsking } from "../store";
 import { viewSystemOf } from "../look";
 import { DAY_HOURS_REM, DAY_ROW_REM, DAY_TOP_REM, dayRowsRem, DayChart } from "./dayChart";
 import { DayView, dayViewOf, lanesOf, runsOverDays, viewStops } from "./dayView";
@@ -34,11 +34,12 @@ function useDayView(): DayView {
   const focus = useStore((s) => s.body.focus);
   const focusMuscle = useStore((s) => s.body.focusMuscle);
   const real = useStore((s) => (s.asking && s.asking.realDerived.trajectory !== s.trajectory ? s.asking.realDerived.trajectory : null));
+  const yourDay = useStore(yourDayWhileAsking);
   const steps = useStore((s) => (s.asking?.guideOpen && !s.touring ? s.asking.guide : null));
   const index = useStore((s) => s.asking?.step ?? 0);
   return useMemo(() => {
     const walkthrough = steps ? { steps, index } : null;
-    const page = { tr, now, walkthrough };
+    const page = { tr, now, walkthrough, yourDay };
     if (focus === "muscle") {
       const muscles: MuscleSubject = focusMuscle ? { kind: "one", group: focusMuscle } : { kind: "worked", groups: null };
       return dayViewOf({ ...page, lanes: focusMuscle ? muscleStateLanes(tr, now, focusMuscle) : workedMuscleLanes(tr, now), muscles, readings: new Set() });
@@ -59,7 +60,7 @@ function useDayView(): DayView {
       muscles: system === "muscles" ? { kind: "worked", groups: null } : null,
       readings: system === "overview" ? null : new Set<string>([...readings, ...more]),
     });
-  }, [tr, real, now, system, processId, focus, focusMuscle, steps, index]);
+  }, [tr, real, yourDay, now, system, processId, focus, focusMuscle, steps, index]);
 }
 
 // Where a row of the chart comes from. A row is a thread, a reading, a stop on a line, or a muscle.

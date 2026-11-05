@@ -1,8 +1,8 @@
 import { RefObject, useDeferredValue, useEffect, useRef } from "react";
-import { assess, Assessment } from "../model/assess";
+import { assess, Assessment, Reading } from "../model/assess";
 import { OrganId, Trajectory } from "../model/simulate";
 import type { Stage } from "../scene/stage";
-import { AppState, muscleMinute, setUi, useStore } from "../store";
+import { AppState, muscleMinute, setUi, useStore, yourDayWhileAsking } from "../store";
 
 const PLAY_STEP_MINUTES = 5;
 const SCROLL_FADE_PX = 28;
@@ -20,12 +20,21 @@ export function useMuscleMinute(): number {
   return useDeferredValue(useStore((s) => readableMinute(s, muscleMinute(s))));
 }
 
-let assessed: { tr: Trajectory; minute: number; result: Assessment } | null = null;
+const assessed = new WeakMap<Trajectory, { minute: number; result: Assessment }>();
 
 // The rail, the panel and the timeline all read the same assessment in the same render.
 export function assessmentAt(tr: Trajectory, minute: number): Assessment {
-  if (!assessed || assessed.tr !== tr || assessed.minute !== minute) assessed = { tr, minute, result: assess(tr, minute) };
-  return assessed.result;
+  const known = assessed.get(tr);
+  if (known?.minute === minute) return known.result;
+  const result = assess(tr, minute);
+  assessed.set(tr, { minute, result });
+  return result;
+}
+
+// Whether a reading says anything about the question: while exploring, one that reads the same on your day doesn't.
+export function useIsNews(minute: number) {
+  const yourDay = useStore(yourDayWhileAsking);
+  return (reading: Reading) => !yourDay || assessmentAt(yourDay, minute).readings.find((yours) => yours.id === reading.id)?.display !== reading.display;
 }
 
 export function useFrame(stage: Stage | null, listener: (stage: Stage, dt: number) => void) {

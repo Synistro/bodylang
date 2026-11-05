@@ -3,9 +3,9 @@ import { MUSCLE_LABEL } from "../model/muscleGroups";
 import type { OrganId } from "../model/simulate";
 import { SYSTEMS, SystemId } from "../model/systems";
 import { Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
-import { processesAt } from "../model/processes";
 import { threadsAt } from "../model/threads";
-import { currentProcesses, getState, useStore } from "../store";
+import { processIdsOf } from "../model/yourDay";
+import { currentProcesses, getState, useStore, yourDayWhileAsking } from "../store";
 import { assessmentAt, organHover, useMinute } from "./hooks";
 import { SYSTEM_GLYPH } from "./icons";
 import { showProcess, showSystem } from "./navigation";
@@ -27,14 +27,13 @@ interface Leaf {
 // What sits under the system you are in: the things you logged, or the processes running through it.
 function useLeaves(system: SystemId): Leaf[] {
   const tr = useStore((s) => s.trajectory);
-  const real = useStore((s) => (s.asking && s.asking.realDerived.trajectory !== s.trajectory ? s.asking.realDerived.trajectory : null));
+  const yourDay = useStore(yourDayWhileAsking);
   const minute = useMinute();
   return useMemo(() => {
     const processes = currentProcesses(getState());
     const threads = threadsAt(tr, minute);
-    // In an exploration, what isn't part of your real day says so.
-    const realIds = real ? new Set(processesAt(real, minute).map((p) => p.id)) : null;
-    const noteOf = (id: string, note: string) => (realIds && !realIds.has(id) ? "what if" : note);
+    const alreadyYours = yourDay ? processIdsOf(yourDay, minute) : null;
+    const isNews = (id: string) => !alreadyYours?.has(id);
     const hereOf = (id: string) => processes.find((p) => p.id === id)?.stops.find((stop) => stop.state === "here")?.organ ?? null;
     const originOf = (id: string) => {
       const process = processes.find((p) => p.id === id);
@@ -42,17 +41,17 @@ function useLeaves(system: SystemId): Leaf[] {
     };
     if (system === "overview") {
       return threads
-        .filter((t) => t.at <= minute)
-        .map((t) => ({ id: t.processId, title: t.title, note: noteOf(t.processId, t.status), active: t.active, organ: hereOf(t.processId), origin: originOf(t.processId) }));
+        .filter((t) => t.at <= minute && isNews(t.processId))
+        .map((t) => ({ id: t.processId, title: t.title, note: t.status, active: t.active, organ: hereOf(t.processId), origin: originOf(t.processId) }));
     }
     return processes
-      .filter((p) => p.system === system || (p.alsoIn?.includes(system) ?? false))
+      .filter((p) => (p.system === system || (p.alsoIn?.includes(system) ?? false)) && isNews(p.id))
       .sort((a, b) => Number(b.active) - Number(a.active))
       .map((p) => {
         const thread = threads.find((t) => t.processId === p.id);
-        return { id: p.id, title: p.title, note: noteOf(p.id, thread?.status ?? ""), active: p.active, organ: hereOf(p.id), origin: originOf(p.id) };
+        return { id: p.id, title: p.title, note: thread?.status ?? "", active: p.active, organ: hereOf(p.id), origin: originOf(p.id) };
       });
-  }, [tr, real, minute, system]);
+  }, [tr, yourDay, minute, system]);
 }
 
 // Keeps what it showed while it folds away, so closing is as gentle as opening.
@@ -123,6 +122,8 @@ export function Rail() {
   const tr = useStore((s) => s.trajectory);
   const minute = useMinute();
   const statuses = assessmentAt(tr, minute).systems;
+  const yourDay = useStore(yourDayWhileAsking);
+  const yours = yourDay ? assessmentAt(yourDay, minute).systems : null;
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -140,8 +141,9 @@ export function Rail() {
         const status = statuses[s.id];
         const open = s.id === system;
         // Only what matters most right now gets a word. Bright means something is going on there.
-        const quiet = status.quiet && s.id !== "overview";
-        const speaks = status.emphasis && s.id !== "overview";
+        const unchanged = yours?.[s.id].word === status.word;
+        const quiet = (status.quiet || unchanged) && s.id !== "overview";
+        const speaks = status.emphasis && s.id !== "overview" && !unchanged;
         const Icon = SYSTEM_GLYPH[s.id];
         return (
           <div key={s.id} className="tree-node">

@@ -4,6 +4,7 @@ import { aheadOf, Ahead, DAY_SPAN, dayMoments, dayStops, fromSeverity, isStill, 
 import { LANES } from "../model/params";
 import type { Trajectory } from "../model/simulate";
 import { levelWord } from "../model/state";
+import { processIdsOf } from "../model/yourDay";
 import { isOnChart, stepMinute } from "../store";
 
 export interface StoryStop {
@@ -32,6 +33,7 @@ interface Page {
   muscles: MuscleSubject | null; // set when this page is about how muscles are doing
   walkthrough: Walkthrough | null;
   readings: ReadonlySet<string> | null; // what this page's next moments can be about when it has no rows; null for all of them
+  yourDay?: Trajectory | null; // while exploring: what was already true of your day stays off the chart
 }
 
 const FIRST_LEVEL = "pain";
@@ -72,14 +74,23 @@ function storyOf({ tr, now, walkthrough }: Page): Extract<DayView, { kind: "stor
   return { kind: "story", span, lanes: [lane], stops, current: index };
 }
 
+const momentKey = ({ at, label }: Moment) => `${at}|${label}`;
+
+// A thread you already had, or a curve the question didn't move, is only your day again.
+const isYourDayAgain = (lane: Lane, tr: Trajectory, yourDay: Trajectory, alreadyYours: Set<string>) => tr === yourDay || lane.sameAsYourDay === true || (lane.target?.kind === "process" && alreadyYours.has(lane.target.id));
+
 export function dayViewOf(page: Page): DayView {
-  const { tr, now, lanes, muscles, walkthrough, readings } = page;
+  const { tr, now, muscles, walkthrough, readings, yourDay } = page;
   const story = storyOf(page);
   if (story) return story;
   const recovery = muscles && !walkthrough ? recoveryOf(tr, now, muscles) : null;
   if (recovery) return { kind: "recovery", ...recovery };
-  const moments = dayMoments(tr, now);
+  const alreadyYours = yourDay ? processIdsOf(yourDay, now) : new Set<string>();
+  const lanes = yourDay ? page.lanes.filter((lane) => !isYourDayAgain(lane, tr, yourDay, alreadyYours)) : page.lanes;
+  const yourMoments = new Set(yourDay ? dayMoments(yourDay, now).map(momentKey) : []);
+  const moments = dayMoments(tr, now).filter((moment) => !yourMoments.has(momentKey(moment)));
   if (!isStill(lanes, now)) return { kind: "today", span: DAY_SPAN, lanes, moments };
+  if (yourDay) return { kind: "quiet", span: DAY_SPAN, moments };
   const items = aheadOf(tr, now, lanes.length ? new Set(lanes.map((lane) => lane.id)) : readings);
   return items.length ? { kind: "next", span: DAY_SPAN, items, moments } : { kind: "quiet", span: DAY_SPAN, moments };
 }

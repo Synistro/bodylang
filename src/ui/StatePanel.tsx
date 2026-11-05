@@ -6,9 +6,9 @@ import { PROCESS } from "../model/params";
 import "./insets/insets.css";
 import { Assessment, Feeling, hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
 import { systemById, SystemId } from "../model/systems";
-import { setUi, useStore } from "../store";
+import { setUi, useStore, yourDayWhileAsking } from "../store";
 import { Swap } from "./Swap";
-import { assessmentAt, organHover, useMinute, useScrollFade } from "./hooks";
+import { assessmentAt, organHover, useMinute, useScrollFade, useIsNews } from "./hooks";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
 import { feelingOrigin, modelOrigin, readingOrigin } from "../model/origin";
@@ -101,7 +101,10 @@ function FeelingRow({ feeling, index }: { feeling: Feeling; index: number }) {
 
 // Level 0: how you may feel. Its sentence heads the page, and what you logged is in the outline.
 function Glance({ assessment }: { assessment: Assessment }) {
-  const { feelings } = assessment;
+  const yourDay = useStore(yourDayWhileAsking);
+  const minute = useMinute();
+  const alreadyYours = new Set(yourDay ? assessmentAt(yourDay, minute).feelings.map((feeling) => feeling.id) : []);
+  const feelings = assessment.feelings.filter((feeling) => !alreadyYours.has(feeling.id));
   if (!feelings.length) return null;
   return (
     <section className="group" aria-labelledby="feel-title">
@@ -121,7 +124,8 @@ function Glance({ assessment }: { assessment: Assessment }) {
 function SystemDetail({ system, assessment }: { system: SystemId; assessment: Assessment }) {
   const [showMore, setShowMore] = useState(false);
   const def = systemById(system);
-  const present = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && hasSomethingToSay(r)));
+  const isNews = useIsNews(useMinute());
+  const present = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && hasSomethingToSay(r) && isNews(r)));
   const well = system === "immune" && assessment.systems.immune.quiet;
   const primary = well ? [] : present(def.readings);
   const more = well ? [] : present(def.more);
@@ -227,7 +231,10 @@ export function BrainPage() {
   const minute = useMinute();
   const assessment = assessmentAt(tr, minute);
   const story = organStory("brain", tr, minute);
-  const feel = BRAIN_PAGE.feel.filter(worthARow(assessment));
+  const isNews = useIsNews(minute);
+  const newsOnly = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && isNews(r)));
+  const feel = newsOnly(BRAIN_PAGE.feel.filter(worthARow(assessment)));
+  const acting = newsOnly(BRAIN_PAGE.acting);
   return (
     <div className="brain-page">
       <section className="readings" aria-label="How you feel">
@@ -238,7 +245,7 @@ export function BrainPage() {
       </div>
       <ActingHere organ="brain" />
       <section className="readings" aria-label="What is acting on it">
-        <ReadingList ids={BRAIN_PAGE.acting} assessment={assessment} startIndex={feel.length} />
+        <ReadingList ids={acting} assessment={assessment} startIndex={feel.length} />
       </section>
     </div>
   );

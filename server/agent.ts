@@ -101,6 +101,8 @@ A hypothetical injury that goes through the body, such as a bullet or a stab wou
 
 ${closeupGuidance()}
 
+The question is the subject. Their day is on the copy and it changes the numbers, but bring in what they ate or did today only where it changes the answer, such as a meal slowing how fast alcohol arrives.
+
 Then call reply, once, with the short answer: the result of the what-if, compared with their day as it is, or the idea in plain words. The steps carry the explanation, so don't repeat them.
 
 Three things get no walkthrough. Log nothing, show nothing, and only reply:

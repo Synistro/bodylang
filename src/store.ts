@@ -318,6 +318,10 @@ export function showMuscleMinute(minute: number) {
   setUi(isOnChart(minute) ? { t: minute, dayMoment: null, playing: false } : { dayMoment: minute, playing: false });
 }
 
+// While exploring, the screen is about the question. Your day is still in the model, because it changes the
+// numbers, but what was already true of it stays off the screen, so only what differs from it shows.
+export const yourDayWhileAsking = (s: AppState) => s.asking?.realDerived.trajectory ?? null;
+
 export const stepOnScreen = (s: AppState) => (s.asking?.guideOpen && !s.touring ? (s.asking.guide?.[s.asking.step] ?? null) : null);
 
 // A drawing Claude composed for the current step.

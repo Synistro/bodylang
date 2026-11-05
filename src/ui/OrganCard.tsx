@@ -5,7 +5,7 @@ import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { OrganId, Trajectory } from "../model/simulate";
 import { chartOffsetHours, setUi, useStore } from "../store";
 import { ActingHere } from "./ActingHere";
-import { assessmentAt, useMinute, useMuscleMinute, useScrollFade } from "./hooks";
+import { assessmentAt, useIsNews, useMinute, useMuscleMinute, useScrollFade } from "./hooks";
 import { OrganInset } from "./insets/OrganInset";
 import { muscleStory, organStory } from "./insets/organStory";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
@@ -123,10 +123,11 @@ function MusclePlate({ group, trajectory, minute }: { group: MuscleGroup; trajec
 function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory: Trajectory; minute: number }) {
   const story = organStory(organ, trajectory, minute);
   const assessment = assessmentAt(trajectory, minute);
+  const isNews = useIsNews(minute);
   const worked = organ === "muscle" ? assessment.muscles.filter((m) => m.level >= WORKED_FROM).sort((a, b) => b.level - a.level) : [];
   const readings = (worked.length ? [] : story.rows)
     .flatMap((id) => assessment.readings.find((r) => r.id === id) ?? [])
-    .filter(hasSomethingToSay)
+    .filter((reading) => hasSomethingToSay(reading) && isNews(reading))
     .slice(0, MAX_ROWS);
   const scroller = useCard();
   const from = sourced(modelOrigin(story.evidence, story.source));

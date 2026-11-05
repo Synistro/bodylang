@@ -118,6 +118,12 @@ Five real questions ran this way: a cigarette, a bullet through the liver, three
 
 Simple and Deep are two settings beside the Tell and Ask switch. Simple runs on Sonnet and gives the idea in 2 or 3 steps with the organs' own drawings. Deep runs on Opus, goes through the mechanism in up to 6 steps, and can compose drawings.
 
+### Ask follows the question
+
+While exploring, the screen shows only what differs from your day. Your day stays in the model, because a meal really does slow how fast alcohol arrives, and it stays off the screen. After a cigarette question, the left list holds the cigarette and nothing you ate, Heart & lungs says "Raised" and the sections it didn't change say nothing. The chart drops curves the question didn't move and ticks for what you already logged, and a page's sentence and readings show only if they read differently from your day.
+
+One comparison does all of this: Ask keeps your real day beside the copy (`yourDayWhileAsking` in `src/store.ts`), and each part of the screen asks whether what it is about to show is also true of that day. Anything Claude names in a step shows anyway, so it can bring in the pizza where the pizza matters. Outside Ask, everything shows as usual.
+
 ### What's acting on an organ
 
 Each organ's drawing shows how that organ works, and it can't know about everything that might reach it. So every organ's page also lists what is acting on it now, read from the model's processes. A process already says which organs it stops at, so food, caffeine, alcohol, a drug Claude defined, an illness and a process Claude added all appear on the right organs with no code for any of them. `actingAt` in `src/model/acting.ts` does this, and `src/ui/ActingHere.tsx` shows it.

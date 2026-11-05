@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
 import { modelOrigin, Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { systemById } from "../model/systems";
-import { composedOnScreen, getState, selectedProcess, useStore } from "../store";
+import type { Trajectory } from "../model/simulate";
+import { composedOnScreen, getState, selectedProcess, useStore, yourDayWhileAsking } from "../store";
 import { assessmentAt, useMinute, useMuscleMinute } from "./hooks";
 import { muscleStory, organStory } from "./insets/organStory";
 import { ORGAN_NAME } from "./organ";
@@ -20,52 +21,43 @@ export function PageHead() {
   const muscleAt = useMuscleMinute();
   // A drawing Claude composed is about the step, and the step's words are on screen beside it.
   const composed = useStore((s) => composedOnScreen(s) !== null);
+  const yourDay = useStore(yourDayWhileAsking);
 
   const process = useMemo(() => (processId ? selectedProcess(getState()) : null), [processId, tr, minute]);
-  const assessment = assessmentAt(tr, minute);
 
-  let title: string | null;
-  let sentence: string;
-  let origin: Origin = SENTENCE_ORIGIN;
-  if (focus === "muscle" && focusMuscle) {
-    const story = muscleStory(focusMuscle, tr, muscleAt);
-    title = MUSCLE_LABEL[focusMuscle];
-    sentence = story.doing;
-    origin = modelOrigin(story.evidence, story.source);
-  } else if (focus === "brain") {
-    title = systemById("brain").title;
-    sentence = assessment.systems.brain.sentence;
-  } else if (focus) {
-    const story = organStory(focus, tr, minute);
-    title = ORGAN_NAME[focus];
-    sentence = story.doing;
-    origin = modelOrigin(story.evidence, story.source);
-  } else if (process) {
-    title = process.title;
-    sentence = process.headline;
-    origin = processOrigin(tr, process);
-  } else if (system !== "overview") {
-    title = systemById(system).title;
-    sentence = assessment.systems[system].sentence;
-  } else {
-    title = null;
-    sentence = assessment.headline;
-  }
+  // The same question asked of any day, so the words can be compared with your own.
+  const headIn = (day: Trajectory): { title: string | null; sentence: string; origin: Origin } => {
+    const assessment = assessmentAt(day, minute);
+    if (focus === "muscle" && focusMuscle) {
+      const story = muscleStory(focusMuscle, day, muscleAt);
+      return { title: MUSCLE_LABEL[focusMuscle], sentence: story.doing, origin: modelOrigin(story.evidence, story.source) };
+    }
+    if (focus === "brain") return { title: systemById("brain").title, sentence: assessment.systems.brain.sentence, origin: SENTENCE_ORIGIN };
+    if (focus) {
+      const story = organStory(focus, day, minute);
+      return { title: ORGAN_NAME[focus], sentence: story.doing, origin: modelOrigin(story.evidence, story.source) };
+    }
+    if (process) return { title: process.title, sentence: process.headline, origin: processOrigin(day, process) };
+    if (system !== "overview") return { title: systemById(system).title, sentence: assessment.systems[system].sentence, origin: SENTENCE_ORIGIN };
+    return { title: null, sentence: assessment.headline, origin: SENTENCE_ORIGIN };
+  };
+  const { title, sentence, origin } = headIn(tr);
+  // While exploring, a sentence that would read the same on your day says nothing about the question.
+  const says = !composed && !(yourDay && !process && headIn(yourDay).sentence === sentence);
 
   return (
     <header key={`${system}/${processId}/${focus}/${focusMuscle}`} className="page-head">
       {title ? <h1 className="page-name">{title}</h1> : null}
-      {title ? (
-        composed ? null : (
-          <p className="page-sentence" {...sourced(origin)}>
-            {sentence}
-          </p>
-        )
-      ) : (
+      {says && title ? (
+        <p className="page-sentence" {...sourced(origin)}>
+          {sentence}
+        </p>
+      ) : null}
+      {says && !title ? (
         <h1 className="page-headline" {...sourced(origin)}>
           {sentence}
         </h1>
-      )}
+      ) : null}
     </header>
   );
 }
