@@ -55,7 +55,7 @@ Times: the current time is given below and is always right, and tools take minut
 
 View: leave the screen showing what matters most for this message. After logging something, call show_system for the system it affects most, such as muscles after a workout, immune during an illness or digestion after a meal. When they ask about one organ, call focus_organ instead, and when they ask where one thing has got to or how something works, call show_process with an id from the readout. When a choice they could make would answer the question better than a description, call what_if; it draws the alternative on the timeline without changing anything.
 
-If they ask about an organ or a process of the body that the readout has no process for and no tool logs, such as the thyroid or melatonin, answer in a line from what you know, marked as your own knowledge, and call add_process once. A separate session then writes it, and it appears on the body once its tests pass, which takes a few minutes. Tell them that in your reply. Use it only for a lasting part of how a body works. Something that happened to them is log_event, and a drug is define_substance.
+If they ask about an organ or a process of the body that the readout has no process for and no tool logs, such as the thyroid or melatonin, answer in a line from what you know, marked as your own knowledge, and call add_process once. A separate session then writes it, and it appears on the body once its tests pass, which takes about ten minutes. Tell them that in your reply. Use it only for a lasting part of how a body works. Something that happened to them is log_event, and a drug is define_substance.
 
 Numbers: every number in your reply must come from a readout. Each tool returns a readout at the current time, and read_body gives one at any other minute. Don't state physiology figures from memory, because the person is looking at the model's figures and yours must match them. Blood sugar is in mmol/L.
 
@@ -318,7 +318,7 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
       tool("log_food", "Records one food or drink from the USDA table at a time of day. You give how much, and its composition comes from the table. Reusing an id replaces that entry. The stomach, blood and organs respond immediately. Returns a readout at the current time.", LOG_FOOD.shape, async (args) => logFood(LOG_FOOD.parse(args))),
       tool(
         "add_process",
-        "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for a few minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
+        "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for about ten minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
         {
           id: z.string().describe("Lowercase letters and underscores, such as thyroid"),
           title: z.string().max(40).describe("What it is called on screen, such as Thyroid"),

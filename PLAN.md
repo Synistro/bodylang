@@ -38,7 +38,7 @@ The body, readings, sentences and day chart all read this one calculation, and n
 
 **Food comes from a table.** `server/foods.json` holds 12,750 foods from USDA FoodData Central, with composition per 100 g and real portion weights. Claude searches it, picks the row and decides only how much you had. If nothing fits, it uses its own composition, and the food is marked as Claude's estimate.
 
-**Every estimate can be corrected.** Foods have a dotted underline along the top of the day chart. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
+**Every estimate can be corrected.** Foods along the top of the day chart have a dotted underline, because their portion is Claude's estimate. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
 
 ## Where each thing came from
 
@@ -52,15 +52,15 @@ Hover any number or sentence and a small note says where it came from, in one of
 | From the USDA food table | The food's contents | Pizza, cheese, thin crust |
 | You said this | Your own measurements | 62 kg |
 
-The last four are the ones to look at, so the second and third also have a dotted line under them. Nothing unmarked came from Claude's own knowledge.
+Anything from Claude's numbers or Claude's own knowledge also has a dotted line under it, so it shows without hovering. Evidence grades mean this: A is consistent human studies or official bodies, B is human studies with wide variation, and C is an estimate chosen to match the shape of published curves.
 
 Claude's replies are checked by code. Its instructions say every number must come from the model, and the bridge keeps a list of each number the model returned to it, plus what you said. Any number in a reply or a walkthrough step that isn't on that list gets the dotted line and the note "The model never returned this number". A number Claude worked out by arithmetic counts as added, because nothing computed it.
 
-I checked this by having a script walk 40 views in real WebKit, with a table food, an estimated food, a sauna, a workout, a drug and a cycle all logged, and list any number on screen with no note. The list came back empty once I fixed the one it found. The walk leaves out the clock, the numbers on stops, the count in a walkthrough and the sliders. The canvas of the day chart can't be walked this way: its rows carry the notes, and hovering a row of the plot shows that row's note.
+I checked this by having a script walk 40 views in real WebKit, with a table food, an estimated food, a sauna, a workout, a drug and a cycle all logged, and list any number on screen with no note. The list came back empty once I fixed the one it found. The walk leaves out the clock, the numbers on stops, the count in a walkthrough and the sliders in the panel for your measurements. The canvas of the day chart can't be walked this way: its rows carry the notes, and hovering a row of the plot shows that row's note.
 
 ## How the screen is organised
 
-The body stands in the middle of the window. On its left is the rail, an outline of the body: the systems as plain text, with the one you are in opened to show where you are. The message box is at the bottom of that column, with the latest answer as plain text above it. On the right is a page for where you are, in a column of the same width, so the body stays centered. Under the body is the day chart.
+The body stands in the middle of the window. At the top left is the clock, with your measurements under it. Below them is the rail, an outline of the body: the systems as plain text, with the one you are in opened to show where you are. The message box is at the bottom of that column, with the latest answer as plain text above it. On the right is a page for where you are, in a column of the same width, so the body stays centered. Under the body is the day chart.
 
 The look uses the system font at 13 px for most text and 20 px at most, a warm near-black background with hairlines, and no shadows. Only the day chart and the organ diagrams sit on a panel. Icons are for finding your way and for controls everybody knows, so they appear on the list of systems and on the play, skip, send and close buttons, thin and in one quiet tone. Everything said on the page stays in words. It opens dark, and Light at the bottom right switches to a cream background.
 
@@ -144,7 +144,7 @@ The dev server runs Claude Code through the Claude Agent SDK, using your existin
 - `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
 - 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
 - `add_process` asks a separate session to add something the model doesn't have.
-- `what_if` draws an alternative on the day chart, in Tell mode only.
+- `what_if` offers another choice you could make, in words under the answer and as a line on the day chart, in Tell mode only.
 - `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at.
 - `read_body` returns the model's numbers at any time.
 - `reply` shows the answer, at most three lines of under 18 words each.
@@ -163,14 +163,14 @@ Claude turns casual language into quantities and explains the result. Code compu
 | Haiku records, Opus answers | 20 of 20 | 3.9 s | 10.9 s | 18.8 s | $0.018 |
 | Haiku records, Sonnet answers | 20 of 20 | 3.8 s | 9.8 s | 16.9 s | $0.011 |
 | Opus, brief | 20 of 20 | 4.5 s | 8.6 s | 17.1 s | $0.047 |
-| **Sonnet, brief (in use)** | 20 of 20 | 3.4 s | 6.3 s | 11.3 s | $0.019 |
+| **Sonnet, brief (in use for Tell)** | 20 of 20 | 3.4 s | 6.3 s | 11.3 s | $0.019 |
 | Haiku, brief | 19 of 20 | 4.1 s | 6.4 s | 9.8 s | $0.002 |
 
-Brief means the tools just record, and Claude reads the numbers once, in as few messages as it can. Compared on the same sentences, Sonnet brief is 2.8 s faster than Opus (standard error 0.5).
+Brief means the tools just record, and Claude reads the numbers once, in as few messages as it can. The table shows medians. The differences below are means across pairs of runs of the same sentence, which is the fairer comparison, so they differ from the gaps between medians. Sonnet brief is 2.8 s faster than Opus (standard error 0.5).
 
-Splitting the work, which I expected to help, made it slower: Haiku then Opus takes 3.7 s longer than Opus alone (standard error 0.6), because the second model has to start over. Haiku alone is the fastest and cheapest, and I rejected it on wording and one error. It wrote "more alert-dependent later", and it recorded "from 7 to 8" as 07:30 to 08:30. I judged wording by reading samples from each, with no scoring, so that part is my opinion. Opus is still a little richer in its explanations, and `BODYLANG_MODEL=claude-opus-5-5` puts it back.
+Splitting the work, which I expected to help, made it slower: Haiku then Opus takes 3.7 s longer than Opus alone (standard error 0.6), because the second model has to start over. Haiku brief is as fast as Sonnet brief and ten times cheaper, and I rejected it on wording and one error. It wrote "more alert-dependent later", and it recorded "from 7 to 8" as 07:30 to 08:30. I judged wording by reading samples from each, with no scoring, so that part is my opinion. Opus is still a little richer in its explanations, and `BODYLANG_MODEL=claude-opus-5-5` puts it back.
 
-For Ask, Sonnet takes 7.6 s at the median against Opus's 11.1 s, and got 10 of 10 right. That is 4.5 s faster on the same questions (standard error 0.5). Brief made it skip the walkthrough for a concept in 2 of 10, so Ask isn't brief.
+For Ask, Sonnet takes 7.6 s at the median against Opus's 11.1 s, and got 10 of 10 right. By pairs, that is 4.5 s faster (standard error 0.5). Brief made it skip the walkthrough for a concept in 2 of 10, so Ask isn't brief.
 
 About 2.4 s of every answer is Claude Code starting and the model's first words, whichever model is used. The SDK's `prewarm` could cut the starting part, but it is an alpha feature that fixes the tools when the process starts, and these tools hold state for each message, so I left it out.
 
@@ -178,14 +178,14 @@ About 2.4 s of every answer is Claude Code starting and the model's first words,
 
 I ran eight sentences through live Claude on 2026-11-05: a cold, a leg day yesterday, sex, two apples, an espresso with stress, a short night, a sauna, and crushing chest pain. This was before the move to Sonnet, once each, judged by me. All eight did the right thing.
 
-I ran ten questions through Ask the same way, with the same caveat: burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch.
+I ran ten questions through Ask the same way, with the same caveat, including burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch.
 
 ## Claude adds what's missing
 
-Ask how your thyroid works when the model has no thyroid, and Claude answers in a line from its own knowledge and asks for the process to be added. A separate Claude Code session then writes it, and it appears on the body once every test passes. You can keep using the app in the meantime, and a small line above the message box says how far it has got, with Stop.
+Ask about something the model doesn't have, such as how melatonin works, and Claude answers in a line from its own knowledge and starts adding it, without asking first. A separate Claude Code session writes the process, and it appears on the body once every test passes. This changes the app and leaves your day alone, and it can start from Tell or Ask. You can keep using the app in the meantime, and a small line above the message box says how far it has got, with Stop.
 
 ```text
-"How does my thyroid work?"
+"How does melatonin work?"
      │
      ▼
 Chat ── add_process ──► separate session, in a throwaway copy of the repository
@@ -201,12 +201,14 @@ Chat ── add_process ──► separate session, in a throwaway copy of the r
                      the running app reloads with the new line through the body
 ```
 
+I ran this for real on 2026-11-05 by asking how my thyroid works. The session took 22 turns and $0.70, and the whole thing took 9 minutes, with a benchmark running beside it. The result is `src/model/extensions/thyroid.ts`, a line from the brain, through a stop at the throat, and on to the tissues, and its source note says what it left out. The first try failed for a reason of my own: two existing tests listed every process by name, so nothing new could pass. Stopping that build left the repository untouched, and after I fixed the tests the second try passed. I then removed the thyroid through its link and brought it back with `git revert`. The running app reloaded by itself each time.
+
 A process is one file in `src/model/extensions/`, following `api.ts`, plus its test: its parameters, a function saying what is happening at any minute, and a path through the vessels. It reads every curve the model computes and can't change any of them, so a wrong process can only be wrong about itself. Everything it says is marked as added by Claude, with its source and evidence grade.
 
 What keeps this narrow:
 
 - **The chat can't write.** It has no file or shell tools. All it can do is ask for a build.
-- **The session has no general tools.** It has six of its own: list and read files in the copy, write its process, write its test, run the checks, and finish. It has no shell, so it can't touch anything else or reach the network from a tool. It stops at 40 turns or $6.
+- **The session has no general tools.** It has six of its own: list and read files in the copy, write its process, write its test, run the checks, and finish. It has no shell, so it can't touch anything else or reach the network from a tool. It can't reach your days either, because they are outside the copy. It stops at 40 turns or $6, and one at a time can run.
 - **The code is read before it runs.** The process can import only the contract, and neither file can use the network, storage, the page, timers or `eval`. This is a check for an honest mistake or an odd request, and a determined author could probably find a way past a list like this. The real limits are that it runs only on your Mac, you asked for it, and it is one commit.
 - **Every test is the gate.** The contract test runs the process across four bodies and a whole day, and rejects one that throws, gives broken numbers, diagnoses, or never changes. Its own tests must run the real model. If anything in the app breaks, nothing lands.
 - **It can be undone.** Each process is its own commit, and Remove this process on its page takes it out as another commit.
@@ -215,7 +217,7 @@ What keeps this narrow:
 
 **Phase 1: your real day.** Built, and described under Your day.
 
-**Phase 2: a model you can trust further.** Marking what the model computed apart from what Claude added is built, along with the menstrual cycle and the fixes for three known errors. What is left is fitting curves to large published datasets, which is left out for now.
+**Phase 2: a model you can trust further.** Marking what the model computed apart from what Claude added is built, along with the menstrual cycle and fixes for three known errors: insulin staying high during a run after food, the stomach not slowing in hard exercise, and heart output running low at high intensity. What is left is fitting curves to large published datasets, which is left out for now.
 
 **Phase 3: go further inside.** Built. Every organ has a diagram of its own process, moving at the rate the model computes: the kidney's filter, the bladder filling, the small intestine's fingers absorbing, water leaving the large intestine, fat cells taking in and releasing fat, the uterine lining, an ovary's follicle, and the prostate around the urethra. The type system requires a figure for every organ, and I measured motion in each new figure in real WebKit.
 
@@ -240,8 +242,8 @@ Voice input is left out, because Mac dictation already works.
 
 ## Decisions for you
 
-1. **A personal tool or a product?** Your local Claude Code is right for a personal tool. A product needs a hosted API backend and accounts. It would also make health claims and hold health data, which brings regulation I haven't looked into. I'd keep it personal through phase 2 and decide then.
-2. **What comes next?** I'd start with phase 1, because using it on your own days will show which gaps matter.
+1. **A personal tool or a product?** Your local Claude Code is right for a personal tool. A product needs a hosted API backend and accounts. It would also make health claims and hold health data, which brings regulation I haven't looked into. I'd keep it personal for now.
+2. **What comes next?** I'd use it on your own days for a while, because that will show which gaps matter better than more planning.
 3. **The BodyParts3D licence, before any public release.** The project's website says CC BY 4.0, while the headers inside its OBJ files still say CC BY-SA 2.1 Japan, and the latissimus, rectus abdominis and internal oblique come from its older version 3.0 files, because version 4.0 lacks them. The Credits link at the bottom of the page states CC BY 4.0. Share-alike could affect how those assets can be distributed. Nothing needs settling while this stays on your machine.
 
 ## Limits
@@ -253,9 +255,9 @@ Voice input is left out, because Mac dictation already works.
 - Known gap in the model: two apples peak slightly below the target, because the fibre effect stays close to Benini 1995. A smaller fibre effect would hit the apple target and move further from that study. How far insulin falls and the stomach slows on a hard run is my estimate. Only the direction comes from published work.
 - Some sources were read only as a secondary reference or search snippet, including the running core temperature and the 10 mmHg per MET figure. `src/model/params.ts` keeps a source note beside each value.
 - Organs and muscles are warped from other bodies onto the Anny shape, so the fit is approximate and gets less accurate at extreme sizes. At very low or high BMI, a plain girth scale makes up the remaining weight, so those bodies look less natural.
-- A process Claude adds has no mesh of its own, so a thyroid is a line ending at the throat. It also can't change other numbers: a thyroid process can't raise your heart rate on screen.
+- A process Claude adds has no mesh of its own, so the thyroid is a numbered stop at the throat with no gland drawn. It also can't change other numbers: a thyroid process can't raise your heart rate on screen.
 - The small intestine's loops are generated, so its shape is plausible and its exact course is invented.
 - Under 820 px wide, the layout stacks and hides the organ name labels and the lines from stop numbers to the body.
 - Inside an exploration, changing the body's measurements with the sliders changes the copy, so it goes when you leave.
 - Sliders stay live while Claude is answering, and Claude keeps the state it started with, so moving one mid-answer can leave its numbers out of step with the screen until the next message.
-- I last measured performance on the first mock, so the current scene has no frame rate on record.
+- I last measured frame rate on an early prototype, so the current scene has none on record.
