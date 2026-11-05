@@ -1,0 +1,6 @@
+import { createRoot } from "react-dom/client";
+import "skullet/styles.css";
+import { App } from "./ui/App";
+import "./ui/app.css";
+
+createRoot(document.getElementById("root")!).render(<App />);

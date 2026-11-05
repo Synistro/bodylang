@@ -1,0 +1,59 @@
+import react from "@vitejs/plugin-react";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { defineConfig, type Plugin } from "vite";
+
+// The bridge lives in the dev server so the page has one origin and no key ever reaches the browser.
+// It is loaded per request instead of imported here: an import would make every model file a config
+// dependency, and each edit would restart the server and strand the wallpaper on a dead page.
+function bodyAgent(): Plugin {
+  return {
+    name: "bodylang-agent",
+    configureServer(server) {
+      server.middlewares.use("/api/beacon", (req, res) => {
+        const chunks: Buffer[] = [];
+        req.on("data", (c: Buffer) => chunks.push(c));
+        req.on("end", () => {
+          console.log(`[beacon] ${Buffer.concat(chunks).toString("utf8").slice(0, 400)}`);
+          res.statusCode = 204;
+          res.end();
+        });
+      });
+      server.middlewares.use("/api/snapshot", (req, res) => {
+        if (req.method === "GET") {
+          server.ws.send("bodylang:snapshot");
+          res.end("requested");
+          return;
+        }
+        const chunks: Buffer[] = [];
+        req.on("data", (c: Buffer) => chunks.push(c));
+        req.on("end", () => {
+          const base64 = Buffer.concat(chunks).toString("utf8").split(",")[1] ?? "";
+          mkdirSync("pipeline/cache", { recursive: true });
+          writeFileSync("pipeline/cache/snapshot.jpg", Buffer.from(base64, "base64"));
+          res.statusCode = 204;
+          res.end();
+        });
+      });
+      server.middlewares.use("/api/tell", (req, res) => {
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.end();
+          return;
+        }
+        server
+          .ssrLoadModule("/server/agent.ts")
+          .then((bridge) => (bridge as typeof import("./server/agent")).handleTell(req, res))
+          .catch((e: unknown) => {
+            console.error("[bodylang] request error", e);
+            if (!res.headersSent) res.statusCode = 400;
+            res.end();
+          });
+      });
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [react(), bodyAgent()],
+  server: { port: 5183, strictPort: true },
+});

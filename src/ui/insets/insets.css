@@ -1,0 +1,150 @@
+/* Level 3: one figure in a panel, at most three readings, and a small word that holds the source. The
+   page head names the part and says the sentence, so the card repeats neither. */
+.organ-card {
+  grid-area: 1 / 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top, 0px), #000 calc(100% - var(--fade-bottom, 0px)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top, 0px), #000 calc(100% - var(--fade-bottom, 0px)), transparent 100%);
+}
+.organ-card::-webkit-scrollbar { display: none; }
+/* The close-up comes in as chunks, a beat apart. */
+.organ-card > * { flex: none; animation: rise 240ms var(--ease) backwards; }
+.organ-card > :nth-child(2) { animation-delay: 60ms; }
+.organ-card > :nth-child(n + 3) { animation-delay: 110ms; }
+
+.organ-lines { display: grid; gap: 0.2rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+
+.organ-substances { display: grid; gap: 0.2rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+.organ-substances b { font-weight: 500; color: var(--ink); }
+
+/* The source is one small word until you ask. */
+.organ-source { position: relative; align-self: flex-start; margin-top: 0.2rem; font-size: var(--t-tiny); line-height: 1.4; color: var(--ink-3); cursor: default; }
+.organ-source::after { content: ""; position: absolute; inset: -1.4rem -0.6rem; }
+.organ-source-text { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 180ms var(--ease), opacity 160ms var(--ease); }
+.organ-source-text > span { min-height: 0; overflow: hidden; color: var(--ink-2); text-wrap: pretty; }
+.organ-source:focus .organ-source-text, .organ-source:hover .organ-source-text { grid-template-rows: 1fr; opacity: 1; }
+.organ-source:focus { outline: none; }
+
+/* Figures: fine line work in the colour of the view. Marks that stay in the drawing's own units scale
+   with the column. Hairlines are set in rem, so they keep their weight in proportion on a large
+   display and stay crisp at any size. */
+.inset {
+  --bg: var(--surface); /* the paper of the drawing */
+  --fig-salmon: var(--view-hue); /* active, working */
+  --fig-brick: var(--view-hue);
+  --fig-ochre: #bc5215; /* food and fuel */
+  margin: 0;
+}
+:root[data-theme="dark"] .inset { --fig-ochre: #da702c; }
+
+.inset-art { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 1rem; background: var(--surface); }
+.inset-art path, .inset-art circle, .inset-art ellipse { vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.inset-art text { font-family: var(--font-ui); fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.inset-art .inset-caption { font-size: 7.4px; font-weight: 500; fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 2.4; stroke-linejoin: round; }
+.inset-art .inset-note { fill: var(--ink-3); paint-order: stroke; stroke: var(--bg); stroke-width: 2.2; stroke-linejoin: round; }
+.inset-art .inset-note[data-tone="attention"] { fill: var(--note); }
+.inset-art .inset-number { fill: var(--ink-2); }
+.inset-art .inset-quiet { fill: var(--ink-3); }
+.inset-art .inset-accent { fill: var(--fig-brick); }
+
+.line-ink { fill: none; stroke: var(--ink); stroke-width: 0.1rem; }
+.line-soft { fill: none; stroke: var(--ink-2); stroke-width: 0.075rem; }
+.line-hair { fill: none; stroke: var(--line-strong); stroke-width: 0.075rem; }
+.fill-paper { fill: var(--bg); stroke: none; }
+.leader { fill: none; stroke: var(--ink-3); stroke-width: 0.075rem; }
+.mark-caffeine { fill: var(--ink); stroke: var(--fig-salmon); stroke-width: 0.12rem; }
+
+/* Stomach */
+.stomach-fibres { fill: none; stroke: var(--ink-3); stroke-width: 0.05rem; opacity: 0.75; }
+.stomach-lining { fill: none; stroke: var(--ink-2); stroke-width: 0.06rem; }
+.stomach-hatch { fill: none; stroke: var(--fig-ochre); stroke-width: 0.06rem; opacity: 0.55; }
+.stomach-surface { fill: none; stroke: var(--fig-ochre); stroke-width: 0.1rem; }
+.stomach-hatch[data-liquid] { stroke: var(--ink-3); opacity: 0.5; }
+.stomach-surface[data-liquid] { stroke: var(--ink-2); }
+.stomach-piece { fill: color-mix(in srgb, var(--fig-ochre) 24%, var(--bg)); stroke: var(--fig-ochre); stroke-width: 0.08rem; }
+.stomach-leaving { fill: var(--fig-ochre); stroke: none; }
+.stomach-gate { fill: var(--bg); stroke: var(--ink); stroke-width: 0.1rem; }
+
+/* Liver */
+.liver-granule { fill: transparent; stroke: var(--line-strong); stroke-width: 0.06rem; transition-property: fill, stroke; transition-duration: 240ms; transition-timing-function: var(--ease); }
+.liver-granule[data-stored] { fill: var(--fig-ochre); stroke: var(--fig-ochre); }
+.inset-art .pipe-wall, .inset-art .pipe-bore, .inset-art .stream-body, .inset-art .stream-beads { vector-effect: none; }
+.pipe-wall { fill: none; stroke: var(--line-strong); stroke-width: 12.5; }
+.pipe-bore { fill: none; stroke: var(--bg); stroke-width: 11; }
+.stream-body { fill: none; stroke: var(--fig-ochre); opacity: 0.32; }
+.stream-beads { fill: none; stroke: var(--fig-ochre); }
+.liver-lane { transition-property: opacity; transition-duration: 240ms; }
+
+/* Brain */
+.brain-signal { fill: var(--ink-2); stroke: none; }
+.brain-caffeine { fill: var(--ink); stroke: var(--fig-salmon); stroke-width: 0.12rem; transition-property: opacity; transition-duration: 240ms; transition-timing-function: var(--ease); }
+.brain-caffeine:not([data-seated]) { opacity: 0; }
+
+/* Heart */
+.heart-cavity { fill: var(--bg); stroke: var(--ink); stroke-width: 0.09rem; }
+.heart-muscle { fill: none; stroke: var(--ink-3); stroke-width: 0.05rem; opacity: 0.7; }
+.inset-art .heart-stream, .inset-art .heart-beads, .inset-art .heart-vessel-wall, .inset-art .heart-vessel-bore { vector-effect: none; }
+.inset-art .heart-stream { stroke-linecap: butt; }
+.heart-vessel-wall { fill: none; stroke: var(--ink-2); stroke-width: 9; stroke-linecap: butt; }
+.heart-vessel-bore { fill: none; stroke: var(--bg); stroke-width: 7.8; stroke-linecap: butt; }
+.heart-vessel-wall.heart-aorta { stroke-width: 15; }
+.heart-vessel-bore.heart-aorta { stroke-width: 13.8; }
+.heart-stream { fill: none; stroke: var(--ink); opacity: 0.2; }
+.heart-beads { fill: none; stroke: var(--ink); opacity: 0.75; }
+
+/* Pancreas */
+.islet-cell { fill: var(--bg); stroke: var(--ink-2); stroke-width: 0.075rem; }
+.islet-glow { fill: var(--fig-salmon); stroke: none; }
+.islet-nucleus { fill: var(--ink-3); stroke: none; }
+.insulin-dot { fill: var(--fig-salmon); stroke: none; }
+
+/* Muscle */
+.muscle-edge { fill: none; stroke: var(--ink-2); stroke-width: 0.06rem; }
+.muscle-striation { fill: none; stroke: var(--ink-3); stroke-width: 0.04rem; opacity: 0.75; }
+.muscle-tear { fill: none; stroke: var(--fig-brick); stroke-width: 0.11rem; }
+.inset-art .muscle-tear-word { fill: var(--fig-brick); }
+.muscle-patch { fill: color-mix(in srgb, var(--fig-salmon) 30%, transparent); stroke: none; }
+.muscle-blood { transition-property: opacity; transition-duration: 240ms; }
+.muscle-stitch { fill: none; stroke: var(--ink); stroke-width: 0.1rem; }
+.muscle-sugar { fill: var(--fig-ochre); stroke: none; }
+.muscle-face { fill: var(--bg); stroke: var(--ink); stroke-width: 0.1rem; }
+.muscle-end { fill: none; stroke: var(--ink-2); stroke-width: 0.06rem; }
+.inset-art .vessel-wall, .inset-art .vessel-bore, .inset-art .vessel-beads { vector-effect: none; }
+.vessel-wall { fill: none; stroke: var(--line-strong); stroke-width: 6.6; }
+.vessel-bore { fill: none; stroke: var(--bg); stroke-width: 5.4; }
+.vessel-beads { fill: none; stroke: var(--fig-ochre); stroke-width: 2.4; }
+
+/* Lungs */
+.inset-art .airway-wall, .inset-art .airway-lining, .inset-art .airway-lumen, .inset-art .airway-cough { vector-effect: none; }
+.airway-wall { fill: none; stroke: var(--ink-2); }
+.airway-lining { fill: none; stroke: color-mix(in srgb, var(--fig-salmon) 40%, var(--bg)); }
+.airway-lumen { fill: none; stroke: var(--bg); }
+.airway-irritation { fill: none; stroke: var(--fig-brick); stroke-width: 0.05rem; }
+.airway-cough { fill: none; stroke: var(--fig-brick); stroke-width: 3.2; }
+.airway-ring { fill: none; stroke: var(--ink-3); stroke-width: 0.05rem; opacity: 0.8; }
+.lung-sac { fill: var(--bg); stroke: var(--ink-2); stroke-width: 0.07rem; }
+
+/* Immune */
+.thermo-band { fill: var(--band); stroke: none; }
+.inset-art .thermo-column { vector-effect: none; }
+.thermo-column { fill: none; stroke: var(--ink-2); stroke-width: 3.2; stroke-linecap: butt; transition-property: stroke; transition-duration: 240ms; }
+.thermo-bulb, .thermo-pointer { fill: var(--ink-2); stroke: none; transition-property: fill; transition-duration: 240ms; }
+.thermo-column[data-tone="note"] { stroke: var(--note); }
+.thermo-column[data-tone="concern"] { stroke: var(--fig-brick); }
+.thermo-bulb[data-tone="note"], .thermo-pointer[data-tone="note"] { fill: var(--note); }
+.thermo-bulb[data-tone="concern"], .thermo-pointer[data-tone="concern"] { fill: var(--fig-brick); }
+.immune-cell path { fill: var(--bg); stroke: var(--ink-2); stroke-width: 0.075rem; }
+.immune-nucleus { fill: var(--ink-2); stroke: none; }
+.immune-invader { transition-property: opacity; transition-duration: 240ms; }
+.immune-invader circle { fill: var(--fig-brick); stroke: none; }
+.immune-invader path { fill: none; stroke: var(--fig-brick); stroke-width: 0.07rem; }
+
+@media (max-width: 820px) {
+  .organ-card { overflow: visible; -webkit-mask-image: none; mask-image: none; }
+}

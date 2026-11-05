@@ -1,0 +1,73 @@
+import { RefObject, useDeferredValue, useEffect, useRef } from "react";
+import { assess, Assessment } from "../model/assess";
+import { OrganId, Trajectory } from "../model/simulate";
+import type { Stage } from "../scene/stage";
+import { setUi, useStore } from "../store";
+
+const PLAY_STEP_MINUTES = 5;
+const SCROLL_FADE_PX = 28;
+
+// The minute that readings and sentences draw from. Coarser while the day plays, so the figures
+// stay readable and React is never busy at frame rate. Deferred, so a scrub stays ahead of it.
+export function useMinute(): number {
+  const minute = useStore((s) => (s.playing ? Math.round(s.t / PLAY_STEP_MINUTES) * PLAY_STEP_MINUTES : Math.round(s.t)));
+  return useDeferredValue(minute);
+}
+
+let assessed: { tr: Trajectory; minute: number; result: Assessment } | null = null;
+
+// The rail, the panel and the timeline all read the same assessment in the same render.
+export function assessmentAt(tr: Trajectory, minute: number): Assessment {
+  if (!assessed || assessed.tr !== tr || assessed.minute !== minute) assessed = { tr, minute, result: assess(tr, minute) };
+  return assessed.result;
+}
+
+export function useFrame(stage: Stage | null, listener: (stage: Stage, dt: number) => void) {
+  const latest = useRef(listener);
+  latest.current = listener;
+  useEffect(() => {
+    if (!stage) return;
+    const run = (s: Stage, dt: number) => latest.current(s, dt);
+    stage.frameListeners.add(run);
+    return () => {
+      stage.frameListeners.delete(run);
+    };
+  }, [stage]);
+}
+
+export const rootRem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+export const scrollBehavior = (): ScrollBehavior => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+
+export function organHover(organ: OrganId | null) {
+  return {
+    onPointerEnter: () => setUi({ hover: organ }),
+    onPointerLeave: () => setUi({ hover: null }),
+    onFocus: () => setUi({ hover: organ }),
+    onBlur: () => setUi({ hover: null }),
+  };
+}
+
+// Fades the edge of a scroller only on the sides that have more to show.
+export function useScrollFade(ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const below = el.scrollHeight - el.clientHeight - el.scrollTop;
+      el.style.setProperty("--fade-top", `${Math.min(el.scrollTop, SCROLL_FADE_PX)}px`);
+      el.style.setProperty("--fade-bottom", `${Math.max(0, Math.min(below, SCROLL_FADE_PX))}px`);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const resized = new ResizeObserver(update);
+    resized.observe(el);
+    const changed = new MutationObserver(update);
+    changed.observe(el, { childList: true, subtree: true });
+    return () => {
+      el.removeEventListener("scroll", update);
+      resized.disconnect();
+      changed.disconnect();
+    };
+  }, [ref]);
+}
