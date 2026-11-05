@@ -7,7 +7,7 @@ import "./insets/insets.css";
 import { Assessment, Feeling, hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
 import { systemById, SystemId } from "../model/systems";
 import { setUi, useStore } from "../store";
-import { Crossfade } from "./Crossfade";
+import { Swap } from "./Swap";
 import { assessmentAt, organHover, useMinute, useScrollFade } from "./hooks";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
@@ -282,9 +282,9 @@ export function StatePanel() {
 
   return (
     <section ref={scroller} className="state" data-away={focused || undefined} inert={focused} aria-label="State of the body">
-      <Crossfade k={level}>
+      <Swap k={level}>
         <PanelContent system={system} processId={processId} />
-      </Crossfade>
+      </Swap>
     </section>
   );
 }

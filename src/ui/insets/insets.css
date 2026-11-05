@@ -16,9 +16,7 @@
 }
 .organ-card::-webkit-scrollbar { display: none; }
 /* The close-up comes in as chunks, a beat apart. */
-.organ-card > * { flex: none; animation: rise 240ms var(--ease) backwards; }
-.organ-card > :nth-child(2) { animation-delay: 60ms; }
-.organ-card > :nth-child(n + 3) { animation-delay: 110ms; }
+.organ-card > * { flex: none; animation: settle 120ms var(--ease) backwards; }
 
 .organ-lines { display: grid; gap: 0.2rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
 
