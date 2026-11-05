@@ -1,4 +1,4 @@
-/* Level 3: one figure in a panel, at most three readings, and a small word that holds the source. The
+/* Level 3: one figure in a panel and at most three readings. The
    page head names the part and says the sentence, so the card repeats neither. */
 .organ-card {
   grid-area: 1 / 1;
@@ -23,10 +23,6 @@
 .organ-substances { display: grid; gap: 0.2rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
 .organ-substances b { font-weight: 500; color: var(--ink); }
 
-/* The source is one small word until you ask. */
-.organ-source { position: relative; align-self: flex-start; margin-top: 0.2rem; font-size: var(--t-tiny); line-height: 1.4; color: var(--ink-3); cursor: default; }
-.organ-source::after { content: ""; position: absolute; inset: -1.4rem -0.6rem; }
-.organ-source:focus { outline: none; }
 
 /* Figures: fine line work in the colour of the view. Marks that stay in the drawing's own units scale
    with the column. Hairlines are set in rem, so they keep their weight in proportion on a large

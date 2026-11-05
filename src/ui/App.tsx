@@ -7,6 +7,7 @@ import { AppState, dispatch, getState, leaveAsk, selectedProcess, setBody, setUi
 import { viewSystemOf } from "../look";
 import { AskBar, Guide } from "./Ask";
 import { AtlasKeys } from "./AtlasKeys";
+import { Explain } from "./Explain";
 import { Answer, Composer } from "./Conversation";
 import { Header, ViewControls } from "./Controls";
 import { freeArea, useFreeArea } from "./freeArea";
@@ -18,7 +19,7 @@ import { OrganCard } from "./OrganCard";
 import { startDay } from "./day";
 import { PageHead } from "./PageHead";
 import { Rail } from "./Rail";
-import { SourceTip } from "./SourceTip";
+import { SourceEntry, sourcesOnScreen } from "./SourceTip";
 import { StatePanel } from "./StatePanel";
 import { Timeline } from "./Timeline";
 import { Tour } from "./Tour";
@@ -61,7 +62,8 @@ function useEscape() {
     const key = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.stopPropagation();
-      if (e.target instanceof HTMLTextAreaElement) e.target.blur();
+      if (getState().explaining) setUi({ explaining: null });
+      else if (e.target instanceof HTMLTextAreaElement) e.target.blur();
       else if (getState().fixing) setUi({ fixing: null });
       else if (getState().bodyOpen) setUi({ bodyOpen: false });
       else if (atTopLevel() && getState().asking) leaveAsk();
@@ -112,13 +114,31 @@ function useStillWhileHidden() {
 
 function Foot() {
   const [credits, setCredits] = useState(false);
+  const [sources, setSources] = useState<SourceEntry[] | null>(null);
   const problem = useStore((s) => s.dayProblem);
+  const level = useStore((s) => `${s.body.system}/${s.body.process}/${s.body.focus}/${s.body.focusMuscle}`);
+
+  // The list is about what was on screen when you asked, so it closes when you go somewhere else.
+  useEffect(() => setSources(null), [level]);
+
   return (
     <div className="foot">
       {problem ? <p className="foot-problem">{problem}</p> : null}
+      {sources ? (
+        <ul className="sources">
+          {sources.map((source) => (
+            <li key={`${source.heading}${source.detail}`}>
+              <b>{source.heading}</b> {source.detail}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {credits ? <p className="credits">{CREDITS}</p> : null}
       <p className="foot-line">
         Estimates, not medical advice.{" "}
+        <button type="button" className="link" aria-expanded={sources !== null} onClick={() => setSources(sources ? null : sourcesOnScreen())}>
+          Sources
+        </button>{" "}
         <button type="button" className="link" aria-expanded={credits} onClick={() => setCredits(!credits)}>
           Credits
         </button>
@@ -277,7 +297,7 @@ export function App() {
           </div>
         </main>
       </div>
-      <SourceTip />
+      <Explain />
     </div>
   );
 }

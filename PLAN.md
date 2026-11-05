@@ -42,7 +42,7 @@ The body, readings, sentences and day chart all read this one calculation, and n
 
 ## Where each thing came from
 
-Hover any number or sentence and a small note says where it came from, in one of five ways:
+Sources, at the bottom right, opens a list of where everything on screen right now came from, when you click it. Nothing appears on hover, because hover notes covered the buttons underneath. Each source is one of five kinds:
 
 | Note | Meaning | Example |
 |---|---|---|
@@ -52,11 +52,15 @@ Hover any number or sentence and a small note says where it came from, in one of
 | From the USDA food table | The food's contents | Pizza, cheese, thin crust |
 | You said this | Your own measurements | 62 kg |
 
-Anything from Claude's numbers or Claude's own knowledge also has a dotted line under it, so it shows without hovering. Evidence grades mean this: A is consistent human studies or official bodies, B is human studies with wide variation, and C is an estimate chosen to match the shape of published curves.
+Evidence grades mean this: A is consistent human studies or official bodies, B is human studies with wide variation, and C is an estimate chosen to match the shape of published curves.
 
-Claude's replies are checked by code. Its instructions say every number must come from the model, and the bridge keeps a list of each number the model returned to it, plus what you said. Any number in a reply or a walkthrough step that isn't on that list gets the dotted line and the note "The model never returned this number". A number Claude worked out by arithmetic counts as added, because nothing computed it.
+Claude's replies are checked by code. Its instructions say every number must come from the model, and the bridge keeps a list of each number the model returned to it, plus what you said. Any number in a reply or a walkthrough step that isn't on that list gets a dotted line under it, and Sources says what the line means. A number Claude worked out by arithmetic counts as added, because nothing computed it.
 
-I checked this by having a script walk 40 views in real WebKit, with a table food, an estimated food, a sauna, a workout, a drug and a cycle all logged, and list any number on screen with no note. The list came back empty once I fixed the one it found. The walk leaves out the clock, the numbers on stops, the count in a walkthrough and the sliders in the panel for your measurements. The canvas of the day chart can't be walked this way: its rows carry the notes, and hovering a row of the plot shows that row's note.
+I checked this by having a script walk 40 views in real WebKit, with a table food, an estimated food, a sauna, a workout, a drug and a cycle all logged, and list any number on screen with no source. The list came back empty once I fixed the one it found. The walk leaves out the clock, the numbers on stops, the count in a walkthrough and the sliders in the panel for your measurements. The canvas of the day chart can't be walked this way, so its rows carry the sources for what they draw.
+
+## Selecting words to ask about them
+
+Select any words on screen, such as TRH in a walkthrough, and a small panel opens right above them. Claude Haiku 5.5 says what they mean in one short sentence, using the sentence they came from, and you can ask follow-ups in the same panel. It also has your current numbers, so "is mine low?" gets an answer from the model. This session has no tools at all, so it can only talk: it can't change your day, and the conversation is gone when you close the panel.
 
 ## How the screen is organised
 
@@ -205,7 +209,7 @@ Chat ── add_process ──► separate session, in a throwaway copy of the r
 
 I ran this for real on 2026-11-05 by asking how my thyroid works. The session took 22 turns and $0.70, and the whole thing took 9 minutes, with a benchmark running beside it. The result is `src/model/extensions/thyroid.ts`, a line from the brain, through a stop at the throat, and on to the tissues, and its source note says what it left out. The first try failed for a reason of my own: two existing tests listed every process by name, so nothing new could pass. Stopping that build left the repository untouched, and after I fixed the tests the second try passed. I then removed the thyroid through its link and brought it back with `git revert`. The running app reloaded by itself each time.
 
-A process is one file in `src/model/extensions/`, following `api.ts`, plus its test: its parameters, a function saying what is happening at any minute, and a path through the vessels. It reads every curve the model computes and can't change any of them, so a wrong process can only be wrong about itself. Everything it says is marked as added by Claude, with its source and evidence grade.
+A process is one file in `src/model/extensions/`, following `api.ts`, plus its test: its parameters, a function saying what is happening at any minute, and a path through the vessels. It reads every curve the model computes and can't change any of them, so a wrong process can only be wrong about itself. Sources lists it as added by Claude, with its studies and evidence grade.
 
 What keeps this narrow:
 

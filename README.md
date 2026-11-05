@@ -16,7 +16,7 @@ pnpm dev
 
 Then open http://localhost:5183. It opens on today at the real time. Anything you type goes to your local Claude Code through the dev server, so it needs the dev server and doesn't work from a static build. http://localhost:5183/?demo replays a scripted day with no model call, and saves nothing.
 
-Your days are saved as one file per date in `~/.bodylang/days/`. Set `BODYLANG_DATA` to keep them somewhere else, and `BODYLANG_MODEL` to use a model other than `claude-sonnet-5-5`, such as `claude-opus-5-5`.
+Your days are saved as one file per date in `~/.bodylang/days/`. Set `BODYLANG_DATA` to keep them somewhere else, `BODYLANG_EXPLAIN_MODEL` to explain selected words with something other than `claude-haiku-5-5`, and `BODYLANG_MODEL` to use a model other than `claude-sonnet-5-5`, such as `claude-opus-5-5`.
 
 ```bash
 pnpm test
@@ -48,9 +48,10 @@ open "plash:reload"
 | `src/ui/insets/` | The organ and muscle close-up figures |
 | `src/wall.ts` | Wallpaper mode |
 | `src/model/day.ts` | The real clock, the day file, and what carries over to the next day |
-| `src/model/origin.ts`, `src/ui/SourceTip.tsx` | Where each number and sentence came from, and the note that says so |
+| `src/model/origin.ts`, `src/ui/SourceTip.tsx` | Where each number and sentence came from, and the list that says so |
 | `src/model/cycle.ts` | The menstrual cycle |
 | `server/agent.ts` | The Claude Code bridge, its system prompt and its tools |
+| `server/explain.ts`, `src/ui/Explain.tsx` | What selected words mean, from Haiku, in a panel above them |
 | `server/numberCheck.ts` | Checks every number in Claude's replies against what the model returned |
 | `server/extend.ts`, `server/extendCheck.ts` | The separate session that adds a process, and the checks before it lands |
 | `src/model/extensions/` | Processes Claude has added, and the contract they follow (`api.ts`) |

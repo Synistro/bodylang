@@ -50,6 +50,10 @@ const dayDocSchema = z.object({
   assumptions: z.record(z.string(), z.string()),
 });
 
+// A day without its date, for anything that reads a day as it stands.
+export const dayContentSchema = dayDocSchema.omit({ version: true, date: true });
+export type DayContent = Omit<DayDoc, "version" | "date">;
+
 // The fields are checked here, where a file comes in. Events carry a nested story the reducer built, so
 // past their common fields they are taken as the app wrote them.
 export function parseDayDoc(raw: unknown): DayDoc {

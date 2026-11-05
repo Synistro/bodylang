@@ -56,6 +56,17 @@ export interface Ui {
   dayProblem: string | null; // why your day could not be read or saved
   fixing: Fixing | null;
   build: Build | null;
+  explaining: Explaining | null;
+}
+
+// Words selected on screen, what surrounds them, and where they are, for the panel that explains them.
+export interface Explaining {
+  term: string;
+  around: string;
+  page: string;
+  top: number;
+  bottom: number;
+  center: number;
 }
 
 // A process a separate Claude session is adding, or has just finished with.
@@ -137,6 +148,7 @@ let state: AppState = {
   dayProblem: null,
   fixing: null,
   build: null,
+  explaining: null,
 };
 
 const listeners = new Set<() => void>();

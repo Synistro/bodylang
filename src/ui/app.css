@@ -281,12 +281,26 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .day-plot:focus-visible { outline-offset: 3px; }
 .day-plot canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: ew-resize; touch-action: none; }
 
-/* Where something on screen came from. What the model computed needs no mark, and what came from
-   Claude has a dotted line under it. Hovering anything says which. */
-.source-tip { position: fixed; top: 0; left: 0; z-index: 20; display: grid; gap: 0.15rem; max-width: 30rem; padding: 0.5rem 0.7rem; border-radius: 0.5rem; background: var(--surface); outline: 1px solid var(--line-strong); outline-offset: -1px; font-size: var(--t-tiny); line-height: 1.4; color: var(--ink-2); pointer-events: none; opacity: 0; text-wrap: pretty; }
-.source-tip b { font-weight: 500; color: var(--ink); }
-[data-src-kind="claude-input"]:not(button):not(.day-plot), .said-number[data-src-kind="claude"] { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
-.day-row[data-src-kind="claude-input"] .day-value { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
+/* Text inside a row that is also a button can still be selected. */
+.sheet button { -webkit-user-select: text; user-select: text; }
+.composer button, .transport button, .controls button, .tour-actions button, .mode-switch button, .icon-button { -webkit-user-select: none; user-select: none; }
+
+/* What selected words mean, right above them. */
+::highlight(explain-term) { background-color: var(--line-strong); color: var(--ink); }
+.explain { position: fixed; z-index: 20; display: grid; gap: 0.5rem; width: min(32rem, calc(100vw - 2.4rem)); padding: 0.7rem 1rem 0.8rem; border-radius: 0.8rem; background: var(--surface); outline: 1px solid var(--line-strong); outline-offset: -1px; font-size: var(--t-small); line-height: 1.45; pointer-events: auto; animation: rise 140ms var(--ease) backwards; }
+.explain-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.explain-head b { min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.explain-log { display: grid; gap: 0.5rem; max-height: 16rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; color: var(--ink-2); text-wrap: pretty; }
+.explain-log::-webkit-scrollbar { display: none; }
+.explain-log [data-role="you"] { color: var(--ink); }
+.explain-waiting { color: var(--ink-3); animation: breathe 1.6s ease-in-out infinite; }
+.explain-problem { color: var(--ink); }
+.explain input { width: 100%; padding: 0.3rem 0; background: none; border: 0; border-top: 1px solid var(--line); outline: none; padding-top: 0.5rem; }
+.explain input::placeholder { color: var(--ink-3); }
+
+/* A number in Claude's answer that the model never returned. Sources says what the line means. */
+.said-number[data-src-kind="claude"] { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
+
 
 /* A process being added, under the answer. */
 .build-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.8rem; padding-top: 0.6rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
@@ -353,6 +367,9 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .toggle[aria-pressed="true"] { color: var(--ink-2); }
 .toggle:disabled { opacity: 0.5; }
 .foot { font-size: var(--t-tiny); line-height: 1.35; color: var(--ink-3); }
+.sources { display: grid; gap: 0.5rem; max-height: 38vh; margin-bottom: 0.7rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; text-wrap: pretty; animation: rise 160ms var(--ease) backwards; }
+.sources::-webkit-scrollbar { display: none; }
+.sources b { font-weight: 500; color: var(--ink-2); }
 .credits { margin-bottom: 0.4rem; text-wrap: pretty; animation: rise 160ms var(--ease) backwards; }
 
 .group + .group { margin-top: 1.6rem; }

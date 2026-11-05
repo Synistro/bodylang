@@ -218,7 +218,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
           </button>
         </div>
       </div>
-      <div ref={plot} className="day-plot" role="slider" tabIndex={0} aria-label="Time of day" aria-valuemin={DAY_FROM} aria-valuemax={DAY_TO} onKeyDown={key} {...sourced(origins.get(hoverLane ?? "") ?? SENTENCE_ORIGIN)}>
+      <div ref={plot} className="day-plot" role="slider" tabIndex={0} aria-label="Time of day" aria-valuemin={DAY_FROM} aria-valuemax={DAY_TO} onKeyDown={key}>
         <canvas ref={canvas} aria-hidden="true" />
       </div>
       <FoodFix />

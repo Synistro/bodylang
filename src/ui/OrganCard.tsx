@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
 import { CLAUDE_WORDS, modelOrigin, Origin, readingOrigin } from "../model/origin";
-import type { Evidence } from "../model/params";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { OrganId, Trajectory } from "../model/simulate";
 import { setUi, useStore } from "../store";
@@ -50,15 +49,6 @@ function ReadingRow({ reading, trajectory, minute }: { reading: Reading; traject
         </span>
       </span>
     </li>
-  );
-}
-
-// One small word. The citation and how far to trust it open on hover or focus.
-function SourceWord({ evidence, source }: { evidence: Evidence; source: string }) {
-  return (
-    <p className="organ-source" tabIndex={0} {...sourced(modelOrigin(evidence, source))}>
-      Source
-    </p>
   );
 }
 
@@ -122,7 +112,6 @@ function MusclePlate({ group, trajectory, minute }: { group: MuscleGroup; trajec
           ))}
         </ul>
       ) : null}
-      <SourceWord evidence={story.evidence} source={story.source} />
     </aside>
   );
 }
@@ -169,7 +158,6 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
           {story.line}
         </p>
       ) : null}
-      <SourceWord evidence={story.evidence} source={story.source} />
     </aside>
   );
 }

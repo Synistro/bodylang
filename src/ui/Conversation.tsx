@@ -16,7 +16,7 @@ const WHAT_IF_MIN_PEAK_CHANGE = 0.05;
 const MG_DL_PER_MMOL = 18.016;
 
 const NUMBER_ORIGIN: Origin = { kind: "model", detail: "This number is one the model returned to Claude." };
-const ADDED_ORIGIN: Origin = { kind: "claude", detail: "The model never returned this number. Claude worked it out or added it from its own knowledge." };
+const ADDED_ORIGIN: Origin = { kind: "claude", detail: "A number with a dotted line in Claude's answer is one the model never returned. Claude worked it out or added it from its own knowledge." };
 const SAID_NUMBER = /(?<![\w.:,])(\d{1,2}:\d{2}|\d+(?:\.\d+)?%?)(?![\w:]|\.\d)/g;
 
 // Claude's words, with each number marked by whether the model really returned it. Without a check,

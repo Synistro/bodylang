@@ -55,6 +55,16 @@ function bodyAgent(): Plugin {
             res.end(e instanceof Error ? e.message : String(e));
           });
       });
+      server.middlewares.use("/api/explain", (req, res) => {
+        server
+          .ssrLoadModule("/server/explain.ts")
+          .then((explain) => (explain as typeof import("./server/explain")).handleExplain(req, res))
+          .catch((e: unknown) => {
+            console.error("[bodylang] explain error", e);
+            if (!res.headersSent) res.statusCode = 400;
+            res.end();
+          });
+      });
       server.middlewares.use("/api/tell", (req, res) => {
         if (req.method !== "POST") {
           res.statusCode = 405;
