@@ -97,6 +97,21 @@ export interface CustomStory {
   effects: Effect[];
   feelings: EventFeeling[];
   stops: EventStop[];
+  track?: EventTrack | null; // for an injury: the straight line it took through the body
+}
+
+export const TRACK_FROM = ["front", "back", "left", "right", "above", "below"] as const;
+export type TrackFrom = (typeof TRACK_FROM)[number];
+
+export interface CrossedPart {
+  organ: OrganId | null; // null for a vessel or the spinal cord
+  name: string;
+}
+
+export interface EventTrack {
+  aim: OrganId; // the organ it goes through
+  from: TrackFrom; // the side of the body it comes from
+  crossed?: CrossedPart[]; // what that line really crosses, worked out by the app
 }
 
 // What the model reads: the same thing with every curve resolved.
@@ -105,6 +120,7 @@ export interface ResolvedEvent extends BodyEvent {
   effects: Effect[];
   feelings: EventFeeling[];
   stops: EventStop[];
+  track?: EventTrack | null;
   evidence: Evidence; // presets carry A or B from cited sources, custom is always C
   ends: number | null; // `until`, or a typical length for what cannot go on forever
   causeName: string; // the cause as it reads inside a reason: "the fever", "short sleep"

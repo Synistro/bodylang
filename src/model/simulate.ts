@@ -49,6 +49,9 @@ export interface ActivitySpan {
   posture: Posture;
 }
 
+export const SUBSTANCE_ROUTES = ["swallowed", "inhaled", "injected"] as const;
+export type SubstanceRoute = (typeof SUBSTANCE_ROUTES)[number];
+
 // A substance the core model doesn't know about. Claude supplies the kinetics and says where
 // the numbers come from, and the engine moves it through the body like caffeine.
 export interface CustomSubstance {
@@ -60,6 +63,7 @@ export interface CustomSubstance {
   halfLifeH: number;
   volumeLPerKg: number;
   bioavailability: number;
+  route?: SubstanceRoute; // how it gets in; swallowed if not said
   targets: { organ: OrganId; effect: string }[];
   source: string;
 }

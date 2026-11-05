@@ -1,9 +1,13 @@
 import { memo } from "react";
-import { curveStrength } from "../../model/events";
-import { Trajectory, value } from "../../model/simulate";
-import { easeToward, lerp, part, parts, tenth, seededRandom, smoothstep } from "./draw";
-import { InsetProps, Painter, useInsetPainter } from "./loop";
-import { Plate } from "./Plate";
+import type { Levels } from "../../closeup/define";
+import { breathsPerMinute, lungsCloseup } from "../../closeup/lungs";
+import { closeupInset, Look } from "./closeupInset";
+import { lerp, part, parts, tenth, seededRandom, smoothstep } from "./draw";
+import type { Frame, InsetProps } from "./loop";
+import { setLit, setShown, setWord } from "./parts/part";
+import type { PlateWords } from "./Plate";
+
+type Setting = (typeof lungsCloseup.keys)[number];
 
 const GENERATIONS = 5;
 const BORE = [11, 8, 5.6, 3.9, 2.8]; // figure units, trachea first
@@ -28,8 +32,8 @@ const STILL_BREATH = 0.3;
 const COUGH_SECONDS = 0.8;
 const COUGH_DASH = 26;
 const COUGH_EVERY_SECONDS = { mild: 16, strong: 6 };
-const COUGH_FEELING = "coughing";
 const COUGH_SQUEEZE = 0.5;
+const COUGHING_FROM = 0.02; // of the cough level, from where a cough is drawn and named
 
 interface Point {
   x: number;
@@ -157,39 +161,28 @@ const IRRITATION = (() => {
   return d;
 })();
 
-// How strong the cough is now, from whatever illness logged it.
-function coughAt(tr: Trajectory, t: number) {
-  let strongest = 0;
-  for (const event of tr.events) {
-    for (const feeling of event.feelings) {
-      if (feeling.id === COUGH_FEELING) strongest = Math.max(strongest, feeling.amount * curveStrength(feeling, event.from, event.ends, t));
-    }
-  }
-  return strongest;
-}
-
-function createLungsPainter(art: SVGSVGElement): Painter {
+function paintLungs(art: SVGSVGElement) {
   const sacs = parts<SVGCircleElement>(art, "sac");
+  const sacGroup = part<SVGGElement>(art, "sacs");
+  const airways = part<SVGGElement>(art, "airways");
   const lumens = parts<SVGPathElement>(art, "lumen");
   const linings = part<SVGGElement>(art, "linings");
   const irritation = part<SVGPathElement>(art, "irritation");
   const coughPulse = part<SVGPathElement>(art, "cough");
+  const coughWord = part<SVGTextElement>(art, "cough-word");
   let breathPhase = STILL_BREATH;
-  let irritated = -1;
   let nextCough = 2;
   let coughBorn = -Infinity;
 
-  return ({ dt, clock, still }, { trajectory, t }) => {
-    const breaths = value(trajectory, "breaths", t);
-    if (!still) breathPhase += dt * (breaths / 60);
+  return ({ dt, clock, still }: Frame, { levels, lit }: Look<Setting>) => {
+    if (!still) breathPhase += dt * (breathsPerMinute(levels.rate) / 60);
     const phase = breathPhase % 1;
     const inhale = phase < INHALE_SHARE ? smoothstep(0, INHALE_SHARE, phase) : 1 - smoothstep(INHALE_SHARE, 1, phase);
 
-    const cough = coughAt(trajectory, t);
-    irritated = still || irritated < 0 ? cough : easeToward(irritated, cough, dt, 5);
-    if (!still && cough > 0.02 && clock >= nextCough) {
+    const irritated = levels.irritation;
+    if (!still && levels.cough > COUGHING_FROM && clock >= nextCough) {
       coughBorn = clock;
-      nextCough = clock + lerp(COUGH_EVERY_SECONDS.mild, COUGH_EVERY_SECONDS.strong, cough);
+      nextCough = clock + lerp(COUGH_EVERY_SECONDS.mild, COUGH_EVERY_SECONDS.strong, levels.cough);
     }
     const coughProgress = (clock - coughBorn) / COUGH_SECONDS;
     const coughing = coughProgress >= 0 && coughProgress <= 1;
@@ -203,55 +196,58 @@ function createLungsPainter(art: SVGSVGElement): Painter {
     lumens.forEach((lumen, generation) => {
       lumen.style.strokeWidth = tenth(BORE[generation] * (1 - SWOLLEN_SHARE * irritated) * (1 + 0.06 * fill));
     });
-    linings.style.opacity = irritated > 0.005 ? "1" : "0";
-    irritation.style.opacity = String(Math.round(irritated * 100) / 100);
+    setShown(linings, irritated > 0.005 ? 1 : 0, lit.irritation);
+    setShown(irritation, irritated, lit.irritation);
 
     coughPulse.style.visibility = coughing ? "visible" : "hidden";
     // A positive offset, which every engine honours: the dash starts behind the route's start and runs through it.
     if (coughing) coughPulse.setAttribute("stroke-dashoffset", tenth(COUGH_DASH + COUGH_ROUTE.length * (1 - coughProgress)));
+
+    setLit(sacGroup, lit.rate);
+    setLit(airways, Math.max(lit.rate, lit.irritation));
+    setLit(coughPulse, lit.cough);
+    setWord(coughWord, levels.cough / COUGHING_FROM, lit.cough);
   };
 }
 
 const Drawing = memo(function Drawing() {
   return (
     <>
-      {TREE.sacs.map((sac, k) => (
-        <circle key={k} data-part="sac" className="lung-sac" cx={tenth(sac.x)} cy={tenth(sac.y)} r={SAC_RADIUS} />
-      ))}
-      {AIRWAYS.map((d, generation) => (
-        <path key={generation} className="airway-wall" style={{ strokeWidth: BORE[generation] + WALL_THICKNESS * 2 }} d={d} />
-      ))}
-      <g data-part="linings">
-        {AIRWAYS.map((d, generation) => (
-          <path key={generation} className="airway-lining" style={{ strokeWidth: BORE[generation] }} d={d} />
+      <g data-part="sacs">
+        {TREE.sacs.map((sac, k) => (
+          <circle key={k} data-part="sac" className="lung-sac" cx={tenth(sac.x)} cy={tenth(sac.y)} r={SAC_RADIUS} />
         ))}
+        <path className="leader" d="M105 160H92M135 160H148" />
+        <text x="120" y="162.2" textAnchor="middle">Air sacs</text>
       </g>
-      {AIRWAYS.map((d, generation) => (
-        <path key={generation} data-part="lumen" className="airway-lumen" style={{ strokeWidth: BORE[generation] }} d={d} />
-      ))}
-      <path className="airway-ring" d={RINGS} />
-      <path data-part="irritation" className="airway-irritation" d={IRRITATION} />
+      <g data-part="airways">
+        {AIRWAYS.map((d, generation) => (
+          <path key={generation} className="airway-wall" style={{ strokeWidth: BORE[generation] + WALL_THICKNESS * 2 }} d={d} />
+        ))}
+        <g data-part="linings">
+          {AIRWAYS.map((d, generation) => (
+            <path key={generation} className="airway-lining" style={{ strokeWidth: BORE[generation] }} d={d} />
+          ))}
+        </g>
+        {AIRWAYS.map((d, generation) => (
+          <path key={generation} data-part="lumen" className="airway-lumen" style={{ strokeWidth: BORE[generation] }} d={d} />
+        ))}
+        <path className="airway-ring" d={RINGS} />
+        <path data-part="irritation" className="airway-irritation" d={IRRITATION} />
+        <path className="leader" d={`M${CARINA.x + BORE[0] / 2 + 1} 10h6`} />
+        <text x={CARINA.x + BORE[0] / 2 + 9} y="12.3">Windpipe</text>
+      </g>
       <path data-part="cough" className="airway-cough" strokeDasharray={`${COUGH_DASH} ${tenth(COUGH_ROUTE.length + COUGH_DASH)}`} d={COUGH_ROUTE.d} />
-      <path className="leader" d={`M${CARINA.x + BORE[0] / 2 + 1} 10h6`} />
-      <text x={CARINA.x + BORE[0] / 2 + 9} y="12.3">Windpipe</text>
-      <path className="leader" d="M105 160H92M135 160H148" />
-      <text x="120" y="162.2" textAnchor="middle">Air sacs</text>
+      <text data-part="cough-word" x={CARINA.x + BORE[0] / 2 + 9} y="21" className="inset-accent" style={{ opacity: 0 }}>
+        A cough travels up
+      </text>
     </>
   );
 });
 
-export function LungsInset(props: InsetProps) {
-  const art = useInsetPainter(createLungsPainter, props);
-  const label = `${Math.round(value(props.trajectory, "breaths", props.t))} breaths a minute`;
-  const coughing = coughAt(props.trajectory, props.t) > 0.02;
-  return (
-    <Plate caption={label} describe={`The airway branching down to air sacs that swell with each breath. ${label}.${coughing ? " The lining is irritated and a cough travels up." : ""}`} artRef={art}>
-      <Drawing />
-      {coughing ? (
-        <text x={CARINA.x + BORE[0] / 2 + 9} y="21" className="inset-accent">
-          A cough travels up
-        </text>
-      ) : null}
-    </Plate>
-  );
+function useLungsPlate(_props: InsetProps, levels: Levels<Setting>): PlateWords {
+  const caption = `${Math.round(breathsPerMinute(levels.rate))} breaths a minute`;
+  return { caption, describe: `The airway branching down to air sacs that swell with each breath. ${caption}.${levels.cough > COUGHING_FROM ? " The lining is irritated and a cough travels up." : ""}` };
 }
+
+export const LungsInset = closeupInset(lungsCloseup, { Drawing, paint: paintLungs, usePlate: useLungsPlate });

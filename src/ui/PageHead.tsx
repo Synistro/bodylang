@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
 import { modelOrigin, Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { systemById } from "../model/systems";
-import { getState, selectedProcess, useStore } from "../store";
+import { composedOnScreen, getState, selectedProcess, useStore } from "../store";
 import { assessmentAt, useMinute, useMuscleMinute } from "./hooks";
 import { muscleStory, organStory } from "./insets/organStory";
 import { ORGAN_NAME } from "./organ";
@@ -18,6 +18,8 @@ export function PageHead() {
   const focusMuscle = useStore((s) => s.body.focusMuscle);
   const minute = useMinute();
   const muscleAt = useMuscleMinute();
+  // A drawing Claude composed is about the step, and the step's words are on screen beside it.
+  const composed = useStore((s) => composedOnScreen(s) !== null);
 
   const process = useMemo(() => (processId ? selectedProcess(getState()) : null), [processId, tr, minute]);
   const assessment = assessmentAt(tr, minute);
@@ -54,9 +56,11 @@ export function PageHead() {
     <header key={`${system}/${processId}/${focus}/${focusMuscle}`} className="page-head">
       {title ? <h1 className="page-name">{title}</h1> : null}
       {title ? (
-        <p className="page-sentence" {...sourced(origin)}>
-          {sentence}
-        </p>
+        composed ? null : (
+          <p className="page-sentence" {...sourced(origin)}>
+            {sentence}
+          </p>
+        )
       ) : (
         <h1 className="page-headline" {...sourced(origin)}>
           {sentence}

@@ -1,12 +1,13 @@
 import { useRef } from "react";
 import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
-import { CLAUDE_WORDS, modelOrigin, Origin, readingOrigin } from "../model/origin";
+import { modelOrigin, readingOrigin } from "../model/origin";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { OrganId, Trajectory } from "../model/simulate";
 import { chartOffsetHours, setUi, useStore } from "../store";
+import { ActingHere } from "./ActingHere";
 import { assessmentAt, useMinute, useMuscleMinute, useScrollFade } from "./hooks";
 import { OrganInset } from "./insets/OrganInset";
-import { muscleStory, organStory, substancesAt } from "./insets/organStory";
+import { muscleStory, organStory } from "./insets/organStory";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle } from "./navigation";
 import { ORGAN_NAME } from "./organ";
@@ -52,8 +53,6 @@ function ReadingRow({ reading, trajectory, minute }: { reading: Reading; traject
     </li>
   );
 }
-
-const SUBSTANCE_ORIGIN: Origin = { ...CLAUDE_WORDS, detail: "Claude supplied what this does here, along with its half-life and dose." };
 
 // Level 3 for "muscle" with no group chosen: what has been worked, each one a step further down.
 function WorkedGroups({ worked }: { worked: MuscleSummary[] }) {
@@ -116,6 +115,7 @@ function MusclePlate({ group, trajectory, minute }: { group: MuscleGroup; trajec
           ))}
         </ul>
       ) : null}
+      <ActingHere organ="muscle" />
     </aside>
   );
 }
@@ -128,7 +128,6 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
     .flatMap((id) => assessment.readings.find((r) => r.id === id) ?? [])
     .filter(hasSomethingToSay)
     .slice(0, MAX_ROWS);
-  const substances = substancesAt(organ, trajectory, minute);
   const scroller = useCard();
   const from = sourced(modelOrigin(story.evidence, story.source));
   return (
@@ -139,15 +138,7 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
         </div>
       )}
       {worked.length ? <WorkedGroups worked={worked} /> : null}
-      {substances.length ? (
-        <ul className="organ-substances">
-          {substances.map((s) => (
-            <li key={s.label} {...sourced(SUBSTANCE_ORIGIN)}>
-              <b>{s.label}</b> {s.effect}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <ActingHere organ={organ} />
       {readings.length ? (
         <section aria-label="Readings">
           <ul className="readings">

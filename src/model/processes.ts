@@ -4,7 +4,7 @@ import { EXTENSIONS } from "./extensions";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
 import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
-import { alcoholLedgerAt, caffeineLedgerAt, CustomSubstance, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
+import { alcoholLedgerAt, caffeineLedgerAt, CustomSubstance, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
 import type { Tint } from "./state";
 import { foodKcalOf, formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
 import type { SystemId } from "./systems";
@@ -354,6 +354,16 @@ interface DoseView {
   absorbingPerMin: number;
 }
 
+// Where a dose crosses into the blood.
+interface DoseEntry {
+  organ: OrganId;
+  label: string;
+  routesIn: RouteId[];
+  routesToBlood: RouteId[];
+}
+
+const THROUGH_THE_GUT: DoseEntry = { organ: "small_intestine", label: "Small intestine", routesIn: ["stomach_out", "duodenum", "jejunum"], routesToBlood: ["portal_liver", "liver_out", "arch"] };
+
 // Everything that differs between one dose line and another.
 interface DoseLine {
   id: string;
@@ -364,7 +374,7 @@ interface DoseLine {
   ledger: (minute: number) => DoseLedger;
   fullRate: number;
   fullClearRate: number;
-  routesToGut?: RouteId[];
+  entry?: DoseEntry | null; // where it crosses into the blood, the gut unless said; null when it goes straight in
   effects: (d: DoseView) => Draft[]; // what it does once it is in the blood; counted under Blood
   working: (d: DoseView) => boolean;
   settlesAt: (d: DoseView) => string; // where the action sits once it has crossed the gut
@@ -394,6 +404,7 @@ function doseProcess(line: DoseLine, t: number): Process {
   };
   const share = (x: number) => shareOf(x, l.dose);
   const hasStomach = line.say.stomach !== null;
+  const entry = line.entry === undefined ? THROUGH_THE_GUT : line.entry;
   const stomachStops: Draft[] = line.say.stomach
     ? [
         {
@@ -408,18 +419,23 @@ function doseProcess(line: DoseLine, t: number): Process {
         },
       ]
     : [];
+  const entryStops: Draft[] = entry
+    ? [
+        {
+          id: "intestine",
+          organ: entry.organ,
+          label: entry.label,
+          reading: percent(share(l.intestine)),
+          share: share(l.intestine),
+          flow: flowRate(hasStomach ? d.emptyingPerMin : d.absorbingPerMin, line.fullRate),
+          say: line.say.intestine(d),
+          routes: entry.routesIn,
+        },
+      ]
+    : [];
   const drafts: Draft[] = [
     ...stomachStops,
-    {
-      id: "intestine",
-      organ: "small_intestine",
-      label: "Small intestine",
-      reading: percent(share(l.intestine)),
-      share: share(l.intestine),
-      flow: flowRate(hasStomach ? d.emptyingPerMin : d.absorbingPerMin, line.fullRate),
-      say: line.say.intestine(d),
-      routes: line.routesToGut ?? ["stomach_out", "duodenum", "jejunum"],
-    },
+    ...entryStops,
     {
       id: "blood",
       organ: "heart",
@@ -428,7 +444,7 @@ function doseProcess(line: DoseLine, t: number): Process {
       share: share(l.blood),
       flow: flowRate(d.absorbingPerMin, line.fullRate),
       say: line.say.blood(d),
-      routes: ["portal_liver", "liver_out", "arch"],
+      routes: entry?.routesToBlood ?? [],
     },
     ...line.effects(d),
     {
@@ -615,7 +631,22 @@ const TARGET_SYSTEM: Record<OrganId, SystemId> = {
   prostate: "reproductive",
 };
 
+const SUBSTANCE_ENTRY: Record<SubstanceRoute, { entry: DoseEntry | null; verb: string; crossing: string }> = {
+  swallowed: {
+    entry: { ...THROUGH_THE_GUT, routesIn: ["esophagus", "stomach_out", "duodenum", "jejunum"] },
+    verb: "Took",
+    crossing: "crossing the gut wall",
+  },
+  inhaled: {
+    entry: { organ: "lungs", label: "Lungs", routesIn: [], routesToBlood: ["from_lung_L", "from_lung_R", "arch"] },
+    verb: "Inhaled",
+    crossing: "crossing from the air sacs into the blood",
+  },
+  injected: { entry: null, verb: "Injected", crossing: "going straight into the blood" },
+};
+
 function substanceLine(tr: Trajectory, substance: CustomSubstance, t: number): DoseLine {
+  const way = SUBSTANCE_ENTRY[substance.route ?? "swallowed"];
   const track = tr.substances.get(substance.id);
   if (!track) throw new Error(`No ledger for substance ${substance.id}`);
   const available = substance.doseMg * substance.bioavailability;
@@ -642,20 +673,20 @@ function substanceLine(tr: Trajectory, substance: CustomSubstance, t: number): D
     }));
   return {
     id: `substance:${substance.id}`,
-    title: `Took ${name}`,
+    title: `${way.verb} ${name}`,
     system: substance.targets.length ? TARGET_SYSTEM[substance.targets[0].organ] : "clearing",
     substance: "other",
     at: substance.at,
     ledger,
     fullRate: PROCESS.fullFlow.substanceMgPerMin,
     fullClearRate: PROCESS.fullFlow.substanceMgPerMin,
-    routesToGut: ["esophagus", "stomach_out", "duodenum", "jejunum"],
+    entry: way.entry,
     effects,
     working: () => level >= PROCESS.finishedBelowShare,
     settlesAt: () => "blood",
     say: {
       stomach: null,
-      intestine: (d) => (!d.started ? `You take the ${name} later.` : d.l.intestine >= available * PROCESS.presentShare ? `${mg(d.l.intestine)} is here, crossing the gut wall.` : "It has all crossed the gut wall."),
+      intestine: (d) => (!d.started ? `You take the ${name} later.` : d.l.intestine >= available * PROCESS.presentShare ? `${mg(d.l.intestine)} is here, ${way.crossing}.` : "It has all crossed the gut wall."),
       blood: (d) => `${mg(d.l.blood)} is in your blood and tissues, ${mgL.toFixed(1)} mg/L. Half of it leaves every ${substance.halfLifeH} hours.`,
       cleared: (d) => `Your body has cleared ${mg(d.l.cleared)} so far, ${percent(shareOf(d.l.cleared, available))} of it.`,
     },

@@ -318,8 +318,22 @@ export function showMuscleMinute(minute: number) {
   setUi(isOnChart(minute) ? { t: minute, dayMoment: null, playing: false } : { dayMoment: minute, playing: false });
 }
 
+export const stepOnScreen = (s: AppState) => (s.asking?.guideOpen && !s.touring ? (s.asking.guide?.[s.asking.step] ?? null) : null);
+
+// A drawing Claude composed for the current step.
+export const composedOnScreen = (s: AppState) => stepOnScreen(s)?.composed ?? null;
+
+// The line an injury took through the body, while exploring one.
+export const trackOnScreen = (s: AppState) => (s.asking ? (s.trajectory.events.find((event) => event.track && event.from <= s.t)?.track ?? null) : null);
+
 // What the current walkthrough step points at in the close-up beside the body.
-export const closeupOnScreen = (s: AppState) => (s.asking?.guideOpen && !s.touring ? (s.asking.guide?.[s.asking.step]?.closeup ?? null) : null);
+export const closeupOnScreen = (s: AppState) => stepOnScreen(s)?.closeup ?? null;
+
+// The process the current step is about, when it stays on one organ.
+export const processOnScreen = (s: AppState) => {
+  const step = stepOnScreen(s);
+  return step?.organ ? step.process : null;
+};
 
 export function goToStep(index: number) {
   const asking = state.asking;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GuideStep } from "../agent/actions";
-import { chartOffsetHours, closeGuide, closeupOnScreen, dispatch, enterAsk, getState, goToStep, leaveAsk, muscleMinute, releaseMoment, stepMinute } from "../store";
+import { chartOffsetHours, closeGuide, closeupOnScreen, composedOnScreen, dispatch, enterAsk, getState, goToStep, leaveAsk, muscleMinute, processOnScreen, releaseMoment, stepMinute, trackOnScreen } from "../store";
 
 const step = (at: number | null): GuideStep => ({ title: "A step", say: "Something happens.", system: null, process: null, organ: "muscle", muscle: "quads", at, closeup: { organ: "muscle", light: ["tears"], set: {}, compare: null, basis: null } });
 
@@ -90,5 +90,41 @@ describe("where a step puts an organ in the outline", () => {
     dispatch({ name: "guide", args: { steps: [onOrgan({ organ: null, muscle: null, closeup: null, system: "muscles", process: "event:squats" })] } });
     expect(place()).toEqual({ system: "muscles", process: "event:squats", focus: null });
     leaveAsk();
+  });
+});
+
+describe("what a step shows beside an organ", () => {
+  const composed = { caption: "A torn vessel", layers: [{ id: "vessel", kind: "blood" as const, label: "Vessel", state: "torn" as const, amount: 0.8 }], actors: [], light: [], basis: "Trauma surgery textbooks" };
+
+  it("keeps the process it is about out of the outline, and still knows it", () => {
+    walkthrough({ ...step(null), process: "event:squats" });
+    expect(getState().body.process).toBeNull();
+    expect(processOnScreen(getState())).toBe("event:squats");
+    leaveAsk();
+  });
+
+  it("has no process of its own to point at without an organ", () => {
+    walkthrough({ ...step(null), organ: null, muscle: null, closeup: null, process: null });
+    expect(processOnScreen(getState())).toBeNull();
+    leaveAsk();
+  });
+
+  it("shows a composed drawing for as long as the step does", () => {
+    walkthrough({ ...step(null), closeup: null, composed }, step(null));
+    expect(composedOnScreen(getState())?.caption).toBe("A torn vessel");
+    goToStep(1);
+    expect(composedOnScreen(getState())).toBeNull();
+    leaveAsk();
+  });
+
+  it("draws an injury's line only while exploring it", () => {
+    const from = Math.round(getState().t) - 30;
+    const custom = { systems: ["circulation" as const], effects: [{ channel: "heartRate" as const, amount: 30, rise_min: 10, half_life_min: 60 }], feelings: [], stops: [{ organ: "liver" as const, muscle: null, label: "Liver", after_min: 0, say: "It tears the liver.", routes: [] }], track: { aim: "liver" as const, from: "front" as const, crossed: [{ organ: "liver" as const, name: "liver" }] } };
+    expect(trackOnScreen(getState())).toBeNull();
+    enterAsk();
+    dispatch({ name: "log_event", args: { id: "wound", label: "Wound", preset: "custom", from, until: null, intensity: 0.5, muscles: [], symptoms: [], source: "My estimate", custom } });
+    expect(trackOnScreen(getState())?.aim).toBe("liver");
+    leaveAsk();
+    expect(trackOnScreen(getState())).toBeNull();
   });
 });

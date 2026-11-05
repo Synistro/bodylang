@@ -1,17 +1,27 @@
 import { z } from "zod";
 import type { OrganId } from "../model/simulate";
+import { bladderCloseup } from "./bladder";
 import { brainCloseup } from "./brain";
 import type { Levels, Place, Travel } from "./define";
+import { fatCloseup } from "./fat";
 import { heartCloseup } from "./heart";
+import { kidneysCloseup } from "./kidneys";
+import { largeIntestineCloseup } from "./largeIntestine";
+import { liverCloseup } from "./liver";
+import { lungsCloseup } from "./lungs";
 import { muscleCloseup } from "./muscle";
+import { ovariesCloseup } from "./ovaries";
 import { pancreasCloseup } from "./pancreas";
+import { prostateCloseup } from "./prostate";
 import { smallIntestineCloseup } from "./smallIntestine";
+import { spleenCloseup } from "./spleen";
 import { stomachCloseup } from "./stomach";
+import { uterusCloseup } from "./uterus";
 
 // The organs whose close-up a step can direct. A new one is one more entry in each of these two lists, and
 // the tool schema and Claude's instructions follow from them.
-const CLOSEUPS = [muscleCloseup, brainCloseup, stomachCloseup, smallIntestineCloseup, pancreasCloseup, heartCloseup] as const;
-export const closeupSpec = z.discriminatedUnion("organ", [muscleCloseup.spec, brainCloseup.spec, stomachCloseup.spec, smallIntestineCloseup.spec, pancreasCloseup.spec, heartCloseup.spec]);
+const CLOSEUPS = [muscleCloseup, brainCloseup, stomachCloseup, smallIntestineCloseup, pancreasCloseup, heartCloseup, liverCloseup, lungsCloseup, kidneysCloseup, bladderCloseup, largeIntestineCloseup, fatCloseup, spleenCloseup, uterusCloseup, ovariesCloseup, prostateCloseup] as const;
+export const closeupSpec = z.discriminatedUnion("organ", [muscleCloseup.spec, brainCloseup.spec, stomachCloseup.spec, smallIntestineCloseup.spec, pancreasCloseup.spec, heartCloseup.spec, liverCloseup.spec, lungsCloseup.spec, kidneysCloseup.spec, bladderCloseup.spec, largeIntestineCloseup.spec, fatCloseup.spec, spleenCloseup.spec, uterusCloseup.spec, ovariesCloseup.spec, prostateCloseup.spec]);
 export type CloseupStep = z.infer<typeof closeupSpec>;
 
 export interface AnyCloseup {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ACTION_SCHEMAS } from "../agent/actions";
 import type { BodyEvent } from "../model/events";
-import type { Trajectory } from "../model/simulate";
+import type { OrganId, Trajectory } from "../model/simulate";
 import { AS_THE_MODEL_SAYS, levelsAt, litLevels, panelsOf } from "./define";
 import { closeupGuidance, closeupOf } from "./list";
 import { muscleCloseup } from "./muscle";
@@ -62,8 +62,8 @@ describe("what a step can change", () => {
 });
 
 describe("what Claude can ask for", () => {
-  const step = (closeup: unknown, organ = "muscle") => ({ title: "Tiny tears", say: "Lowering the weight strains the fibres.", system: null, process: null, organ, muscle: "quads", at: -1770, closeup });
-  const parse = (closeup: unknown, organ?: string) => ACTION_SCHEMAS.guide.safeParse({ steps: [step(closeup, organ)] });
+  const step = (closeup: unknown, organ: string | null = "muscle") => ({ title: "Tiny tears", say: "Lowering the weight strains the fibres.", system: null, process: null, organ, muscle: "quads", at: -1770, closeup });
+  const parse = (closeup: unknown, organ?: string | null) => ACTION_SCHEMAS.guide.safeParse({ steps: [step(closeup, organ)] });
   const directed = { organ: "muscle", light: ["tears"], set: {}, compare: null, basis: null };
 
   it("accepts a step that only points at something, days away from the chart", () => {
@@ -72,11 +72,27 @@ describe("what Claude can ask for", () => {
 
   it("wants a step on an organ with a close-up to point at something", () => {
     expect(parse(null).success).toBe(false);
-    expect(parse(null, "kidneys").success).toBe(true);
+    expect(parse(null, "kidneys").success).toBe(false);
+    expect(parse({ organ: "kidneys", light: ["urine"], set: {}, compare: null, basis: null }, "kidneys").success).toBe(true);
+  });
+
+  it("needs no close-up on a step with no organ", () => {
+    expect(parse(null, null).success).toBe(true);
   });
 
   it("refuses a level the drawing doesn't have", () => {
     expect(parse({ ...directed, light: ["sparkle"] }).success).toBe(false);
+  });
+
+  it("lets a step point at nothing when no level means what it says", () => {
+    expect(parse({ ...directed, light: [] }).success).toBe(true);
+  });
+
+  it("takes a composed drawing in place of a close-up, beside an organ", () => {
+    const composed = { caption: "Smoke in an air sac", layers: [{ id: "air", kind: "air", label: "Air sac", state: "healthy", amount: 0 }], actors: [], light: [], basis: "Benowitz 2009" };
+    const steps = (over: object) => ACTION_SCHEMAS.guide.safeParse({ steps: [{ ...step(null), ...over }] });
+    expect(steps({ composed }).success).toBe(true);
+    expect(steps({ composed, organ: null, muscle: null }).success).toBe(false);
   });
 
   it("wants a basis for any number of its own", () => {
@@ -91,7 +107,7 @@ describe("what Claude can ask for", () => {
 
   it("tells Claude what each level means", () => {
     expect(closeupOf("muscle")?.keys).toContain("immune");
-    expect(closeupOf("kidneys")).toBeNull();
+    expect(closeupOf("no_such_organ" as OrganId)).toBeNull();
     expect(closeupGuidance()).toContain("immune (How many immune cells");
   });
 });

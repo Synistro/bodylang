@@ -42,7 +42,7 @@ export function nerve({ id, points, endings }: NerveOptions): Part<{ signal: num
       const group = part<SVGGElement>(art, id);
       const line = part<SVGGElement>(group, `${id}-line`);
       const pulses = createStream(parts(group, `${id}-pulse`), PULSES.seconds, 13);
-      const running: Placer = (progress, seat) => pointAlong(branches[Math.floor(seat * branches.length) % branches.length].route, progress);
+      const running: Placer = (progress, seat) => pointAlong(branches.length ? branches[Math.floor(seat * branches.length) % branches.length].route : main.route, progress);
       return (frame, { signal }) => {
         setLit(line, signal);
         pulses(frame, signal * PULSES.most, running);

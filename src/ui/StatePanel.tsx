@@ -1,7 +1,7 @@
+import { ActingHere } from "./ActingHere";
 import { useEffect, useRef, useState } from "react";
 import { OrganInset } from "./insets/OrganInset";
-import { BRAIN_PAGE, organStory, substancesAt } from "./insets/organStory";
-import { CLAUDE_WORDS } from "../model/origin";
+import { BRAIN_PAGE, organStory } from "./insets/organStory";
 import { PROCESS } from "../model/params";
 import "./insets/insets.css";
 import { Assessment, Feeling, hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
@@ -219,8 +219,6 @@ function MusclesDetail({ assessment }: { assessment: Assessment }) {
   );
 }
 
-const SUBSTANCE_ORIGIN = { ...CLAUDE_WORDS, detail: "Claude supplied what this does here, along with its half-life and dose." };
-
 // Feel-good chemicals sit at rest most of the day, and a row saying so tells you nothing.
 const worthARow = (assessment: Assessment) => (id: Reading["id"]) => id !== "reward" || (assessment.readings.find((r) => r.id === id)?.value ?? 0) >= PROCESS.liftedFrom * 100;
 
@@ -229,7 +227,6 @@ export function BrainPage() {
   const minute = useMinute();
   const assessment = assessmentAt(tr, minute);
   const story = organStory("brain", tr, minute);
-  const substances = substancesAt("brain", tr, minute);
   const feel = BRAIN_PAGE.feel.filter(worthARow(assessment));
   return (
     <div className="brain-page">
@@ -239,18 +236,10 @@ export function BrainPage() {
       <div {...sourced(modelOrigin(story.evidence, story.source))}>
         <OrganInset organ="brain" trajectory={tr} t={minute} muscle={null} />
       </div>
+      <ActingHere organ="brain" />
       <section className="readings" aria-label="What is acting on it">
         <ReadingList ids={BRAIN_PAGE.acting} assessment={assessment} startIndex={feel.length} />
       </section>
-      {substances.length ? (
-        <ul className="organ-substances">
-          {substances.map((s) => (
-            <li key={s.label} {...sourced(SUBSTANCE_ORIGIN)}>
-              <b>{s.label}</b> {s.effect}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </div>
   );
 }

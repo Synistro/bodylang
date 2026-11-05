@@ -20,8 +20,6 @@
 
 .organ-lines { display: grid; gap: 0.2rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
 
-.organ-substances { display: grid; gap: 0.2rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
-.organ-substances b { font-weight: 500; color: var(--ink); }
 
 
 /* Figures: fine line work in the colour of the view. Marks that stay in the drawing's own units scale
@@ -51,7 +49,6 @@
 .line-hair { fill: none; stroke: var(--line-strong); stroke-width: 0.075rem; }
 .fill-paper { fill: var(--bg); stroke: none; }
 .leader { fill: none; stroke: var(--ink-3); stroke-width: 0.075rem; }
-.mark-caffeine { fill: var(--ink); stroke: var(--fig-salmon); stroke-width: 0.12rem; }
 
 /* What is moving, in any figure. The bright dots are the thing the figure is about. */
 .flow-dot { fill: var(--fig-salmon); stroke: none; }
@@ -87,7 +84,6 @@
 .pipe-bore { fill: none; stroke: var(--bg); stroke-width: 11; }
 .stream-body { fill: none; stroke: var(--fig-ochre); opacity: 0.32; }
 .stream-beads { fill: none; stroke: var(--fig-ochre); }
-.liver-lane { transition-property: opacity; transition-duration: 240ms; }
 
 /* Brain */
 .brain-page { display: grid; gap: 0.9rem; }

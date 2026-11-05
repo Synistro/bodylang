@@ -1,12 +1,13 @@
 import { z } from "zod";
+import { composedSpec } from "../closeup/composed";
 import { closeupOf, closeupSpec } from "../closeup/list";
-import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS } from "../model/events";
+import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS, TRACK_FROM } from "../model/events";
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
 import type { Cycle } from "../model/cycle";
 import { CYCLE, DAY } from "../model/params";
 import { ROUTE_IDS } from "../model/processes";
 import { shortText } from "./shortText";
-import { ActivitySpan, Body, CustomSubstance, Intake, OrganId, Posture, postureAt } from "../model/simulate";
+import { ActivitySpan, Body, CustomSubstance, Intake, OrganId, Posture, postureAt, SUBSTANCE_ROUTES } from "../model/simulate";
 import { formatClock } from "../model/state";
 import { systemById, SystemId } from "../model/systems";
 import { ORGAN_HOME } from "../look";
@@ -59,6 +60,15 @@ const customStory = z.object({
       }),
     )
     .min(1),
+  track: z
+    .object({
+      aim: organ.describe("The organ it goes through"),
+      from: z.enum(TRACK_FROM).describe("The side of the body it comes from, the person's own left and right"),
+      crossed: z.array(z.object({ organ: organ.nullable(), name: z.string() })).optional().describe("Leave this out. The app fills it in"),
+    })
+    .nullable()
+    .optional()
+    .describe("Only for a hypothetical injury that goes through the body. A straight line, which the app tests against the real organs and tells you what it crosses. Null otherwise"),
 });
 
 const STEP_REACHES_DAYS = 8;
@@ -68,13 +78,14 @@ const guideStep = z.object({
   title: shortText(6).describe("What this step is about, in a few words, such as The pancreas answers"),
   say: shortText(32).describe("One or two plain sentences, at most 32 words"),
   system: system.nullable().describe("The body system to show, or null to stay where the last step was. A step with an organ shows that organ's own"),
-  process: z.string().nullable().describe("A process id from the readout to draw as a line through the body, or null. A step with an organ draws no line, so leave this null there"),
+  process: z.string().nullable().describe("A process id from the readout, or null. With no organ, it is drawn as a line through the body. With an organ, it is what the step is about: its row stands out in the panel and its way to this organ is drawn on the body"),
   organ: organ.nullable().describe("An organ to fly into, which also shows its diagram, or null"),
   muscle: z.enum(MUSCLE_GROUPS).nullable().describe("With organ muscle, the group to go to; otherwise null"),
   at: z.number().int().min(-STEP_REACHES_DAYS * 1440).max(STEP_REACHES_DAYS * 1440).nullable().describe("The minute to move to, so the body shows that moment, or null to stay at the same moment as the step before. It counts from 00:00 today, so an earlier day is negative"),
-  closeup: closeupSpec.nullable().describe("What this step points at in the close-up beside the body. Every step on an organ listed under close-ups needs one. Null otherwise"),
+  closeup: closeupSpec.nullable().describe("What this step points at in the close-up beside the body. Every step on an organ listed under close-ups needs one, unless it composes a drawing. Null otherwise"),
+  composed: composedSpec.nullable().optional().describe("A drawing you compose, shown in place of the organ's own drawing, for what that drawing can't show. Needs an organ. Null otherwise"),
   unverified: z.array(z.string()).optional().describe("Leave this out. The app fills it in"),
-}).refine((step) => !step.closeup || step.closeup.organ === step.organ, "A close-up has to be of the organ the step flies to").refine((step) => step.closeup || !step.organ || !closeupOf(step.organ), "A step on this organ needs a closeup, with light naming what it is about").refine((step) => {
+}).refine((step) => !step.closeup || step.closeup.organ === step.organ, "A close-up has to be of the organ the step flies to").refine((step) => step.closeup || step.composed || !step.organ || !closeupOf(step.organ), "A step on this organ needs a closeup, with light naming what it is about, or a composed drawing").refine((step) => !step.composed || step.organ, "A composed drawing shows beside an organ, so name one").refine((step) => {
   const closeup = step.closeup;
   return !closeup || closeup.basis !== null || (Object.keys(closeup.set).length === 0 && closeup.compare === null);
 }, "Numbers in set or compare need a basis");
@@ -133,6 +144,7 @@ export const ACTION_SCHEMAS = {
     id: z.string(),
     label: z.string(),
     at: minute,
+    route: z.enum(SUBSTANCE_ROUTES).default("swallowed").describe("How it gets in: swallowed, inhaled as with smoke or vapour, or injected"),
     dose_mg: z.number().positive(),
     tmax_min: z.number().positive().describe("Minutes from taking it to peak blood level"),
     half_life_h: z.number().positive(),
@@ -232,6 +244,7 @@ function storyFrom(custom: z.infer<typeof customStory>): CustomStory {
     effects: custom.effects.map((e) => ({ channel: e.channel, amount: e.amount, riseMin: e.rise_min, halfLifeMin: e.half_life_min, after: e.after })),
     feelings: custom.feelings.map((f) => ({ id: f.id, label: f.label, amount: f.amount, riseMin: f.rise_min, halfLifeMin: f.half_life_min, after: f.after, cause: f.cause, organ: f.organ })),
     stops: custom.stops.map((s) => ({ organ: s.organ, muscle: s.muscle, label: s.label, afterMin: s.after_min, say: s.say, routes: s.routes })),
+    track: custom.track ?? null,
   };
 }
 
@@ -303,6 +316,7 @@ export function reduce(state: BodyState, action: Action): BodyState {
         halfLifeH: a.half_life_h,
         volumeLPerKg: a.volume_l_per_kg,
         bioavailability: a.bioavailability,
+        route: a.route,
         targets: a.targets,
         source: a.source,
       };

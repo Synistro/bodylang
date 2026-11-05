@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { curveStrength, illnessSites, MuscleState, muscleStateAt, ResolvedEvent } from "../model/events";
+import { curveStrength, EventTrack, illnessSites, MuscleState, muscleStateAt, ResolvedEvent, TrackFrom } from "../model/events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import { LIVER, MUSCLE_RECOVERY, REFERENCE, STOMACH } from "../model/params";
 import type { Process, ProcessStop } from "../model/processes";
@@ -26,6 +26,7 @@ export interface SceneInput {
   trajectory: Trajectory;
   t: number;
   muscleMinute: number; // what the muscles show, which a walkthrough step can take off the day chart
+  track?: EventTrack | null; // an injury's line through the body: what it crosses stands out, and the view turns to show it
   body: Body;
   theme: Theme;
   layers: { skin: boolean; vessels: boolean };
@@ -72,6 +73,8 @@ const REM_AT_UNIT_SCALE = 10;
 
 const FIGURE_AZIMUTH = 0.2;
 const PROFILE = Math.PI / 2;
+// A line seen end on is a dot, so the view turns side-on to a track.
+const TRACK_AZIMUTH: Record<TrackFrom, number> = { front: 1.05, back: 1.05, left: 0.15, right: 0.15, above: 0.5, below: 0.5 };
 const HEAD_CENTRE_BELOW_BRAIN = 0.028; // of figure height, so the Brain view centres the whole head
 const HEADROOM = 0.04; // of the free area's height, to the head's rest position; about 40 px from the canvas top at 1440x900
 const LEVEL_POLAR = 1.5;
@@ -783,7 +786,7 @@ export class Stage {
     const cough = this.refreshWork(input.trajectory, input.t).cough;
     for (const part of set.anatomy.parts.values()) {
       this.lookFor(part.style.organ, part.name, part.style, view, input, part.target);
-      part.target.highlight = part.style.organ !== null && part.style.organ === input.hover ? 1 : 0;
+      part.target.highlight = part.style.organ !== null && (part.style.organ === input.hover || this.crossedByTrack(input, part.style.organ)) ? 1 : 0;
       if (part.name === "airway" && view.kind !== "process") this.lightAirway(part, cough, breathIn);
     }
   }
@@ -1182,6 +1185,10 @@ export class Stage {
     return this.figure.worldJoint("hips", out);
   }
 
+  private crossedByTrack(input: SceneInput, organ: OrganId) {
+    return input.track?.crossed?.some((part) => part.organ === organ) ?? false;
+  }
+
   jointAt(name: string, out = new THREE.Vector3()) {
     return this.figure.worldJoint(name, out);
   }
@@ -1311,7 +1318,10 @@ export class Stage {
       const figure = SYSTEM_VIEWS.muscles;
       return withHead(angled(figure, (out) => figure.center(this.places, out)));
     }
-    if (focus) return withHead(angled(FOCUS_VIEWS[focus], (out) => this.organCenter(set, focus, out)));
+    if (focus) {
+      const view = FOCUS_VIEWS[focus];
+      return withHead(angled(view, (out) => this.organCenter(set, focus, out), input.track ? TRACK_AZIMUTH[input.track.from] : view.azimuth));
+    }
     const systemView = SYSTEM_VIEWS[input.system];
     const turned = systemView.turnsToWork ? this.workedAzimuth(input) : null;
     const systemSource = angled(systemView, (out) => systemView.center(this.places, out), turned ?? systemView.azimuth);

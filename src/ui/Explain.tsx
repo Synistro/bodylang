@@ -5,7 +5,7 @@ import { X } from "./icons";
 
 const MOST_CHARS = 200;
 // Only sentences and diagrams explain themselves. Names of rows and buttons are for clicking.
-const DESCRIPTIONS = ".tour-say, .page-sentence, .page-headline, .reading-why, .reading-more, .feel-cause, .stop-say, .reply-line, .organ-lines, .organ-substances, .item-note, .fix-note, .sources, .hint, .inset-art text";
+const DESCRIPTIONS = ".tour-say, .page-sentence, .page-headline, .reading-why, .reading-more, .feel-cause, .stop-say, .reply-line, .organ-lines, .acting-words, .item-note, .fix-note, .sources, .hint, .inset-art text";
 const AROUND = "p, li, h1, .reading, .stop, .tour, figure, .tree-leaf, .day-row, .reply";
 const AROUND_MOST_CHARS = 1000;
 const HIGHLIGHT = "explain-term";

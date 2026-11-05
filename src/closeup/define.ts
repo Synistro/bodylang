@@ -37,22 +37,15 @@ type Amounts<K extends string> = Partial<Record<K, number>>;
 export function defineCloseup<const O extends OrganId, K extends string>(definition: Definition<O, K>) {
   const keys = Object.keys(definition.settings) as [K, ...K[]];
   const amounts = (most: number) => {
-    const shape = Object.fromEntries(keys.map((key) => [key, z.number().min(0).max(most).optional().describe(definition.settings[key])]));
+    const shape = Object.fromEntries(keys.map((key) => [key, z.number().min(0).max(most).optional()]));
     return z.object(shape as Record<K, z.ZodOptional<z.ZodNumber>>);
   };
   const spec = z.object({
     organ: z.literal(definition.organ),
-    light: z.array(z.enum(keys)).min(1).max(3).describe("What this step is about. These stand out and the rest of the drawing dims"),
-    set: amounts(1).describe("Levels from 0 to 1, only for what the model can't know in this case. Leave out everything else, because the model sets it"),
-    compare: z
-      .object({
-        this_label: shortText(3).describe("What the upper drawing is, such as First session"),
-        other_label: shortText(3).describe("What the lower drawing is, such as Repeat session"),
-        times: amounts(3).describe("How much of each level the lower drawing has, compared with the upper one, such as 0.4 for less than half"),
-      })
-      .nullable()
-      .describe("A second drawing below the first, for when the question is about a difference. Otherwise null"),
-    basis: z.string().min(1).nullable().describe("Where the numbers in set and compare come from: name the study or the textbook idea, or say it is your own understanding. Null when you use neither"),
+    light: z.array(z.enum(keys)).max(3),
+    set: amounts(1),
+    compare: z.object({ this_label: shortText(3), other_label: shortText(3), times: amounts(3) }).nullable(),
+    basis: z.string().min(1).nullable(),
   });
   return { ...definition, keys, spec };
 }

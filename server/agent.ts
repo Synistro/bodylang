@@ -8,6 +8,7 @@ import { BuildStatus, startBuild } from "./extend";
 import { combineIngredients, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 import { NumberBook, unverifiedNumbers } from "./numberCheck";
 import { closeupGuidance } from "../src/closeup/list";
+import { traceTrack } from "./track";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/narrate";
@@ -45,7 +46,7 @@ This is their real day, running on the real clock and saved as they go.
 What happened, and which tool records it:
 - Food or drink: call find_foods once with everything in the message, then log_food for each one with the row that fits best. You decide only how much they had: use the serving they name, or a typical one from the row's portions, and say it in \`assumption\`. A dish made of several ingredients, such as syrniki, pierogi, a stew or a homemade cake, needs log_dish unless a row is that same dish: never log it as its main ingredient, because the flour, sugar and frying oil would go missing. Include each ingredient in that find_foods call, and use a typical recipe scaled to what they ate. Only when no row is close, use log_intake with your own composition, which is shown to them as your estimate. For whole fruit pass fructose_share 0.6. Things eaten within 10 minutes show as one meal, with a process id of meal:<first id>.
 - A correction, such as "only one slice" or "that was an hour ago": correct_intake with the id already logged. Don't log it a second time.
-- A drug or supplement: define_substance, with published oral kinetics and where those come from in \`source\`. If you don't know the kinetics, say so in your reply and leave it out of the simulation.
+- A drug or supplement: define_substance, with published kinetics for the way it is taken and where those come from in \`source\`. Smoke or vapour is inhaled, and its \`targets\` should name every organ it really acts on, because each one shows it on its own page. If you don't know the kinetics, say so in your reply and leave it out of the simulation.
 - Sitting, standing, walking, running or a nap: set_activity.
 - When they slept: set_sleep with when they went to bed and when they woke. The usual night is 23:30 to 07:30, so only call it when they say otherwise. A late or short night changes how today feels.
 - A gym or bodyweight session, being ill, sexual activity, a stressful stretch, or a short night: log_event with the matching preset.
@@ -88,24 +89,35 @@ Two views work together during a step. The body shows where something is and wha
 A step's \`at\` can reach other days for a muscle, in the order things happen: during the session, hours after, now, days later. The close-up and the muscle's colour on the body follow it, and the chart stays on today. For anything else, stay within today.
 
 A step on an organ listed below must direct its close-up through \`closeup\`:
-- light is what the step is about. It stands out and the rest dims, and whatever it sends across the body, such as a pain signal to the brain, is drawn on the body. List first what the step is most about, because only the first one that travels is drawn.
-- set is for what the model can't know in this case. Leave it empty otherwise, because the model's numbers are real and yours are shown as your illustration.
-- compare adds a second drawing below the first, for a question about a difference such as trained and untrained. Its times scale the lower drawing's levels, and basis says where the difference comes from.
+- light is what the step is about. It stands out and the rest dims, and whatever it sends across the body, such as a pain signal to the brain, is drawn on the body. List first what the step is most about, because only the first one that travels is drawn. Only name a level that means what the step says. If none does, leave light empty and the whole drawing dims, because pointing at something else shows the wrong thing.
+- set gives levels from 0 to 1 for what the model can't know in this case. Leave it empty otherwise, because the model's numbers are real and yours are shown as your illustration.
+- compare adds a second drawing below the first, for a question about a difference such as trained and untrained: this_label and other_label say which is which, and times multiplies the lower drawing's levels, such as 0.4 for less than half. Otherwise null.
+- basis says where any number in set or compare comes from, naming the study or textbook idea or saying it is your own understanding. Null when you use neither.
 Stay on one organ through the steps when they are watching one tissue change.
+
+Every organ's page also lists everything acting on it now, from what you have logged: the food, the caffeine, a substance you defined. When a step on an organ is about one of those, set the step's process to its id. Its row stands out and its way to this organ is drawn on the body.
+
+A hypothetical injury that goes through the body, such as a bullet or a stab wound, is a custom log_event with custom.track naming the organ it goes through and the side it comes from. The tool answers with this_line_crosses, the organs and large vessels that line really meets, so name only those, and don't name others. Its effects are your estimate of what blood loss does to heart rate and blood pressure, and your source says so. Explain it clinically: what is damaged, what bleeds and why it matters, what the body does, and what saves the person. No descriptions of gore.
 
 ${closeupGuidance()}
 
 Then call reply, once, with the short answer: the result of the what-if, compared with their day as it is, or the idea in plain words. The steps carry the explanation, so don't repeat them.
 
-Asking how a dangerous dose or self-harm would play out is not something to simulate. Log nothing, show nothing, and reply that they should talk to someone now, such as a doctor or a local crisis line.`;
+Three things get no walkthrough. Log nothing, show nothing, and only reply:
+- An injury or emergency that is happening now: tell them to call emergency services now, and what to do until help comes.
+- Any sign they may hurt themselves, including asking how a dangerous dose or a wound would play out on them: tell them to talk to someone now, such as a doctor or a local crisis line, warmly and without a lecture.
+- A question aimed at hurting someone, such as where a wound would be most lethal or how to avoid treatment: say you won't help with that.
+Understanding what an injury does in general, with no sign of any of these, is a fine question.`;
 
 const DEPTH_PROMPT: Record<"simple" | "deep", string> = {
   simple: `
 
-They chose Simple, so keep it light: 2 or 3 steps, the idea and no more.`,
+They chose Simple, so keep it light: 2 or 3 steps, the idea and no more. Use the organs' own drawings, and leave composed null. When no level means exactly what a step says, leave light empty: a step about nicotine doesn't light caffeine, and a step about surgery doesn't light anything.`,
   deep: `
 
-They chose Deep, so take the time to really explain it: up to 6 steps, going through the mechanism in order and saying why each thing happens. Compare where a comparison makes it clearer. Check what you say against the readout at the minute you show.`,
+They chose Deep, so take the time to really explain it: up to 6 steps, going through the mechanism in order and saying why each thing happens. Compare where a comparison makes it clearer. Check what you say against the readout at the minute you show.
+
+Deep can also compose a drawing, in the panel in place of the organ's own, for what that drawing can't show, such as dopamine at a nerve ending, smoke in an air sac, a virus entering a cell or a torn vessel. Say what is there in composed: up to 5 layers from top to bottom, and up to 5 actors moving between them. The app does all the layout, so you give no positions. Keep the same ids through consecutive steps and change amounts and states, so they watch one picture change. Light what the step is about. Every amount in it is your illustration, so the basis says where the picture comes from. Prefer an organ's own drawing whenever it can show the step, and compose when it can't. An injury should almost always compose its wound.`,
 };
 
 const BRIEF_PROMPT = `
@@ -122,7 +134,7 @@ const ACTION_DESCRIPTIONS: Record<ActionName, string> = {
   set_activity: "Sets what the body is doing from a time onward, or between two times. The figure changes posture and the model changes muscle uptake and heart rate. Use it for sitting, standing, walking, running and sleeping. A gym session is log_event with the training preset, without this as well, or its effort would count twice. Returns a readout.",
   set_body: "Changes sex, age, height or weight. Pass only what changed. Returns a readout.",
   set_now: "Moves the current time. Use this when the person states what time it is. Returns a readout at the new time.",
-  define_substance: "Adds a drug or supplement the model has no built-in kinetics for, as a one-compartment oral dose. It circulates on screen and reaches the target organs. Returns a readout.",
+  define_substance: "Adds a drug or supplement the model has no built-in kinetics for, as a one-compartment dose that is swallowed, inhaled or injected. It circulates on screen and shows on the page of every target organ, with the effect you give. It changes no heart rate or other reading by itself, so pair it with a custom log_event for what it does to those. Returns a readout.",
   log_event: `Records something that happened to the body or is still going on, other than food, drugs and plain posture. The model computes every curve from the preset. The event appears in the readout under events and threads, and as a process with id event:<id>. Reusing an id replaces that event. Label it the way a person says it, such as "Chest and triceps workout" or "Cold", since the label is shown as written. When describing how it may feel, say "you may feel", never "you should feel". Pick one preset:
 - training: a gym or bodyweight session. Pass muscles, using only the groups they name or that the exercise works. Give until; without it the session counts as 60 minutes.
 - illness: a cold, flu or other infection. Pass the symptoms they report. until null while they are ill, and end_event when it is over.
@@ -286,9 +298,9 @@ export async function runTell({ text, state: initial, mode, depth, history, date
     return { content: [{ type: "text" as const, text }] };
   };
   const recorded = () => ({ content: [{ type: "text" as const, text: "Recorded." }] });
-  const report = (at = state.now) => {
+  const report = (at = state.now, also: Record<string, unknown> = {}) => {
     const tr = trajectory();
-    return told(JSON.stringify({ ...readout(tr, at), where_things_are: whereabouts(tr, at).map((w) => ({ id: w.id, label: w.label, unit: w.unit, total: Math.round(w.total), places: w.places.map((p) => `${p.label} ${Math.round(p.share * 100)}%`) })) }));
+    return told(JSON.stringify({ ...also, ...readout(tr, at), where_things_are: whereabouts(tr, at).map((w) => ({ id: w.id, label: w.label, unit: w.unit, total: Math.round(w.total), places: w.places.map((p) => `${p.label} ${Math.round(p.share * 100)}%`) })) }));
   };
 
   const applied = (Object.keys(ACTION_SCHEMAS) as ActionName[])
@@ -308,6 +320,8 @@ export async function runTell({ text, state: initial, mode, depth, history, date
         const unknown = action.args.steps.flatMap((step) => (step.process !== null && !known.includes(step.process) ? [step.process] : []));
         if (unknown.length) return { content: [{ type: "text" as const, text: `guide was not applied. No process ${unknown.join(", ")}. Known ids: ${known.join(", ")}` }], isError: true };
       }
+      const track = action.name === "log_event" ? action.args.custom?.track : null;
+      if (track) track.crossed = traceTrack(track.aim, track.from, state.body.sex);
       try {
         state = reduce(state, action);
       } catch (e: unknown) {
@@ -325,6 +339,7 @@ export async function runTell({ text, state: initial, mode, depth, history, date
         const alt = simulate({ ...scenario(), activities: state.whatIf.activities });
         return told(JSON.stringify({ alternative: action.args.label, ...readout(alt, action.args.until) }));
       }
+      if (track) return report(state.now, { this_line_crosses: track.crossed?.map((part) => part.name) ?? [] });
       return plan.brief ? recorded() : report();
     }),
   );

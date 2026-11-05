@@ -10,6 +10,7 @@ import type { Frame, InsetProps } from "./loop";
 import { nerve } from "./parts/nerve";
 import { setLit, setShown, setWord } from "./parts/part";
 import { Tag } from "./parts/Tag";
+import { TEAR } from "./parts/tear";
 import { vessel } from "./parts/vessel";
 import { ART_WIDTH, PlateWords } from "./Plate";
 import { createStream, Placer } from "./stream";
@@ -71,8 +72,6 @@ function fibreShape(fibre: number) {
   return `M${[...edge(-1, fibre * 1.7), ...edge(1, fibre * 2.3 + 1).reverse()].join("L")}Z`;
 }
 
-// A crack: both sides zigzag the same way, as if they had just pulled apart.
-const BREAK = "M-3 -11L-1 -6.5L-4 -2.5L-1 1.5L-3 6L-1.5 11L3 11L1.5 6L4 1.5L1 -2.5L4 -6.5L1.5 -11Z";
 // New tissue, swelling out of the fibre's edge and back into it.
 const BULGE = "M-24 0C-13.5 -1 -10 -13 0 -13C10 -13 13.5 -1 24 0C13.5 1 10 13 0 13C-10 13 -13.5 1 -24 0Z";
 const FLUID_TOP = fibreY(0) - FIBRE.half + 2; // always hidden behind the outer fibres, wherever swelling has moved them
@@ -96,7 +95,7 @@ const Drawing = memo(function Drawing() {
             site.fibre === fibre
               ? [
                   <path key={`new${i}`} data-part="rebuilt" data-site={i} className="fibre-rebuilt" transform={`translate(${site.x} 0)`} d={BULGE} />,
-                  <path key={`tear${i}`} data-part="tear" data-site={i} className="fibre-tear" transform={`translate(${site.x} 0)`} d={BREAK} />,
+                  <path key={`tear${i}`} data-part="tear" data-site={i} className="fibre-tear" transform={`translate(${site.x} 0)`} d={TEAR} />,
                 ]
               : [],
           )}

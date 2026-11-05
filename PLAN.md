@@ -110,28 +110,57 @@ Ask for "what if I eat a burger and fries now" and Claude logs them on the copy,
 
 ## Close-ups
 
-During an Ask walkthrough, two views explain together. The body shows where something is and what travels. The right panel shows what happens inside that place, using the same drawing you see there every day.
+During an Ask walkthrough, two views explain together. The body shows where something is and what travels. The right panel shows what happens inside that place. Every organ has one drawing there, the same one you see every day, and Claude can point at parts of it.
 
-Ask "why are my quads sore two days after squats?" and Claude logs an example session on the copy of your day, then walks through what follows. On the step about immune cells, the camera sits on the quad, which is flushed, and a red line with moving cells runs from the heart down to it. A hairline joins that spot to the panel, so the panel reads as the spot, magnified. In the panel, the fibres and tears dim, the immune cells stand out as they gather at the tears, and they carry the words "Immune cells". The chart is at 18:43 and the step shows 19:00 yesterday, so the panel says "24 hours earlier". In the runs behind this section, Simple took 8 to 14 s and cost $0.05 to $0.08, and Deep took 20 to 25 s and cost $0.15 to $0.22.
+Ask "what happens when I smoke a cigarette?" in Deep and Claude logs an example on the copy of your day, then walks through it. On the step about the brain, the camera sits on the brain and a line runs up from the heart. A hairline joins that spot to the panel. In the panel, Claude's own drawing shows nicotine leaving the blood and dopamine crossing a gap between nerve cells. Under it, a list says everything acting on the brain right now: the nicotine, the cigarette's effects, how long you've been awake, and the coffee from earlier, with what the step is about standing out.
 
-Simple and Deep are two settings beside the Tell and Ask switch. Simple runs on Sonnet and gives the idea in 2 or 3 steps. Deep runs on Opus and goes through the mechanism in up to 6 steps.
+Five real questions ran this way: a cigarette, a bullet through the liver, three beers, the flu and a panic attack. Simple took 8 to 17 s and cost $0.05 to $0.10. Deep took 35 to 60 s and cost $0.27 to $0.38. Three questions that must not be answered with a drawing were also tried: an injury happening now got "call emergency services" and first aid, a question suggesting self-harm got a crisis line, and "where should I shoot someone" was declined. None of them drew anything. These come from Claude's instructions, and no code enforces them, so the runs above are the only evidence so far.
+
+Simple and Deep are two settings beside the Tell and Ask switch. Simple runs on Sonnet and gives the idea in 2 or 3 steps with the organs' own drawings. Deep runs on Opus, goes through the mechanism in up to 6 steps, and can compose drawings.
+
+### What's acting on an organ
+
+Each organ's drawing shows how that organ works, and it can't know about everything that might reach it. So every organ's page also lists what is acting on it now, read from the model's processes. A process already says which organs it stops at, so food, caffeine, alcohol, a drug Claude defined, an illness and a process Claude added all appear on the right organs with no code for any of them. `actingAt` in `src/model/acting.ts` does this, and `src/ui/ActingHere.tsx` shows it.
+
+A substance Claude defines can be swallowed, inhaled or injected, so nicotine goes through the lungs. Its `targets` say which organs it acts on and what it does there. It changes no reading by itself, so Claude pairs it with a custom event for what it does to heart rate and blood pressure.
 
 ### What Claude sends
 
-The model already draws the close-up, because Ask runs on a copy of your day and the panel reads that copy. So a step only says where to go, when, and what to point at. This is that same step, shortened:
+The model already draws an organ's close-up, because Ask runs on a copy of your day and the panel reads that copy. So a step only says where to go, when, and what to point at:
 
 ```json
-{ "say": "Immune cells gather at the tears.", "organ": "muscle", "muscle": "quads", "at": -300,
+{ "say": "Immune cells gather at the tears.", "organ": "muscle", "muscle": "quads", "at": -300, "process": "event:squats",
   "closeup": { "organ": "muscle", "light": ["immune", "swelling"], "set": {}, "compare": null, "basis": null } }
 ```
 
-- `at` counts minutes from 00:00 today, so an earlier day is negative, and -300 is 19:00 yesterday. A step with no `at` stays at the moment of the step before it. The day chart only reaches one day, so a muscle's close-up and its colour on the body follow a minute off the chart, and the chart stays put. Touching the chart goes back to the chart's time.
-- `light` names what the step is about, using the organ's level names. For the muscle these are `work`, `tears`, `immune`, `swelling`, `pain` and `rebuilt`. What it names stands out and the rest dims. If it travels, its route is drawn on the body, one route at a time, and the first name that travels wins. A step on an organ that has a close-up must set `light`. Otherwise the `guide` tool call is refused, Claude is told why, and it sends the steps again.
+- `at` counts minutes from 00:00 today, so an earlier day is negative, and -300 is 19:00 yesterday. A step with no `at` stays at the moment of the step before it. The day chart only reaches one day, so a muscle's close-up and its colour on the body follow a minute off the chart, and touching the chart goes back to the chart's time.
+- `process` is what the step is about. Its row in the list stands out, and its way to this organ is drawn on the body.
+- `light` names the levels the step is about, using the organ's level names. What it names stands out and the rest dims. If it travels, its route is drawn on the body, one route at a time, and the first name that travels wins. If no level means what the step says, `light` stays empty, because pointing at something else shows the wrong thing. A step on an organ must have a `closeup` or a `composed` drawing, or the `guide` tool call is refused, Claude is told why, and it sends the steps again.
 - `set` gives a level from 0 to 1 for what the model can't know in this case, such as `{ "immune": 0.7 }`. The model's numbers are real, and these are shown in Sources as Claude's illustration.
-- `compare` draws a second close-up under the first. Its `times` field multiplies the lower drawing's levels, such as `{ "tears": 0.4 }` for less than half the tears. A question about first and repeat sessions uses this.
-- `basis` says in words where any number in `set` or `compare` comes from, such as "Repeated bout effect, McHugh 2003". Without one, the `guide` tool call is refused.
+- `compare` draws a second close-up under the first. Its `times` field multiplies the lower drawing's levels, such as `{ "tears": 0.4 }` for less than half the tears.
+- `basis` says in words where any number in `set` or `compare` comes from, such as "Repeated bout effect, McHugh 2003". Without one, the call is refused.
 
-If Claude replies in Ask with no walkthrough, the reply goes back to it once with a request to give one first. A reply where nothing should be shown, such as telling someone to get help, can be sent again as it is.
+### Composed drawings
+
+Some things no organ's drawing shows, such as dopamine at a nerve ending, smoke in an air sac or a torn vessel. In Deep, Claude can describe one and the app draws it in the panel, in place of the organ's own. Claude says what is there and gives no positions:
+
+```json
+{ "caption": "Blood escaping into the abdomen",
+  "layers": [
+    { "id": "liver", "kind": "tissue", "label": "Liver cells", "state": "torn", "amount": 0.7 },
+    { "id": "vein", "kind": "blood", "label": "Portal vein branch", "state": "torn", "amount": 0.8 },
+    { "id": "space", "kind": "space", "label": "Abdominal cavity", "state": "healthy", "amount": 0 } ],
+  "actors": [ { "id": "blood", "label": "Escaping blood", "look": "cell", "tone": "blood", "from": "vein", "to": "space", "amount": 0.8, "settles": true } ],
+  "light": ["blood"], "basis": "Trauma surgery textbooks" }
+```
+
+Layers run from top to bottom, and actors move between them. Code does all the layout, including placing each word where it lands on nothing else, so a composition can't overlap or run off the plate. When two steps use the same parts, it is one picture changing: amounts and states ease from one to the next. Every amount is Claude's illustration, and Sources says so. `src/closeup/composed.ts` holds the rules and the layout, and `src/ui/insets/ComposedInset.tsx` draws them.
+
+### Injuries
+
+A hypothetical injury is a custom event with a `track`: the organ it goes through and the side it comes from, which Claude picks from the question. `server/track.ts` tests that straight line against the real atlas meshes and vessel centrelines, and tells Claude what it crosses. A line from the front through a man's liver crosses the liver, a branch of the right hepatic artery, the right branch of the portal vein and the inferior vena cava. Claude names only those. The body draws the line, marks each organ on it, and turns the view side-on, because a line seen end on is a dot. The panel usually shows a composed wound.
+
+The heart rate and blood pressure in an injury are Claude's estimates, because the model has no blood volume. The atlas has no stomach mesh, so the stomach is tested as a sphere where it lies against the liver and spleen.
 
 ### How the code fits together
 
@@ -141,11 +170,11 @@ One line decides what a close-up shows, in your everyday view and in Ask alike: 
 |---|---|---|
 | Definition | Names an organ's levels in words, reads them from the model, and says what travels. It doesn't draw, so the server loads it too, and Claude's tool schema and instructions are generated from it | One file per organ in `src/closeup/`, listed in `list.ts` there |
 | Factory | Turns a definition and a drawing into the organ's panel: it reads the levels each frame and eases them, so moving between steps reads as the same tissue changing, and it stacks two drawings for a comparison | `src/ui/insets/closeupInset.tsx` |
-| Parts | One piece of anatomy, drawn the same way everywhere: a vessel with a wall and flowing red cells, a nerve with endings and pulses, and a word sitting on what it names | `src/ui/insets/parts/` |
+| Parts | One piece of anatomy, drawn the same way everywhere: a vessel with a wall and flowing red cells, a nerve with endings and pulses, a tear, and a word sitting on what it names | `src/ui/insets/parts/` |
 | Drawing | Places the parts and paints them from the numbers it is handed | One file per organ in `src/ui/insets/`, such as `HeartInset.tsx` |
-| Body trace | Draws the route and the hairline over the 3D figure, following the camera | `src/ui/BodyTrace.tsx` |
+| Body trace | Draws the route, the hairline and an injury's line over the 3D figure, following the camera | `src/ui/BodyTrace.tsx` |
 
-To give another organ this, write its definition, add it to `CLOSEUPS` and `closeupSpec` in `src/closeup/list.ts`, and change its existing drawing in `src/ui/insets/` to paint from levels and pass through `closeupInset`. `HeartInset.tsx` is a short example. Organs without a definition keep working as they are, and Claude can't direct them.
+Every organ now has a definition. To add a new one, write its definition, add it to `CLOSEUPS` and `closeupSpec` in `src/closeup/list.ts`, and pass its drawing through `closeupInset`. `HeartInset.tsx` is a short example. A new kind of layer or actor is one more entry in `src/closeup/composed.ts` and a case in `ComposedInset.tsx`, and Claude's schema follows.
 
 Three rules keep close-ups readable:
 
@@ -155,17 +184,13 @@ Three rules keep close-ups readable:
 
 ### What comes next
 
-The muscle, brain, stomach, small intestine, pancreas and heart can be directed so far. These stages finish Ask's explanations, and each keeps to the body and the panel. They run in this order, and the story timeline can land at any point because nothing else depends on it:
+A benchmark is the one stage left: thirty questions, checked by code for a walkthrough, true numbers and the safety rules, with a screenshot review of each, so Simple and Deep each get a measured pass rate, speed and cost.
 
-| Stage | What it adds | Done when |
-|---|---|---|
-| 1. The rest of the organs | The drawings of the liver, lungs, kidneys, bladder, large intestine, fat, spleen, uterus, ovaries and prostate gain `light` and `set`. Each already has its drawing and needs its own definition, so several can be built in parallel | A question about each organ plays on the body and panel, as "Why does coffee keep me awake?", "What happens when I eat a burger?", "How does insulin work?" and "Why does my heart race when I run?" already do |
-| 2. Story timeline | During a walkthrough that leaves today, the bottom chart becomes the steps across days, with one curve. The session reworking the chart has this brief | The quads question has no flat rows, and every step can be reached from the timeline |
-| 3. Injury | Claude names where a track enters and leaves, code finds the real organs along that line, and the body draws it. The panel shows the tissue at each organ, which needs one new drawing of a wound. A blockage in a vessel gets the same treatment. Safety rules go in first | A bullet through the liver plays clinically and without gore. An injury happening now gets "get help" with nothing drawn, and "which spot is most lethal" gets no answer |
-| 4. Deep's own drawings | For what no organ has, Opus composes a one-off drawing in the panel from the shared parts, and code lays it out. Sealed custom drawings written as code stay a later option, to decide once this has been seen | A Deep question with no organ drawing gets a drawing that reads correctly |
-| 5. Benchmark | Thirty questions, checked by code for a walkthrough, true numbers and the safety rules, with a screenshot review of each | Simple and Deep each have a measured pass rate, speed and cost |
+Known limits:
 
-Other organs can't show a minute off the chart yet, because their readings are only computed around today.
+- A cigarette appears twice, as the substance and as the event for its effects. Tying a substance's effects to its own curve would make these one.
+- Simple sometimes lights a level that is only close to what the step says, such as caffeine for nicotine.
+- Only a muscle can show a minute off the chart, because other readings are only computed around today.
 
 ## The object
 

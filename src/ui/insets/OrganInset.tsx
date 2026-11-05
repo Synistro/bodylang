@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
 import type { OrganId } from "../../model/simulate";
+import { composedOnScreen, useStore } from "../../store";
 import { BladderInset } from "./BladderInset";
+import { ComposedInset } from "./ComposedInset";
 import { BrainInset } from "./BrainInset";
 import { FatInset } from "./FatInset";
 import { HeartInset } from "./HeartInset";
@@ -39,6 +41,8 @@ export const FIGURES: Record<OrganId, ComponentType<InsetProps>> = {
 };
 
 export function OrganInset({ organ, trajectory, t, muscle }: InsetProps & { organ: OrganId }) {
+  const composed = useStore(composedOnScreen);
+  if (composed) return <ComposedInset spec={composed} />;
   const Figure = FIGURES[organ];
   return <Figure trajectory={trajectory} t={t} muscle={muscle} />;
 }

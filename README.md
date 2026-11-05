@@ -46,7 +46,9 @@ open "plash:reload"
 | `src/scene/` | Three.js: body, organs, muscles, stomach, process line, shaders, camera |
 | `src/ui/` | Rail, page, day chart, message box, labels and stop numbers on the figure |
 | `src/ui/insets/` | The organ and muscle close-up figures, and the anatomy they share (`parts/`) |
-| `src/closeup/` | What Claude can direct in an organ's close-up during an Ask walkthrough: its levels in words, and how the model sets them |
+| `src/closeup/` | What Claude can direct in an organ's close-up during an Ask walkthrough, and the drawings it can compose: levels in words, how the model sets them, and the layout rules |
+| `src/model/acting.ts`, `src/ui/ActingHere.tsx` | Everything acting on an organ right now, read from the model's processes |
+| `server/track.ts` | What an injury's straight line really crosses, tested against the atlas meshes |
 | `src/wall.ts` | Wallpaper mode |
 | `src/model/day.ts` | The real clock, the day file, and what carries over to the next day |
 | `src/model/origin.ts`, `src/ui/SourceTip.tsx` | Where each number and sentence came from, and the list that says so |

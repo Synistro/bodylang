@@ -76,7 +76,6 @@ function liver(now: Now): OrganStory {
   if (v("alcohol") > REFERENCE.alcohol.presentAboveGPerL) doing = "Breaking down alcohol first.";
   else if (working(now)) doing = "Releasing sugar for your working muscles.";
   else if (now.stress) doing = "Releasing extra sugar while you are under stress.";
-  else if (v("caffeine") > REFERENCE.caffeine.presentAboveMgL) doing = doing.replace(/\.$/, " and clearing caffeine.");
   return { doing, rows: ["alcohol"], evidence: "B", source: REFERENCE.liverGlycogen.source };
 }
 
@@ -119,6 +118,7 @@ function lungs(now: Now): OrganStory {
   else if (illness) doing = `Your airway lining is inflamed by ${illness.causeName}.`;
   else if (now.moving || working(now)) doing = "Breathing faster to feed your muscles.";
   else if (now.said) doing = now.said;
+  else if (now.stress) doing = "Breathing faster under stress.";
   else if (v("digestion") >= 0.04) doing = "Breathing a little faster while you digest.";
   return { doing, rows: [], evidence: "A", source: REFERENCE.breathing.source };
 }
@@ -248,20 +248,4 @@ export function muscleStory(group: MuscleGroup, tr: Trajectory, t: number): Orga
   const later = muscleStateAt(tr.muscleEvents, group, t + 60);
   const worked = tr.muscleEvents.some((event) => event.from <= t && event.muscles.some((m) => m.group === group));
   return { doing: recoverySentence(now, later.soreness > now.soreness, worked), rows: [], evidence: REFERENCE.muscleState.evidence, source: REFERENCE.muscleState.source };
-}
-
-export interface SubstanceAtOrgan {
-  label: string;
-  effect: string;
-}
-
-// Anything Claude logged that the core model doesn't know about, while it is still in the blood.
-export function substancesAt(organ: OrganId, tr: Trajectory, t: number): SubstanceAtOrgan[] {
-  const minute = Math.max(0, Math.min(tr.series.glucose.length - 1, Math.floor(t)));
-  const out: SubstanceAtOrgan[] = [];
-  for (const { substance, series } of tr.substances.values()) {
-    if (series[minute] < 0.001) continue;
-    for (const target of substance.targets) if (target.organ === organ) out.push({ label: substance.label, effect: target.effect });
-  }
-  return out;
 }

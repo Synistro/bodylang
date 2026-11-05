@@ -52,3 +52,40 @@
 .body-travel[data-kind="lymph"] circle { fill: var(--ink-2); }
 .body-travel[data-kind="food"] path { stroke: var(--hue-digestion); }
 .body-travel[data-kind="food"] circle { fill: var(--hue-digestion); }
+
+/* What is acting on this organ now: a small stream for each, faster the more of it there is. */
+.acting { display: grid; gap: 0.5rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+.acting-row { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; align-items: baseline; transition: opacity 240ms var(--ease); }
+.acting-row b { font-weight: 500; color: var(--ink); }
+.acting[data-pointed] .acting-row:not([data-about]) { opacity: 0.45; }
+.acting-flow { position: relative; display: block; height: 1px; align-self: center; background: var(--line-strong); overflow: visible; }
+.acting-flow::after { content: ""; position: absolute; top: -0.15rem; left: 0; width: 0.32rem; height: 0.32rem; border-radius: 50%; background: var(--view-hue); opacity: calc(0.4 + 0.6 * var(--strength)); animation: acting-along calc(2.6s - 1.6s * var(--strength)) linear infinite; }
+@keyframes acting-along { from { transform: translateX(-0.1rem); } to { transform: translateX(1.4rem); } }
+@media (prefers-reduced-motion: reduce) { .acting-flow::after { animation: none; left: 45%; } }
+
+/* A drawing Claude composed. */
+.inset-art .composed-word { fill: var(--ink-2); }
+.inset-art .composed-actor-word { fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 2.4; stroke-linejoin: round; }
+.composed-air { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--line-strong); stroke-width: 0.07rem; }
+.composed-wall { fill: none; stroke: color-mix(in srgb, var(--fig-salmon) 70%, var(--bg)); stroke-width: 0.09rem; }
+.composed-cell { fill: color-mix(in srgb, var(--fig-salmon) 14%, var(--bg)); stroke: color-mix(in srgb, var(--fig-salmon) 50%, var(--bg)); stroke-width: 0.07rem; }
+.composed-nucleus { fill: color-mix(in srgb, var(--fig-salmon) 55%, var(--bg)); stroke: none; }
+.composed-inflamed { fill: color-mix(in srgb, var(--fig-blood) 24%, transparent); stroke: none; opacity: 0; }
+.composed-gap { fill: var(--bg); stroke: var(--ink); stroke-width: 0.08rem; stroke-linejoin: round; opacity: 0; }
+.composed-beyond { fill: var(--bg); opacity: 0.6; }
+.composed-plug { fill: var(--ink-3); stroke: var(--ink); stroke-width: 0.08rem; }
+.composed-plaque { fill: color-mix(in srgb, var(--fig-ochre) 55%, var(--bg)); stroke: var(--fig-ochre); stroke-width: 0.06rem; }
+.composed-actor { stroke: none; }
+.composed-actor[data-tone="blood"] { fill: var(--fig-blood); }
+.composed-actor[data-tone="immune"] { fill: var(--ink); stroke: var(--bg); stroke-width: 0.06rem; }
+.composed-actor[data-tone="food"] { fill: var(--fig-ochre); }
+.composed-actor[data-tone="nerve"] { fill: var(--fig-nerve); }
+.composed-actor[data-tone="drug"] { fill: var(--fig-salmon); }
+.composed-actor[data-tone="gas"] { fill: var(--bg); stroke: var(--ink-2); stroke-width: 0.07rem; }
+.composed-actor[data-look="molecule"] { stroke: var(--bg); stroke-width: 0.05rem; }
+.composed-actor[data-look="molecule"][data-tone="gas"] { stroke: var(--ink-2); stroke-width: 0.07rem; }
+
+/* An injury's line through the body. */
+.body-track path { fill: none; stroke: var(--fig-blood); stroke-width: 2px; stroke-linecap: round; }
+.body-track circle { fill: var(--bg); stroke: var(--fig-blood); stroke-width: 1.5px; }
+.body-track text { fill: var(--ink); font-size: var(--t-small); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }

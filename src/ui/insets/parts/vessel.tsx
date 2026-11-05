@@ -13,7 +13,7 @@ interface VesselOptions {
   tone?: "blood" | "lymph";
 }
 
-export interface Vessel extends Part<{ lit: number }> {
+export interface Vessel extends Part<{ lit: number; until?: number }> {
   route: Polyline; // for whatever else travels inside it
   centerAt: (x: number) => number; // where something leaving or entering crosses at this x, on a vessel running sideways
 }
@@ -36,17 +36,19 @@ export function vessel({ id, points, radius, tone = "blood" }: VesselOptions): V
     attach: (art) => {
       const group = part<SVGGElement>(art, id);
       const cells = createStream(parts(group, `${id}-cell`), RED_CELLS.seconds, 23);
+      let until = 1; // how far along the cells get, for a vessel with something in the way
       const flowing: Placer = (progress, seat) => {
-        const at = pointAlong(route, progress);
-        const ahead = pointAlong(route, Math.min(1, progress + LOOK_AHEAD));
+        const at = pointAlong(route, progress * until);
+        const ahead = pointAlong(route, Math.min(1, progress * until + LOOK_AHEAD));
         const dx = ahead.x - at.x;
         const dy = ahead.y - at.y;
         const length = Math.hypot(dx, dy) || 1;
         const off = (seat - 0.5) * radius * RED_CELLS.lanes;
         return { x: at.x - (dy / length) * off, y: at.y + (dx / length) * off };
       };
-      return (frame, { lit }) => {
-        setLit(group, lit);
+      return (frame, input) => {
+        until = input.until ?? 1;
+        setLit(group, input.lit);
         if (redCells) cells(frame, RED_CELLS.perSecond, flowing);
       };
     },

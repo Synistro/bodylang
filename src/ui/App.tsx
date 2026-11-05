@@ -3,7 +3,7 @@ import { Skeleton } from "skullet/react";
 import { SYSTEMS } from "../model/systems";
 import { Stage } from "../scene/stage";
 import { startBeacon, WALL } from "../wall";
-import { AppState, closeupOnScreen, dispatch, getState, leaveAsk, muscleMinute, selectedProcess, setBody, setUi, useStore } from "../store";
+import { AppState, closeupOnScreen, composedOnScreen, dispatch, getState, leaveAsk, muscleMinute, selectedProcess, setBody, setUi, trackOnScreen, useStore } from "../store";
 import { viewSystemOf } from "../look";
 import { AskBar, Guide } from "./Ask";
 import { AtlasKeys } from "./AtlasKeys";
@@ -39,6 +39,7 @@ function sceneInput(s: AppState) {
     trajectory: s.trajectory,
     t: s.t,
     muscleMinute: muscleMinute(s),
+    track: trackOnScreen(s),
     body: s.body.body,
     theme: s.theme,
     layers: s.layers,
@@ -158,7 +159,7 @@ export function App() {
   const playing = useStore((s) => s.playing);
   const view = useStore((s) => viewSystemOf({ system: s.body.system, process: selectedProcess(s), focus: s.body.focus }));
   const asking = useStore((s) => s.asking !== null);
-  const directed = useStore((s) => closeupOnScreen(s) !== null);
+  const directed = useStore((s) => closeupOnScreen(s) !== null || composedOnScreen(s) !== null);
   useFreeArea(sheet, asking);
   useEscape();
   useWallCycle();
