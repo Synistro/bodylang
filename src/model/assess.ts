@@ -1666,12 +1666,12 @@ const RESTED = "Rested";
 const muscleWord = (s: MuscleState) => MUSCLE_STATUS.find(([test]) => test(s))?.[1] ?? RESTED;
 const muscleLevel = (s: MuscleState) => Math.max(s.work, s.fatigue, s.soreness, s.repair);
 
-// When a muscle stops being noticeably different from rested, in hours from now.
-function hoursUntilNormal(c: Context, group: MuscleGroup): number | null {
+// The minute a muscle stops being noticeably different from rested.
+export function normalAgainAt(tr: Trajectory, group: MuscleGroup, t: number): number | null {
   const r = REFERENCE.muscleState;
-  for (let h = 1; h <= REFERENCE.muscleState.normalWithinDays * 24; h++) {
-    const later = muscleStateAt(c.tr.muscleEvents, group, c.t + h * 60);
-    if (later.work < r.workingFrom && later.soreness < r.soreFrom && later.fatigue < r.tiredFrom) return h;
+  for (let h = 1; h <= r.normalWithinDays * 24; h++) {
+    const later = muscleStateAt(tr.muscleEvents, group, t + h * 60);
+    if (later.work < r.workingFrom && later.soreness < r.soreFrom && later.fatigue < r.tiredFrom) return t + h * 60;
   }
   return null;
 }
@@ -1688,7 +1688,7 @@ function muscleSummaries(c: Context): MuscleSummary[] {
     const state = muscleStateAt(c.tr.muscleEvents, group, c.t);
     const status = muscleWord(state);
     const rested = status === RESTED;
-    const hours = rested ? null : hoursUntilNormal(c, group);
+    const normalAt = rested ? null : normalAgainAt(c.tr, group, c.t);
     return {
       ...state,
       group,
@@ -1696,7 +1696,7 @@ function muscleSummaries(c: Context): MuscleSummary[] {
       status,
       level: muscleLevel(state),
       sorenessLine: rested ? null : sorenessLineFor(c, group),
-      normalLine: hours === null ? null : `Should feel normal ${whenWords(c.t + hours * 60, c.t)}`,
+      normalLine: normalAt === null ? null : `Should feel normal ${whenWords(normalAt, c.t)}`,
     };
   });
 }

@@ -255,7 +255,7 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .float > * { width: min(100%, 44rem); }
 
 /* The day: how much of each thing there is, and when it ends. The plot is a canvas; the names beside
-   it are real buttons, kept level with their rows by the chart itself. */
+   it are real buttons, one fixed row each, which scroll when there are more than fit. */
 .console { display: grid; justify-items: center; }
 .day { position: relative; width: min(100%, 72rem); display: grid; grid-template-columns: 17rem minmax(0, 1fr); column-gap: 1rem; padding: 0.7rem 1.2rem 0.4rem 1.1rem; border-radius: 0.8rem; background: var(--surface); pointer-events: auto; }
 .day-side { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--day-top) var(--day-rows) var(--day-hours); }
@@ -271,18 +271,26 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .day-range { display: flex; align-items: flex-end; gap: 0.9rem; padding-bottom: 0.2rem; }
 .day-range .toggle { font-size: var(--t-tiny); }
 .toggle[aria-checked="true"] { color: var(--ink-2); }
-.day-rows { min-height: 0; overflow: hidden; }
-.day-row { display: flex; align-items: center; gap: 0.5rem; width: 100%; height: calc(var(--day-rows) / 2); font-size: var(--t-small); color: var(--ink-2); transition: color 120ms; }
+.day-rows { min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.day-rows::-webkit-scrollbar { display: none; }
+.day-row { display: flex; align-items: center; gap: 0.5rem; width: 100%; height: var(--day-row); font-size: var(--t-small); color: var(--ink-2); transition: color 120ms; }
 .day-row:disabled { cursor: default; }
 .day-row:hover:not(:disabled), .day-row[data-hot] { color: var(--ink); }
 .day-row:focus-visible { outline-offset: -1px; }
 .day-name { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .day-value { flex: none; font-family: var(--font-data); font-size: var(--t-tiny); color: var(--ink); white-space: nowrap; }
 .day-number { flex: none; width: 1.2rem; font-family: var(--font-data); font-size: var(--t-tiny); color: var(--ink-3); }
-.day-empty { margin-top: 0.8rem; font-size: var(--t-small); color: var(--ink-3); }
 .day-plot { position: relative; min-width: 0; height: calc(var(--day-top) + var(--day-rows) + var(--day-hours)); }
 .day-plot:focus-visible { outline-offset: 3px; }
 .day-plot canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: ew-resize; touch-action: none; }
+.day[data-shape="story"] { grid-template-columns: minmax(0, 1fr); }
+.day[data-shape="story"] .day-side { display: none; }
+.day-next { position: absolute; left: 1.1rem; right: 1.2rem; top: calc(0.7rem + var(--day-top)); height: var(--day-rows); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 1rem; align-items: start; padding-top: 0.5rem; pointer-events: none; }
+.day-next-item { display: grid; justify-items: start; row-gap: 0.25rem; min-width: 0; text-align: left; pointer-events: auto; transition: color 120ms; }
+.day-next-at { font-family: var(--font-data); font-size: var(--t-small); color: var(--ink); }
+.day-next-what { max-width: 100%; font-size: var(--t-small); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.day-next-whose { font-size: var(--t-tiny); color: var(--ink-3); transition: color 120ms; }
+.day-next-item:hover .day-next-whose { color: var(--ink-2); }
 
 /* Names of rows and buttons are for clicking. The sentences inside a reading or an answer can be selected. */
 .sheet button, .sheet .reading-head { -webkit-user-select: none; user-select: none; }

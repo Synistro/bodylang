@@ -45,6 +45,7 @@ export interface Ui {
   t: number;
   playing: boolean;
   playUntil: number; // the last moment on the day chart when play was pressed
+  dayMoment: number | null; // a minute outside today that you moved a muscle's recovery to
   theme: Theme;
   layers: { skin: boolean; vessels: boolean };
   hover: string | null;
@@ -139,6 +140,7 @@ let state: AppState = {
   t: initialBody.now,
   playing: false,
   playUntil: LANES.to,
+  dayMoment: null,
   theme: "xray",
   layers: { skin: true, vessels: true },
   hover: null,
@@ -293,7 +295,7 @@ export function setMode(mode: Mode) {
   setUi({ mode });
 }
 
-const openMoment = (s: AppState) => (s.asking?.guideOpen ? s.asking.moment : null);
+const openMoment = (s: AppState) => (s.asking?.guideOpen ? s.asking.moment : s.dayMoment);
 
 // A muscle's story runs for days and the day chart only reaches one, so a step can show a minute off the
 // chart. The muscle's close-up and its colour on the body read this, and everything else reads the chart.
@@ -306,9 +308,14 @@ export const chartOffsetHours = (s: AppState) => {
 
 // Touching the chart means you want to see the chart's time.
 export function releaseMoment() {
-  if (openMoment(state) === null || !state.asking) return;
-  state = { ...state, asking: { ...state.asking, moment: null } };
+  if (openMoment(state) === null) return;
+  state = { ...state, dayMoment: null, asking: state.asking && { ...state.asking, moment: null } };
   emit();
+}
+
+// Moves to a minute on a muscle's recovery, which can be any day: the chart's time if it reaches that far.
+export function showMuscleMinute(minute: number) {
+  setUi(isOnChart(minute) ? { t: minute, dayMoment: null, playing: false } : { dayMoment: minute, playing: false });
 }
 
 // What the current walkthrough step points at in the close-up beside the body.

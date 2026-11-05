@@ -549,7 +549,6 @@ export const LANES = {
   from: DAY.rolloverMin,
   to: 28 * 60,
   stepMin: 5,
-  most: 4,
   // A curve that barely changes all day should look flat, so it gets at least this share of its value as vertical range.
   leastRangeShare: 0.06,
   nothingLeftBelowShareOfPeak: 0.1, // a low this far under a curve's peak counts as empty, such as a stomach's resting volume
@@ -563,6 +562,10 @@ export const LANES = {
   eventLookaheadStepMin: 30,
   // How much of the day the chart shows by itself: what is going on now, from where it began to where it ends.
   fit: { pastMin: 180, aheadMin: 240, marginMin: 15, leastSpanMin: 360, overBelowShare: 0.05 }, // over: how little counts as gone when a forecast lands there
+  stillBelowShare: 0.1, // a reading moving less than this share of its row across the shown stretch has nothing to draw
+  aheadMost: 3, // what comes next, when nothing is moving
+  // A muscle's recovery runs for days: how finely it is drawn, and how much is shown around it.
+  days: { stepMin: 30, marginShare: 0.03, tailShare: 0.2, storyMarginShare: 0.06, leastStoryMin: 720 },
 } as const;
 
 export const PROCESS = {

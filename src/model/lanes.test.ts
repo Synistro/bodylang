@@ -19,11 +19,11 @@ const day = (intakes: Intake[], events: BodyEvent[] = []) => {
 const LEG_DAY: BodyEvent = { id: "legs", label: "Leg day", preset: "training", from: hm(10), until: hm(11), intensity: 0.8, muscles: [{ group: "quads", load: 0.9 }, { group: "glutes", load: 0.7 }], symptoms: [], custom: null, source: "test" };
 
 describe("the day chart's lanes", () => {
-  it("draws each thing logged, oldest on top, in plain ink", () => {
+  it("draws each thing logged, newest on top, in plain ink", () => {
     const lanes = threadLanes(day([COFFEE, PIZZA]), hm(17));
     expect(lanes.map((l) => [l.id, l.system])).toEqual([
-      ["intake:coffee", "overview"],
       ["intake:pizza", "overview"],
+      ["intake:coffee", "overview"],
     ]);
   });
 
@@ -169,8 +169,8 @@ describe("the day chart's lanes", () => {
   it("marks what only exists in a what-if", () => {
     const lanes = threadLanes(day([COFFEE, PIZZA]), hm(17), day([COFFEE]));
     expect(lanes.map((l) => [l.id, l.hypothetical])).toEqual([
-      ["intake:coffee", false],
       ["intake:pizza", true],
+      ["intake:coffee", false],
     ]);
   });
 
@@ -181,11 +181,10 @@ describe("the day chart's lanes", () => {
     ]);
   });
 
-  it("never draws more than fits, and every value stays in its lane", () => {
+  it("keeps every value in its lane", () => {
     const tr = day([COFFEE, PIZZA, BEER], [LEG_DAY]);
     for (const system of ["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing"] as const) {
       const lanes = systemLanes(tr, hm(17), system);
-      expect(lanes.length).toBeLessThanOrEqual(LANES.most);
       for (const lane of lanes) for (const v of lane.values) expect(v).toBeGreaterThanOrEqual(-0.001), expect(v).toBeLessThanOrEqual(1.001);
     }
   });
