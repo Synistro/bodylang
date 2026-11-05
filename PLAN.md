@@ -76,7 +76,7 @@ A thread crosses systems, and a system holds parts of several threads. Everythin
 | 0 Overview | Am I fine, and what is going on? | The body with one accent on what is working hardest, one sentence, and up to three things you may feel. The rail lists one row per thread |
 | 1 System | How is this part of me? | That system lit and labelled on the body in its colour, and readings with a typical band. The rail lists what is running there |
 | 2 Thread | Where did it go, and what happens next? | One coloured line through the body, numbered stops, and an optional walkthrough |
-| 3 Organ or muscle | What is happening inside? | The camera inside, one diagram driven by the numbers, and up to three readings |
+| 3 Organ or muscle | What is happening inside? | The camera inside, one moving diagram driven by the numbers, and up to three readings |
 
 One click on the thing itself goes down: a system, an organ, or a thread, which jumps from the overview straight to its line. Esc, any row in the rail, or a click on empty space goes back up.
 
@@ -107,7 +107,7 @@ Ask for "what if I eat a burger and fries now" and Claude logs them on the copy,
 | Part | What it is |
 |---|---|
 | Body shape | [Anny](https://github.com/naver/anny), a parametric human model. The browser solves sex, age, height and weight against the mesh's real volume |
-| Organs and vessels | Real meshes from the [HuBMAP Human Reference Atlas](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html), one set per sex, fitted to the body |
+| Organs and vessels | Real meshes from the [HuBMAP Human Reference Atlas](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html), one set per sex, fitted to the body. Each body has its own reproductive organs: a uterus, ovaries and tubes, or a prostate |
 | Muscles and bones | Real meshes from [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html), warped to the body. Each worked group flushes in the Muscles colour, and the body turns to show it |
 | Stomach | Generated in code, because the atlas has none and a stomach changes shape. Its size follows the model's millilitres |
 | Small intestine | One generated tube filling the atlas's volume, because the atlas walls can't be recovered as a tube |
@@ -160,13 +160,13 @@ I ran ten questions through Ask the same way, once each, with the same caveat: b
 
 **Phase 2: a model you can trust further.** Marking what the model computed apart from what Claude added is built, along with the menstrual cycle and the fixes for three known errors. What is left is fitting curves to large published datasets, which is left out for now.
 
-**Phase 3: go further inside.** Close-ups exist for the stomach, liver, brain, heart, pancreas, lungs, immune system and muscles. Kidneys, intestines, bladder and fat have short text cards. Add diagrams for those, plus the uterus, ovaries and prostate, which are missing. Done when a click on any organ shows its own process in motion.
+**Phase 3: go further inside.** Built. Every organ has a diagram of its own process, moving at the rate the model computes: the kidney's filter, the bladder filling, the small intestine's fingers absorbing, water leaving the large intestine, fat cells taking in and releasing fat, the uterine lining, an ovary's follicle, and the prostate around the urethra. The type system requires a figure for every organ, and I measured motion in each new figure in real WebKit.
 
 **Phase 4: Claude extends the app.** Give a separate Claude Code session write access to this repo and a narrow contract for adding a process: a parameter file, a model function, a path through the vessels and a test, with the tests as the gate before hot reload. The chat path keeps no file or shell access. Done when a request for a process that doesn't exist yet ends with it on screen and its tests passing.
 
 **Phase 5: real signals.** Calibrate the model to you from a glucose monitor and wearable data, so "typical body" becomes your body. Done when the forecast's error against your own glucose readings is measured and shown.
 
-Phases 2, 3 and 4 don't depend on each other. Phase 5 needs a glucose monitor and a wearable from you. Sizes are my judgment, without data behind them: phases 3 and 4 are medium, 2 and 5 are large and open-ended.
+Phase 5 needs a glucose monitor and a wearable from you. Sizes are my judgment, without data behind them: phase 4 is medium, and 5 is large and open-ended.
 
 Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 for turning language into quantities, with Opus writing the answer, and prompt caching.
 

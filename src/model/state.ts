@@ -1,3 +1,4 @@
+import { cycleDay, cyclePhase, liningShare } from "./cycle";
 import { CAFFEINE, DAY, PROCESS, STOMACH } from "./params";
 import { availableCarbsG, caffeineLedgerAt, Intake, intakeFlowsAt, kcalOf, ledgerAt, Nutrients, OrganId, Trajectory, value } from "./simulate";
 
@@ -127,10 +128,23 @@ export function organStates(tr: Trajectory, t: number): OrganState[] {
       reading: `${round(v("bladderMl"), 10)} ml to bladder`,
       doing: "Filtering about a fifth of all blood",
     },
+    ...reproductiveStates(tr, t),
     ...custom,
   ];
 
   return out;
+}
+
+// How busy the reproductive organs read on the body. With no cycle logged there is nothing to light.
+function reproductiveStates(tr: Trajectory, t: number): OrganState[] {
+  const { cycle } = tr;
+  if (!cycle) return [];
+  const phase = cyclePhase(cycle, t);
+  const day = `Day ${cycleDay(cycle, t)}`;
+  return [
+    { id: "uterus", title: "Uterus", activity: phase === "period" ? 0.8 : 0.25 + 0.3 * liningShare(cycle, t), tint: null, reading: day, doing: phase === "period" ? "Shedding its lining" : "Keeping its lining" },
+    { id: "ovaries", title: "Ovaries", activity: phase === "ovulation" ? 0.85 : phase === "luteal" ? 0.55 : 0.35, tint: null, reading: day, doing: phase === "ovulation" ? "Releasing an egg" : "Making hormones" },
+  ];
 }
 
 function postureUptakeText(posture: number) {

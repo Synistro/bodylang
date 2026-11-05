@@ -57,6 +57,21 @@
 .leader { fill: none; stroke: var(--ink-3); stroke-width: 0.075rem; }
 .mark-caffeine { fill: var(--ink); stroke: var(--fig-salmon); stroke-width: 0.12rem; }
 
+/* What is moving, in any figure. The bright dots are the thing the figure is about. */
+.flow-dot { fill: var(--fig-salmon); stroke: none; }
+.flow-dot-quiet { fill: var(--ink-3); stroke: none; }
+.flow-dot-food { fill: color-mix(in srgb, var(--fig-ochre) 55%, var(--bg)); stroke: none; }
+
+.filter-tuft { fill: color-mix(in srgb, var(--fig-salmon) 22%, var(--bg)); stroke: var(--fig-salmon); stroke-width: 0.06rem; }
+.tube-wall { fill: none; stroke: var(--ink-2); stroke-width: 8; stroke-linejoin: round; }
+.tube-bore { fill: none; stroke: var(--bg); stroke-width: 6.4; stroke-linejoin: round; }
+.bladder-water { fill: color-mix(in srgb, var(--fig-salmon) 22%, var(--bg)); stroke: var(--fig-salmon); stroke-width: 0.08rem; }
+.fat-droplet { fill: color-mix(in srgb, var(--fig-ochre) 20%, var(--bg)); stroke: var(--fig-ochre); stroke-width: 0.06rem; }
+.uterus-lining { fill: color-mix(in srgb, var(--fig-salmon) 10%, var(--bg)); stroke: color-mix(in srgb, var(--fig-salmon) 45%, var(--bg)); stroke-linejoin: round; vector-effect: none; }
+.ovary-follicle { fill: color-mix(in srgb, var(--fig-salmon) 18%, var(--bg)); stroke: var(--fig-salmon); stroke-width: 0.08rem; }
+.ovary-luteum { fill: color-mix(in srgb, var(--fig-salmon) 55%, var(--bg)); stroke: none; }
+.prostate-gland { fill: color-mix(in srgb, var(--fig-salmon) 14%, var(--bg)); stroke: var(--ink-2); stroke-width: 0.06rem; }
+
 /* Stomach */
 .stomach-fibres { fill: none; stroke: var(--ink-3); stroke-width: 0.05rem; opacity: 0.75; }
 .stomach-lining { fill: none; stroke: var(--ink-2); stroke-width: 0.06rem; }

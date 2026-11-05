@@ -327,8 +327,12 @@ export function reduce(state: BodyState, action: Action): BodyState {
       return { ...state, system: action.args.system, process: null, focus: null, focusMuscle: null };
     case "show_process":
       return { ...state, process: action.args.id };
-    case "focus_organ":
+    case "focus_organ": {
+      const wanted = action.args.organ;
+      if ((wanted === "uterus" || wanted === "ovaries") && state.body.sex !== "female") throw new Error(`This body has no ${wanted}. Its sex is set to ${state.body.sex}.`);
+      if (wanted === "prostate" && state.body.sex !== "male") throw new Error(`This body has no prostate. Its sex is set to ${state.body.sex}.`);
       return { ...state, focus: action.args.organ, focusMuscle: action.args.organ === "muscle" ? action.args.muscle ?? null : null };
+    }
     case "guide":
       return state;
     case "what_if":

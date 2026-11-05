@@ -61,7 +61,6 @@ function largeIntestine({ tr, t }: Now): OrganStory {
   return {
     doing: held >= FOOD_MIN_KCAL ? "Holding the fibre and leftovers you didn't absorb." : "Quiet, with nothing from today yet.",
     rows: [],
-    line: "Receives what's left and draws back water.",
     evidence: "C",
     source: "My estimate",
   };
