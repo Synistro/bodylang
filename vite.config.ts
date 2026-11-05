@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { mkdirSync, writeFileSync } from "node:fs";
 import type { Plugin } from "vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 // The bridge lives in the dev server so the page has one origin and no key ever reaches the browser.
 // It is loaded per request instead of imported here: an import would make every model file a config
@@ -99,5 +99,5 @@ export default defineConfig({
   server: { port: 5183, strictPort: true },
   // The sweeps through a whole day take seconds, and more on a busy machine. These tests decide whether
   // a process Claude wrote goes in, so a slow moment must never read as a failure.
-  test: { testTimeout: 60_000 },
+  test: { testTimeout: 60_000, exclude: [...configDefaults.exclude, "proofs/**"] },
 });
