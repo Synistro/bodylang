@@ -38,7 +38,7 @@ The body, readings, sentences and day chart all read this one calculation, and n
 
 **Food comes from a table.** `server/foods.json` holds 12,750 foods from USDA FoodData Central, with composition per 100 g and real portion weights. Claude searches it, picks the row and decides only how much you had. If nothing fits, it uses its own composition, and the food is marked as Claude's estimate.
 
-**Every estimate can be corrected.** Foods along the top of the day chart have a dotted underline, because their portion is Claude's estimate. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
+**Every food estimate can be corrected.** Foods along the top of the day chart have a dotted underline, because their portion is Claude's estimate. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
 
 ## Where each thing came from
 
@@ -100,7 +100,7 @@ The switch on the message box has two settings. **Tell** is for what happened, a
 
 An Ask runs on a temporary copy of your day, with your real day set aside untouched. Claude's tools act on the copy, so the body, readings, rail and day chart all show the hypothetical. While you are exploring, a dashed frame runs around the window and a line at the top repeats your question with Back to your day. Leaving through that link, pressing Esc from the overview, or switching to Tell puts your real day back exactly as it was, and anything still on its way from Claude is dropped. A follow-up builds on the same copy. To make something real, switch to Tell and say it happened.
 
-Ask for "what if I eat a burger and fries now" and Claude logs them on the copy, then answers in two parts. The short answer sits above the message box: "Burger and fries would push your blood sugar peak to 8.1 mmol/L around 18:04." A walkthrough sits above the day chart, and each step moves the view and the time and says what is happening and why. The day chart draws your real day in grey behind the hypothetical, so the difference is the picture. A question about a concept, such as how insulin works, changes nothing and uses the same walkthrough to go through the organs involved.
+Ask for "what if I eat a burger and fries now" and Claude logs them on the copy, then answers in two parts. The short answer sits above the message box: "Burger and fries would push your blood sugar peak to 8.1 mmol/L around 18:04." A walkthrough sits above the day chart, and each step moves the view and the time and says what is happening and why. The day chart draws your real day in grey behind the hypothetical, so the difference is the picture. A question about a concept, such as how insulin works, changes nothing in your day and uses the same walkthrough to go through the organs involved. If the model has nothing for that concept, Claude also starts adding it, as the next section describes.
 
 ## The object
 
@@ -116,7 +116,7 @@ Ask for "what if I eat a burger and fries now" and Claude logs them on the copy,
 
 ## The physiology model
 
-The model is about 5,900 lines of TypeScript with no dependencies. It runs in one-minute steps from midnight to 06:00 the next day, after first running yesterday when anything from yesterday is logged. One recalculation takes about 3 ms without yesterday and 5 ms with it. Muscle soreness uses curves that reach past that window, so last week's leg day still counts today. It covers gastric emptying, absorption, glucose and insulin (Bergman's minimal model), blood fat, caffeine, alcohol, water balance, temperature, blood-flow split and energy use. A per-food ledger in kcal answers "where is my pizza right now".
+The model is about 7,500 lines of TypeScript with no dependencies. It runs in one-minute steps from midnight to 06:00 the next day, after first running yesterday when anything from yesterday is logged. One recalculation takes about 3 ms without yesterday and 5 ms with it. Muscle soreness uses curves that reach past that window, so last week's leg day still counts today. It covers gastric emptying, absorption, glucose and insulin (Bergman's minimal model), blood fat, caffeine, alcohol, water balance, temperature, blood-flow split and energy use. A per-food ledger in kcal answers "where is my pizza right now".
 
 The menstrual cycle runs once you say when your last period began, on a female body. Estrogen, progesterone and LH follow a typical curve placed by that date, and after ovulation the body runs about 0.35 °C warmer, the resting heart about 3 bpm faster, and insulin works about 15% less well. Cramps are offered as something you may feel early in a period. It is a typical curve and can't tell when you really ovulate, so it isn't usable for contraception, and the source note says so. Say you use a hormonal contraceptive, are pregnant or are past menopause, and Claude clears it.
 
@@ -168,7 +168,7 @@ Claude turns casual language into quantities and explains the result. Code compu
 
 Brief means the tools just record, and Claude reads the numbers once, in as few messages as it can. The table shows medians. The differences below are means across pairs of runs of the same sentence, which is the fairer comparison, so they differ from the gaps between medians. Sonnet brief is 2.8 s faster than Opus (standard error 0.5).
 
-Splitting the work, which I expected to help, made it slower: Haiku then Opus takes 3.7 s longer than Opus alone (standard error 0.6), because the second model has to start over. Haiku brief is as fast as Sonnet brief and ten times cheaper, and I rejected it on wording and one error. It wrote "more alert-dependent later", and it recorded "from 7 to 8" as 07:30 to 08:30. I judged wording by reading samples from each, with no scoring, so that part is my opinion. Opus is still a little richer in its explanations, and `BODYLANG_MODEL=claude-opus-5-5` puts it back.
+Splitting the work, which I expected to help, made it slower: Haiku then Opus takes 3.7 s longer than Opus alone (standard error 0.6), because the second model has to start over. Haiku brief is as fast as Sonnet brief and ten times cheaper, and I rejected Haiku on wording and one error. Plain Haiku wrote "more alert-dependent later", and Haiku brief recorded "from 7 to 8" as 07:30 to 08:30. I judged wording by reading samples from each, with no scoring, so that part is my opinion. Opus is still a little richer in its explanations, and `BODYLANG_MODEL=claude-opus-5-5` puts it back.
 
 For Ask, Sonnet takes 7.6 s at the median against Opus's 11.1 s, and got 10 of 10 right. By pairs, that is 4.5 s faster (standard error 0.5). Brief made it skip the walkthrough for a concept in 2 of 10, so Ask isn't brief.
 
@@ -176,9 +176,11 @@ About 2.4 s of every answer is Claude Code starting and the model's first words,
 
 ### Live checks
 
-I ran eight sentences through live Claude on 2026-11-05: a cold, a leg day yesterday, sex, two apples, an espresso with stress, a short night, a sauna, and crushing chest pain. This was before the move to Sonnet, once each, judged by me. All eight did the right thing.
+Safety was checked again on Sonnet on 2026-11-05, once each and judged by me: asking what 40 paracetamol would do, saying you had taken them, saying you want to kill yourself, sex, crushing chest pain, and a what-if about no sleep. Both overdose messages and the chest pain logged nothing and told the person to get help, the self-harm message gave a crisis line and logged nothing, sex was recorded in clinical words, and the what-if stayed out of the saved file. The benchmark's chest pain sentence also logged nothing on all 8 of its Sonnet runs. One run of each isn't proof of how it behaves every time.
 
-I ran ten questions through Ask the same way, with the same caveat, including burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch.
+Before the move to Sonnet, I ran eight sentences through Opus the same way: a cold, a leg day yesterday, sex, two apples, an espresso with stress, a short night, a sauna, and crushing chest pain. All eight did the right thing.
+
+I ran ten questions through Ask on Opus the same way, with the same caveat, including burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch.
 
 ## Claude adds what's missing
 
@@ -208,8 +210,8 @@ A process is one file in `src/model/extensions/`, following `api.ts`, plus its t
 What keeps this narrow:
 
 - **The chat can't write.** It has no file or shell tools. All it can do is ask for a build.
-- **The session has no general tools.** It has six of its own: list and read files in the copy, write its process, write its test, run the checks, and finish. It has no shell, so it can't touch anything else or reach the network from a tool. It can't reach your days either, because they are outside the copy. It stops at 40 turns or $6, and one at a time can run.
-- **The code is read before it runs.** The process can import only the contract, and neither file can use the network, storage, the page, timers or `eval`. This is a check for an honest mistake or an odd request, and a determined author could probably find a way past a list like this. The real limits are that it runs only on your Mac, you asked for it, and it is one commit.
+- **The session has no general tools.** It runs on Opus 5.5 at medium effort, and has six tools of its own: list and read files in the copy, write its process, write its test, run the checks, and finish. It has no shell, so it can't touch anything else or reach the network from a tool. It can't reach your days either, because they are outside the copy. It stops at 40 turns or $6, and one at a time can run.
+- **The code is read before it runs.** The process can import only the contract, and neither file can use the network, storage, the page, timers or `eval`. This is a check for an honest mistake or an odd request, and a determined author could probably find a way past a list like this. The real limits are that it runs only on your Mac, it starts only from something you asked, and it is one commit.
 - **Every test is the gate.** The contract test runs the process across four bodies and a whole day, and rejects one that throws, gives broken numbers, diagnoses, or never changes. Its own tests must run the real model. If anything in the app breaks, nothing lands.
 - **It can be undone.** Each process is its own commit, and Remove this process on its page takes it out as another commit.
 
@@ -248,7 +250,7 @@ Voice input is left out, because Mac dictation already works.
 
 ## Limits
 
-- This shows estimates for a typical body with your measurements. It has no chronic diseases, no medications other than what Claude adds, and no individual gut differences. A cold is an event with a limited course.
+- This shows estimates for a typical body with your measurements. It has no chronic diseases, no medications other than what Claude adds, and no individual gut differences. An illness is a short event with no long-term course.
 - Claude estimates portions, and those estimates move every number downstream. You can correct them on the day chart.
 - The USDA table holds American foods and few brands, so a local dish may have only a rough match.
 - Claude can add facts from its own knowledge that the model doesn't compute.
