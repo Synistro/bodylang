@@ -35,7 +35,6 @@ export interface OrganMeta {
   organs: Record<string, OrganMeshMeta>;
   landmarks: Record<string, number[]>;
   centerlines: Record<string, number[][]>;
-  vesselRadius: Record<string, number>;
 }
 
 export interface BodyAsset {

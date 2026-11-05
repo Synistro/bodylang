@@ -44,7 +44,7 @@ function lineLength(line: Line) {
   return total;
 }
 
-export function nearestIndex(line: Line, to: THREE.Vector3) {
+function nearestIndex(line: Line, to: THREE.Vector3) {
   let best = 0;
   let bestDistance = Infinity;
   for (let i = 0; i < line.length; i++) {
@@ -79,7 +79,7 @@ function resample(line: Line, spacing: number): Line {
 
 // Vessel skeletons come out of a voxel grid, so they stair-step. This irons them flat without
 // moving the ends, which is what lets one line pick up exactly where another stopped.
-export function smoothLine(line: Line, passes: number): Line {
+function smoothLine(line: Line, passes: number): Line {
   if (line.length < 2) return line.map((p) => p.clone());
   const even = resample(line, SMOOTHING.spacing);
   const scratch = even.map((p) => p.clone());
@@ -436,7 +436,7 @@ export function traceStrands(network: RouteNetwork, routes: RouteId[], from: THR
   return [main, strandFrom(rest, parted === 0 ? 0 : main.lengths[nearestIndex(main.path, other[start])])];
 }
 
-export function arcLengths(line: Line): number[] {
+function arcLengths(line: Line): number[] {
   const lengths = line.length ? [0] : [];
   for (let i = 1; i < line.length; i++) lengths.push(lengths[i - 1] + line[i].distanceTo(line[i - 1]));
   return lengths;

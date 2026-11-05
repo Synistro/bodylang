@@ -482,8 +482,6 @@ export class Muscles {
   private height = 1.8;
   private weightKg: number | null = null;
   private muscleOpacity = 0;
-  private boneTarget = 0;
-  private boneOpacity = 0;
   private palette: Palette;
 
   constructor(
@@ -700,10 +698,6 @@ export class Muscles {
     this.inversesStale = true;
   }
 
-  setBones(visible: number) {
-    this.boneTarget = visible;
-  }
-
   update(dt: number, input: MuscleInput) {
     if (input.palette !== this.palette) this.applyPalette(input.palette);
     const k = 1 - Math.exp(-dt * LOOK.easeRate);
@@ -720,7 +714,6 @@ export class Muscles {
     }
 
     this.muscleOpacity = this.approach(this.muscleOpacity, input.visible, k);
-    this.boneOpacity = this.approach(this.boneOpacity, this.boneTarget, k);
 
     const focusNamed = input.focus !== null;
     this.groupNames.forEach((name, i) => {
@@ -739,11 +732,9 @@ export class Muscles {
     for (const mesh of this.muscleMeshes) mesh.visible = drawn;
 
     // Where no muscle covers it, bone shows: hands, sternum, knees. So the muscle figure always
-    // stands on its skeleton, and setBones only matters once the muscles fade. A single group on
-    // its own brings no bones with it.
-    const boneOpacity = Math.max(this.boneOpacity, this.muscleOpacity);
-    this.boneMaterial.uniforms.uOpacity.value = boneOpacity;
-    for (const mesh of this.boneMeshes) mesh.visible = boneOpacity > LOOK.drawnFrom;
+    // stands on its skeleton. A single group on its own brings no bones with it.
+    this.boneMaterial.uniforms.uOpacity.value = this.muscleOpacity;
+    for (const mesh of this.boneMeshes) mesh.visible = this.muscleOpacity > LOOK.drawnFrom;
     // Solid muscles let the bones ink over them; fading muscles need the bones already drawn behind.
     this.setDrawOrder(this.boneMeshes, this.muscleOpacity > 0.998 ? ORDER.bonesOverMuscles : ORDER.bonesWhileFading);
   }

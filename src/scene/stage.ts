@@ -37,7 +37,7 @@ export interface SceneInput {
   focusMuscle: MuscleGroup | null;
   hoverMuscle: MuscleGroup | null;
   hover: OrganId | null;
-  insets?: Insets; // screen taken by panels, in CSS px; the object frames itself in what is left
+  insets: Insets; // screen taken by panels, in CSS px; the object frames itself in what is left
 }
 
 // Anything on the body the interface can put a label on.
@@ -65,10 +65,6 @@ const EASE_RATE = 7; // per second; a change is settled within about 600 ms
 const CONTOUR_CSS_PX = 0.9;
 const IDLE_SWAY = { rate: 0.32, radiansPerSecond: 0.02 }; // swings about ±3.5° around where the view started
 
-// The room the interface takes when it doesn't say. It centres the canvas between its columns, so
-// both sides lose the same amount; narrow screens stack the body above everything else.
-const DEFAULT_ROOM = { sideShareOfWindow: 0.25, sideLeastRem: 30, sideMostRem: 38, gutterRem: 2, topRem: 1.2, bottomRem: 22, fromWindowWidth: 820 };
-const NO_INSETS: Insets = { left: 0, right: 0, top: 0, bottom: 0 };
 const REM_AT_UNIT_SCALE = 10;
 
 const FIGURE_AZIMUTH = 0.2;
@@ -404,7 +400,6 @@ export class Stage {
   private idle = true;
   private input: SceneInput | null = null;
   private framingKey: string | null = null;
-  private defaultInsets: Insets = NO_INSETS;
   private appliedTheme: Theme | null = null;
   private clock = 0;
   private shellFront = 1;
@@ -525,14 +520,7 @@ export class Stage {
     setContourWeight(CONTOUR_CSS_PX * Math.sqrt(unit), this.renderer.getPixelRatio());
     for (const set of Object.values(this.sets)) set.line.setSizeScale(unit);
     this.lymph.setSizeScale(unit);
-    this.defaultInsets = this.measureDefaultInsets(rem);
   };
-
-  private measureDefaultInsets(rem: number): Insets {
-    if (window.innerWidth <= DEFAULT_ROOM.fromWindowWidth) return NO_INSETS;
-    const side = THREE.MathUtils.clamp(window.innerWidth * DEFAULT_ROOM.sideShareOfWindow, DEFAULT_ROOM.sideLeastRem * rem, DEFAULT_ROOM.sideMostRem * rem) + DEFAULT_ROOM.gutterRem * rem;
-    return { left: side, right: side, top: DEFAULT_ROOM.topRem * rem, bottom: DEFAULT_ROOM.bottomRem * rem };
-  }
 
   setInput(input: SceneInput) {
     this.input = input;
@@ -1200,10 +1188,6 @@ export class Stage {
     return { x: ((p.x + 1) / 2) * rect.clientWidth, y: ((1 - p.y) / 2) * rect.clientHeight, behind: p.z > 1 };
   }
 
-  pick(clientX: number, clientY: number): OrganId | null {
-    return this.pickTarget(clientX, clientY).organ;
-  }
-
   pickTarget(clientX: number, clientY: number): PickTarget {
     const input = this.input;
     if (!input) return { organ: null, muscle: null, onBody: false };
@@ -1429,7 +1413,7 @@ export class Stage {
     set.line.update(dt, input.process, input.stop, motion);
 
     // Asking for a new view flies the camera there; a viewer drag cancels the flight.
-    const insets = input.insets ?? this.defaultInsets;
+    const { insets } = input;
     const key = this.framingKeyOf(input);
     if (key !== this.framingKey) {
       const source = this.framingSourceOf(set, input);

@@ -418,7 +418,6 @@ export class Tract {
     this.wallMaterial.depthWrite = false;
     this.wall = new THREE.Mesh(this.wallSurface.geometry, this.wallMaterial);
     this.wall.renderOrder = 6;
-    this.wall.userData.part = "stomach";
     this.wall.onBeforeRender = (_renderer, _scene, camera) => {
       this.centerWorld.copy(this.center);
       this.group.localToWorld(this.centerWorld);
@@ -429,7 +428,6 @@ export class Tract {
     this.contentsMaterial.depthWrite = false;
     this.contents = new THREE.Mesh(this.contentsSurface.geometry, this.contentsMaterial);
     this.contents.renderOrder = 4;
-    this.contents.userData.part = "stomach";
     this.contentsOutlineMaterial = createOutlineMaterial(palette, resolution);
     this.contentsOutlineMaterial.depthWrite = false; // the stomach is only drawn in outline, and what lies behind it has to show
     const contentsOutline = new THREE.Mesh(this.contentsSurface.geometry, this.contentsOutlineMaterial);
