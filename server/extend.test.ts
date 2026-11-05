@@ -2,11 +2,10 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-// The real quick checks read the whole app, so here they stand aside and the rest of the pipeline is real:
-// real git, a real worktree and a real commit, in a small repository of its own.
-vi.mock("./extendCheck", async (original) => ({ ...(await original<typeof import("./extendCheck")>()) }));
+// Everything here is real except Claude and the two suites: real git, a real worktree and a real commit,
+// in a small repository of its own.
 
 import { BuildParts, BuildStatus, removeProcess, runBuild } from "./extend";
 

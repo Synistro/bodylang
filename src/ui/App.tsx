@@ -179,7 +179,7 @@ export function App() {
       .then(() => {
         if (!alive) return;
         setStage(next);
-        startBeacon(next.frameListeners);
+        startBeacon();
         if (import.meta.env.DEV) Object.assign(window, { stage: next, bodylang: { setUi, setBody, dispatch, getState } });
         startDay();
       })

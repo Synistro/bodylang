@@ -1,5 +1,4 @@
 import react from "@vitejs/plugin-react";
-import { mkdirSync, writeFileSync } from "node:fs";
 import type { Plugin } from "vite";
 import { configDefaults, defineConfig } from "vitest/config";
 
@@ -15,22 +14,6 @@ function bodyAgent(): Plugin {
         req.on("data", (c: Buffer) => chunks.push(c));
         req.on("end", () => {
           console.log(`[beacon] ${Buffer.concat(chunks).toString("utf8").slice(0, 400)}`);
-          res.statusCode = 204;
-          res.end();
-        });
-      });
-      server.middlewares.use("/api/snapshot", (req, res) => {
-        if (req.method === "GET") {
-          server.ws.send("bodylang:snapshot");
-          res.end("requested");
-          return;
-        }
-        const chunks: Buffer[] = [];
-        req.on("data", (c: Buffer) => chunks.push(c));
-        req.on("end", () => {
-          const base64 = Buffer.concat(chunks).toString("utf8").split(",")[1] ?? "";
-          mkdirSync("pipeline/cache", { recursive: true });
-          writeFileSync("pipeline/cache/snapshot.jpg", Buffer.from(base64, "base64"));
           res.statusCode = 204;
           res.end();
         });

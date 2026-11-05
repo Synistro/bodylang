@@ -201,8 +201,6 @@ function defaultParts(): BuildParts {
 let building: { status: BuildStatus; abort: AbortController } | null = null;
 let latest: BuildStatus | null = null;
 
-export const buildStatus = () => latest;
-
 export function stopBuild() {
   building?.abort.abort();
 }

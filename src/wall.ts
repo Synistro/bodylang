@@ -6,33 +6,12 @@ export const WALL = new URLSearchParams(location.search).has("wall");
 export const WALL_FPS = 90;
 export const WALL_PIXEL_RATIO = 1.5;
 
-interface FrameListeners {
-  add(listener: () => void): unknown;
-  delete(listener: () => void): unknown;
-}
-
 function report(event: Record<string, unknown>) {
   void fetch("/api/beacon", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(event), keepalive: true }).catch(() => undefined);
 }
 
-// Lets the coordinating session look through the wallpaper's eyes: nothing else can capture it,
-// since it sits behind every window and the page has no visible console.
-function listenForSnapshotRequests(frameListeners: FrameListeners) {
-  import.meta.hot?.on("bodylang:snapshot", () => {
-    if (!WALL) return;
-    const shoot = () => {
-      frameListeners.delete(shoot);
-      const canvas = document.querySelector("canvas");
-      if (!canvas) return;
-      void fetch("/api/snapshot", { method: "POST", body: canvas.toDataURL("image/jpeg", 0.82) });
-    };
-    frameListeners.add(shoot);
-  });
-}
-
-export function startBeacon(frameListeners: FrameListeners) {
+export function startBeacon() {
   if (!import.meta.env.DEV) return;
-  listenForSnapshotRequests(frameListeners);
   const where = WALL ? "wall" : "page";
   window.addEventListener("error", (e) => report({ where, error: e.message, at: `${e.filename}:${e.lineno}` }));
   window.addEventListener("unhandledrejection", (e) => report({ where, error: String(e.reason) }));

@@ -455,8 +455,8 @@ export async function runTell({ text, state: initial, mode, depth, history, date
     for await (const message of run) {
       if (message.type === "assistant" && measure.firstOutputMs === null) measure.firstOutputMs = elapsed();
       if (message.type === "result") {
-        measure.turns += message.num_turns;
-        measure.costUsd += message.total_cost_usd;
+        measure.turns = message.num_turns;
+        measure.costUsd = message.total_cost_usd;
         measure.subtype = message.subtype;
         if (message.subtype !== "success") send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
       }
