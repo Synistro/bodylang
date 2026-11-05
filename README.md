@@ -45,7 +45,8 @@ open "plash:reload"
 | `src/agent/actions.ts` | The function schemas and the reducer that Claude, the demo and the browser share |
 | `src/scene/` | Three.js: body, organs, muscles, stomach, process line, shaders, camera |
 | `src/ui/` | Rail, page, day chart, message box, labels and stop numbers on the figure |
-| `src/ui/insets/` | The organ and muscle close-up figures |
+| `src/ui/insets/` | The organ and muscle close-up figures, and the anatomy they share (`parts/`) |
+| `src/closeup/` | What Claude can direct in an organ's close-up during an Ask walkthrough: its levels in words, and how the model sets them |
 | `src/wall.ts` | Wallpaper mode |
 | `src/model/day.ts` | The real clock, the day file, and what carries over to the next day |
 | `src/model/origin.ts`, `src/ui/SourceTip.tsx` | Where each number and sentence came from, and the list that says so |

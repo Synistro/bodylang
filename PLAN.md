@@ -95,7 +95,7 @@ These rules keep it quiet:
 - **One sentence, one place.** The sentence at the head of the page changes with the level and answers what you just clicked.
 - **A reading explains itself when it needs to.** Inside its typical band, a reading shows its number and band with no verdict. Past the band, it adds a line saying why: "Blood pressure 175 mmHg. Expected. About 55 mmHg from running." The word is Expected when the model has a normal cause, and Slightly raised, High or Low in amber or red when it hasn't.
 - **Scales read as words.** Inflammation or stress read Quiet, Mild, Moderate or Strong, and 0-to-100 numbers never reach the screen.
-- **Colour only with focus.** The overview is neutral, apart from one orange accent on the organs. Open a system or a thread and its one colour appears on the organs, the line, the curves and a small tick and icon in the rail: Digestion orange, Sugar & energy yellow, Heart & lungs red, Muscles magenta, Brain & mood purple, Immune teal, Liver & kidneys blue, Reproductive green. Blood vessels stay red and blue.
+- **Colour only with focus.** The overview is neutral, apart from one orange accent on the organs. Open a system or a thread and its one colour appears on the organs, the line, the curves and a small tick and icon in the rail: Digestion orange, Sugar & energy yellow, Heart & lungs red, Muscles magenta, Brain & mood purple, Immune teal, Liver & kidneys blue, Reproductive green. On the light theme the main accent is blue, so Digestion is blue and Liver & kidneys orange. Blood vessels stay red and blue.
 - **The rail shows activity quietly.** A dimmer name and icon mean nothing is going on there, and the systems that matter most add one word, such as "Working hard".
 
 ## Telling and asking
@@ -105,6 +105,55 @@ The switch on the message box has two settings. **Tell** is for what happened, a
 An Ask runs on a temporary copy of your day, with your real day set aside untouched. Claude's tools act on the copy, so the body, readings, rail and day chart all show the hypothetical. While you are exploring, a dashed frame runs around the window and a line at the top shows your question with Back to your day. A long question gets a short name there from Claude Haiku, asked for beside the answer. Leaving through that link, pressing Esc from the overview, or switching to Tell puts your real day back exactly as it was, and anything still on its way from Claude is dropped. A follow-up builds on the same copy. To make something real, switch to Tell and say it happened.
 
 Ask for "what if I eat a burger and fries now" and Claude logs them on the copy, then answers in two parts. The short answer sits above the message box: "Burger and fries would push your blood sugar peak to 8.1 mmol/L around 18:04." A walkthrough sits above the day chart, and each step moves the view and the time and says what is happening and why. The day chart draws your real day in grey behind the hypothetical, so the difference is the picture. A question about a concept, such as how insulin works, changes nothing in your day and uses the same walkthrough to go through the organs involved. If the model has nothing for that concept, Claude also starts adding it, as the next section describes.
+
+## Close-ups
+
+During an Ask walkthrough, two views explain together. The body shows where something is and what travels. The right panel shows what happens inside that place, using the same drawing you see there every day.
+
+Ask "why are my quads sore two days after squats?" and Claude logs an example session on the copy of your day, then walks through what follows. On the step about immune cells, the camera sits on the quad, which is flushed, and a red line with moving cells runs from the heart down to it. A hairline joins that spot to the panel, so the panel reads as the spot, magnified. In the panel, the fibres and tears dim, the immune cells stand out as they gather at the tears, and they carry the words "Immune cells". The chart is at 18:43 and the step shows 19:00 yesterday, so the panel says "24 hours earlier". In the runs behind this section, Simple took 8 to 14 s and cost $0.05 to $0.07. Deep took 20 to 23 s, and the one run with a recorded cost came to $0.15.
+
+Simple and Deep are two settings beside the Tell and Ask switch. Simple runs on Sonnet and gives the idea in 2 or 3 steps. Deep runs on Opus and goes through the mechanism in up to 6 steps.
+
+### What Claude sends
+
+The model already draws the close-up, because Ask runs on a copy of your day and the panel reads that copy. So a step only says where to go, when, and what to point at. This is that same step, shortened:
+
+```json
+{ "say": "Immune cells gather at the tears.", "organ": "muscle", "muscle": "quads", "at": -300,
+  "closeup": { "organ": "muscle", "light": ["immune", "swelling"], "set": {}, "compare": null, "basis": null } }
+```
+
+- `at` counts minutes from 00:00 today, so an earlier day is negative, and -300 is 19:00 yesterday. The day chart only reaches one day, so a muscle's close-up and its colour on the body follow a minute off the chart, and the chart stays put. Touching the chart goes back to the chart's time.
+- `light` names what the step is about, using the organ's level names. For the muscle these are `work`, `tears`, `immune`, `swelling`, `pain` and `rebuilt`. What it names stands out and the rest dims. If it travels, its route is drawn on the body, one route at a time.
+- `set` gives a level from 0 to 1 for what the model can't know in this case, such as `{ "immune": 0.7 }`. The model's numbers are real, and these are shown in Sources as Claude's illustration.
+- `compare` draws a second close-up under the first, with `times` multiplying its levels, such as `{ "tears": 0.4 }` for less than half the tears. A question about first and repeat sessions uses this.
+- `basis` says in words where any number in `set` or `compare` comes from, such as "Repeated bout effect, McHugh 2003". Without one, the `guide` tool call is refused.
+
+If Claude replies in Ask with no walkthrough, the reply goes back to it once with a request to give one first. A reply where nothing should be shown, such as telling someone to get help, can be sent again as it is.
+
+### How the code fits together
+
+One line decides what a close-up shows, in your everyday view and in Ask alike: the model's level for each setting, with whatever the step changed.
+
+| Piece | What it does | Where |
+|---|---|---|
+| Definition | Names an organ's levels in words, reads them from the model, and says what travels. It doesn't draw, so the server loads it too, and Claude's tool schema and instructions are generated from it | `src/closeup/muscle.ts`, listed in `src/closeup/list.ts` |
+| Painter | Reads the levels each frame and eases them, so moving between steps reads as the same tissue changing | `src/ui/insets/closeupPainter.ts` |
+| Parts | One piece of anatomy, drawn the same way everywhere: a vessel with a wall and flowing red cells, a nerve with endings and pulses, and a word sitting on what it names | `src/ui/insets/parts/` |
+| Drawing | Places the parts and paints them from the numbers it is handed | `src/ui/insets/MuscleInset.tsx` |
+| Body trace | Draws the route and the hairline over the 3D figure, following the camera | `src/ui/BodyTrace.tsx` |
+
+To give another organ this, write its definition, add it to `CLOSEUPS` and `closeupSpec` in `src/closeup/list.ts`, and paint its drawing in `src/ui/insets/` through `closeupPainter`. Organs without a definition keep working as they are, and Claude can't direct them.
+
+Three rules keep close-ups readable:
+
+- Words sit on the things they name, and each word appears when its thing does. There is no legend.
+- What the step is about is lit, and the rest stays dim behind it.
+- A level says how much of something is there, so any moment reads correctly when paused, and moving through time plays it forwards or backwards.
+
+### What comes next
+
+Only the muscle can be directed so far. Many other questions already have a drawing to direct: seats in the brain, crossing a wall in the small intestine, filling and emptying in the bladder and stomach, a cell's response in the pancreas, and flow in the heart. They gain `light` and `set` one organ at a time. Blockages and injury have no drawing yet. An injury such as a bullet wound belongs on the body as a track through the real organs, with the panel showing the tissue at each one. Other organs can't show a minute off the chart yet, because their readings are only computed around today.
 
 ## The object
 
@@ -149,7 +198,7 @@ The dev server runs Claude Code through the Claude Agent SDK, using your existin
 - 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
 - `add_process` asks a separate session to add something the model doesn't have.
 - `what_if` offers another choice you could make, in words under the answer and as a line on the day chart, in Tell mode only.
-- `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at.
+- `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at, and can point at parts of the close-up, as described under Close-ups.
 - `read_body` returns the model's numbers at any time.
 - `reply` shows the answer, at most three lines of under 18 words each.
 

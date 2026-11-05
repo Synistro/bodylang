@@ -2,7 +2,7 @@ import { FormEvent, ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Skeleton } from "skullet/react";
 import { ReplyLine } from "../model/narrate";
 import { CLAUDE_WORDS, Origin, SENTENCE_ORIGIN } from "../model/origin";
-import { applyWhatIf, clearWhatIf, Exchange, goToStep, Mode, setMode, useStore } from "../store";
+import { applyWhatIf, clearWhatIf, Depth, Exchange, goToStep, Mode, setMode, setUi, useStore } from "../store";
 import { organHover, useScrollFade } from "./hooks";
 import { ArrowUp, X } from "./icons";
 import { showOrgan } from "./navigation";
@@ -157,11 +157,17 @@ const MODES: { mode: Mode; label: string; hint: string }[] = [
   { mode: "ask", label: "Ask", hint: "What would happen, or how something works. Nothing is saved." },
 ];
 
+const DEPTHS: { depth: Depth; label: string; hint: string }[] = [
+  { depth: "simple", label: "Simple", hint: "A quick answer, with a drawing where it helps." },
+  { depth: "deep", label: "Deep", hint: "Takes longer, and goes through it step by step, with comparisons." },
+];
+
 const PLACEHOLDER: Record<Mode, string> = { tell: "Tell your body what happened", ask: "What if I ate this? How does insulin work?" };
 
 export function Composer() {
   const working = useStore((s) => s.exchanges.some((e) => e.status === "working"));
   const mode = useStore((s) => s.mode);
+  const depth = useStore((s) => s.depth);
   const asking = useStore((s) => s.asking !== null);
   const [text, setText] = useState("");
   const field = useRef<HTMLTextAreaElement>(null);
@@ -219,6 +225,15 @@ export function Composer() {
             </button>
           ))}
         </div>
+        {mode === "ask" ? (
+          <div className="mode-switch depth-switch" role="radiogroup" aria-label="How far to go">
+            {DEPTHS.map((d) => (
+              <button key={d.depth} type="button" role="radio" aria-checked={depth === d.depth} title={d.hint} onClick={() => setUi({ depth: d.depth })}>
+                {d.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <button type="submit" className="send" aria-label={working ? "Working" : "Send"} data-shown={working || text.trim() !== "" || undefined} data-working={working || undefined} disabled={working || !text.trim()}>
           <ArrowUp weight="bold" />
         </button>

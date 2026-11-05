@@ -3,10 +3,11 @@ import { Skeleton } from "skullet/react";
 import { SYSTEMS } from "../model/systems";
 import { Stage } from "../scene/stage";
 import { startBeacon, WALL } from "../wall";
-import { AppState, dispatch, getState, leaveAsk, selectedProcess, setBody, setUi, useStore } from "../store";
+import { AppState, closeupOnScreen, dispatch, getState, leaveAsk, muscleMinute, selectedProcess, setBody, setUi, useStore } from "../store";
 import { viewSystemOf } from "../look";
 import { AskBar, Guide } from "./Ask";
 import { AtlasKeys } from "./AtlasKeys";
+import { BodyTrace } from "./BodyTrace";
 import { Explain } from "./Explain";
 import { Answer, Composer } from "./Conversation";
 import { Header, ViewControls } from "./Controls";
@@ -37,6 +38,7 @@ function sceneInput(s: AppState) {
   return {
     trajectory: s.trajectory,
     t: s.t,
+    muscleMinute: muscleMinute(s),
     body: s.body.body,
     theme: s.theme,
     layers: s.layers,
@@ -156,6 +158,7 @@ export function App() {
   const playing = useStore((s) => s.playing);
   const view = useStore((s) => viewSystemOf({ system: s.body.system, process: selectedProcess(s), focus: s.body.focus }));
   const asking = useStore((s) => s.asking !== null);
+  const directed = useStore((s) => closeupOnScreen(s) !== null);
   useFreeArea(sheet, asking);
   useEscape();
   useWallCycle();
@@ -261,10 +264,11 @@ export function App() {
   }, [stage]);
 
   return (
-    <div className="plate" data-view={view} data-asking={asking || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
+    <div className="plate" data-view={view} data-asking={asking || undefined} data-directed={directed || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
       <div className="object">
         <canvas ref={canvas} aria-label="Three-dimensional model of the body. Drag to rotate, scroll to zoom." />
         {stage ? <AtlasKeys stage={stage} /> : null}
+        {stage ? <BodyTrace stage={stage} /> : null}
       </div>
       <div ref={sheet} className="sheet">
         <aside className="left">

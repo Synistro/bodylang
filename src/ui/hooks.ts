@@ -2,16 +2,22 @@ import { RefObject, useDeferredValue, useEffect, useRef } from "react";
 import { assess, Assessment } from "../model/assess";
 import { OrganId, Trajectory } from "../model/simulate";
 import type { Stage } from "../scene/stage";
-import { setUi, useStore } from "../store";
+import { AppState, muscleMinute, setUi, useStore } from "../store";
 
 const PLAY_STEP_MINUTES = 5;
 const SCROLL_FADE_PX = 28;
 
 // The minute that readings and sentences draw from. Coarser while the day plays, so the figures
 // stay readable and React is never busy at frame rate. Deferred, so a scrub stays ahead of it.
+const readableMinute = (s: AppState, t: number) => (s.playing ? Math.round(t / PLAY_STEP_MINUTES) * PLAY_STEP_MINUTES : Math.round(t));
+
 export function useMinute(): number {
-  const minute = useStore((s) => (s.playing ? Math.round(s.t / PLAY_STEP_MINUTES) * PLAY_STEP_MINUTES : Math.round(s.t)));
-  return useDeferredValue(minute);
+  return useDeferredValue(useStore((s) => readableMinute(s, s.t)));
+}
+
+// The same, for what a muscle shows, which a walkthrough step can take off the chart.
+export function useMuscleMinute(): number {
+  return useDeferredValue(useStore((s) => readableMinute(s, muscleMinute(s))));
 }
 
 let assessed: { tr: Trajectory; minute: number; result: Assessment } | null = null;

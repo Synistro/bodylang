@@ -14,11 +14,11 @@ export interface Frame {
   still: boolean; // reduced motion: draw the resting picture for this moment of the model
 }
 
-export type Painter = (frame: Frame, props: InsetProps) => void;
+export type Painter<P = InsetProps> = (frame: Frame, props: P) => void;
 
 // One requestAnimationFrame loop per figure. React renders the figure's parts once and the painter
 // moves them, so playing the timeline never re-renders React on every frame.
-export function useInsetPainter(create: (art: SVGSVGElement) => Painter, props: InsetProps) {
+export function useInsetPainter<P = InsetProps>(create: (art: SVGSVGElement) => Painter<P>, props: P) {
   const art = useRef<SVGSVGElement>(null);
   const latest = useRef(props);
   const drawStill = useRef<(() => void) | null>(null);

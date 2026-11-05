@@ -7,6 +7,7 @@ import { cleanEnvironment } from "./claudeEnv";
 import { BuildStatus, startBuild } from "./extend";
 import { combineIngredients, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 import { NumberBook, unverifiedNumbers } from "./numberCheck";
+import { closeupGuidance } from "../src/closeup/list";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/narrate";
@@ -23,10 +24,12 @@ export interface TellPlan {
 }
 
 const MODEL = process.env.BODYLANG_MODEL ?? "claude-sonnet-5-5";
-const PLANS: Record<"tell" | "ask", TellPlan> = {
-  tell: { model: MODEL, effort: "low", brief: true },
-  // Being brief made it skip the walkthrough for a concept, so an explanation takes the turns it needs.
-  ask: { model: MODEL, effort: "low", brief: false },
+const DEEP_MODEL = process.env.BODYLANG_DEEP_MODEL ?? "claude-opus-5-5";
+const TELL_PLAN: TellPlan = { model: MODEL, effort: "low", brief: true };
+// Being brief made it skip the walkthrough for a concept, so an explanation takes the turns it needs.
+const ASK_PLANS: Record<"simple" | "deep", TellPlan> = {
+  simple: { model: MODEL, effort: "low", brief: false },
+  deep: { model: DEEP_MODEL, effort: "medium", brief: false },
 };
 const MAX_TURNS = 14;
 const MAX_REQUEST_BYTES = 200_000;
@@ -76,13 +79,34 @@ This message is in Ask mode. The person is exploring, and nothing they say here 
 
 Two kinds of question:
 - What would happen if: put the hypothetical into the copy with the same tools and the same care you would use for something real, at the time they name, or now if they name none. Taking something away counts too, so "what if I hadn't had the pizza" is remove_intake. The model then computes the consequences. Things from earlier questions in this exploration stay in the copy until you remove them, so remove what no longer applies.
-- How does this work, such as what insulin does: change nothing in the copy and use the body as the illustration.
+- How does this work, such as what insulin does: use the body as the illustration, and change nothing in the copy unless a close-up needs an example to show, as below.
 
 Then explain it on the body by calling guide, once, after anything you log and before reply. Give 2 to 5 steps in the order the thing happens, and each step puts something on screen and says what it means. Prefer showing a process line or flying into an organ, because an organ shows its diagram, over a general system view. For a what-if, give each step the minute it happens in \`at\`, so they watch it unfold, and use read_body at that minute so every number you state matches what is on screen. Say why it happens as well as what happens, because they are here to understand it. A concept can use numbers from their own readout to make it concrete.
+
+Two views work together during a step. The body shows where something is and what travels: set organ, and muscle with it, to fly there, or process to draw a line. Beside it, the panel shows that place's close-up, the same drawing the person sees every day, moved by the model at the step's minute. So to explain something, put it in the model and let the drawing show it. For how soreness works, log a training session for the muscle a couple of days ago, say in the first step that it is an example, and walk through what follows with each step's \`at\`.
+
+A step's \`at\` can reach other days for a muscle, in the order things happen: during the session, hours after, now, days later. The close-up and the muscle's colour on the body follow it, and the chart stays on today. For anything else, stay within today.
+
+A step can direct a close-up through \`closeup\`:
+- light is what the step is about. It stands out and the rest dims, and whatever it sends across the body, such as a pain signal to the brain, is drawn on the body. Use it whenever a close-up has this, because it tells them where to look.
+- set is for what the model can't know in this case. Leave it empty otherwise, because the model's numbers are real and yours are shown as your illustration.
+- compare adds a second drawing below the first, for a question about a difference such as trained and untrained. Its times scale the lower drawing's levels, and basis says where the difference comes from.
+Stay on one organ through the steps when they are watching one tissue change.
+
+${closeupGuidance()}
 
 Then call reply, once, with the short answer: the result of the what-if, compared with their day as it is, or the idea in plain words. The steps carry the explanation, so don't repeat them.
 
 Asking how a dangerous dose or self-harm would play out is not something to simulate. Log nothing, show nothing, and reply that they should talk to someone now, such as a doctor or a local crisis line.`;
+
+const DEPTH_PROMPT: Record<"simple" | "deep", string> = {
+  simple: `
+
+They chose Simple, so keep it light: 2 or 3 steps, the idea and no more.`,
+  deep: `
+
+They chose Deep, so take the time to really explain it: up to 6 steps, going through the mechanism in order and saying why each thing happens. Compare where a comparison makes it clearer. Check what you say against the readout at the minute you show.`,
+};
 
 const BRIEF_PROMPT = `
 
@@ -199,6 +223,7 @@ const requestSchema = z.object({
   text: z.string().min(1).max(4000),
   state: z.custom<BodyState>((v) => bodyStateShape.safeParse(v).success, "Not a body state"),
   mode: z.enum(["tell", "ask"]).default("tell"),
+  depth: z.enum(["simple", "deep"]).default("simple"),
   history: z.array(z.object({ asked: z.string().max(4000), answered: z.string().max(4000) })).max(10).default([]),
   date: z.string().regex(DATE_PATTERN).nullable().default(null),
 });
@@ -223,7 +248,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, buil
   res.on("close", () => {
     if (!res.writableEnded) abort.abort();
   });
-  const measured = await runTell(input, PLANS[input.mode], (event) => res.write(`data: ${JSON.stringify(event)}\n\n`), abort, buildChanged);
+  const measured = await runTell(input, input.mode === "ask" ? ASK_PLANS[input.depth] : TELL_PLAN, (event) => res.write(`data: ${JSON.stringify(event)}\n\n`), abort, buildChanged);
   console.log(`[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, $${measured.costUsd.toFixed(4)}`);
   res.end();
 }
@@ -241,7 +266,7 @@ export interface TellMeasure {
 type TellInput = Awaited<ReturnType<typeof readBody>>;
 
 // One message, from the sentence to the answer, with each change sent on as it happens.
-export async function runTell({ text, state: initial, mode, history, date }: TellInput, plan: TellPlan, emit: (event: unknown) => void, abort: AbortController, buildChanged: (status: BuildStatus) => void): Promise<TellMeasure> {
+export async function runTell({ text, state: initial, mode, depth, history, date }: TellInput, plan: TellPlan, emit: (event: unknown) => void, abort: AbortController, buildChanged: (status: BuildStatus) => void): Promise<TellMeasure> {
   const started = performance.now();
   const elapsed = () => Math.round(performance.now() - started);
   const measure: TellMeasure = { subtype: "success", totalMs: 0, firstOutputMs: null, firstActionMs: null, replyMs: null, turns: 0, costUsd: 0 };
@@ -292,7 +317,10 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
       for (const [key, minute] of Object.entries(action.args)) if (["at", "from", "until", "bed", "wake"].includes(key) && typeof minute === "number") book.add(formatClock(minute));
       if (action.name === "guide") for (const step of action.args.steps) step.unverified = unverifiedNumbers(step.say, book);
       send({ type: "action", name, args: action.args });
-      if (action.name === "guide") return { content: [{ type: "text" as const, text: "On screen. Now call reply." }] };
+      if (action.name === "guide") {
+        guided = true;
+        return { content: [{ type: "text" as const, text: "On screen. Now call reply." }] };
+      }
       if (action.name === "what_if" && state.whatIf) {
         const alt = simulate({ ...scenario(), activities: state.whatIf.activities });
         return told(JSON.stringify({ alternative: action.args.label, ...readout(alt, action.args.until) }));
@@ -333,6 +361,8 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
   };
 
   let replied = false;
+  let guided = false;
+  let remindedToGuide = false;
   const allTools = [
       ...applied,
       tool(
@@ -372,6 +402,10 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
             .max(3),
         },
         async ({ lines }) => {
+          if (mode === "ask" && !guided && !remindedToGuide) {
+            remindedToGuide = true;
+            return { content: [{ type: "text" as const, text: "Not shown. They asked in Ask to see it on the body, so call guide first, then reply. If this is a reply where nothing should be shown, such as telling them to get help, call reply again as it is." }], isError: true };
+          }
           const long = lines.filter((l) => l.text.trim().split(/\s+/).length >= REPLY_WORDS_UNDER);
           if (long.length) return { content: [{ type: "text" as const, text: `Not shown. Shorten to under ${REPLY_WORDS_UNDER} words: ${long.map((l) => `"${l.text}"`).join(", ")}. Call reply again.` }], isError: true };
           replied = true;
@@ -390,7 +424,7 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
         model: plan.model,
         effort: plan.effort,
         maxTurns: MAX_TURNS,
-        systemPrompt: SYSTEM_PROMPT + (mode === "ask" ? ASK_PROMPT : TELL_PROMPT) + (plan.brief ? BRIEF_PROMPT : ""),
+        systemPrompt: SYSTEM_PROMPT + (mode === "ask" ? ASK_PROMPT + DEPTH_PROMPT[depth] : TELL_PROMPT) + (plan.brief ? BRIEF_PROMPT : ""),
         tools: [],
         allowedTools: ["mcp__body__*"],
         mcpServers: { body: createSdkMcpServer({ name: "body", version: "0.0.0", tools: allTools }) },

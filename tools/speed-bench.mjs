@@ -169,7 +169,7 @@ async function runOne({ plan, sentence, repeat }) {
   let unverified = [];
   let say = "";
   const measure = await runTell(
-    { text: sentence.text, state: sentence.state ?? base(), mode: sentence.mode ?? "tell", history: [], date: "2026-11-05" },
+    { text: sentence.text, state: sentence.state ?? base(), mode: sentence.mode ?? "tell", depth: "simple", history: [], date: "2026-11-05" },
     ALL_PLANS[plan],
     (event) => {
       if (event.type === "action") actions.push({ name: event.name, args: event.args });

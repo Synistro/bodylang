@@ -212,6 +212,28 @@ export function muscleStateAt(events: BodyEvent[], group: MuscleGroup, minute: n
   return { work: clamp01(total.work), fatigue: clamp01(total.fatigue), soreness: clamp01(total.soreness), repair: clamp01(total.repair), glycogenUsed: clamp01(total.glycogenUsed) };
 }
 
+// A muscle's state told as what happens to its fibres: how hard they work, how much is torn and not yet
+// repaired, how sore it feels, and how much has been rebuilt. Damage builds through a session, and repair
+// work then stands for what is still torn. What repair has finished is what has been rebuilt.
+export function muscleStoryAt(events: BodyEvent[], group: MuscleGroup, minute: number) {
+  const { work, fatigue, soreness, repair } = muscleStateAt(events, group, minute);
+  let strained = 0;
+  let during = false;
+  for (const event of events) {
+    const worked = event.muscles.find((m) => m.group === group);
+    const end = endOf(event);
+    if (!worked || end === null || minute < event.from) continue;
+    if (minute <= end) during = true;
+    else strained += worked.load * event.intensity;
+  }
+  return {
+    load: during ? work : 0,
+    damage: clamp01(during ? fatigue : repair),
+    soreness,
+    healed: clamp01(Math.max(0, strained - repair)),
+  };
+}
+
 export const maxHeartRate = (age: number) => TRAINING.maxHeartRate.intercept - TRAINING.maxHeartRate.perYearOfAge * age;
 
 export const namesOf = (muscles: MuscleWork[]) => {

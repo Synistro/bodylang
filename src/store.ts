@@ -22,6 +22,7 @@ export interface Exchange {
 }
 
 export type Mode = "tell" | "ask";
+export type Depth = "simple" | "deep";
 
 // While you are asking, the screen shows a copy of your day that Claude is free to change. Your real
 // day sits here untouched, and leaving puts exactly these same objects back.
@@ -34,6 +35,7 @@ export interface Asking {
   guide: GuideStep[] | null;
   step: number;
   guideOpen: boolean;
+  moment: number | null; // a minute the day chart can't reach, shown by the current step until you move the chart
   cancel: (() => void) | null; // stops an answer still on its way
 }
 
@@ -52,6 +54,7 @@ export interface Ui {
   stop: number | null;
   touring: boolean;
   mode: Mode;
+  depth: Depth;
   asking: Asking | null;
   date: string | null; // the day being saved; null when nothing is, as in the demo
   dayProblem: string | null; // why your day could not be read or saved
@@ -144,6 +147,7 @@ let state: AppState = {
   stop: null,
   touring: false,
   mode: "tell",
+  depth: "simple",
   asking: null,
   date: null,
   dayProblem: null,
@@ -187,7 +191,7 @@ export function dispatch(action: Action, exchangeId?: number) {
   const next = reduce(state.body, action);
   const extra: Partial<Ui> = {};
   if (action.name === "guide" && state.asking) {
-    setBodyState(viewOfStep(next, action.args.steps[0]), { asking: { ...state.asking, guide: action.args.steps, step: 0, guideOpen: true }, stop: null, touring: false });
+    setBodyState(viewOfStep(next, action.args.steps[0]), { asking: { ...state.asking, guide: action.args.steps, step: 0, guideOpen: true, moment: momentOfStep(action.args.steps[0]) }, stop: null, touring: false });
     return;
   }
   // Moving "now" brings the view with it; a viewer who scrubbed elsewhere gets pulled back.
@@ -205,6 +209,10 @@ export function setBody(patch: Partial<BodyState["body"]>) {
 export function setPostureNow(posture: BodyState["activities"][number]["posture"]) {
   dispatch({ name: "set_activity", args: { posture, from: Math.round(state.body.now) } });
 }
+
+export const isOnChart = (minute: number) => minute >= LANES.from && minute <= LANES.to;
+
+const momentOfStep = (step: GuideStep) => (step.at !== null && !isOnChart(step.at) ? step.at : null);
 
 function viewOfStep(body: BodyState, step: GuideStep): BodyState {
   return {
@@ -227,7 +235,7 @@ export function enterAsk() {
     ...state,
     body: { ...state.body, whatIf: null },
     whatIf: null,
-    asking: { id, real: state.body, realDerived: { trajectory, fastClearer, slowClearer, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, cancel: null },
+    asking: { id, real: state.body, realDerived: { trajectory, fastClearer, slowClearer, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, moment: null, cancel: null },
   };
   emit();
   return id;
@@ -270,11 +278,32 @@ export function setMode(mode: Mode) {
   setUi({ mode });
 }
 
+const openMoment = (s: AppState) => (s.asking?.guideOpen ? s.asking.moment : null);
+
+// A muscle's story runs for days and the day chart only reaches one, so a step can show a minute off the
+// chart. The muscle's close-up and its colour on the body read this, and everything else reads the chart.
+export const muscleMinute = (s: AppState) => openMoment(s) ?? s.t;
+
+export const chartOffsetHours = (s: AppState) => {
+  const moment = openMoment(s);
+  return moment === null ? null : Math.round((moment - s.t) / 60);
+};
+
+// Touching the chart means you want to see the chart's time.
+export function releaseMoment() {
+  if (openMoment(state) === null || !state.asking) return;
+  state = { ...state, asking: { ...state.asking, moment: null } };
+  emit();
+}
+
+// What the current walkthrough step points at in the close-up beside the body.
+export const closeupOnScreen = (s: AppState) => (s.asking?.guideOpen && !s.touring ? (s.asking.guide?.[s.asking.step]?.closeup ?? null) : null);
+
 export function goToStep(index: number) {
   const asking = state.asking;
   const step = asking?.guide?.[index];
   if (!asking || !step) return;
-  setBodyState(viewOfStep(state.body, step), { asking: { ...asking, step: index, guideOpen: true }, stop: null, touring: false, playing: false });
+  setBodyState(viewOfStep(state.body, step), { asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(step) }, stop: null, touring: false, playing: false });
 }
 
 export function closeGuide() {

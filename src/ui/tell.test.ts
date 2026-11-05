@@ -35,7 +35,7 @@ describe("what a message ends as", () => {
 
 const burger = { id: "burger", label: "Burger", at: 1030, grams: 250, water_ml: 100, carbs_g: 40, sugar_g: 8, fat_g: 30, protein_g: 25, fiber_g: 2, caffeine_mg: 0, alcohol_g: 0, liquid: false, assumption: "One burger" };
 const logBurger = { type: "action", name: "log_intake", args: burger };
-const step = (over: object) => ({ title: "A step", say: "Something happens.", system: null, process: null, organ: null, muscle: null, at: null, ...over });
+const step = (over: object) => ({ title: "A step", say: "Something happens.", system: null, process: null, organ: null, muscle: null, at: null, closeup: null, ...over });
 
 describe("asking never touches your day", () => {
   afterEach(() => setMode("tell"));

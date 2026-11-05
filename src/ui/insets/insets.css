@@ -113,22 +113,6 @@
 .islet-nucleus { fill: var(--ink-3); stroke: none; }
 .insulin-dot { fill: var(--fig-salmon); stroke: none; }
 
-/* Muscle */
-.muscle-edge { fill: none; stroke: var(--ink-2); stroke-width: 0.06rem; }
-.muscle-striation { fill: none; stroke: var(--ink-3); stroke-width: 0.04rem; opacity: 0.75; }
-.muscle-tear { fill: none; stroke: var(--fig-brick); stroke-width: 0.11rem; }
-.inset-art .muscle-tear-word { fill: var(--fig-brick); }
-.muscle-patch { fill: color-mix(in srgb, var(--fig-salmon) 30%, transparent); stroke: none; }
-.muscle-blood { transition-property: opacity; transition-duration: 240ms; }
-.muscle-stitch { fill: none; stroke: var(--ink); stroke-width: 0.1rem; }
-.muscle-sugar { fill: var(--fig-ochre); stroke: none; }
-.muscle-face { fill: var(--bg); stroke: var(--ink); stroke-width: 0.1rem; }
-.muscle-end { fill: none; stroke: var(--ink-2); stroke-width: 0.06rem; }
-.inset-art .vessel-wall, .inset-art .vessel-bore, .inset-art .vessel-beads { vector-effect: none; }
-.vessel-wall { fill: none; stroke: var(--line-strong); stroke-width: 6.6; }
-.vessel-bore { fill: none; stroke: var(--bg); stroke-width: 5.4; }
-.vessel-beads { fill: none; stroke: var(--fig-ochre); stroke-width: 2.4; }
-
 /* Lungs */
 .inset-art .airway-wall, .inset-art .airway-lining, .inset-art .airway-lumen, .inset-art .airway-cough { vector-effect: none; }
 .airway-wall { fill: none; stroke: var(--ink-2); }

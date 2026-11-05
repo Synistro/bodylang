@@ -25,6 +25,7 @@ export type Theme = keyof typeof PALETTES;
 export interface SceneInput {
   trajectory: Trajectory;
   t: number;
+  muscleMinute: number; // what the muscles show, which a walkthrough step can take off the day chart
   body: Body;
   theme: Theme;
   layers: { skin: boolean; vessels: boolean };
@@ -877,7 +878,7 @@ export class Stage {
   // Worked out once a minute, or when the view changes. The muscles ease toward it every frame.
   private composeMuscleLook(input: SceneInput, view: View) {
     const tr = input.trajectory;
-    const minute = Math.floor(input.t);
+    const minute = Math.floor(input.muscleMinute);
     const focus = view.kind === "focus" && view.organ === "muscle" ? input.focusMuscle : null;
     const cached = this.muscleLook;
     if (cached && cached.view === view && cached.trajectory === tr && cached.minute === minute && cached.focus === focus) return cached;
@@ -1182,6 +1183,10 @@ export class Stage {
     return this.figure.worldJoint("hips", out);
   }
 
+  jointAt(name: string, out = new THREE.Vector3()) {
+    return this.figure.worldJoint(name, out);
+  }
+
   // Projects a world point into CSS pixels of the canvas.
   project(world: THREE.Vector3): { x: number; y: number; behind: boolean } {
     const p = world.clone().project(this.camera);
@@ -1256,7 +1261,7 @@ export class Stage {
   // Which way to face so the muscles that were worked can be seen: the groups' own best angles,
   // averaged by how much each was worked, in whole steps so a passing minute doesn't turn the view.
   private workedAzimuth(input: SceneInput): number | null {
-    const minute = Math.floor(input.t);
+    const minute = Math.floor(input.muscleMinute);
     let sin = 0;
     let cos = 0;
     for (const group of MUSCLE_GROUPS) {

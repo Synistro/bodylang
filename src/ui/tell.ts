@@ -62,7 +62,7 @@ export async function tell(text: string) {
     const response = await fetch("/api/tell", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text, state: s.body, mode, history: s.asking?.history ?? [], date: s.date }),
+      body: JSON.stringify({ text, state: s.body, mode, depth: s.depth, history: s.asking?.history ?? [], date: s.date }),
       signal: stop.signal,
     });
     if (!response.ok || !response.body) throw new Error(`The Claude Code bridge answered ${response.status}.`);

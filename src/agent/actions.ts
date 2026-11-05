@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { closeupSpec } from "../closeup/list";
 import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS } from "../model/events";
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
 import type { Cycle } from "../model/cycle";
 import { CYCLE, DAY } from "../model/params";
 import { ROUTE_IDS } from "../model/processes";
+import { shortText } from "./shortText";
 import { ActivitySpan, Body, CustomSubstance, Intake, OrganId, Posture, postureAt } from "../model/simulate";
 import { formatClock } from "../model/state";
 import { systemById, SystemId } from "../model/systems";
@@ -19,8 +21,6 @@ const system = z.enum(["overview", "digestion", "energy", "circulation", "muscle
 const eventMinute = z.number().int().min(-14 * 1440).max(1799).describe("Minutes since 00:00 today. Negative for earlier days: 18:00 yesterday is -360");
 const foodSource = z.discriminatedUnion("kind", [z.object({ kind: z.literal("table"), fdcId: z.number(), name: z.string(), dataset: z.string() }), z.object({ kind: z.literal("estimate") }), z.object({ kind: z.literal("recipe"), ingredients: z.array(z.object({ fdcId: z.number(), name: z.string(), grams: z.number() })) })]);
 const serving = z.object({ label: z.string().min(1).describe("What one serving is, in the singular, such as slice or cup"), grams: z.number().positive() });
-const wordsAtMost = (limit: number) => (text: string) => text.trim().split(/\s+/).length <= limit;
-const shortText = (limit: number) => z.string().min(1).refine(wordsAtMost(limit), `Keep this to ${limit} words or fewer`);
 
 const customStory = z.object({
   systems: z.array(system.exclude(["overview"])).min(1).describe("Body systems this touches, the main one first"),
@@ -61,6 +61,8 @@ const customStory = z.object({
     .min(1),
 });
 
+const STEP_REACHES_DAYS = 8;
+
 // One step of a guided explanation: what to put on screen, and what to say about it.
 const guideStep = z.object({
   title: shortText(6).describe("What this step is about, in a few words, such as The pancreas answers"),
@@ -69,9 +71,13 @@ const guideStep = z.object({
   process: z.string().nullable().describe("A process id from the readout to draw as a line through the body, or null"),
   organ: organ.nullable().describe("An organ to fly into, which also shows its diagram, or null"),
   muscle: z.enum(MUSCLE_GROUPS).nullable().describe("With organ muscle, the group to go to; otherwise null"),
-  at: minute.nullable().describe("The minute to move to, so the body shows that moment, or null to stay at the same time"),
+  at: z.number().int().min(-STEP_REACHES_DAYS * 1440).max(STEP_REACHES_DAYS * 1440).nullable().describe("The minute to move to, so the body shows that moment, or null to stay at the same time. It counts from 00:00 today, so an earlier day is negative"),
+  closeup: closeupSpec.nullable().describe("What this step points at in the close-up beside the body, or null to leave the close-up as the model draws it"),
   unverified: z.array(z.string()).optional().describe("Leave this out. The app fills it in"),
-});
+}).refine((step) => !step.closeup || step.closeup.organ === step.organ, "A close-up has to be of the organ the step flies to").refine((step) => {
+  const closeup = step.closeup;
+  return !closeup || closeup.basis !== null || (Object.keys(closeup.set).length === 0 && closeup.compare === null);
+}, "Numbers in set or compare need a basis");
 export type GuideStep = z.infer<typeof guideStep>;
 
 export const ACTION_SCHEMAS = {

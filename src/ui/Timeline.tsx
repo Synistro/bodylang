@@ -8,7 +8,7 @@ import { processesAt } from "../model/processes";
 import type { Trajectory } from "../model/simulate";
 import { formatClock } from "../model/state";
 import type { Stage } from "../scene/stage";
-import { getState, selectedProcess, setUi, useStore } from "../store";
+import { getState, releaseMoment, selectedProcess, setUi, useStore } from "../store";
 import { viewSystemOf } from "../look";
 import { DAY_HOURS_REM, DAY_ROWS_REM, DAY_TOP_REM, DayChart } from "./dayChart";
 import { FoodFix } from "./FoodFix";
@@ -183,7 +183,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
   };
 
   return (
-    <section className="day" style={{ "--day-top": `${DAY_TOP_REM}rem`, "--day-rows": `${DAY_ROWS_REM}rem`, "--day-hours": `${DAY_HOURS_REM}rem` }} aria-label="Today, and when each thing ends">
+    <section className="day" onPointerDownCapture={releaseMoment} onKeyDownCapture={releaseMoment} style={{ "--day-top": `${DAY_TOP_REM}rem`, "--day-rows": `${DAY_ROWS_REM}rem`, "--day-hours": `${DAY_HOURS_REM}rem` }} aria-label="Today, and when each thing ends">
       <div className="day-side">
         <div className="transport">
           <button type="button" className="icon-button" aria-label="Previous moment" title="Previous moment" disabled={previous === null} onClick={() => goTo(previous)}>

@@ -1,0 +1,48 @@
+/* Parts: anatomy keeps its own colour in every close-up, whatever view is open. */
+.plate { --fig-blood: #af3029; --fig-nerve: #ad8301; }
+:root[data-theme="dark"] .plate { --fig-blood: #d14d41; --fig-nerve: #d0a215; }
+.inset-art .part-vessel-wall, .inset-art .part-vessel-blood { vector-effect: none; stroke-linecap: butt; fill: none; }
+.part-vessel-wall { stroke: color-mix(in srgb, var(--fig-blood) 70%, var(--bg)); }
+.part-vessel-blood { stroke: color-mix(in srgb, var(--fig-blood) 16%, var(--bg)); }
+.part-red-cell { fill: var(--fig-blood); stroke: none; }
+.part-nerve { fill: none; stroke: var(--fig-nerve); stroke-width: 0.1rem; }
+.part-nerve-ending { fill: var(--fig-nerve); stroke: none; }
+.part-nerve-pulse { fill: var(--fig-nerve); stroke: var(--bg); stroke-width: 0.06rem; }
+.inset-art .part-tag { fill: var(--ink); }
+
+/* A walkthrough explains through the close-up, so it gets more room while one does. */
+.plate[data-directed] { --side-right: clamp(34rem, 28vw, 44rem); }
+
+/* Comparing: two drawings, one under the other. */
+.inset + .inset { margin-top: 0.6rem; }
+
+/* The muscle */
+.fibre-body { fill: color-mix(in srgb, var(--fig-salmon) 16%, var(--bg)); stroke: color-mix(in srgb, var(--fig-salmon) 55%, var(--bg)); stroke-width: 0.07rem; }
+.fibre-band { fill: none; stroke: color-mix(in srgb, var(--fig-salmon) 28%, var(--bg)); stroke-width: 0.05rem; }
+.fibre-tear { fill: var(--bg); stroke: var(--ink); stroke-width: 0.09rem; stroke-linejoin: round; }
+.fibre-rebuilt { fill: color-mix(in srgb, var(--fig-salmon) 52%, var(--bg)); stroke: none; }
+.fibre-fluid { fill: color-mix(in srgb, var(--fig-salmon) 9%, transparent); stroke: none; opacity: 0; }
+.fibre-sugar { fill: var(--fig-ochre); stroke: none; }
+.immune-cell { fill: var(--ink); stroke: var(--bg); stroke-width: 0.06rem; }
+.immune-nucleus { fill: var(--bg); stroke: none; }
+
+/* The body's half of a step, drawn over the figure. */
+.body-trace {
+  --trace-fade: linear-gradient(to bottom, transparent var(--free-top), #000 calc(var(--free-top) + var(--figure-fade)), #000 calc(100% - var(--free-bottom) - var(--figure-fade)), transparent calc(100% - var(--free-bottom)));
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-mask-image: var(--trace-fade);
+  mask-image: var(--trace-fade);
+  animation: settle 320ms var(--ease) backwards;
+}
+.body-link path { fill: none; stroke: var(--ink-3); stroke-width: 1px; }
+.body-link circle { fill: var(--ink); stroke: var(--bg); stroke-width: 1px; }
+.body-travel path { fill: none; stroke-width: 1.5px; opacity: 0.7; stroke-linecap: round; }
+.body-travel circle { stroke: var(--bg); stroke-width: 1px; }
+.body-travel[data-kind="nerve"] path { stroke: var(--fig-nerve); }
+.body-travel[data-kind="nerve"] circle { fill: var(--fig-nerve); }
+.body-travel[data-kind="blood"] path { stroke: var(--fig-blood); }
+.body-travel[data-kind="blood"] circle { fill: var(--ink); }

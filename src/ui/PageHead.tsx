@@ -3,7 +3,7 @@ import { MUSCLE_LABEL } from "../model/muscleGroups";
 import { modelOrigin, Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { systemById } from "../model/systems";
 import { getState, selectedProcess, useStore } from "../store";
-import { assessmentAt, useMinute } from "./hooks";
+import { assessmentAt, useMinute, useMuscleMinute } from "./hooks";
 import { muscleStory, organStory } from "./insets/organStory";
 import { ORGAN_NAME } from "./organ";
 import { sourced } from "./SourceTip";
@@ -17,6 +17,7 @@ export function PageHead() {
   const focus = useStore((s) => s.body.focus);
   const focusMuscle = useStore((s) => s.body.focusMuscle);
   const minute = useMinute();
+  const muscleAt = useMuscleMinute();
 
   const process = useMemo(() => (processId ? selectedProcess(getState()) : null), [processId, tr, minute]);
   const assessment = assessmentAt(tr, minute);
@@ -25,7 +26,7 @@ export function PageHead() {
   let sentence: string;
   let origin: Origin = SENTENCE_ORIGIN;
   if (focus === "muscle" && focusMuscle) {
-    const story = muscleStory(focusMuscle, tr, minute);
+    const story = muscleStory(focusMuscle, tr, muscleAt);
     title = MUSCLE_LABEL[focusMuscle];
     sentence = story.doing;
     origin = modelOrigin(story.evidence, story.source);

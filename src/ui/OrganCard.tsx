@@ -3,8 +3,8 @@ import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/a
 import { CLAUDE_WORDS, modelOrigin, Origin, readingOrigin } from "../model/origin";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { OrganId, Trajectory } from "../model/simulate";
-import { setUi, useStore } from "../store";
-import { assessmentAt, useMinute, useScrollFade } from "./hooks";
+import { chartOffsetHours, setUi, useStore } from "../store";
+import { assessmentAt, useMinute, useMuscleMinute, useScrollFade } from "./hooks";
 import { OrganInset } from "./insets/OrganInset";
 import { muscleStory, organStory, substancesAt } from "./insets/organStory";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
@@ -94,15 +94,18 @@ function useCard() {
 }
 
 function MusclePlate({ group, trajectory, minute }: { group: MuscleGroup; trajectory: Trajectory; minute: number }) {
-  const story = muscleStory(group, trajectory, minute);
+  const shownAt = useMuscleMinute();
+  const offChart = useStore((s) => chartOffsetHours(s) !== null);
+  const story = muscleStory(group, trajectory, shownAt);
   const from = sourced(modelOrigin(story.evidence, story.source));
-  const summary = assessmentAt(trajectory, minute).muscles.find((m) => m.group === group);
+  // These look ahead from the chart's time, so they don't apply to a moment days away from it.
+  const summary = offChart ? null : assessmentAt(trajectory, minute).muscles.find((m) => m.group === group);
   const lines = [summary?.sorenessLine, summary?.normalLine].flatMap((line) => line ?? []);
   const scroller = useCard();
   return (
     <aside ref={scroller} className="organ-card" aria-label={`${MUSCLE_LABEL[group]} close-up`}>
       <div {...from}>
-        <OrganInset organ="muscle" trajectory={trajectory} t={minute} muscle={group} />
+        <OrganInset organ="muscle" trajectory={trajectory} t={shownAt} muscle={group} />
       </div>
       {lines.length ? (
         <ul className="organ-lines">
