@@ -1,7 +1,5 @@
-import type { CSSProperties } from "react";
 import type { ReadingScale, Tone, Trend } from "../model/assess";
 import { SYSTEM_HUE, LookTheme } from "../look";
-import type { SystemId } from "../model/systems";
 
 const TREND_ANGLE: Record<Trend, number> = { rising: -45, steady: 0, falling: 45 };
 
@@ -12,8 +10,6 @@ export function applyHues(theme: LookTheme) {
   const style = document.documentElement.style;
   for (const [system, hue] of Object.entries(SYSTEM_HUE)) style.setProperty(`--hue-${system}`, hue[theme]);
 }
-
-export const hueStyle = (system: SystemId): CSSProperties => ({ "--hue": `var(--hue-${system})` });
 
 // A value with a digit in it reads as a number; "Moderate" or "Irritated" read as words.
 export const isNumeric = (text: string) => /\d/.test(text);

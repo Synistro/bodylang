@@ -12,7 +12,7 @@ const SAVE_AFTER_MS = 300;
 // Tells this page's own saves apart from another page's.
 const WRITER = crypto.randomUUID();
 
-export const DEMO = new URLSearchParams(location.search).has("demo");
+const DEMO = new URLSearchParams(location.search).has("demo");
 
 async function readNewest(): Promise<DayDoc | null> {
   const response = await fetch("/api/day", { cache: "no-store" });

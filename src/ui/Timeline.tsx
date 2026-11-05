@@ -20,8 +20,8 @@ import { Pause, Play, SkipBack, SkipForward } from "./icons";
 import { showMuscle, showOrgan, showProcess } from "./navigation";
 import { sourced } from "./SourceTip";
 
-export const DAY_FROM = LANES.from;
-export const DAY_TO = LANES.to;
+const DAY_FROM = LANES.from;
+const DAY_TO = LANES.to;
 
 const KEY_STEP = { today: { small: 5, large: 30 }, days: { small: 60, large: 360 } };
 
@@ -93,8 +93,8 @@ function goToLane(lane: Lane) {
   else setUi({ stop: target.number });
 }
 
-// A name, and what is there at the minute you are looking at. The chart writes that value and this
-// row's height itself, because both change far more often than React should.
+// A name, and what is there at the minute you are looking at. The chart writes that value itself,
+// because it changes far more often than React should.
 function LaneRow({ lane, hot, origin }: { lane: Lane; hot: boolean; origin: Origin }) {
   return (
     <button {...sourced(origin)} type="button" className="day-row" data-lane={lane.id} data-hot={hot || undefined} disabled={!lane.target} title={lane.label} onClick={() => goToLane(lane)} onPointerEnter={() => pointAtLane(lane)} onPointerLeave={() => pointAtLane(null)}>

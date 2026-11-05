@@ -2,7 +2,7 @@ import { Action } from "../agent/actions";
 import { openingReply } from "../model/narrate";
 import { beginExchange, dispatch, getState, setUi, updateExchange } from "../store";
 
-export const OPENING_MESSAGE =
+const OPENING_MESSAGE =
   "It's 5 pm. 15 minutes ago I ate a sugar bar with pizza, and I had coffee this morning. Is the coffee still working? What's happening in my body now, where does it all go, and what should I feel? I'm sitting.";
 
 const NOW = 17 * 60;

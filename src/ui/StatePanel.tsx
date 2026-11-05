@@ -28,7 +28,7 @@ const QUIET_HINT: Partial<Record<SystemId, string>> = {
 const touchOnly = () => window.matchMedia("(hover: none)").matches;
 
 // A meter: the name and number on one line, a wide bar under them with the typical band and you.
-function ReadingRow({ reading, index, hot }: { reading: Reading; index: number; hot: boolean }) {
+function ReadingRow({ reading, hot }: { reading: Reading; hot: boolean }) {
   const [open, setOpen] = useState(false);
   const tr = useStore((s) => s.trajectory);
   const minute = useMinute();
@@ -39,7 +39,7 @@ function ReadingRow({ reading, index, hot }: { reading: Reading; index: number; 
     else setOpen(!open);
   };
   return (
-    <button type="button" className="reading stagger" data-tone={reading.tone} data-outside={outsideTypical(reading) || undefined} data-open={open || undefined} data-hot={hot || undefined} style={{ "--i": index }} onClick={press} {...organHover(reading.organ)}>
+    <button type="button" className="reading" data-tone={reading.tone} data-outside={outsideTypical(reading) || undefined} data-open={open || undefined} data-hot={hot || undefined} onClick={press} {...organHover(reading.organ)}>
       <span className="reading-head">
         <span className="reading-label">{reading.label}</span>
         <TrendMark trend={reading.trend} />
@@ -72,23 +72,23 @@ function ReadingRow({ reading, index, hot }: { reading: Reading; index: number; 
   );
 }
 
-function ReadingList({ ids, assessment, startIndex }: { ids: Reading["id"][]; assessment: Assessment; startIndex: number }) {
+function ReadingList({ ids, assessment }: { ids: Reading["id"][]; assessment: Assessment }) {
   const hover = useStore((s) => s.hover);
   const readings = ids.flatMap((id) => assessment.readings.find((r) => r.id === id) ?? []).filter(hasSomethingToSay);
   return (
     <>
-      {readings.map((r, i) => (
-        <ReadingRow key={r.id} reading={r} index={startIndex + i} hot={hover !== null && hover === r.organ} />
+      {readings.map((r) => (
+        <ReadingRow key={r.id} reading={r} hot={hover !== null && hover === r.organ} />
       ))}
     </>
   );
 }
 
-function FeelingRow({ feeling, index }: { feeling: Feeling; index: number }) {
+function FeelingRow({ feeling }: { feeling: Feeling }) {
   const look = FEELING_LOOK[feeling.id];
   const Icon = look?.glyph ?? FEELING_FROM_CLAUDE;
   return (
-    <li className="feel stagger" style={{ "--i": index }} {...organHover(feeling.organ)}>
+    <li className="feel" {...organHover(feeling.organ)}>
       <Icon className="feel-icon" weight="light" style={{ color: look ? `var(--hue-${look.system})` : "var(--ink-3)" }} aria-hidden="true" />
       <span className="feel-label">{feeling.label}</span>
       <span className="feel-cause" {...sourced(feelingOrigin(feeling))}>
@@ -108,12 +108,12 @@ function Glance({ assessment }: { assessment: Assessment }) {
   if (!feelings.length) return null;
   return (
     <section className="group" aria-labelledby="feel-title">
-      <h3 id="feel-title" className="group-title stagger" style={{ "--i": 0 }}>
+      <h3 id="feel-title" className="group-title">
         You may feel
       </h3>
       <ul>
-        {feelings.map((f, i) => (
-          <FeelingRow key={f.id} feeling={f} index={1 + i} />
+        {feelings.map((f) => (
+          <FeelingRow key={f.id} feeling={f} />
         ))}
       </ul>
     </section>
@@ -137,25 +137,25 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
       {symptoms.length ? (
         <section className="group" aria-label="You may feel">
           <ul>
-            {symptoms.map((f, i) => (
-              <FeelingRow key={f.id} feeling={f} index={i} />
+            {symptoms.map((f) => (
+              <FeelingRow key={f.id} feeling={f} />
             ))}
           </ul>
         </section>
       ) : null}
       {primary.length ? (
         <section className="readings" aria-label="Readings">
-          <ReadingList ids={primary} assessment={assessment} startIndex={0} />
-          {showMore ? <ReadingList ids={more} assessment={assessment} startIndex={0} /> : null}
+          <ReadingList ids={primary} assessment={assessment} />
+          {showMore ? <ReadingList ids={more} assessment={assessment} /> : null}
           {more.length ? (
-            <button type="button" className="link more stagger" style={{ "--i": primary.length }} aria-expanded={showMore} onClick={() => setShowMore(!showMore)}>
+            <button type="button" className="link more" aria-expanded={showMore} onClick={() => setShowMore(!showMore)}>
               {showMore ? "Less" : "More"}
             </button>
           ) : null}
         </section>
       ) : null}
       {hint ? (
-        <p className="hint stagger" style={{ "--i": 1 + primary.length }}>
+        <p className="hint">
           {hint}
         </p>
       ) : null}
@@ -165,10 +165,10 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
 
 const MUSCLE_ORIGIN = sourced(modelOrigin(REFERENCE.muscleState.evidence, REFERENCE.muscleState.source));
 
-function MuscleRow({ muscle, index, hot }: { muscle: MuscleSummary; index: number; hot: boolean }) {
+function MuscleRow({ muscle, hot }: { muscle: MuscleSummary; hot: boolean }) {
   const detail = [muscle.sorenessLine, muscle.normalLine].filter(Boolean).join(". ");
   return (
-    <li className="stagger" style={{ "--i": index }}>
+    <li>
       <button
         type="button"
         className="item item-button"
@@ -206,16 +206,16 @@ function MusclesDetail({ assessment }: { assessment: Assessment }) {
   const hoverMuscle = useStore((s) => s.hoverMuscle);
   const worked = assessment.muscles.filter((m) => assessment.readings.find((r) => r.id === `muscle:${m.group}`)?.verdict !== "normal").sort((a, b) => b.level - a.level);
   const rested = assessment.muscles.length - worked.length;
-  if (!worked.length) return <p className="hint stagger">{QUIET_HINT.muscles}</p>;
+  if (!worked.length) return <p className="hint">{QUIET_HINT.muscles}</p>;
   return (
     <>
       <ul>
-        {worked.map((m, i) => (
-          <MuscleRow key={m.group} muscle={m} index={i} hot={hoverMuscle === m.group} />
+        {worked.map((m) => (
+          <MuscleRow key={m.group} muscle={m} hot={hoverMuscle === m.group} />
         ))}
       </ul>
       {rested ? (
-        <p className="quiet-line stagger" style={{ "--i": worked.length }} {...MUSCLE_ORIGIN}>
+        <p className="quiet-line" {...MUSCLE_ORIGIN}>
           {`${rested} others rested`}
         </p>
       ) : null}
@@ -238,14 +238,14 @@ export function BrainPage() {
   return (
     <div className="brain-page">
       <section className="readings" aria-label="How you feel">
-        <ReadingList ids={feel} assessment={assessment} startIndex={0} />
+        <ReadingList ids={feel} assessment={assessment} />
       </section>
       <div {...sourced(modelOrigin(story.evidence, story.source))}>
         <OrganInset organ="brain" trajectory={tr} t={minute} muscle={null} />
       </div>
       <ActingHere organ="brain" />
       <section className="readings" aria-label="What is acting on it">
-        <ReadingList ids={acting} assessment={assessment} startIndex={feel.length} />
+        <ReadingList ids={acting} assessment={assessment} />
       </section>
     </div>
   );

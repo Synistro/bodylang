@@ -187,7 +187,7 @@ function LitNames({ stage, lit }: { stage: Stage; lit: { id: AnchorId; name: str
   return (
     <div ref={root} className="atlas-layer">
       <Leaders ids={ids} />
-      {lit.map(({ id, name }, i) => {
+      {lit.map(({ id, name }) => {
         const open = openTarget(id);
         const muscle = muscleOf(id);
         const hot = id === hover || (muscle !== null && muscle === hoverMuscle);
@@ -199,7 +199,6 @@ function LitNames({ stage, lit }: { stage: Stage; lit: { id: AnchorId; name: str
             data-key={id}
             data-hot={hot || undefined}
             disabled={!open}
-            style={{ "--i": i }}
             onClick={open ?? undefined}
             onPointerEnter={() => setUi(muscle ? { hoverMuscle: muscle } : { hover: isOrganId(id) ? id : null })}
             onPointerLeave={() => setUi({ hover: null, hoverMuscle: null })}
@@ -232,7 +231,7 @@ function StopNumbers({ stage, stops }: { stage: Stage; stops: ProcessStop[] }) {
   return (
     <div ref={root} className="atlas-layer">
       <Leaders ids={ids} active={here ? `stop-${here.number}` : null} />
-      {stops.map((stop, i) => {
+      {stops.map((stop) => {
         const on = spotlight === stop.number;
         return (
           <button
@@ -240,7 +239,6 @@ function StopNumbers({ stage, stops }: { stage: Stage; stops: ProcessStop[] }) {
             type="button"
             className="atlas-number"
             data-key={`stop-${stop.number}`}
-            style={{ "--i": i }}
             aria-label={`Stop ${stop.number}, ${stop.label}`}
             aria-pressed={on}
             onClick={() => setUi({ stop: stop.number })}

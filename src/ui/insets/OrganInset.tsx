@@ -21,7 +21,7 @@ import { StomachInset } from "./StomachInset";
 import { UterusInset } from "./UterusInset";
 
 // A new figure is one new entry here.
-export const FIGURES: Record<OrganId, ComponentType<InsetProps>> = {
+const FIGURES: Record<OrganId, ComponentType<InsetProps>> = {
   stomach: StomachInset,
   liver: LiverInset,
   brain: BrainInset,

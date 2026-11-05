@@ -265,7 +265,7 @@ export function App() {
   }, [stage]);
 
   return (
-    <div className="plate" data-view={view} data-asking={asking || undefined} data-directed={directed || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
+    <div className="plate" data-asking={asking || undefined} data-directed={directed || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
       <div className="object">
         <canvas ref={canvas} aria-label="Three-dimensional model of the body. Drag to rotate, scroll to zoom." />
         {stage ? <AtlasKeys stage={stage} /> : null}

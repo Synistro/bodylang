@@ -127,13 +127,13 @@ export function ProcessDetail({ processId }: { processId: string }) {
   const origin = processOrigin(tr, process);
   return (
     <div>
-      <ol className="stops stagger" style={{ "--i": 0 }} aria-label={`Stops of ${process.title}`}>
+      <ol className="stops" aria-label={`Stops of ${process.title}`}>
         {rows.map((row) => (
           <StopItem key={row.stop.id} row={row} spotlight={spotlight} touring={touring} origin={origin} />
         ))}
       </ol>
       {rows.length > 1 && !touring ? (
-        <button type="button" className="action walk stagger" style={{ "--i": 1 }} onClick={() => setUi({ touring: true, stop: process.stops[0].number })}>
+        <button type="button" className="action walk" onClick={() => setUi({ touring: true, stop: process.stops[0].number })}>
           <Play weight="fill" />
           Walk me through it
         </button>
