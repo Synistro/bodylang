@@ -14,14 +14,20 @@ import { processesAt } from "../src/model/processes";
 import { simulate } from "../src/model/simulate";
 import { formatClock, whereabouts } from "../src/model/state";
 
-// Who does what for one message. With a second model, the first records what happened and the second
-// writes the answer from the result.
+// Which model answers, and how. tools/speed-bench.mjs measured these, and PLAN.md has the results. In a
+// brief run the tools just record, and Claude reads the numbers once, when it needs them.
 export interface TellPlan {
-  act: { model: string; effort: "low" | "medium" | "high" };
-  answer: { model: string; effort: "low" | "medium" | "high" } | null;
+  model: string;
+  effort: "low" | "medium" | "high";
+  brief: boolean;
 }
 
-const PLAN: TellPlan = { act: { model: process.env.BODYLANG_MODEL ?? "claude-opus-5-5", effort: "low" }, answer: null };
+const MODEL = process.env.BODYLANG_MODEL ?? "claude-sonnet-5-5";
+const PLANS: Record<"tell" | "ask", TellPlan> = {
+  tell: { model: MODEL, effort: "low", brief: true },
+  // Being brief made it skip the walkthrough for a concept, so an explanation takes the turns it needs.
+  ask: { model: MODEL, effort: "low", brief: false },
+};
 const MAX_TURNS = 14;
 const MAX_REQUEST_BYTES = 200_000;
 
@@ -51,8 +57,6 @@ View: leave the screen showing what matters most for this message. After logging
 
 If they ask about an organ or a process of the body that the readout has no process for and no tool logs, such as the thyroid or melatonin, answer in a line from what you know, marked as your own knowledge, and call add_process once. A separate session then writes it, and it appears on the body once its tests pass, which takes a few minutes. Tell them that in your reply. Use it only for a lasting part of how a body works. Something that happened to them is log_event, and a drug is define_substance.
 
-If the message is really a question about something hypothetical, or asks you to explain how something works, log nothing, answer in a line, and add that the Ask switch by the message box can show it on the body.
-
 Numbers: every number in your reply must come from a readout. Each tool returns a readout at the current time, and read_body gives one at any other minute. Don't state physiology figures from memory, because the person is looking at the model's figures and yours must match them. Blood sugar is in mmol/L.
 
 Finish by calling reply exactly once, with at most three lines of under ${REPLY_WORDS_UNDER} words each. Each line is plain text with no lead-in. Answer what they asked first, then what they may feel if that fits, and always say "you may feel", never "you should feel". Say what is happening directly, in plain words, without "not X but Y" constructions or filler.
@@ -61,7 +65,11 @@ The app estimates a typical body with their measurements, and it never diagnoses
 
 If the message describes something that could be a medical emergency, such as chest pain, an overdose or trouble breathing, your reply should tell them to get medical help now, and you should skip the simulation.`;
 
-// Ask mode runs on the same model and tools, on a temporary copy of the day.
+const TELL_PROMPT = `
+
+If the message is really a question about something hypothetical, or asks you to explain how something works, log nothing, answer in a line, and add that the Ask switch by the message box can show it on the body.`;
+
+// Ask mode runs on the same tools, on a temporary copy of the day.
 const ASK_PROMPT = `
 
 This message is in Ask mode. The person is exploring, and nothing they say here has happened. Your tools act on a temporary copy of their day that is thrown away when they leave, so the screen can show anything freely, and their real day cannot change.
@@ -76,14 +84,9 @@ Then call reply, once, with the short answer: the result of the what-if, compare
 
 Asking how a dangerous dose or self-harm would play out is not something to simulate. Log nothing, show nothing, and reply that they should talk to someone now, such as a doctor or a local crisis line.`;
 
-// For when the recording and the answer are two steps.
-const ACT_PROMPT = `
+const BRIEF_PROMPT = `
 
-Someone else writes the answer after you. Your job in this step is only to record what happened and set the view, so call the tools you need, and then stop, with no text of your own. If nothing should be recorded, such as for a question or an emergency, stop right away. Ask for read_body only if a tool needs a number from it.`;
-
-const ANSWER_PROMPT = `
-
-Everything they said has already been recorded, and the screen is set. Your job in this step is only the answer: use the readout below, call read_body if you need another minute, and then call reply.`;
+Work in as few messages as you can, because the person is watching and each message costs them seconds. Send every call you can together in one message. Logging tools record and return nothing, so put read_body at the current time in the same message as your last log or view call, and then call reply. A reply alone in the next message is ideal. For a food: find_foods first, then all the log_food calls, the view and read_body together, then reply. This overrides what the other instructions say about each tool returning a readout.`;
 
 const ACTION_DESCRIPTIONS: Record<ActionName, string> = {
   correct_intake: "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
@@ -209,7 +212,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, buil
   res.on("close", () => {
     if (!res.writableEnded) abort.abort();
   });
-  const measured = await runTell(input, PLAN, (event) => res.write(`data: ${JSON.stringify(event)}\n\n`), abort, buildChanged);
+  const measured = await runTell(input, PLANS[input.mode], (event) => res.write(`data: ${JSON.stringify(event)}\n\n`), abort, buildChanged);
   console.log(`[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, $${measured.costUsd.toFixed(4)}`);
   res.end();
 }
@@ -246,6 +249,7 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
     book.add(text);
     return { content: [{ type: "text" as const, text }] };
   };
+  const recorded = () => ({ content: [{ type: "text" as const, text: "Recorded." }] });
   const report = (at = state.now) => {
     const tr = trajectory();
     return told(JSON.stringify({ ...readout(tr, at), where_things_are: whereabouts(tr, at).map((w) => ({ id: w.id, label: w.label, unit: w.unit, total: Math.round(w.total), places: w.places.map((p) => `${p.label} ${Math.round(p.share * 100)}%`) })) }));
@@ -282,7 +286,7 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
         const alt = simulate({ ...scenario(), activities: state.whatIf.activities });
         return told(JSON.stringify({ alternative: action.args.label, ...readout(alt, action.args.until) }));
       }
-      return report();
+      return plan.brief ? recorded() : report();
     }),
   );
 
@@ -299,7 +303,7 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
     state = reduce(state, logged);
     book.add(formatClock(args.at));
     send({ type: "action", name: logged.name, args: logged.args });
-    return report();
+    return plan.brief ? recorded() : report();
   };
 
   let replied = false;
@@ -350,18 +354,19 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
       ),
   ];
 
-  const step = async (who: TellPlan["act"], system: string, prompt: string, keep: (name: string) => boolean) => {
+  try {
+    const prompt = renderContext(state, text, mode, history, date);
     book.add(prompt);
     const run = query({
       prompt,
       options: {
-        model: who.model,
-        effort: who.effort,
+        model: plan.model,
+        effort: plan.effort,
         maxTurns: MAX_TURNS,
-        systemPrompt: (mode === "ask" ? SYSTEM_PROMPT + ASK_PROMPT : SYSTEM_PROMPT) + system,
+        systemPrompt: SYSTEM_PROMPT + (mode === "ask" ? ASK_PROMPT : TELL_PROMPT) + (plan.brief ? BRIEF_PROMPT : ""),
         tools: [],
         allowedTools: ["mcp__body__*"],
-        mcpServers: { body: createSdkMcpServer({ name: "body", version: "0.0.0", tools: allTools.filter((t) => keep(t.name)) }) },
+        mcpServers: { body: createSdkMcpServer({ name: "body", version: "0.0.0", tools: allTools }) },
         settingSources: [],
         persistSession: false,
         permissionMode: "dontAsk",
@@ -377,17 +382,6 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
         measure.subtype = message.subtype;
         if (message.subtype !== "success") send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
       }
-    }
-  };
-
-  try {
-    const prompt = renderContext(state, text, mode, history, date);
-    if (plan.answer) {
-      const writes = new Set(["reply", "read_body", "guide"]);
-      await step(plan.act, ACT_PROMPT, prompt, (name) => !writes.has(name));
-      await step(plan.answer, ANSWER_PROMPT, `${renderContext(state, text, mode, history, date)}\n\nThe readout now:\n${report().content[0].text}`, (name) => writes.has(name));
-    } else {
-      await step(plan.act, "", prompt, () => true);
     }
     if (!replied) console.warn("[bodylang] finished without calling reply");
   } catch (e: unknown) {

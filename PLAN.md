@@ -139,7 +139,7 @@ Parameters were tuned by hand toward these same targets, so treat every row of t
 
 ## The Claude Code connection
 
-The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 20 tools and no file or shell access:
+The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Sonnet 5.5 at low effort. Claude gets 20 tools and no file or shell access:
 
 - `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
 - 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
@@ -151,9 +151,34 @@ The dev server runs Claude Code through the Claude Agent SDK, using your existin
 
 Claude turns casual language into quantities and explains the result. Code computes every curve. Claude's instructions make it log nothing for an emergency and tell the person to get help. Code doesn't enforce this, so the live check below is the evidence. Sex-related text stays clinical, and the app never diagnoses.
 
-I ran eight real sentences through live Claude on 2026-11-05: a cold, a leg day yesterday, sex, two apples, an espresso with stress, a short night, a sauna, and crushing chest pain. I ran each one once and judged the result myself. All eight did the right thing, and the chest pain message logged nothing and told the person to call emergency services. On the other seven, the first change on the body came after 4 to 6 s, or 9 s for the sauna. The full answer took 9 to 16 s.
+### How fast, and how I chose the model
 
-I ran ten questions through Ask the same way, once each, with the same caveat: burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch. Answers took 9 to 16 s, with the first change on screen after 4 to 11 s.
+`tools/speed-bench.mjs` runs real sentences through the bridge and checks by code that the right thing was recorded: two foods from the table at 13:10, a workout from 07:00 to 08:00, a correction instead of a second pizza, nothing logged for crushing chest pain and an instruction to get help. I ran ten Tell sentences and five Ask questions twice each on 2026-11-05, 30 Ask and 160 Tell runs in all, for about $4.30.
+
+| Way of working, Tell | Right | First change on screen | Answer, median | Slowest 10% from | Cost per message |
+|---|---|---|---|---|---|
+| Opus 5.5 | 20 of 20 | 3.5 s | 7.9 s | 15.9 s | $0.046 |
+| Sonnet 5.5 | 20 of 20 | 3.8 s | 7.2 s | 12.7 s | $0.022 |
+| Haiku 5.5 | 20 of 20 | 4.2 s | 6.4 s | 11.1 s | $0.002 |
+| Haiku records, Opus answers | 20 of 20 | 3.9 s | 10.9 s | 18.8 s | $0.018 |
+| Haiku records, Sonnet answers | 20 of 20 | 3.8 s | 9.8 s | 16.9 s | $0.011 |
+| Opus, brief | 20 of 20 | 4.5 s | 8.6 s | 17.1 s | $0.047 |
+| **Sonnet, brief (in use)** | 20 of 20 | 3.4 s | 6.3 s | 11.3 s | $0.019 |
+| Haiku, brief | 19 of 20 | 4.1 s | 6.4 s | 9.8 s | $0.002 |
+
+Brief means the tools just record, and Claude reads the numbers once, in as few messages as it can. Compared on the same sentences, Sonnet brief is 2.8 s faster than Opus (standard error 0.5).
+
+Splitting the work, which I expected to help, made it slower: Haiku then Opus takes 3.7 s longer than Opus alone (standard error 0.6), because the second model has to start over. Haiku alone is the fastest and cheapest, and I rejected it on wording and one error. It wrote "more alert-dependent later", and it recorded "from 7 to 8" as 07:30 to 08:30. I judged wording by reading samples from each, with no scoring, so that part is my opinion. Opus is still a little richer in its explanations, and `BODYLANG_MODEL=claude-opus-5-5` puts it back.
+
+For Ask, Sonnet takes 7.6 s at the median against Opus's 11.1 s, and got 10 of 10 right. That is 4.5 s faster on the same questions (standard error 0.5). Brief made it skip the walkthrough for a concept in 2 of 10, so Ask isn't brief.
+
+About 2.4 s of every answer is Claude Code starting and the model's first words, whichever model is used. The SDK's `prewarm` could cut the starting part, but it is an alpha feature that fixes the tools when the process starts, and these tools hold state for each message, so I left it out.
+
+### Live checks
+
+I ran eight sentences through live Claude on 2026-11-05: a cold, a leg day yesterday, sex, two apples, an espresso with stress, a short night, a sauna, and crushing chest pain. This was before the move to Sonnet, once each, judged by me. All eight did the right thing.
+
+I ran ten questions through Ask the same way, with the same caveat: burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch.
 
 ## Claude adds what's missing
 
@@ -200,7 +225,7 @@ What keeps this narrow:
 
 Phase 5 needs a glucose monitor and a wearable from you, and is large and open-ended by my judgment, without data behind it.
 
-Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 for turning language into quantities, with Opus writing the answer, and prompt caching.
+Voice input is left out, because Mac dictation already works.
 
 ## Choices made, and why
 

@@ -16,7 +16,7 @@ pnpm dev
 
 Then open http://localhost:5183. It opens on today at the real time. Anything you type goes to your local Claude Code through the dev server, so it needs the dev server and doesn't work from a static build. http://localhost:5183/?demo replays a scripted day with no model call, and saves nothing.
 
-Your days are saved as one file per date in `~/.bodylang/days/`. Set `BODYLANG_DATA` to keep them somewhere else, and `BODYLANG_MODEL` to use a model other than `claude-opus-5-5`.
+Your days are saved as one file per date in `~/.bodylang/days/`. Set `BODYLANG_DATA` to keep them somewhere else, and `BODYLANG_MODEL` to use a model other than `claude-sonnet-5-5`, such as `claude-opus-5-5`.
 
 ```bash
 pnpm test
@@ -57,6 +57,7 @@ open "plash:reload"
 | `server/days.ts` | Reads and writes the day files |
 | `server/foods.ts`, `server/foods.json` | The USDA food table and its search |
 | `pipeline/` | Python that builds `public/assets/` from the source meshes, and `server/foods.json` from USDA's files |
+| `tools/speed-bench.mjs` | Measures how fast and how right the answers are across models. Every run costs money, and it saves each result and stops at its budget |
 | `tools/webkitshot.swift` | Renders the page in real WebKit off-screen and saves a PNG, the same engine Plash uses |
 
 To look at any state without opening a window, compile the tool once. It takes a URL, width, height, seconds to wait, an output file, and optional JavaScript to run first. In development `window.bodylang` exposes `dispatch`, `setUi`, `setBody` and `getState`.

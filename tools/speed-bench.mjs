@@ -22,11 +22,12 @@ const opus = { model: "claude-opus-5-5", effort: "low" };
 const sonnet = { model: "claude-sonnet-5-5", effort: "low" };
 const haiku = { model: "claude-haiku-5-5", effort: "low" };
 const ALL_PLANS = {
-  opus: { act: opus, answer: null },
-  sonnet: { act: sonnet, answer: null },
-  haiku: { act: haiku, answer: null },
-  "haiku+opus": { act: haiku, answer: opus },
-  "haiku+sonnet": { act: haiku, answer: sonnet },
+  opus: { ...opus, brief: false },
+  sonnet: { ...sonnet, brief: false },
+  haiku: { ...haiku, brief: false },
+  "opus-brief": { ...opus, brief: true },
+  "sonnet-brief": { ...sonnet, brief: true },
+  "haiku-brief": { ...haiku, brief: true },
 };
 const PLANS = flag("plans", Object.keys(ALL_PLANS).join(",")).split(",");
 
@@ -126,6 +127,26 @@ const SENTENCES = [
   } },
 ];
 
+// Explaining, in Ask mode, where the answer's wording matters most. Each has to walk through it on the body.
+const guided = (mustLog) => (a, reply) => {
+  const guide = a.find((x) => x.name === "guide");
+  if (!guide) return "no walkthrough";
+  if (guide.args.steps.length < 2) return "one step";
+  if (mustLog && !logged(a).length) return "didn't put it on the copy";
+  if (!mustLog && logged(a).length) return "changed the copy";
+  return reply ? null : "no reply";
+};
+if (flag("ask", "no") === "yes") {
+  SENTENCES.length = 0;
+  SENTENCES.push(
+    { id: "burger", mode: "ask", text: "what if I eat a burger and fries now", check: guided(true) },
+    { id: "insulin", mode: "ask", text: "how does insulin work", check: guided(false) },
+    { id: "run", mode: "ask", text: "what would a 5k run tonight do to me", check: guided(true) },
+    { id: "coffee_why", mode: "ask", text: "why does coffee keep me awake", check: guided(false) },
+    { id: "skip", mode: "ask", text: "what if I hadn't had the pizza", state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }), check: guided(true) },
+  );
+}
+
 const done = new Set();
 let spent = 0;
 if (existsSync(OUT)) {
@@ -146,11 +167,13 @@ async function runOne({ plan, sentence, repeat }) {
   const actions = [];
   let reply = "";
   let unverified = [];
+  let say = "";
   const measure = await runTell(
-    { text: sentence.text, state: sentence.state ?? base(), mode: "tell", history: [], date: "2026-11-05" },
+    { text: sentence.text, state: sentence.state ?? base(), mode: sentence.mode ?? "tell", history: [], date: "2026-11-05" },
     ALL_PLANS[plan],
     (event) => {
       if (event.type === "action") actions.push({ name: event.name, args: event.args });
+      if (event.type === "action" && event.name === "guide") say = event.args.steps.map((step) => step.say).join(" / ");
       if (event.type === "reply") {
         reply = event.lines.map((l) => l.text).join(" ");
         unverified = event.lines.flatMap((l) => l.unverified ?? []);
@@ -166,7 +189,7 @@ async function runOne({ plan, sentence, repeat }) {
     problem = `check threw: ${e.message}`;
   }
   if (!reply) problem = problem ?? "no reply";
-  return { plan, sentence: sentence.id, repeat, ...measure, ok: problem === null, problem, reply, unverified, tools: actions.map((a) => a.name) };
+  return { plan, sentence: sentence.id, repeat, ...measure, ok: problem === null, problem, reply, say, unverified, tools: actions.map((a) => a.name) };
 }
 
 let next = 0;
