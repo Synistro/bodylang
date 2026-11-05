@@ -4,7 +4,7 @@ import type { ReadingId } from "./assess";
 
 // How the app divides the body for navigation. Each entry says what lights up in 3D and which
 // readings the panel shows when you pick that system.
-export type SystemId = "overview" | "digestion" | "energy" | "circulation" | "muscles" | "brain" | "immune" | "clearing";
+export type SystemId = "overview" | "digestion" | "energy" | "circulation" | "muscles" | "brain" | "immune" | "clearing" | "reproductive";
 
 export interface SystemDef {
   id: SystemId;
@@ -25,6 +25,7 @@ export const SYSTEMS: SystemDef[] = [
   { id: "brain", title: "Brain & mood", organs: ["brain"], readings: ["alertness", "caffeine", "receptors", "stressLevel"], more: ["reward"] },
   { id: "immune", title: "Immune", organs: ["spleen"], readings: ["temperature", "inflammation", "immune"], more: [] },
   { id: "clearing", title: "Liver & kidneys", organs: ["liver", "kidneys", "bladder"], readings: ["caffeine", "alcohol", "bladder", "fluid"], more: ["flowKidneys"] },
+  { id: "reproductive", title: "Reproductive", organs: ["uterus", "ovaries", "prostate"], readings: ["cycleDay", "estradiol", "progesterone"], more: [] },
 ];
 
 export const systemById = (id: SystemId) => {

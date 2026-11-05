@@ -1,4 +1,4 @@
-import { ArrowUp, Barbell, Brain, Heartbeat, Icon, IconProps, Lightning, Pause, PersonSimple, Play, ShieldPlus, SkipBack, SkipForward, X } from "@phosphor-icons/react";
+import { ArrowUp, Barbell, Brain, Dna, Heartbeat, Icon, IconProps, Lightning, Pause, PersonSimple, Play, ShieldPlus, SkipBack, SkipForward, X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { SystemId } from "../model/systems";
 
@@ -29,6 +29,7 @@ export const SYSTEM_GLYPH: Record<SystemId, Glyph> = {
   brain: Brain,
   immune: ShieldPlus,
   clearing: Kidney,
+  reproductive: Dna,
 };
 
 export { ArrowUp, Pause, Play, SkipBack, SkipForward, X };

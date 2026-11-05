@@ -37,6 +37,9 @@ export const STOMACH = {
   fibreSlowdownPerGPer1000Kcal: 0.008,
   fatSlowdown: 0.42, // at 100 % of energy from fat
   walkSpeedup: 0.15,
+  // Neufer 1989: running at 74% of VO2max emptied less than running at 57% or 65%. Maughan and Rehrer
+  // 1994: little effect up to 70 to 75%. The direction is published, and the size is my estimate.
+  hardRunSlowdown: 0.25,
   secretionMlPerKcal: 0.28,
   restingVolumeMl: 45,
   fullnessMl: 1000,
@@ -96,6 +99,13 @@ export const INSULIN = {
   sensitivityAgeLoss: 0.004, // per year above 30
   femaleBonus: 1.08,
   activityBoost: { sleeping: 0.9, sitting: 0.85, standing: 1, walking: 1.45, running: 1.7 },
+  // Adrenaline holds the pancreas back during effort, so insulin falls even with food on board.
+  // Nygaard 2009: a brisk walk after a meal cut the insulin response by 8 to 17%. The size at a hard
+  // run is my estimate; the direction is standard exercise physiology.
+  exerciseBrake: { sleeping: 0, sitting: 0, standing: 0, walking: 0.15, running: 0.75 },
+  exerciseBrakePerMuscleWork: 1.2,
+  exerciseBrakeMost: 0.85,
+  exerciseBasalFall: 0.5, // how much of that brake also lowers insulin's resting level while it lasts
   resistanceCompensationPower: 0.3,
   afterglowGain: 0.5, // muscles stay more sensitive to insulin for a while after moving
   afterglowRiseMin: 15,
@@ -166,6 +176,13 @@ export const HEART = {
   digestionEaseMin: 15,
   caffeineGainPerMgL: 0.6,
   strokeVolumeMlPerKgLean: 1.25,
+  // The heart squeezes out more per beat during effort. Zhou 2001: in untrained people it levels off
+  // near 40% of VO2max, though Vella and Robergs 2005 report it can keep rising. A 50% rise gives about
+  // 18 L/min on a run burning 2.4 L of oxygen a minute, matching the usual 5 L/min per L of oxygen.
+  strokeExerciseGain: 0.5,
+  strokePlateauReserveShare: 0.4,
+  strokeEaseMin: 3,
+  strokeWorkingFromMuscleFlow: 0.02,
   breathsByActivity: { sleeping: 11, sitting: 13, standing: 14, walking: 13, running: 13 },
 } as const;
 
@@ -249,6 +266,33 @@ export const DAY = {
   substanceCarryDays: 2,
   eventCarryDays: 14,
 } as const;
+
+// A typical menstrual cycle. Each hormone is a smooth curve in days from ovulation, drawn by hand to
+// pass through the medians Stricker 2006 measured daily in 20 women, with the day of ovulation taken as
+// 14 days before the next period. Real cycles vary a lot more than one curve can show.
+export const CYCLE = {
+  lengthDays: 28,
+  periodDays: 5,
+  lutealDays: 14,
+  aroundOvulationDays: 1,
+  hormones: {
+    estradiol: { base: 120, ovulatory: { amount: 900, atDay: -1, widthDays: 1.6 }, luteal: { amount: 350, atDay: 7, widthDays: 3.2 } }, // pmol/L
+    progesterone: { base: 0.6, luteal: { amount: 42, atDay: 7, widthDays: 3 } }, // nmol/L
+    lh: { base: 5, surge: { amount: 40, atDay: -0.5, widthDays: 0.7 } }, // IU/L
+  },
+  // At the height of the luteal phase. Temperature: 0.28 to 0.56 °C is the reported rise. Heart: a review
+  // of digital tools reports 2.7 to 3.9 bpm. Insulin: BioCycle (Yeung 2010) HOMA-IR 1.35 to 1.59, read here
+  // as sensitivity 15% lower, though other studies find no change. Metabolism: Benton 2020 finds a small
+  // rise (effect size 0.33), which I put at 3%. Appetite is my estimate.
+  luteal: { temperatureC: 0.35, heartBpm: 3, insulinSensitivity: -0.15, metabolism: 0.03, appetite: 0.1 },
+  cramps: { amount: 0.5, fadeDays: 1.6 }, // my estimate of how it feels for many people, and it varies widely
+  lining: { least: 0.2, atOvulation: 0.75 }, // of its full thickness; the shape is standard, the numbers my estimate
+  namedFrom: { warmthC: 0.15, heartBpm: 1.5 },
+  scale: { estradiol: { min: 0, max: 1400, low: 100, high: 1300 }, progesterone: { min: 0, max: 60, low: 0.3, high: 50 } },
+  evidence: "B" as Evidence,
+  source:
+    "A typical cycle placed by the date you gave, so your real days may differ, and it can't be used for contraception. Hormones: Stricker et al., Clin Chem Lab Med 2006, daily medians from 20 women. Luteal changes: Yeung 2010 (BioCycle), Benton 2020",
+};
 
 // The typical ranges every reading is judged against, with where each one comes from. Thresholds
 // the interface shows as "My estimate" have no published standard and carry evidence C.

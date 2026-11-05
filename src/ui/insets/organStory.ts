@@ -1,7 +1,8 @@
 import type { ReadingId } from "../../model/assess";
+import { cyclePhase } from "../../model/cycle";
 import { effectAt, eventActiveAt, eventLevelAt, curveStrength, isMuscleState, MuscleState, muscleStateAt, namesOf, ResolvedEvent } from "../../model/events";
 import { MUSCLE_GROUPS, MuscleGroup } from "../../model/muscleGroups";
-import { BLOOD_FLOW, Evidence, INSULIN, REFERENCE, SOURCES, STOMACH } from "../../model/params";
+import { BLOOD_FLOW, CYCLE, Evidence, INSULIN, MUSCLE_RECOVERY, REFERENCE, SOURCES, STOMACH } from "../../model/params";
 import { ledgerAt, OrganId, POSTURES, SeriesName, Trajectory, value } from "../../model/simulate";
 import { recoverySentence } from "./muscleRecovery";
 
@@ -162,8 +163,34 @@ function fat({ v, tr }: Now): OrganStory {
   return { doing: storing ? "Storing fat from your meal." : "Releasing a little fat for fuel.", rows: ["tg"], evidence: "B", source: SOURCES.lipemia };
 }
 
+const CYCLE_EVIDENCE = { evidence: CYCLE.evidence, source: CYCLE.source };
+
+function uterus({ tr, t }: Now): OrganStory {
+  const { cycle } = tr;
+  if (!cycle) return { doing: "Resting, with no cycle logged.", rows: [], evidence: "C", source: "General anatomy" };
+  const phase = cyclePhase(cycle, t);
+  const doing = phase === "period" ? "Shedding its lining." : phase === "luteal" ? "Keeping its lining ready." : "Rebuilding its lining.";
+  return { doing, rows: ["cycleDay"], ...CYCLE_EVIDENCE };
+}
+
+function ovaries({ tr, t }: Now): OrganStory {
+  const { cycle } = tr;
+  if (!cycle) return { doing: "Resting, with no cycle logged.", rows: [], evidence: "C", source: "General anatomy" };
+  const phase = cyclePhase(cycle, t);
+  const doing = phase === "ovulation" ? "Releasing an egg about now." : phase === "luteal" ? "The empty follicle is making progesterone." : "A follicle is growing and making estrogen.";
+  return { doing, rows: ["estradiol", "progesterone"], ...CYCLE_EVIDENCE };
+}
+
+function prostate({ tr, t }: Now): OrganStory {
+  const sex = tr.events.some((event) => event.preset === "sex" && event.from <= t && eventLevelAt(event, t) >= MUSCLE_RECOVERY.activeAbove);
+  return { doing: sex ? "Refilling its fluid after sexual activity." : "Making its share of seminal fluid, around the urethra.", rows: ["bladder"], evidence: "C", source: "General anatomy" };
+}
+
 // A new organ is one new row. Each story reads the event behind it first, and otherwise says what the organ does on an ordinary day.
 const STORIES: Record<OrganId, (now: Now) => OrganStory> = {
+  uterus,
+  ovaries,
+  prostate,
   stomach,
   small_intestine: smallIntestine,
   large_intestine: largeIntestine,

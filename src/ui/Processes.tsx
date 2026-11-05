@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
+import { Origin, processOrigin } from "../model/origin";
 import { ProcessStop, StopState } from "../model/processes";
 import { currentProcesses, getState, setUi, useStore } from "../store";
 import { organHover, scrollBehavior, useMinute } from "./hooks";
 import { Play } from "./icons";
 import { isNumeric } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
+import { sourced } from "./SourceTip";
 
 // Shared with the scene through the store's cache, so both read one list per minute.
 function useProcesses() {
@@ -66,7 +68,7 @@ function layoutStops(stops: ProcessStop[]): StopRow[] {
   return rows;
 }
 
-function StopItem({ row, spotlight, touring }: { row: StopRow; spotlight: number | null; touring: boolean }) {
+function StopItem({ row, spotlight, touring, origin }: { row: StopRow; spotlight: number | null; touring: boolean; origin: Origin }) {
   const { stop } = row;
   const on = spotlight === stop.number;
   const el = useRef<HTMLLIElement>(null);
@@ -98,12 +100,16 @@ function StopItem({ row, spotlight, touring }: { row: StopRow; spotlight: number
         </span>
         <span className="stop-label">{stop.label}</span>
         {stop.reading && stop.state !== "passed" ? (
-          <span className="stop-reading" data-numeric={isNumeric(stop.reading) || undefined}>
+          <span className="stop-reading" data-numeric={isNumeric(stop.reading) || undefined} {...sourced(origin)}>
             {stop.reading}
           </span>
         ) : null}
       </button>
-      {on && !touring && stop.say ? <p className="stop-say">{stop.say}</p> : null}
+      {on && !touring && stop.say ? (
+        <p className="stop-say" {...sourced(origin)}>
+          {stop.say}
+        </p>
+      ) : null}
     </li>
   );
 }
@@ -114,13 +120,15 @@ export function ProcessDetail({ processId }: { processId: string }) {
   const spotlight = useStore((s) => s.stop);
   const touring = useStore((s) => s.touring);
   const process = processes.find((p) => p.id === processId);
+  const tr = useStore((s) => s.trajectory);
   const rows = useMemo(() => (process ? layoutStops(process.stops) : []), [process]);
   if (!process) return null;
+  const origin = processOrigin(tr, process);
   return (
     <div>
       <ol className="stops stagger" style={{ "--i": 0 }} aria-label={`Stops of ${process.title}`}>
         {rows.map((row) => (
-          <StopItem key={row.stop.id} row={row} spotlight={spotlight} touring={touring} />
+          <StopItem key={row.stop.id} row={row} spotlight={spotlight} touring={touring} origin={origin} />
         ))}
       </ol>
       {rows.length > 1 && !touring ? (

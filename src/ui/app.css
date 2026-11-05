@@ -281,6 +281,13 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .day-plot:focus-visible { outline-offset: 3px; }
 .day-plot canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: ew-resize; touch-action: none; }
 
+/* Where something on screen came from. What the model computed needs no mark, and what came from
+   Claude has a dotted line under it. Hovering anything says which. */
+.source-tip { position: fixed; top: 0; left: 0; z-index: 20; display: grid; gap: 0.15rem; max-width: 30rem; padding: 0.5rem 0.7rem; border-radius: 0.5rem; background: var(--surface); outline: 1px solid var(--line-strong); outline-offset: -1px; font-size: var(--t-tiny); line-height: 1.4; color: var(--ink-2); pointer-events: none; opacity: 0; text-wrap: pretty; }
+.source-tip b { font-weight: 500; color: var(--ink); }
+[data-src-kind="claude-input"]:not(button):not(.day-plot), .said-number[data-src-kind="claude"] { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
+.day-row[data-src-kind="claude-input"] .day-value { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
+
 /* Correcting what you had, opened from a name along the top of the chart. */
 .fix { position: absolute; z-index: 3; left: clamp(0rem, var(--fix-x), calc(100% - 32rem)); bottom: calc(100% + 0.6rem); width: 32rem; max-width: 100%; padding: 0.7rem 1.1rem 0.8rem; border-radius: 0.8rem; background: var(--surface); outline: 1px solid var(--line-strong); outline-offset: -1px; animation: rise 160ms var(--ease) backwards; }
 .fix-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; font-size: var(--t-small); color: var(--ink-2); }

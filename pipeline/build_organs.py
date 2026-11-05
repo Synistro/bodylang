@@ -586,7 +586,15 @@ ORGANS = {
     "bladder": ("Urinary_Bladder", None, 0.002, 8, 1.8, 1400),
     "spinal_cord": ("Spinal_Cord", None, 0.002, 2, 1.0, 1600),
     "thymus": ("Thymus", None, 0.0018, 2, 1.2, 1600),
+    "uterus": ("Uterus", None, 0.0018, 4, 1.3, 2600),
+    "ovary_L": ("Ovary_L", None, 0.0012, 3, 1.0, 700),
+    "ovary_R": ("Ovary_R", None, 0.0012, 3, 1.0, 700),
+    "tube_L": ("Fallopian_Tube_L", None, 0.0012, 3, 0.8, 900),
+    "tube_R": ("Fallopian_Tube_R", None, 0.0012, 3, 0.8, 900),
+    "prostate": ("Prostate", None, 0.0016, 4, 1.2, 1600),
 }
+# Organs only one reference body has.
+ONLY_IN = {"uterus": "F", "ovary_L": "F", "ovary_R": "F", "tube_L": "F", "tube_R": "F", "prostate": "M"}
 # Shapes in more than one piece, which keep every piece.
 SEVERAL_PIECES = ("thymus",)
 # Coils and folds so fine that decimating leaves little facets, which would shade as flecks.
@@ -641,6 +649,10 @@ def build(sex, code):
     Q = 32767 / 2.5
     cache = {}
     for name, (suffix, pattern, pitch, close, sigma, target) in ORGANS.items():
+        if ONLY_IN.get(name, code) != code:
+            continue
+        # Organs in one body only leave the random sequence as they found it, so the rest build the same.
+        rng_before = rng.bit_generator.state if name in ONLY_IN else None
         f = source_file(code, suffix)
         parts = cache.setdefault(f, load_parts(f))
         chosen = [p for n, p in parts.items() if pattern is None or re.search(pattern, n)]
@@ -682,6 +694,8 @@ def build(sex, code):
         }
         if along is not None:
             meta["organs"][name]["along"] = add(along)
+        if rng_before is not None:
+            rng.bit_generator.state = rng_before
         print(f"  {name:18s} tris {len(F):6d} center {np.round(V.mean(0), 3)}")
 
     gut_parts = {**cache[source_file(code, "Small_Intestine")], **cache[source_file(code, "Intestine_Large")]}

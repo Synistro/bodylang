@@ -23,7 +23,7 @@ async function readNewest(): Promise<DayDoc | null> {
 let saved: DayDoc | null = null;
 let timer = 0;
 
-const sameDay = (a: DayDoc, b: DayDoc | null) => b !== null && a.date === b.date && a.body === b.body && a.intakes === b.intakes && a.activities === b.activities && a.substances === b.substances && a.events === b.events && a.assumptions === b.assumptions;
+const sameDay = (a: DayDoc, b: DayDoc | null) => b !== null && a.date === b.date && a.body === b.body && a.intakes === b.intakes && a.activities === b.activities && a.substances === b.substances && a.events === b.events && a.cycle === b.cycle && a.assumptions === b.assumptions;
 
 async function write(doc: DayDoc) {
   try {

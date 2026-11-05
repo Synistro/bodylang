@@ -28,6 +28,9 @@ const readingAt = (t: number, id: ReadingId, trajectory = tr): Reading => {
 };
 
 const ALL_READINGS: ReadingId[] = [
+  "cycleDay",
+  "estradiol",
+  "progesterone",
   "glucose",
   "insulin",
   "tg",

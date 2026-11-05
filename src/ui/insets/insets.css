@@ -26,9 +26,6 @@
 /* The source is one small word until you ask. */
 .organ-source { position: relative; align-self: flex-start; margin-top: 0.2rem; font-size: var(--t-tiny); line-height: 1.4; color: var(--ink-3); cursor: default; }
 .organ-source::after { content: ""; position: absolute; inset: -1.4rem -0.6rem; }
-.organ-source-text { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 180ms var(--ease), opacity 160ms var(--ease); }
-.organ-source-text > span { min-height: 0; overflow: hidden; color: var(--ink-2); text-wrap: pretty; }
-.organ-source:focus .organ-source-text, .organ-source:hover .organ-source-text { grid-template-rows: 1fr; opacity: 1; }
 .organ-source:focus { outline: none; }
 
 /* Figures: fine line work in the colour of the view. Marks that stay in the drawing's own units scale

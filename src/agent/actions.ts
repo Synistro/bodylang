@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS } from "../model/events";
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
-import { DAY } from "../model/params";
+import type { Cycle } from "../model/cycle";
+import { CYCLE, DAY } from "../model/params";
 import { ROUTE_IDS } from "../model/processes";
 import { ActivitySpan, Body, CustomSubstance, Intake, OrganId, Posture, postureAt } from "../model/simulate";
 import { formatClock } from "../model/state";
@@ -11,9 +12,9 @@ import type { SystemId } from "../model/systems";
 // opening replays them, and the browser and server share the same reducer.
 
 const minute = z.number().int().min(-1440).max(1799).describe("Minutes since 00:00 today, for example 16:45 is 1005. Yesterday is negative: 23:00 yesterday is -60");
-const organ = z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat"]);
+const organ = z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"]);
 const posture = z.enum(["sleeping", "sitting", "standing", "walking", "running"]);
-const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing"]);
+const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing", "reproductive"]);
 const eventMinute = z.number().int().min(-14 * 1440).max(1799).describe("Minutes since 00:00 today. Negative for earlier days: 18:00 yesterday is -360");
 const foodSource = z.discriminatedUnion("kind", [z.object({ kind: z.literal("table"), fdcId: z.number(), name: z.string(), dataset: z.string() }), z.object({ kind: z.literal("estimate") })]);
 const serving = z.object({ label: z.string().min(1).describe("What one serving is, in the singular, such as slice or cup"), grams: z.number().positive() });
@@ -68,6 +69,7 @@ const guideStep = z.object({
   organ: organ.nullable().describe("An organ to fly into, which also shows its diagram, or null"),
   muscle: z.enum(MUSCLE_GROUPS).nullable().describe("With organ muscle, the group to go to; otherwise null"),
   at: minute.nullable().describe("The minute to move to, so the body shows that moment, or null to stay at the same time"),
+  unverified: z.array(z.string()).optional().describe("Leave this out. The app fills it in"),
 });
 export type GuideStep = z.infer<typeof guideStep>;
 
@@ -108,6 +110,11 @@ export const ACTION_SCHEMAS = {
       wake: minute.describe("When they woke up today"),
     })
     .refine((a) => a.wake > a.bed, "wake must be later than bed"),
+  set_cycle: z.object({
+    last_start: z.number().int().min(-90 * 1440).max(1799).nullable().describe("When their latest period began, in minutes since 00:00 today: 3 days ago is -4320. Null clears it, such as on a hormonal contraceptive, in pregnancy or after menopause, when this curve doesn't apply"),
+    length_days: z.number().int().min(21).max(45).optional().describe("The usual length of their cycle, only if they say. Otherwise 28"),
+    period_days: z.number().int().min(2).max(10).optional().describe("How long their period usually lasts, only if they say. Otherwise 5"),
+  }),
   set_body: z.object({
     sex: z.enum(["male", "female"]).optional(),
     age: z.number().min(18).max(90).optional(),
@@ -175,6 +182,7 @@ export interface BodyState {
   activities: ActivitySpan[];
   substances: CustomSubstance[];
   events: BodyEvent[];
+  cycle: Cycle | null;
   now: number;
   system: SystemId;
   process: string | null;
@@ -248,7 +256,7 @@ export function reduce(state: BodyState, action: Action): BodyState {
       const intake = state.intakes.find((i) => i.id === id);
       if (!intake) throw new Error(`No food or drink with id ${id}. Known ids: ${state.intakes.map((i) => i.id).join(", ") || "none"}`);
       if (grams !== undefined && intake.grams <= 0) throw new Error(`${intake.label} was logged with no weight, so log it again with its real amount.`);
-      const corrected = { ...(grams === undefined ? intake : scaledTo(intake, grams)), at: at ?? intake.at };
+      const corrected: Intake = { ...(grams === undefined ? intake : { ...scaledTo(intake, grams), portionBy: "you" as const }), at: at ?? intake.at };
       return { ...state, intakes: state.intakes.map((i) => (i.id === id ? corrected : i)), assumptions: assumption === undefined ? state.assumptions : { ...state.assumptions, [id]: assumption } };
     }
     case "remove_intake":
@@ -257,6 +265,11 @@ export function reduce(state: BodyState, action: Action): BodyState {
       return { ...state, activities: withActivity(state.activities, action.args.posture, action.args.from, action.args.until), whatIf: null };
     case "set_sleep":
       return { ...state, activities: withSleep(state.activities, action.args.bed, action.args.wake), whatIf: null };
+    case "set_cycle": {
+      const { last_start: start, length_days: lengthDays, period_days: periodDays } = action.args;
+      if (start === null) return { ...state, cycle: null };
+      return { ...state, cycle: { start, lengthDays: lengthDays ?? state.cycle?.lengthDays ?? CYCLE.lengthDays, periodDays: periodDays ?? state.cycle?.periodDays ?? CYCLE.periodDays } };
+    }
     case "set_body": {
       const a = action.args;
       return {
@@ -349,6 +362,8 @@ export function traceLine(action: Action): string {
       return `set_activity ${action.args.posture}, from ${clock(action.args.from)}`;
     case "set_sleep":
       return `set_sleep ${clock(action.args.bed)} to ${clock(action.args.wake)}`;
+    case "set_cycle":
+      return action.args.last_start === null ? "set_cycle none" : `set_cycle period began ${clock(action.args.last_start)}, ${action.args.length_days ?? CYCLE.lengthDays} days`;
     case "set_body":
       return `set_body ${Object.entries(action.args).map(([k, v]) => `${k} ${v}`).join(", ")}`;
     case "set_now":

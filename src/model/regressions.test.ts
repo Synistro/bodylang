@@ -15,7 +15,7 @@ const food = (id: string, at: number, parts: Partial<Intake> = {}): Intake => ({
 const day = (parts: Partial<Scenario>): Scenario => ({ body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], ...parts });
 const training = (id: string, from: number, until: number | null, group: "chest" | "back" | "quads") => ({ id, label: id, preset: "training" as const, from, until, intensity: 0.8, muscles: [{ group, load: 1 }], symptoms: [], custom: null, source: "" });
 
-const start: BodyState = { body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], now: 1020, system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null, assumptions: {} };
+const start: BodyState = { body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], cycle: null, now: 1020, system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null, assumptions: {} };
 const apply = (state: BodyState, action: Action) => reduce(state, action);
 
 describe("a meal with a drink in it", () => {

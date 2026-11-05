@@ -48,7 +48,10 @@ open "plash:reload"
 | `src/ui/insets/` | The organ and muscle close-up figures |
 | `src/wall.ts` | Wallpaper mode |
 | `src/model/day.ts` | The real clock, the day file, and what carries over to the next day |
+| `src/model/origin.ts`, `src/ui/SourceTip.tsx` | Where each number and sentence came from, and the note that says so |
+| `src/model/cycle.ts` | The menstrual cycle |
 | `server/agent.ts` | The Claude Code bridge, its system prompt and its tools |
+| `server/numberCheck.ts` | Checks every number in Claude's replies against what the model returned |
 | `server/days.ts` | Reads and writes the day files |
 | `server/foods.ts`, `server/foods.json` | The USDA food table and its search |
 | `pipeline/` | Python that builds `public/assets/` from the source meshes, and `server/foods.json` from USDA's files |

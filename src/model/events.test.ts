@@ -593,8 +593,8 @@ describe("the fixed quirks", () => {
 });
 
 describe("the rail", () => {
-  it("lists eight systems in order, with the agreed titles", () => {
-    expect(SYSTEMS.map((s) => s.title)).toEqual(["Overview", "Digestion", "Sugar & energy", "Heart & lungs", "Muscles", "Brain & mood", "Immune", "Liver & kidneys"]);
+  it("lists nine systems in order, with the agreed titles", () => {
+    expect(SYSTEMS.map((s) => s.title)).toEqual(["Overview", "Digestion", "Sugar & energy", "Heart & lungs", "Muscles", "Brain & mood", "Immune", "Liver & kidneys", "Reproductive"]);
     expect(systemById("clearing").title).toBe("Liver & kidneys");
     expect([...systemById("muscles").readings, ...systemById("muscles").more]).toHaveLength(MUSCLE_GROUPS.length);
     expect(systemById("immune").readings).toContain("temperature");
@@ -674,7 +674,7 @@ describe("threads", () => {
 });
 
 describe("the tools", () => {
-  const state: BodyState = { body, intakes: [], activities: base.activities, substances: [], events: [], now: hm(12), system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null, assumptions: {} };
+  const state: BodyState = { body, intakes: [], activities: base.activities, substances: [], events: [], cycle: null, now: hm(12), system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null, assumptions: {} };
   const args = { id: "cold", label: "Cold", preset: "illness", from: hm(8), until: null, intensity: 0.4, muscles: [], symptoms: ["cough"], source: "", custom: null };
 
   it("passes a food's fructose share through, and leaves fibre out of the energy it traces", () => {

@@ -5,7 +5,7 @@ import { beginExchange, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rem
 
 const replyEvent = z.object({
   type: z.literal("reply"),
-  lines: z.array(z.object({ text: z.string(), organ: z.string().optional() })),
+  lines: z.array(z.object({ text: z.string(), organ: z.string().optional(), unverified: z.array(z.string()).optional() })),
 });
 const actionEvent = z.object({ type: z.literal("action"), name: z.string(), args: z.unknown() });
 const errorEvent = z.object({ type: z.literal("error"), message: z.string() });

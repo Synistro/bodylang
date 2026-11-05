@@ -265,6 +265,13 @@ const SYSTEM_VIEWS: Record<SystemId, SystemView> = {
     azimuth: 2.58, // from a little behind, so the kidneys come before the liver
     polar: LEVEL_POLAR,
   }),
+  reproductive: row({
+    center: (places, out) => places.organ("bladder", out),
+    height: 0.14,
+    width: 0.2,
+    azimuth: 0.2,
+    polar: LEVEL_POLAR,
+  }),
 };
 
 interface FocusView extends ViewAngle {
@@ -290,6 +297,9 @@ const FOCUS_VIEWS: Record<OrganId, FocusView> = {
   bladder: focusOn({ height: 0.09, width: 0.1, azimuth: 0.22, polar: LEVEL_POLAR }),
   muscle: focusOn({ height: 0.905, standingHeight: 1.02, width: 0.6, azimuth: FIGURE_AZIMUTH, polar: LEVEL_POLAR, headroom: HEADROOM }, "hidden", { hides: true }),
   fat: focusOn({ height: 0.38, width: 0.36, azimuth: FIGURE_AZIMUTH, polar: LEVEL_POLAR }),
+  uterus: focusOn({ height: 0.09, width: 0.11, azimuth: 0.24, polar: LEVEL_POLAR }),
+  ovaries: focusOn({ height: 0.1, width: 0.14, azimuth: 0.12, polar: LEVEL_POLAR }),
+  prostate: focusOn({ height: 0.08, width: 0.09, azimuth: 0.5, polar: LEVEL_POLAR }),
 };
 
 // How to look at one muscle group. A group on both sides of the body frames both.
@@ -332,9 +342,12 @@ const ORGAN_NAME: Record<OrganId, string> = {
   bladder: "Bladder",
   muscle: "Muscle",
   fat: "Fat",
+  uterus: "Uterus",
+  ovaries: "Ovaries",
+  prostate: "Prostate",
 };
 
-const ORGANS: readonly OrganId[] = ["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat"];
+const ORGANS: readonly OrganId[] = ["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "uterus", "ovaries", "prostate", "muscle", "fat"];
 
 const LYMPH_NAME: Record<LymphCluster, string> = { neck: "Neck nodes", armpit: "Armpit nodes", abdomen: "Belly nodes", groin: "Groin nodes" };
 
@@ -421,7 +434,7 @@ export class Stage {
     store: new THREE.Color(),
   };
   // Every system's organs flush in its own colour, from barely tinted to full.
-  private readonly ramps: Record<SystemId, Ramp> = { overview: newRamp(), digestion: newRamp(), energy: newRamp(), circulation: newRamp(), muscles: newRamp(), brain: newRamp(), immune: newRamp(), clearing: newRamp() };
+  private readonly ramps: Record<SystemId, Ramp> = { overview: newRamp(), digestion: newRamp(), energy: newRamp(), circulation: newRamp(), muscles: newRamp(), brain: newRamp(), immune: newRamp(), clearing: newRamp(), reproductive: newRamp() };
   private readonly places: Places = {
     height: 1.8,
     organ: (id, out) => this.organCenter(this.currentSet(), id, out),
@@ -646,7 +659,7 @@ export class Stage {
       const spotlight = input.stop === null ? undefined : process.stops.find((s) => s.number === input.stop);
       return { kind: "process", process, stops, lit: spotlight ?? process.stops.find((s) => s.state === "here") ?? null };
     }
-    return { kind: "system", view: SYSTEM_VIEWS[input.system], organs: new Set(systemById(input.system).organs) };
+    return { kind: "system", view: SYSTEM_VIEWS[input.system], organs: new Set(systemById(input.system).organs.filter((organ) => this.bodyHas(organ))) };
   }
 
   private eventOf(process: Process): ResolvedEvent | undefined {
@@ -1045,6 +1058,11 @@ export class Stage {
       case "small_intestine":
       case "large_intestine":
         return this.partAnchor(set, id, out);
+      case "ovaries":
+        return set.anatomy.has("ovary_L") ? this.sideNearest(set, "ovary_L", "ovary_R", out, near) : this.partAnchor(set, "bladder", out);
+      case "uterus":
+      case "prostate":
+        return this.partAnchor(set, set.anatomy.has(id) ? id : "bladder", out);
       default: {
         const unreachable: never = id;
         throw new Error(`Unhandled organ ${String(unreachable)}`);
@@ -1060,6 +1078,13 @@ export class Stage {
   }
 
   // The middle of an organ for framing it, both sides of a pair included.
+  // Each body has only its own reproductive organs, so a view can't name or light the others.
+  private bodyHas(organ: OrganId): boolean {
+    const { anatomy } = this.currentSet();
+    if (organ === "ovaries") return anatomy.has("ovary_L");
+    return organ === "uterus" || organ === "prostate" ? anatomy.has(organ) : true;
+  }
+
   private organCenter(set: SexSet, id: OrganId, out: THREE.Vector3): THREE.Vector3 {
     switch (id) {
       case "large_intestine":
@@ -1068,6 +1093,12 @@ export class Stage {
         return this.partCenter(set, "lung_L", out).lerp(this.partCenter(set, "lung_R", this.scratchB), 0.5);
       case "kidneys":
         return this.partCenter(set, "kidney_L", out).lerp(this.partCenter(set, "kidney_R", this.scratchB), 0.5);
+      case "ovaries":
+        if (!set.anatomy.has("ovary_L")) return this.partCenter(set, "bladder", out);
+        return this.partCenter(set, "ovary_L", out).lerp(this.partCenter(set, "ovary_R", this.scratchB), 0.5);
+      case "uterus":
+      case "prostate":
+        return this.partCenter(set, set.anatomy.has(id) ? id : "bladder", out);
       case "muscle":
         return this.figure.worldJoint("hips", out);
       case "fat": {

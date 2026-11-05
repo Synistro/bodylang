@@ -87,6 +87,7 @@ const initialBody: BodyState = {
   intakes: [],
   substances: [],
   events: [],
+  cycle: null,
   now: 12 * 60,
   system: "overview",
   process: null,
@@ -97,7 +98,7 @@ const initialBody: BodyState = {
 };
 
 function derive(b: BodyState): Derived {
-  const scenario: Scenario = { body: b.body, intakes: b.intakes, activities: b.activities, substances: b.substances, events: b.events };
+  const scenario: Scenario = { body: b.body, intakes: b.intakes, activities: b.activities, substances: b.substances, events: b.events, cycle: b.cycle };
   return {
     trajectory: simulate(scenario),
     fastClearer: simulate({ ...scenario, caffeineHalfLifeH: CAFFEINE.halfLifeH.low, sensitivityScale: 1.3 }),
@@ -150,7 +151,7 @@ export function setUi(patch: Partial<Ui>) {
 
 function setBodyState(next: BodyState, extra: Partial<Ui> = {}) {
   const physiologyChanged =
-    next.body !== state.body.body || next.intakes !== state.body.intakes || next.activities !== state.body.activities || next.substances !== state.body.substances || next.events !== state.body.events || next.whatIf !== state.body.whatIf;
+    next.body !== state.body.body || next.intakes !== state.body.intakes || next.activities !== state.body.activities || next.substances !== state.body.substances || next.events !== state.body.events || next.cycle !== state.body.cycle || next.whatIf !== state.body.whatIf;
   const derived = physiologyChanged ? derive(next) : null;
   const trajectory = derived?.trajectory ?? state.trajectory;
   const process = next.process === null ? null : followProcess(trajectory, next.process, Math.round(state.t));
@@ -221,15 +222,15 @@ export function leaveAsk() {
 // Your day as a file. Nothing about what is on screen goes in, and neither does a copy being explored.
 export function dayDocOf(s: AppState): DayDoc | null {
   if (!s.date || s.asking) return null;
-  const { body, intakes, activities, substances, events, assumptions } = s.body;
-  return { version: 1, date: s.date, body, intakes, activities, substances, events, assumptions };
+  const { body, intakes, activities, substances, events, cycle, assumptions } = s.body;
+  return { version: 1, date: s.date, body, intakes, activities, substances, events, cycle, assumptions };
 }
 
 // Puts a saved day in place, keeping whatever view you are on.
 export function restoreDay(doc: DayDoc, minute: number) {
   const atNow = Math.abs(state.t - state.body.now) < 1;
   setBodyState(
-    { ...state.body, body: doc.body, intakes: doc.intakes, activities: doc.activities, substances: doc.substances, events: doc.events, assumptions: doc.assumptions, whatIf: null, now: minute },
+    { ...state.body, body: doc.body, intakes: doc.intakes, activities: doc.activities, substances: doc.substances, events: doc.events, cycle: doc.cycle, assumptions: doc.assumptions, whatIf: null, now: minute },
     { date: doc.date, dayProblem: null, ...(atNow ? { t: minute } : {}) },
   );
 }

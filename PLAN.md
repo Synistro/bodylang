@@ -40,6 +40,24 @@ The body, readings, sentences and day chart all read this one calculation, and n
 
 **Every estimate can be corrected.** Foods have a dotted underline along the top of the day chart. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
 
+## Where each thing came from
+
+Hover any number or sentence and a small note says where it came from, in one of five ways:
+
+| Note | Meaning | Example |
+|---|---|---|
+| Computed by the model | The physiology model calculated it, and the note gives the source of its typical range and how far to trust it | Blood sugar 5.1, with the ADA range and evidence A |
+| Computed by the model, from Claude's numbers | The model calculated it, but something feeding it is Claude's estimate | Heart rate during a sauna, or blood sugar after a food the table doesn't have |
+| Added by Claude | Claude's own words, or a number the model never returned | The description of a custom event |
+| From the USDA food table | The food's contents | Pizza, cheese, thin crust |
+| You said this | Your own measurements | 62 kg |
+
+The last four are the ones to look at, so the second and third also have a dotted line under them. Nothing unmarked came from Claude's own knowledge.
+
+Claude's replies are checked by code. Its instructions say every number must come from the model, and the bridge keeps a list of each number the model returned to it, plus what you said. Any number in a reply or a walkthrough step that isn't on that list gets the dotted line and the note "The model never returned this number". A number Claude worked out by arithmetic counts as added, because nothing computed it.
+
+I checked this by having a script walk 40 views in real WebKit, with a table food, an estimated food, a sauna, a workout, a drug and a cycle all logged, and list any number on screen with no note. The list came back empty once I fixed the one it found. The walk leaves out the clock, the numbers on stops, the count in a walkthrough and the sliders. The canvas of the day chart can't be walked this way: its rows carry the notes, and hovering a row of the plot shows that row's note.
+
 ## How the screen is organised
 
 The body stands in the middle of the window. On its left is the rail, an outline of the body: the systems as plain text, with the one you are in opened to show where you are. The message box is at the bottom of that column, with the latest answer as plain text above it. On the right is a page for where you are, in a column of the same width, so the body stays centered. Under the body is the day chart.
@@ -49,7 +67,7 @@ The look uses the system font at 13 px for most text and 20 px at most, a warm n
 Two questions organise everything:
 
 - **What happened?** The things you told it: pizza, coffee, a chest workout, a cold. These are threads.
-- **Where is it happening?** Parts of the body: Digestion, Sugar & energy, Heart & lungs, Muscles, Brain & mood, Immune, Liver & kidneys. These are systems, listed in the rail on the left.
+- **Where is it happening?** Parts of the body: Digestion, Sugar & energy, Heart & lungs, Muscles, Brain & mood, Immune, Liver & kidneys, Reproductive. These are systems, listed in the rail on the left.
 
 A thread crosses systems, and a system holds parts of several threads. Everything else stays hidden until you go down a level:
 
@@ -73,7 +91,7 @@ These rules keep it quiet:
 - **One sentence, one place.** The sentence at the head of the page changes with the level and answers what you just clicked.
 - **A reading explains itself when it needs to.** Inside its typical band, a reading shows its number and band with no verdict. Past the band, it adds a line saying why: "Blood pressure 175 mmHg. Expected. About 55 mmHg from running." The word is Expected when the model has a normal cause, and Slightly raised, High or Low in amber or red when it hasn't.
 - **Scales read as words.** Inflammation or stress read Quiet, Mild, Moderate or Strong, and 0-to-100 numbers never reach the screen.
-- **Colour only with focus.** The overview is neutral, apart from one orange accent on the organs. Open a system or a thread and its one colour appears on the organs, the line, the curves and a small tick and icon in the rail: Digestion orange, Sugar & energy yellow, Heart & lungs red, Muscles magenta, Brain & mood purple, Immune teal, Liver & kidneys blue. Blood vessels stay red and blue.
+- **Colour only with focus.** The overview is neutral, apart from one orange accent on the organs. Open a system or a thread and its one colour appears on the organs, the line, the curves and a small tick and icon in the rail: Digestion orange, Sugar & energy yellow, Heart & lungs red, Muscles magenta, Brain & mood purple, Immune teal, Liver & kidneys blue, Reproductive green. Blood vessels stay red and blue.
 - **The rail shows activity quietly.** A dimmer name and icon mean nothing is going on there, and the systems that matter most add one word, such as "Working hard".
 
 ## Telling and asking
@@ -100,16 +118,20 @@ Ask for "what if I eat a burger and fries now" and Claude logs them on the copy,
 
 The model is about 5,900 lines of TypeScript with no dependencies. It runs in one-minute steps from midnight to 06:00 the next day, after first running yesterday when anything from yesterday is logged. One recalculation takes about 3 ms without yesterday and 5 ms with it. Muscle soreness uses curves that reach past that window, so last week's leg day still counts today. It covers gastric emptying, absorption, glucose and insulin (Bergman's minimal model), blood fat, caffeine, alcohol, water balance, temperature, blood-flow split and energy use. A per-food ledger in kcal answers "where is my pizza right now".
 
+The menstrual cycle runs once you say when your last period began, on a female body. Estrogen, progesterone and LH follow a typical curve placed by that date, and after ovulation the body runs about 0.35 °C warmer, the resting heart about 3 bpm faster, and insulin works about 15% less well. Cramps are offered as something you may feel early in a period. It is a typical curve and can't tell when you really ovulate, so it isn't usable for contraception, and the source note says so. Say you use a hormonal contraceptive, are pregnant or are past menopause, and Claude clears it.
+
 It handles anything that can happen to a body with one mechanism. An event pushes on channels, such as heart rate, temperature, stress, immune activity or insulin sensitivity, through a simple curve. Readings and feelings then follow from the same calculation. Claude picks a preset (training, illness, sex, stress, poor sleep) when one fits, and composes a custom event from the same channels when none does, such as a sauna. Custom events are marked as Claude's estimate.
 
-All tunable numbers are in `src/model/params.ts` with their sources. Many remain my own estimates and are marked so. All  automated tests pass with `pnpm test`: `src/model/published.test.ts` compares the model with published results, and `src/model/copy.test.ts` sweeps 30 scenarios across a full day for broken or alarming sentences.
+All tunable numbers are in `src/model/params.ts` with their sources. Many remain my own estimates and are marked so. All automated tests pass with `pnpm test`: `src/model/published.test.ts` compares the model with published results, and `src/model/copy.test.ts` sweeps 30 scenarios across a full day for broken or alarming sentences.
 
 Parameters were tuned by hand toward these same targets, so treat every row of this table as calibration. It is weaker evidence than a prediction checked against new data.
 
 | Check | Model | Published or expected |
 |---|---|---|
 | 75 g glucose | 8.57 mmol/L at 41 min, 5.76 at 2 h | About 8.6 at 40 min, 5.8 at 2 h |
-| Run 2 h after breakfast, lowest sugar | 4.48 mmol/L | About 4.5 |
+| Run 2 h after breakfast, lowest sugar | 4.67 mmol/L | About 4.5 |
+| Run 2 h after breakfast, insulin | 20.6 to 6.3 µU/mL in 30 min | Falls during effort, direction only |
+| Heart output on a hard run | 17.4 L/min | About 18, at about 5 L/min per L of oxygen |
 | Two apples, sugar peak | 5.88 at 71 min | About 6.0 at 70 min |
 | Lifting at 80% effort, heart rate | 119 bpm | About 120 |
 | Fat test, peak | 199 mg/dL at 3.2 h | About 200 |
@@ -117,10 +139,10 @@ Parameters were tuned by hand toward these same targets, so treat every row of t
 
 ## The Claude Code connection
 
-The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 17 tools and no file or shell access:
+The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 19 tools and no file or shell access:
 
 - `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
-- 12 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
+- 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
 - `what_if` draws an alternative on the day chart, in Tell mode only.
 - `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at.
 - `read_body` returns the model's numbers at any time.
@@ -136,7 +158,7 @@ I ran ten questions through Ask the same way, once each, with the same caveat: b
 
 **Phase 1: your real day.** Built, and described under Your day.
 
-**Phase 2: a model you can trust further.** Exercise, illness and water balance are in, and each close-up shows its evidence grade when you hover over its Source link. Next come fitting curves to published datasets, the menstrual cycle, and marking what the model computed apart from what Claude added from its own knowledge. Done when every number and sentence on screen shows where it came from.
+**Phase 2: a model you can trust further.** Marking what the model computed apart from what Claude added is built, along with the menstrual cycle and the fixes for three known errors. What is left is fitting curves to large published datasets, which is left out for now.
 
 **Phase 3: go further inside.** Close-ups exist for the stomach, liver, brain, heart, pancreas, lungs, immune system and muscles. Kidneys, intestines, bladder and fat have short text cards. Add diagrams for those, plus the uterus, ovaries and prostate, which are missing. Done when a click on any organ shows its own process in motion.
 
@@ -171,7 +193,7 @@ Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 fo
 - Claude estimates portions, and those estimates move every number downstream. You can correct them on the day chart.
 - The USDA table holds American foods and few brands, so a local dish may have only a rough match.
 - Claude can add facts from its own knowledge that the model doesn't compute.
-- Known gaps in the model: insulin stays high during a run after food, when it should fall. The stomach doesn't slow in hard exercise. Heart output runs low at high intensity. Two apples peak slightly below the target, because the fibre effect stays close to Benini 1995. A smaller fibre effect would hit the apple target and move further from that study.
+- Known gap in the model: two apples peak slightly below the target, because the fibre effect stays close to Benini 1995. A smaller fibre effect would hit the apple target and move further from that study. How far insulin falls and the stomach slows on a hard run is my estimate. Only the direction comes from published work.
 - Some sources were read only as a secondary reference or search snippet, including the running core temperature and the 10 mmHg per MET figure. `src/model/params.ts` keeps a source note beside each value.
 - Organs and muscles are warped from other bodies onto the Anny shape, so the fit is approximate and gets less accurate at extreme sizes. At very low or high BMI, a plain girth scale makes up the remaining weight, so those bodies look less natural.
 - The small intestine's loops are generated, so its shape is plausible and its exact course is invented.

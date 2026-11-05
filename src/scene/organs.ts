@@ -50,6 +50,13 @@ const PARTS = {
   kidney_L: part({ organ: "kidneys", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
   kidney_R: part({ organ: "kidneys", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
   bladder: part({ organ: "bladder", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
+  // Only one reference body has each of these, so a set simply doesn't build the others.
+  uterus: part({ organ: "uterus", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
+  ovary_L: part({ organ: "ovaries", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
+  ovary_R: part({ organ: "ovaries", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
+  tube_L: part({ organ: "uterus", ghost: 1, subjectGhost: 0.2, contextOpacity: 0.4 }),
+  tube_R: part({ organ: "uterus", ghost: 1, subjectGhost: 0.2, contextOpacity: 0.4 }),
+  prostate: part({ organ: "prostate", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
   spinal_cord: part({ organ: null, ghost: 1, restOpacity: 0.5, subjectGhost: 1, contextOpacity: 0.25 }),
   thymus: part({ organ: null, worksWith: "spleen", ghost: 1, restOpacity: 0.4, subjectGhost: 0, contextOpacity: 0.25 }),
   // The gut starts as contour so it doesn't wall off the abdomen, and when it is the subject it is a
@@ -70,7 +77,7 @@ const ANCHOR_NEAR: Partial<Record<PartName, string>> = {
   small_intestine: "jejunum_end",
 };
 
-const PART_NAMES: PartName[] = ["brain", "heart", "lung_L", "lung_R", "airway", "liver", "spleen", "pancreas", "kidney_L", "kidney_R", "bladder", "spinal_cord", "thymus", "small_intestine", "duodenum", "large_intestine"];
+const PART_NAMES: PartName[] = ["brain", "heart", "lung_L", "lung_R", "airway", "liver", "spleen", "pancreas", "kidney_L", "kidney_R", "bladder", "uterus", "ovary_L", "ovary_R", "tube_L", "tube_R", "prostate", "spinal_cord", "thymus", "small_intestine", "duodenum", "large_intestine"];
 
 export interface PartLook {
   ghost: number;
@@ -186,6 +193,7 @@ export class Anatomy {
     for (const name of PART_NAMES) {
       const style: PartStyle = PARTS[name];
       const meta = asset.meta.organs[name];
+      if (!meta) continue;
       const geometry = buildGeometry(asset, meta);
       if (style.normalPasses > 0) smoothNormals(geometry, style.normalPasses);
       const material = createOrganMaterial(palette);
@@ -234,6 +242,10 @@ export class Anatomy {
     this.veins = vessel("veins", this.veinMaterial);
     this.arterial = { color: new THREE.Color(palette.ink), opacity: 0.2, body: 0, wave: 0 };
     this.venous = { color: new THREE.Color(palette.ink), opacity: 0.12, body: 0, wave: 0 };
+  }
+
+  has(name: string): name is PartName {
+    return this.parts.has(name as PartName);
   }
 
   part(name: PartName): OrganPart {

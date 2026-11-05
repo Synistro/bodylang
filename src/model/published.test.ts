@@ -120,6 +120,45 @@ describe("running and walking", () => {
   const fed = simulate(scenario([breakfast], { activities: running(hm(10), hm(11)) }));
   const fasted = simulate(scenario([], { activities: running(hm(10), hm(11)) }));
 
+  it("lets insulin fall during a run after food, because effort holds the pancreas back", () => {
+    const start = value(fed, "insulin", hm(10));
+    expect(value(fed, "insulin", hm(10, 30))).toBeLessThan(start);
+    expect(value(fed, "insulin", hm(11))).toBeLessThan(value(fed, "insulin", hm(10, 30)));
+    const sitting = simulate(scenario([breakfast]));
+    expect(value(fed, "insulin", hm(11))).toBeLessThan(value(sitting, "insulin", hm(11)));
+  });
+
+  it("takes fasting insulin below its resting level during a run, and back afterwards", () => {
+    const rest = fasted.series.insulin[hm(9, 30)];
+    expect(value(fasted, "insulin", hm(10, 45))).toBeLessThan(rest * 0.8);
+    expect(value(fasted, "insulin", hm(13))).toBeGreaterThan(rest * 0.9);
+  });
+
+  it("cuts a walk's insulin response by about what Nygaard measured", () => {
+    const area = (tr: Trajectory) => tr.series.insulin.slice(hm(8), hm(10)).reduce((sum, x) => sum + Math.max(0, x - 8), 0);
+    const walked = simulate(scenario([breakfast], { activities: [...wake, { from: hm(8), posture: "walking" }, { from: hm(9), posture: "sitting" }] }));
+    const sat = simulate(scenario([breakfast], { activities: [...wake, { from: hm(8), posture: "sitting" }] }));
+    const cut = 1 - area(walked) / area(sat);
+    expect(cut).toBeGreaterThan(0.05);
+    expect(cut).toBeLessThan(0.45);
+  });
+
+  it("slows the stomach in a hard run, and speeds it on a walk", () => {
+    const at = hm(8);
+    const meal = food("meal", at, { grams: 300, waterMl: 150, carbsG: 60, sugarG: 15, fatG: 15, proteinG: 20, fiberG: 3 });
+    const during = (posture: "sitting" | "walking" | "running") => simulate(scenario([meal], { activities: [...wake, { from: at, posture }] })).series.stomachKcal[hm(9)];
+    expect(during("running")).toBeGreaterThan(during("sitting"));
+    expect(during("walking")).toBeLessThan(during("sitting"));
+  });
+
+  it("raises heart output to about 18 L/min on a hard run, and leaves rest alone", () => {
+    const output = value(fasted, "cardiacOutput", hm(10, 30));
+    expect(output).toBeGreaterThan(16);
+    expect(output).toBeLessThan(20);
+    expect(value(fasted, "cardiacOutput", hm(9, 30))).toBeLessThan(8.2);
+    expect(value(fasted, "cardiacOutput", hm(13))).toBeLessThan(8.2);
+  });
+
   it("keeps sugar near 4.5 through a run two hours after breakfast", () => {
     const lowest = mmol(lowestOf(fed.series.glucose, hm(10), hm(12)).value);
     expect(lowest).toBeGreaterThan(4.3);

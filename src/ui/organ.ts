@@ -14,6 +14,9 @@ export const ORGAN_NAME: Record<OrganId, string> = {
   bladder: "Bladder",
   muscle: "Muscles",
   fat: "Fat tissue",
+  uterus: "Uterus",
+  ovaries: "Ovaries",
+  prostate: "Prostate",
 };
 
 export const isOrganId = (id: string | null): id is OrganId => id !== null && Object.hasOwn(ORGAN_NAME, id);

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Cycle } from "./cycle";
 import type { BodyEvent } from "./events";
 import { DAY } from "./params";
 import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt } from "./simulate";
@@ -13,6 +14,7 @@ export interface DayDoc {
   activities: ActivitySpan[];
   substances: CustomSubstance[];
   events: BodyEvent[];
+  cycle: Cycle | null;
   assumptions: Record<string, string>;
 }
 
@@ -44,6 +46,7 @@ const dayDocSchema = z.object({
   activities: z.array(z.object({ from: z.number().finite(), posture: z.enum(["sleeping", "sitting", "standing", "walking", "running"]) })),
   substances: z.array(substanceSchema),
   events: z.array(eventSchema),
+  cycle: z.object({ start: z.number().finite(), lengthDays: z.number().positive(), periodDays: z.number().positive() }).nullable().default(null),
   assumptions: z.record(z.string(), z.string()),
 });
 
@@ -85,7 +88,7 @@ export const typicalDayFromYesterday = (): ActivitySpan[] => [
 ];
 
 export function firstDay(date: string, body: Body): DayDoc {
-  return { version: 1, date, body, intakes: [], activities: typicalDayFromYesterday(), substances: [], events: [], assumptions: {} };
+  return { version: 1, date, body, intakes: [], activities: typicalDayFromYesterday(), substances: [], events: [], cycle: null, assumptions: {} };
 }
 
 // What was logged keeps its name in the new day, while a new coffee can use the id "coffee" again.
@@ -120,6 +123,7 @@ export function carryOver(doc: DayDoc, date: string): DayDoc {
     body: doc.body,
     intakes,
     assumptions,
+    cycle: doc.cycle && { ...doc.cycle, start: doc.cycle.start - shift },
     activities: activitiesAfter(doc, days),
     substances: doc.substances.filter((s) => s.at - shift >= -DAY.substanceCarryDays * 1440).map((s) => ({ ...s, id: carriedId(s.id, doc.date), at: s.at - shift })),
     events: doc.events

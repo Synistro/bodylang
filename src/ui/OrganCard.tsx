@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
+import { CLAUDE_WORDS, modelOrigin, Origin, readingOrigin } from "../model/origin";
 import type { Evidence } from "../model/params";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { OrganId, Trajectory } from "../model/simulate";
@@ -10,18 +11,20 @@ import { muscleStory, organStory, substancesAt } from "./insets/organStory";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle } from "./navigation";
 import { ORGAN_NAME } from "./organ";
+import { sourced } from "./SourceTip";
 import "./insets/insets.css";
 
 const WORKED_FROM = 0.05;
 const MAX_ROWS = 3;
 
-function ReadingRow({ reading }: { reading: Reading }) {
+function ReadingRow({ reading, trajectory, minute }: { reading: Reading; trajectory: Trajectory; minute: number }) {
+  const from = sourced(readingOrigin(reading, trajectory, minute));
   return (
     <li className="reading" data-tone={reading.tone} data-outside={outsideTypical(reading) || undefined} tabIndex={0}>
       <span className="reading-head">
         <span className="reading-label">{reading.label}</span>
         <TrendMark trend={reading.trend} />
-        <span className="reading-value" data-word={!isNumeric(reading.display) || undefined}>
+        <span className="reading-value" data-word={!isNumeric(reading.display) || undefined} {...from}>
           {reading.display}
           <small>{shortUnit(reading.unit)}</small>
         </span>
@@ -29,15 +32,21 @@ function ReadingRow({ reading }: { reading: Reading }) {
       <RangeBar scale={reading.scale} value={reading.value} tone={reading.tone} />
       <span className="fold fold-why">
         <span className="fold-inner">
-          <span className="reading-why">
+          <span className="reading-why" {...from}>
             <b>{reading.verdictWord}.</b> {reading.why}
           </span>
         </span>
       </span>
       <span className="fold fold-detail">
         <span className="fold-inner">
-          {reading.forecast ? <span className="reading-more">{reading.forecast}</span> : null}
-          <span className="reading-more">{reading.scale.typicalLabel}</span>
+          {reading.forecast ? (
+            <span className="reading-more" {...from}>
+              {reading.forecast}
+            </span>
+          ) : null}
+          <span className="reading-more" {...from}>
+            {reading.scale.typicalLabel}
+          </span>
         </span>
       </span>
     </li>
@@ -47,16 +56,13 @@ function ReadingRow({ reading }: { reading: Reading }) {
 // One small word. The citation and how far to trust it open on hover or focus.
 function SourceWord({ evidence, source }: { evidence: Evidence; source: string }) {
   return (
-    <p className="organ-source" tabIndex={0}>
+    <p className="organ-source" tabIndex={0} {...sourced(modelOrigin(evidence, source))}>
       Source
-      <span className="organ-source-text">
-        <span>
-          Grade {evidence}. {source}
-        </span>
-      </span>
     </p>
   );
 }
+
+const SUBSTANCE_ORIGIN: Origin = { ...CLAUDE_WORDS, detail: "Claude supplied what this does here, along with its half-life and dose." };
 
 // Level 3 for "muscle" with no group chosen: what has been worked, each one a step further down.
 function WorkedGroups({ worked }: { worked: MuscleSummary[] }) {
@@ -98,16 +104,21 @@ function useCard() {
 
 function MusclePlate({ group, trajectory, minute }: { group: MuscleGroup; trajectory: Trajectory; minute: number }) {
   const story = muscleStory(group, trajectory, minute);
+  const from = sourced(modelOrigin(story.evidence, story.source));
   const summary = assessmentAt(trajectory, minute).muscles.find((m) => m.group === group);
   const lines = [summary?.sorenessLine, summary?.normalLine].flatMap((line) => line ?? []);
   const scroller = useCard();
   return (
     <aside ref={scroller} className="organ-card" aria-label={`${MUSCLE_LABEL[group]} close-up`}>
-      <OrganInset organ="muscle" trajectory={trajectory} t={minute} muscle={group} />
+      <div {...from}>
+        <OrganInset organ="muscle" trajectory={trajectory} t={minute} muscle={group} />
+      </div>
       {lines.length ? (
         <ul className="organ-lines">
           {lines.map((line) => (
-            <li key={line}>{line}</li>
+            <li key={line} {...from}>
+              {line}
+            </li>
           ))}
         </ul>
       ) : null}
@@ -126,14 +137,19 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
     .slice(0, MAX_ROWS);
   const substances = substancesAt(organ, trajectory, minute);
   const scroller = useCard();
+  const from = sourced(modelOrigin(story.evidence, story.source));
   return (
     <aside ref={scroller} className="organ-card" aria-label={`${ORGAN_NAME[organ]} close-up`}>
-      {organ === "muscle" ? null : <OrganInset organ={organ} trajectory={trajectory} t={minute} muscle={null} />}
+      {organ === "muscle" ? null : (
+        <div {...from}>
+          <OrganInset organ={organ} trajectory={trajectory} t={minute} muscle={null} />
+        </div>
+      )}
       {worked.length ? <WorkedGroups worked={worked} /> : null}
       {substances.length ? (
         <ul className="organ-substances">
           {substances.map((s) => (
-            <li key={s.label}>
+            <li key={s.label} {...sourced(SUBSTANCE_ORIGIN)}>
               <b>{s.label}</b> {s.effect}
             </li>
           ))}
@@ -143,12 +159,16 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
         <section aria-label="Readings">
           <ul className="readings">
             {readings.map((r) => (
-              <ReadingRow key={r.id} reading={r} />
+              <ReadingRow key={r.id} reading={r} trajectory={trajectory} minute={minute} />
             ))}
           </ul>
         </section>
       ) : null}
-      {story.line ? <p className="organ-lines">{story.line}</p> : null}
+      {story.line ? (
+        <p className="organ-lines" {...from}>
+          {story.line}
+        </p>
+      ) : null}
       <SourceWord evidence={story.evidence} source={story.source} />
     </aside>
   );

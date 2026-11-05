@@ -10,7 +10,7 @@ import { forecast, formatClock, inSentence } from "./state";
 export interface ReplyLine {
   text: string;
   organ?: OrganId;
-  source?: string;
+  unverified?: string[]; // numbers in the text that the model never returned, so Claude added them
 }
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;

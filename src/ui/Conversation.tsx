@@ -1,10 +1,12 @@
-import { FormEvent, useLayoutEffect, useRef, useState } from "react";
+import { FormEvent, ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Skeleton } from "skullet/react";
 import { ReplyLine } from "../model/narrate";
+import { CLAUDE_WORDS, Origin, SENTENCE_ORIGIN } from "../model/origin";
 import { applyWhatIf, clearWhatIf, Exchange, goToStep, Mode, setMode, useStore } from "../store";
 import { organHover, useScrollFade } from "./hooks";
 import { ArrowUp, X } from "./icons";
 import { showOrgan } from "./navigation";
+import { sourced } from "./SourceTip";
 import { tell } from "./tell";
 
 const SAMPLE_REPLY: ReplyLine[] = [{ text: "Working out what happened and running it through the model." }, { text: "The answer appears here, in a line or two." }, { text: "And what you may feel." }];
@@ -12,12 +14,35 @@ const WHAT_IF_PEAK_WINDOW_MINUTES = 360;
 const WHAT_IF_MIN_PEAK_CHANGE = 0.05;
 const MG_DL_PER_MMOL = 18.016;
 
+const NUMBER_ORIGIN: Origin = { kind: "model", detail: "This number is one the model returned to Claude." };
+const ADDED_ORIGIN: Origin = { kind: "claude", detail: "The model never returned this number. Claude worked it out or added it from its own knowledge." };
+const SAID_NUMBER = /(?<![\w.:,])(\d{1,2}:\d{2}|\d+(?:\.\d+)?%?)(?![\w:]|\.\d)/g;
+
+// Claude's words, with each number marked by whether the model really returned it. Without a check,
+// as in the scripted demo, the whole line just counts as the app's own.
+export function CheckedWords({ text, unverified }: { text: string; unverified?: string[] }) {
+  if (!unverified) return <span {...sourced(SENTENCE_ORIGIN)}>{text}</span>;
+  const pieces: ReactNode[] = [];
+  let at = 0;
+  for (const match of text.matchAll(SAID_NUMBER)) {
+    pieces.push(text.slice(at, match.index));
+    pieces.push(
+      <span key={match.index} className="said-number" {...sourced(unverified.includes(match[0]) ? ADDED_ORIGIN : NUMBER_ORIGIN)}>
+        {match[0]}
+      </span>,
+    );
+    at = match.index + match[0].length;
+  }
+  pieces.push(text.slice(at));
+  return <span {...sourced(CLAUDE_WORDS)}>{pieces}</span>;
+}
+
 function Reply({ lines }: { lines: ReplyLine[] }) {
   return (
     <div className="reply">
       {lines.map((l) => (
-        <button type="button" key={l.text} className="reply-line" title={l.source} data-linked={l.organ ? true : undefined} onClick={() => l.organ && showOrgan(l.organ)} {...organHover(l.organ ?? null)}>
-          {l.text}
+        <button type="button" key={l.text} className="reply-line" data-linked={l.organ ? true : undefined} onClick={() => l.organ && showOrgan(l.organ)} {...organHover(l.organ ?? null)}>
+          <CheckedWords text={l.text} unverified={l.unverified} />
         </button>
       ))}
     </div>
@@ -75,6 +100,8 @@ function WalkAgain() {
   );
 }
 
+const NUMBER_ORIGIN_WHAT_IF: Origin = { kind: "model", detail: "Claude suggested this alternative, and the model computed the difference." };
+
 // An alternative Claude offered, in words, at the foot of what it said.
 function WhatIfOffer() {
   const tr = useStore((s) => s.trajectory);
@@ -92,7 +119,7 @@ function WhatIfOffer() {
   const effect = Math.abs(drop) >= WHAT_IF_MIN_PEAK_CHANGE ? `, and your sugar peak is ${Math.abs(drop).toFixed(1)} ${drop > 0 ? "lower" : "higher"}.` : ".";
   return (
     <div className="what-if">
-      <p>
+      <p {...sourced(NUMBER_ORIGIN_WHAT_IF)}>
         {meta.label}
         {effect}
       </p>

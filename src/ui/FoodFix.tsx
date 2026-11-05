@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
+import { foodOrigin } from "../model/origin";
 import { kcalOf, Intake } from "../model/simulate";
 import { formatClock } from "../model/state";
 import { dispatch, setUi, useStore } from "../store";
 import { X } from "./icons";
+import { sourced } from "./SourceTip";
 
 const SERVING_STEP = 0.5;
 const GRAM_STEP = { large: 25, small: 10, largeFrom: 100 };
@@ -70,7 +72,7 @@ function FoodRow({ intake }: { intake: Intake }) {
         Remove
       </button>
       <Stepper text={text} label={`how much ${intake.label}`} canLess={less > 0} onLess={() => correct(less)} onMore={() => correct(more)} />
-      <p className="fix-note">
+      <p className="fix-note" {...sourced(foodOrigin(intake))}>
         {holds(intake)}. {sourceWords(intake)}
       </p>
     </div>

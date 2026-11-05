@@ -1,6 +1,11 @@
 import { KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { dayMoments, dayStops, Lane, muscleStateLanes, processLanes, readingLanes, systemLanes, workedMuscleLanes } from "../model/lanes";
 import { LANES } from "../model/params";
+import { assess } from "../model/assess";
+import { foodOrigin, modelOrigin, Origin, processOrigin, readingOrigin, SENTENCE_ORIGIN } from "../model/origin";
+import { REFERENCE } from "../model/params";
+import { processesAt } from "../model/processes";
+import type { Trajectory } from "../model/simulate";
 import { formatClock } from "../model/state";
 import type { Stage } from "../scene/stage";
 import { getState, selectedProcess, setUi, useStore } from "../store";
@@ -11,6 +16,7 @@ import { useFrame } from "./hooks";
 import { organStory } from "./insets/organStory";
 import { Pause, Play, SkipBack, SkipForward } from "./icons";
 import { showMuscle, showOrgan, showProcess } from "./navigation";
+import { sourced } from "./SourceTip";
 
 export const DAY_FROM = LANES.from;
 export const DAY_TO = LANES.to;
@@ -37,6 +43,20 @@ function useLanes(): Lane[] {
   }, [tr, real, now, system, processId, focus, focusMuscle]);
 }
 
+// Where a row of the chart comes from. A row is a thread, a reading, a stop on a line, or a muscle.
+function laneOrigin(tr: Trajectory, lane: Lane, minute: number, selected: string | null): Origin {
+  const { target } = lane;
+  if (target?.kind === "muscle" || (!target && lane.system === "muscles")) return modelOrigin(REFERENCE.muscleState.evidence, REFERENCE.muscleState.source);
+  const processes = processesAt(tr, minute);
+  const processId = target?.kind === "process" ? target.id : target?.kind === "stop" ? selected : null;
+  const process = processId ? processes.find((p) => p.id === processId) : undefined;
+  if (process) return processOrigin(tr, process);
+  const reading = assess(tr, minute).readings.find((r) => r.id === lane.id);
+  if (reading) return readingOrigin(reading, tr, minute);
+  const food = tr.scenario.intakes.find((intake) => lane.id === `intake:${intake.id}`);
+  return food ? foodOrigin(food) : SENTENCE_ORIGIN;
+}
+
 const pointAtLane = (lane: Lane | null) =>
   setUi({
     hoverLane: lane?.id ?? null,
@@ -55,9 +75,9 @@ function goToLane(lane: Lane) {
 
 // A name, and what is there at the minute you are looking at. The chart writes that value and this
 // row's height itself, because both change far more often than React should.
-function LaneRow({ lane, hot }: { lane: Lane; hot: boolean }) {
+function LaneRow({ lane, hot, origin }: { lane: Lane; hot: boolean; origin: Origin }) {
   return (
-    <button type="button" className="day-row" data-lane={lane.id} data-hot={hot || undefined} disabled={!lane.target} title={lane.label} onClick={() => goToLane(lane)} onPointerEnter={() => pointAtLane(lane)} onPointerLeave={() => pointAtLane(null)}>
+    <button {...sourced(origin)} type="button" className="day-row" data-lane={lane.id} data-hot={hot || undefined} disabled={!lane.target} title={lane.label} onClick={() => goToLane(lane)} onPointerEnter={() => pointAtLane(lane)} onPointerLeave={() => pointAtLane(null)}>
       {lane.badge.kind === "number" ? <span className="day-number">{lane.badge.number}</span> : null}
       <span className="day-name">{lane.label}</span>
       <span className="day-value" />
@@ -79,6 +99,8 @@ export function Timeline({ stage }: { stage: Stage | null }) {
   const away = useStore((s) => Math.abs(Math.round(s.t) - Math.round(s.body.now)) >= 1);
   const hoverLane = useStore((s) => s.hoverLane);
   const lanes = useLanes();
+  const selected = useStore((s) => s.body.process);
+  const origins = useMemo(() => new Map(lanes.map((lane) => [lane.id, laneOrigin(tr, lane, Math.round(now), selected)])), [lanes, tr, now, selected]);
   const moments = useMemo(() => dayMoments(tr, now), [tr, now]);
   const stops = useMemo(() => dayStops(lanes, moments, now).map((stop) => stop.at), [lanes, moments, now]);
   const previous = useStore((s) => stops.filter((at) => at < s.t - 0.5).at(-1) ?? null);
@@ -183,7 +205,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
         </div>
         <div ref={rows} className="day-rows">
           {lanes.map((lane) => (
-            <LaneRow key={lane.id} lane={lane} hot={lane.id === hoverLane} />
+            <LaneRow key={lane.id} lane={lane} hot={lane.id === hoverLane} origin={origins.get(lane.id) ?? SENTENCE_ORIGIN} />
           ))}
           {lanes.length ? null : <p className="day-empty">Nothing here yet</p>}
         </div>
@@ -196,7 +218,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
           </button>
         </div>
       </div>
-      <div ref={plot} className="day-plot" role="slider" tabIndex={0} aria-label="Time of day" aria-valuemin={DAY_FROM} aria-valuemax={DAY_TO} onKeyDown={key}>
+      <div ref={plot} className="day-plot" role="slider" tabIndex={0} aria-label="Time of day" aria-valuemin={DAY_FROM} aria-valuemax={DAY_TO} onKeyDown={key} {...sourced(origins.get(hoverLane ?? "") ?? SENTENCE_ORIGIN)}>
         <canvas ref={canvas} aria-hidden="true" />
       </div>
       <FoodFix />

@@ -6,13 +6,17 @@ import { Crossfade } from "./Crossfade";
 import { assessmentAt, organHover, useMinute, useScrollFade } from "./hooks";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
+import { feelingOrigin, modelOrigin, readingOrigin } from "../model/origin";
+import { REFERENCE } from "../model/params";
 import { ProcessDetail } from "./Processes";
+import { sourced } from "./SourceTip";
 
 // What would wake up a system with nothing going on.
 const QUIET_HINT: Partial<Record<SystemId, string>> = {
   digestion: "Tell your body what you ate.",
   muscles: "Tell your body what you trained.",
   immune: "Tell your body if you feel ill.",
+  reproductive: "Tell your body when your last period started, if you have one.",
 };
 
 const touchOnly = () => window.matchMedia("(hover: none)").matches;
@@ -20,6 +24,9 @@ const touchOnly = () => window.matchMedia("(hover: none)").matches;
 // A meter: the name and number on one line, a wide bar under them with the typical band and you.
 function ReadingRow({ reading, index, hot }: { reading: Reading; index: number; hot: boolean }) {
   const [open, setOpen] = useState(false);
+  const tr = useStore((s) => s.trajectory);
+  const minute = useMinute();
+  const from = sourced(readingOrigin(reading, tr, minute));
   // Clicking goes one level down. Without hover, the first tap has to show the reason instead.
   const press = () => {
     if (reading.organ && (open || !touchOnly())) showOrgan(reading.organ);
@@ -30,7 +37,7 @@ function ReadingRow({ reading, index, hot }: { reading: Reading; index: number; 
       <span className="reading-head">
         <span className="reading-label">{reading.label}</span>
         <TrendMark trend={reading.trend} />
-        <span className="reading-value" data-word={!isNumeric(reading.display) || undefined}>
+        <span className="reading-value" data-word={!isNumeric(reading.display) || undefined} {...from}>
           {reading.display}
           <small>{shortUnit(reading.unit)}</small>
         </span>
@@ -38,15 +45,19 @@ function ReadingRow({ reading, index, hot }: { reading: Reading; index: number; 
       <RangeBar scale={reading.scale} value={reading.value} tone={reading.tone} />
       <span className="fold fold-why">
         <span className="fold-inner">
-          <span className="reading-why">
+          <span className="reading-why" {...from}>
             <b>{reading.verdictWord}.</b> {reading.why}
           </span>
         </span>
       </span>
       <span className="fold fold-detail">
         <span className="fold-inner">
-          {reading.forecast ? <span className="reading-more">{reading.forecast}</span> : null}
-          <span className="reading-more" title={reading.source}>
+          {reading.forecast ? (
+            <span className="reading-more" {...from}>
+              {reading.forecast}
+            </span>
+          ) : null}
+          <span className="reading-more" {...from}>
             {reading.scale.typicalLabel}
           </span>
         </span>
@@ -71,7 +82,7 @@ function FeelingRow({ feeling, index }: { feeling: Feeling; index: number }) {
   return (
     <li className="feel stagger" style={{ "--i": index }} {...organHover(feeling.organ)}>
       <span className="feel-label">{feeling.label}</span>
-      <span className="feel-cause">
+      <span className="feel-cause" {...sourced(feelingOrigin(feeling))}>
         {feeling.cause}
         {feeling.when ? <span className="feel-when">{feeling.when}</span> : null}
       </span>
@@ -104,7 +115,8 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
   const present = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && hasSomethingToSay(r)));
   const primary = present(def.readings);
   const more = present(def.more);
-  const hint = assessment.systems[system].quiet ? QUIET_HINT[system] : undefined;
+  const sex = useStore((s) => s.body.body.sex);
+  const hint = assessment.systems[system].quiet && (system !== "reproductive" || sex === "female") ? QUIET_HINT[system] : undefined;
   return (
     <>
       {primary.length ? (
@@ -127,6 +139,8 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
   );
 }
 
+const MUSCLE_ORIGIN = sourced(modelOrigin(REFERENCE.muscleState.evidence, REFERENCE.muscleState.source));
+
 function MuscleRow({ muscle, index, hot }: { muscle: MuscleSummary; index: number; hot: boolean }) {
   const detail = [muscle.sorenessLine, muscle.normalLine].filter(Boolean).join(". ");
   return (
@@ -146,9 +160,15 @@ function MuscleRow({ muscle, index, hot }: { muscle: MuscleSummary; index: numbe
       >
         <span className="item-head">
           <span className="item-title">{muscle.label}</span>
-          <span className="item-status">{muscle.status}</span>
+          <span className="item-status" {...MUSCLE_ORIGIN}>
+            {muscle.status}
+          </span>
         </span>
-        {detail ? <span className="item-note">{detail}</span> : null}
+        {detail ? (
+          <span className="item-note" {...MUSCLE_ORIGIN}>
+            {detail}
+          </span>
+        ) : null}
         <span className="muscle-level" aria-hidden="true">
           <i style={{ width: `${Math.round(muscle.level * 100)}%` }} />
         </span>
@@ -170,7 +190,11 @@ function MusclesDetail({ assessment }: { assessment: Assessment }) {
           <MuscleRow key={m.group} muscle={m} index={i} hot={hoverMuscle === m.group} />
         ))}
       </ul>
-      {rested ? <p className="quiet-line stagger" style={{ "--i": worked.length }}>{`${rested} others rested`}</p> : null}
+      {rested ? (
+        <p className="quiet-line stagger" style={{ "--i": worked.length }} {...MUSCLE_ORIGIN}>
+          {`${rested} others rested`}
+        </p>
+      ) : null}
     </>
   );
 }

@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useMemo, useRef } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
 import type { OrganId } from "../model/simulate";
 import { SYSTEMS, SystemId } from "../model/systems";
+import { Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { processesAt } from "../model/processes";
 import { threadsAt } from "../model/threads";
 import { currentProcesses, getState, useStore } from "../store";
@@ -9,6 +10,7 @@ import { assessmentAt, organHover, useMinute } from "./hooks";
 import { SYSTEM_GLYPH } from "./icons";
 import { showProcess, showSystem } from "./navigation";
 import { ORGAN_NAME } from "./organ";
+import { sourced } from "./SourceTip";
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLTextAreaElement || (target instanceof HTMLInputElement && target.type !== "range") || (target instanceof HTMLElement && target.isContentEditable);
@@ -19,6 +21,7 @@ interface Leaf {
   note: string;
   active: boolean;
   organ: OrganId | null;
+  origin: Origin;
 }
 
 // What sits under the system you are in: the things you logged, or the processes running through it.
@@ -33,17 +36,21 @@ function useLeaves(system: SystemId): Leaf[] {
     const realIds = real ? new Set(processesAt(real, minute).map((p) => p.id)) : null;
     const noteOf = (id: string, note: string) => (realIds && !realIds.has(id) ? "what if" : note);
     const hereOf = (id: string) => processes.find((p) => p.id === id)?.stops.find((stop) => stop.state === "here")?.organ ?? null;
+    const originOf = (id: string) => {
+      const process = processes.find((p) => p.id === id);
+      return process ? processOrigin(tr, process) : SENTENCE_ORIGIN;
+    };
     if (system === "overview") {
       return threads
         .filter((t) => t.at <= minute)
-        .map((t) => ({ id: t.processId, title: t.title, note: noteOf(t.processId, t.status), active: t.active, organ: hereOf(t.processId) }));
+        .map((t) => ({ id: t.processId, title: t.title, note: noteOf(t.processId, t.status), active: t.active, organ: hereOf(t.processId), origin: originOf(t.processId) }));
     }
     return processes
       .filter((p) => p.system === system || (p.alsoIn?.includes(system) ?? false))
       .sort((a, b) => Number(b.active) - Number(a.active))
       .map((p) => {
         const thread = threads.find((t) => t.processId === p.id);
-        return { id: p.id, title: p.title, note: noteOf(p.id, thread?.status ?? ""), active: p.active, organ: hereOf(p.id) };
+        return { id: p.id, title: p.title, note: noteOf(p.id, thread?.status ?? ""), active: p.active, organ: hereOf(p.id), origin: originOf(p.id) };
       });
   }, [tr, real, minute, system]);
 }
@@ -81,7 +88,7 @@ function Leaves({ system }: { system: SystemId }) {
   const focused = useStore((s) => s.body.focus !== null);
   const selected = useStore((s) => (s.body.process ? currentProcesses(s).find((p) => p.id === s.body.process) ?? null : null));
   // Something selected from elsewhere, such as by Claude, still needs its place in the outline.
-  const shown = selected && !leaves.some((leaf) => leaf.id === selected.id) ? [...leaves, { id: selected.id, title: selected.title, note: "", active: true, organ: null }] : leaves;
+  const shown = selected && !leaves.some((leaf) => leaf.id === selected.id) ? [...leaves, { id: selected.id, title: selected.title, note: "", active: true, organ: null, origin: SENTENCE_ORIGIN }] : leaves;
   return (
     <>
       <ul className="tree-leaves">
@@ -91,7 +98,11 @@ function Leaves({ system }: { system: SystemId }) {
             <li key={leaf.id}>
               <button type="button" className="tree-leaf" data-idle={!leaf.active || undefined} data-open={here || undefined} aria-current={here && !focused ? "location" : undefined} onClick={() => showProcess(leaf.id)} {...organHover(leaf.organ)}>
                 <span className="tree-leaf-title">{leaf.title}</span>
-                {leaf.note ? <span className="tree-note">{leaf.note}</span> : null}
+                {leaf.note ? (
+                  <span className="tree-note" {...sourced(leaf.origin)}>
+                    {leaf.note}
+                  </span>
+                ) : null}
               </button>
               {here ? <FocusLeaf /> : null}
             </li>

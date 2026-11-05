@@ -1,3 +1,4 @@
+import { CheckedWords } from "./Conversation";
 import { useEffect, useState } from "react";
 import { closeGuide, getState, goToStep, leaveAsk, setUi, useStore } from "../store";
 import { X } from "./icons";
@@ -91,7 +92,7 @@ export function Guide() {
         </button>
       </div>
       <p key={index} className="tour-say" aria-live="polite">
-        {step.say}
+        <CheckedWords text={step.say} unverified={step.unverified ?? []} />
       </p>
       <div className="tour-actions">
         <button type="button" className="action" disabled={index === 0} onClick={() => goToStep(index - 1)}>

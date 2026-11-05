@@ -18,6 +18,7 @@ import { OrganCard } from "./OrganCard";
 import { startDay } from "./day";
 import { PageHead } from "./PageHead";
 import { Rail } from "./Rail";
+import { SourceTip } from "./SourceTip";
 import { StatePanel } from "./StatePanel";
 import { Timeline } from "./Timeline";
 import { Tour } from "./Tour";
@@ -276,6 +277,7 @@ export function App() {
           </div>
         </main>
       </div>
+      <SourceTip />
     </div>
   );
 }

@@ -1,5 +1,6 @@
+import { Cycle, cycleDay, hormonesAt, lutealShare } from "./cycle";
 import { activityBouts, BodyEvent, ChannelId, channelSeries, maxHeartRate, muscleWorkSeries, resolveEvent, ResolvedEvent, runSessions } from "./events";
-import { ALCOHOL, BLOOD_FLOW, BODY_COMPOSITION, BODY_TEMPERATURE, CAFFEINE, COUPLING, DAY, ENERGY, FASTING, FEEL, GLUCOSE, GUT, HEART, INSULIN, KIDNEY, LIPID, LIVER, MUSCLE, PROTEIN, RESTING_SYSTOLIC_MMHG, STOMACH, SUBSTANCE_STEP, TRAINING } from "./params";
+import { ALCOHOL, BLOOD_FLOW, BODY_COMPOSITION, BODY_TEMPERATURE, CAFFEINE, COUPLING, CYCLE, DAY, ENERGY, FASTING, FEEL, GLUCOSE, GUT, HEART, INSULIN, KIDNEY, LIPID, LIVER, MUSCLE, PROTEIN, RESTING_SYSTOLIC_MMHG, STOMACH, SUBSTANCE_STEP, TRAINING } from "./params";
 
 export type Sex = "male" | "female";
 export type Posture = "sleeping" | "sitting" | "standing" | "walking" | "running";
@@ -40,6 +41,7 @@ export interface Intake extends Nutrients {
   fructoseShare?: number; // of its sugar; table sugar is 0.5, whole fruit 0.6 to 0.67
   source?: FoodSource;
   serving?: Serving;
+  portionBy?: "you"; // set once you have corrected it; until then the portion is Claude's estimate
 }
 
 export interface ActivitySpan {
@@ -75,7 +77,10 @@ export type OrganId =
   | "kidneys"
   | "bladder"
   | "muscle"
-  | "fat";
+  | "fat"
+  | "uterus"
+  | "ovaries"
+  | "prostate";
 
 export interface Scenario {
   body: Body;
@@ -83,6 +88,7 @@ export interface Scenario {
   activities: ActivitySpan[];
   substances: CustomSubstance[];
   events?: BodyEvent[];
+  cycle?: Cycle | null;
   caffeineHalfLifeH?: number;
   sensitivityScale?: number;
 }
@@ -180,6 +186,10 @@ export const SERIES = [
   "fluidBalance",
   "systolic",
   "muscleWork",
+  "cycleDay",
+  "estradiol",
+  "progesterone",
+  "lh",
 ] as const;
 
 export type SeriesName = (typeof SERIES)[number];
@@ -265,6 +275,26 @@ export interface Trajectory {
   channels: Record<ChannelId, Float32Array>;
   // Everything that works muscle: logged events, and runs from the activity list. Read muscle state from this.
   muscleEvents: BodyEvent[];
+  cycle: Cycle | null;
+}
+
+// A cycle only applies to a body with the anatomy for one.
+export const cycleOf = (s: Pick<Scenario, "body" | "cycle">): Cycle | null => (s.body.sex === "female" ? s.cycle ?? null : null);
+
+// The small, steady changes of the luteal phase, added on top of whatever else is pushing these channels.
+function addCycleChannels(channels: Record<ChannelId, Float32Array>, cycle: Cycle, start: number) {
+  const add: [ChannelId, number][] = [
+    ["temperature", CYCLE.luteal.temperatureC],
+    ["heartRate", CYCLE.luteal.heartBpm],
+    ["insulinSensitivity", CYCLE.luteal.insulinSensitivity],
+    ["metabolism", CYCLE.luteal.metabolism],
+    ["appetite", CYCLE.luteal.appetite],
+  ];
+  for (const [channel, amount] of add) {
+    const out = Float32Array.from(channels[channel]);
+    for (let i = 0; i < out.length; i++) out[i] += amount * lutealShare(cycle, i + start);
+    channels[channel] = out;
+  }
 }
 
 const POSTURE_INDEX: Record<Posture, number> = { sleeping: 0, sitting: 1, standing: 2, walking: 3, running: 4 };
@@ -324,6 +354,8 @@ export function simulate(scenario: Scenario): Trajectory {
   const events = [...(scenario.events ?? [])].sort((a, b) => a.from - b.from || (a.id < b.id ? -1 : 1)).map((event) => resolveEvent(event, { body, anthro }));
   const channels = channelSeries(events, n, activityBouts(activities, { body, anthro }), -leadIn);
   const muscleWork = muscleWorkSeries(events, n, -leadIn);
+  const cycle = cycleOf(scenario);
+  if (cycle) addCycleChannels(channels, cycle, -leadIn);
   const maxBpm = maxHeartRate(body.age);
 
   const tracks: IntakeTrack[] = scenario.intakes
@@ -383,6 +415,7 @@ export function simulate(scenario: Scenario): Trajectory {
   let lastMealEnd = -Infinity;
   let afterglow = 0;
   let digest = 0;
+  let strokeGain = 0;
   let fluidDeficitMl = 0;
   let lastFed: number = FASTING.assumedLastMealMin - leadIn;
   // The day before counts: last night's bedtime and how long ago you woke carry into sleep pressure.
@@ -453,7 +486,8 @@ export function simulate(scenario: Scenario): Trajectory {
       energyRate = (STOMACH.energyRateKcalPerMin + STOMACH.energyRateSizeGain * solidKcal) * (1 - STOMACH.fatSlowdown * fatFraction);
       energyRate *= 1 + (STOMACH.sugaryDrinkRateGain - 1) * (liquidKcal / solidKcal);
       energyRate /= 1 + STOMACH.fibreSlowdownPerGPer1000Kcal * (tracks.reduce((sum, k) => sum + k.stomachFiber, 0) / solidKcal) * 1000;
-      if (posture === "walking" || posture === "running") energyRate *= 1 + STOMACH.walkSpeedup;
+      if (posture === "walking") energyRate *= 1 + STOMACH.walkSpeedup;
+      if (posture === "running") energyRate *= 1 - STOMACH.hardRunSlowdown;
       energyRate *= 1 - COUPLING.stressSlowsEmptying * stress;
       energyRate = Math.min(energyRate, solidKcal);
     }
@@ -575,9 +609,11 @@ export function simulate(scenario: Scenario): Trajectory {
     if (stomachKcalBefore(tracks) > 25) lastFed = t;
     const fastDrift = t < 0 ? 0 : Math.max(0, Math.min(1, ((t - lastFed) / 60 - FASTING.driftStartsAfterH) / (FASTING.driftFullAfterH - FASTING.driftStartsAfterH)));
     const restingGlucose = anthro.baselineGlucose - FASTING.glucoseDropMgDl * fastDrift;
-    const restingInsulin = INSULIN.baselineUUPerMl * (1 - FASTING.insulinDropShare * fastDrift);
+    const effortBrake = Math.min(INSULIN.exerciseBrakeMost, INSULIN.exerciseBrake[posture] + INSULIN.exerciseBrakePerMuscleWork * muscleWork[i]);
+    const restingInsulin = INSULIN.baselineUUPerMl * (1 - FASTING.insulinDropShare * fastDrift) * (1 - INSULIN.exerciseBasalFall * effortBrake);
     const dG = G - previousG;
     const secretion =
+      (1 - effortBrake) *
       compensation *
       (INSULIN.glucoseGain * Math.max(0, G - restingGlucose) +
         INSULIN.firstPhaseGain * Math.max(0, dG) +
@@ -671,7 +707,10 @@ export function simulate(scenario: Scenario): Trajectory {
 
     // Heart and blood distribution
     const hr = Math.min(maxBpm, anthro.restingBpm + HEART.byActivity[posture] + HEART.digestionGain * digest + HEART.caffeineGainPerMgL * caffeineMgL + channels.heartRate[i]);
-    const strokeMl = HEART.strokeVolumeMlPerKgLean * anthro.leanKg;
+    const exerting = posture === "walking" || posture === "running" || channels.muscleFlow[i] >= HEART.strokeWorkingFromMuscleFlow;
+    const reserveUsed = exerting ? Math.max(0, channels.heartRate[i]) / (maxBpm - anthro.restingBpm) : 0;
+    strokeGain += (Math.min(1, reserveUsed / HEART.strokePlateauReserveShare) - strokeGain) / HEART.strokeEaseMin;
+    const strokeMl = HEART.strokeVolumeMlPerKgLean * anthro.leanKg * (1 + HEART.strokeExerciseGain * strokeGain);
     const cardiacOutput = (hr * strokeMl) / 1000;
     const flowMuscle = BLOOD_FLOW.rest.muscle + BLOOD_FLOW.activityMuscleGain[posture] + channels.muscleFlow[i];
     const movingCut = 1 - BLOOD_FLOW.activityGutKidneyCut[posture];
@@ -770,6 +809,13 @@ export function simulate(scenario: Scenario): Trajectory {
     series.fluidBalance[i] = -fluidDeficitMl;
     series.systolic[i] = RESTING_SYSTOLIC_MMHG + channels.bloodPressure[i] + CAFFEINE.bloodPressureGainMmHgPerMgL * caffeineMgL;
     series.muscleWork[i] = muscleWork[i];
+    if (cycle) {
+      const hormones = hormonesAt(cycle, t);
+      series.cycleDay[i] = cycleDay(cycle, t);
+      series.estradiol[i] = hormones.estradiol;
+      series.progesterone[i] = hormones.progesterone;
+      series.lh[i] = hormones.lh;
+    }
 
     for (const k of tracks) {
       const o = i * LEDGER_SIZE;
@@ -800,6 +846,7 @@ export function simulate(scenario: Scenario): Trajectory {
     events,
     channels: Object.fromEntries((Object.keys(channels) as ChannelId[]).map((id) => [id, channels[id].subarray(leadIn)])) as Record<ChannelId, Float32Array>,
     muscleEvents: [...(scenario.events ?? []), ...runSessions(activities)],
+    cycle,
   };
 }
 

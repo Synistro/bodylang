@@ -1,10 +1,14 @@
 import { useEffect, useRef } from "react";
 import { POSTURES, Posture, Sex, value } from "../model/simulate";
+import { modelOrigin, Origin } from "../model/origin";
 import { formatClock } from "../model/state";
 import { getState, setBody, setPostureNow, setUi, useStore } from "../store";
+import { sourced } from "./SourceTip";
 
 const SEXES: Sex[] = ["male", "female"];
 const POSTURE_CHOICES: Posture[] = ["sitting", "standing", "walking"];
+const YOURS: Origin = { kind: "you", detail: "Your measurements. The model starts from a typical body with these." };
+const FROM_FORMULA = (source: string) => sourced(modelOrigin("A", source));
 
 function Slider({ id, label, unit, min, max, step, value: v, onChange }: { id: string; label: string; unit: string; min: number; max: number; step: number; value: number; onChange: (n: number) => void }) {
   return (
@@ -43,7 +47,7 @@ export function Header() {
         <span className="clock-time">{formatClock(t)}</span>
         {Math.abs(t - now) > 1 ? <span className="clock-state">{t > now ? "forecast" : "earlier"}</span> : null}
       </div>
-      <button type="button" className="body-toggle" aria-expanded={open} onClick={() => setUi({ bodyOpen: !open })}>
+      <button type="button" className="body-toggle" aria-expanded={open} onClick={() => setUi({ bodyOpen: !open })} {...sourced(YOURS)}>
         {body.sex === "male" ? "Male" : "Female"}, {body.age} y, {body.heightCm} cm, {body.weightKg} kg
       </button>
       {open ? (
@@ -66,10 +70,10 @@ export function Header() {
             ))}
           </div>
           <dl className="derived">
-            <div><dt>BMI</dt><dd>{a.bmi.toFixed(1)}</dd></div>
-            <div><dt>Lean</dt><dd>{a.leanKg.toFixed(0)} kg</dd></div>
-            <div><dt>Blood</dt><dd>{a.bloodVolumeL.toFixed(1)} L</dd></div>
-            <div><dt>Rest</dt><dd>{Math.round(a.bmrKcalPerDay)} kcal/d</dd></div>
+            <div {...FROM_FORMULA("Weight divided by height squared.")}><dt>BMI</dt><dd>{a.bmi.toFixed(1)}</dd></div>
+            <div {...FROM_FORMULA("Boer's formula for lean body mass.")}><dt>Lean</dt><dd>{a.leanKg.toFixed(0)} kg</dd></div>
+            <div {...FROM_FORMULA("Nadler's formula for blood volume.")}><dt>Blood</dt><dd>{a.bloodVolumeL.toFixed(1)} L</dd></div>
+            <div {...FROM_FORMULA("The Mifflin-St Jeor equation for resting energy use.")}><dt>Rest</dt><dd>{Math.round(a.bmrKcalPerDay)} kcal/d</dd></div>
           </dl>
         </div>
       ) : null}

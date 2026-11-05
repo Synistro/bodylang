@@ -1,6 +1,7 @@
+import { crampLevel, cyclePhase, CyclePhase, lutealShare, minutesToNextPeriod } from "./cycle";
 import { BodyEvent, ChannelId, curveStrength, effectAt, endOf, maxHeartRate, muscleStateAt, MuscleState, MuscleWork, namesOf, ResolvedEvent } from "./events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "./muscleGroups";
-import { ACTIVITY, BLOOD_FLOW, CAFFEINE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
+import { ACTIVITY, BLOOD_FLOW, CAFFEINE, CYCLE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
 import { caffeineLedgerAt, Intake, intakeFlowsAt, kcalOf, mealDipOf, OrganId, Posture, postureKcalPerHour, POSTURES, SeriesName, Trajectory, value } from "./simulate";
 import { arrivingFoods, foodKcalOf, foodsInStomach, forecast as stateForecast, formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./state";
 import { SystemId, systemById } from "./systems";
@@ -34,6 +35,9 @@ export type ReadingId =
   | "immune"
   | "reward"
   | "fluid"
+  | "cycleDay"
+  | "estradiol"
+  | "progesterone"
   | `muscle:${MuscleGroup}`;
 
 // Readings read from a curve in the table below. Muscle summaries are built per group.
@@ -85,6 +89,7 @@ export interface Feeling {
   cause: string; // "Your stomach holds 530 ml"
   when: string | null; // "Peaks around 18:08"
   organ: OrganId | null;
+  byClaude?: boolean; // Claude described it, for something with no built-in curve
 }
 
 export interface SystemStatus {
@@ -409,10 +414,17 @@ const causedBy = (channel: ChannelId, atLeast: number, text: (cause: string, amo
 
 const raises = (cause: string) => `Raised by ${cause}`;
 
+// What the luteal phase is adding to a channel. Only heart rate and temperature ever get named.
+function fromCycle(c: Context, channel: ChannelId, at = c.t): number {
+  if (!c.tr.cycle) return 0;
+  const size = channel === "heartRate" ? CYCLE.luteal.heartBpm : channel === "temperature" ? CYCLE.luteal.temperatureC : 0;
+  return size * lutealShare(c.tr.cycle, at);
+}
+
 // What a walk or run is adding to a channel, including what lingers after you stop.
 function fromMoving(c: Context, channel: ChannelId, at = c.t): number {
   const fromEvents = c.events.reduce((sum, e) => sum + effectAt(e, channel, at), 0);
-  return Math.max(0, c.tr.channels[channel][Math.max(0, Math.min(DAY.minutes - 1, Math.round(at)))] - fromEvents);
+  return Math.max(0, c.tr.channels[channel][Math.max(0, Math.min(DAY.minutes - 1, Math.round(at)))] - fromEvents - fromCycle(c, channel, at));
 }
 
 // "running" or "walking": whichever you did last, for naming what still lingers.
@@ -428,6 +440,7 @@ function heartCauses(c: Context): { name: string; bpm: number }[] {
     { name: movedWord(c), bpm: fromMoving(c, "heartRate") },
     { name: "digestion", bpm: HEART.digestionGain * c.v("digestion") },
     { name: "caffeine", bpm: HEART.caffeineGainPerMgL * c.v("caffeine") },
+    { name: "your cycle", bpm: fromCycle(c, "heartRate") },
   ];
   const named = (e: ResolvedEvent) => (e.preset === "illness" && effectAt(e, "temperature", c.t) >= PROCESS.feverNamedFromC ? "the fever" : e.causeName);
   const rows = c.events.map((e) => ({ name: named(e), bpm: effectAt(e, "heartRate", c.t) }));
@@ -1159,6 +1172,7 @@ const temperatureSpec: ReadingSpec = {
     [coolingDown, (c) => `Cooling down after ${movedWord(c)}`],
     [(c) => isIll(c) && startedBy("temperature", 0.2)(c), () => "Your immune system turned up your temperature"],
     causedBy("temperature", 0.2, raises),
+    [(c) => fromCycle(c, "temperature") >= CYCLE.namedFrom.warmthC, () => "A little warmer in this part of your cycle"],
     [always, () => "Your usual daily rhythm"],
   ],
   forecast: [
@@ -1199,6 +1213,62 @@ const immuneSpec = eventScaleSpec(
   [causedBy("immune", 0.02, (cause) => `Working against ${cause}`), [always, () => "Patrolling as usual"]],
   (_c, s) => (s.value < REFERENCE.immune.high ? NORMAL : EXPECTED),
 );
+
+const PHASE_WORD: Record<CyclePhase, string> = { period: "Period", follicular: "Follicular phase", ovulation: "Around ovulation", luteal: "Luteal phase" };
+const phaseOf = (c: Context): CyclePhase | null => (c.tr.cycle ? cyclePhase(c.tr.cycle, c.t) : null);
+
+const PHASE_SAYS: Record<CyclePhase, { day: string; estradiol: string; progesterone: string }> = {
+  period: { day: "The lining of the uterus is shedding", estradiol: "Low, and starting to rise as a follicle grows", progesterone: "Low, which is what started the period" },
+  follicular: { day: "An egg is ripening and the lining is rebuilding", estradiol: "Rising, because a follicle in the ovary is growing", progesterone: "Low until an egg is released" },
+  ovulation: { day: "A surge of LH releases an egg about now", estradiol: "At its peak, which triggers the LH surge", progesterone: "Just starting to rise" },
+  luteal: { day: "The lining stays ready, and your body runs slightly warmer", estradiol: "A second, smaller rise from the empty follicle", progesterone: "High, made by the empty follicle" },
+};
+
+const nextPeriod = (c: Context): Said | null => {
+  if (!c.tr.cycle) return null;
+  const days = Math.round(minutesToNextPeriod(c.tr.cycle, c.t) / 1440);
+  const text = days <= 1 ? "Next period about tomorrow" : `Next period in about ${days} days`;
+  return { text, short: `Period in ${days} d`, at: null };
+};
+
+const cycleDaySpec: ReadingSpec = {
+  label: "Cycle day",
+  organ: "uterus",
+  series: "cycleDay",
+  unit: "day",
+  toValue: identity,
+  format: rounded,
+  trendEpsilon: 2,
+  headingChange: null,
+  range: (c) => {
+    const length = c.tr.cycle?.lengthDays ?? CYCLE.lengthDays;
+    return { min: 1, max: length, typicalLow: 1, typicalHigh: length, typicalLabel: `Of a ${length}-day cycle`, evidence: CYCLE.evidence, source: CYCLE.source };
+  },
+  judge: (c) => quiet(PHASE_WORD[phaseOf(c) ?? "follicular"]),
+  why: [[always, (c) => PHASE_SAYS[phaseOf(c) ?? "follicular"].day]],
+  forecast: [(c) => nextPeriod(c)],
+};
+
+const hormoneSpec = (label: string, organ: OrganId, series: "estradiol" | "progesterone", unit: string, digits: number, says: "estradiol" | "progesterone"): ReadingSpec => ({
+  label,
+  organ,
+  series,
+  unit,
+  toValue: identity,
+  format: (x) => x.toFixed(digits),
+  trendEpsilon: series === "estradiol" ? 2 : 0.05,
+  headingChange: null,
+  range: () => {
+    const r = CYCLE.scale[says];
+    return { min: r.min, max: r.max, typicalLow: r.low, typicalHigh: r.high, typicalLabel: `${r.low} to ${r.high} ${unit} across a cycle`, evidence: CYCLE.evidence, source: CYCLE.source };
+  },
+  judge: (c) => quiet(PHASE_WORD[phaseOf(c) ?? "follicular"]),
+  why: [[always, (c) => PHASE_SAYS[phaseOf(c) ?? "follicular"][says]]],
+  forecast: [],
+});
+
+const estradiolSpec = hormoneSpec("Estrogen", "ovaries", "estradiol", "pmol/L", 0, "estradiol");
+const progesteroneSpec = hormoneSpec("Progesterone", "ovaries", "progesterone", "nmol/L", 1, "progesterone");
 
 const rewardSpec = eventScaleSpec("Feel-good chemicals", "brain", "reward", REFERENCE.reward, [causedBy("reward", 0.02, raises), [always, () => "At their usual level"]], () => NORMAL);
 
@@ -1295,10 +1365,13 @@ const READINGS: Record<TableReadingId, ReadingSpec> = {
   immune: immuneSpec,
   reward: rewardSpec,
   fluid: fluidSpec,
+  cycleDay: cycleDaySpec,
+  estradiol: estradiolSpec,
+  progesterone: progesteroneSpec,
 };
 
 // A fever comes first, so it leads the notable list when it ties with something else.
-const READING_ORDER: TableReadingId[] = ["temperature", "glucose", "insulin", "tg", "hr", "output", "bloodPressure", "breaths", "flowGut", "flowMuscle", "flowBrain", "flowKidneys", "stomach", "absorbing", "glycogen", "muscleUptake", "burn", "fuel", "caffeine", "receptors", "alertness", "stressLevel", "reward", "inflammation", "immune", "alcohol", "bladder", "fluid"];
+const READING_ORDER: TableReadingId[] = ["temperature", "glucose", "insulin", "tg", "hr", "output", "bloodPressure", "breaths", "flowGut", "flowMuscle", "flowBrain", "flowKidneys", "stomach", "absorbing", "glycogen", "muscleUptake", "burn", "fuel", "caffeine", "receptors", "alertness", "stressLevel", "reward", "inflammation", "immune", "alcohol", "bladder", "fluid", "cycleDay", "estradiol", "progesterone"];
 
 function firstReason(rows: readonly ReasonRow[], c: Context, s: Sample): string {
   for (const [test, text] of rows) if (test(c, s)) return text(c, s);
@@ -1342,7 +1415,7 @@ function buildReading(id: TableReadingId, c: Context): Reading {
 // A bare number means nothing, so its unit sits quietly beside it. Only what the row's name already
 // says is shortened ("% of blood" beside "Blood to gut") or left out (°C beside "Temperature").
 export function shortUnit(unit: string) {
-  if (unit === "°C") return "";
+  if (unit === "°C" || unit === "day") return "";
   if (unit.startsWith("%")) return "%";
   if (unit === "a minute") return "/min";
   return unit;
@@ -1438,6 +1511,14 @@ function sorenessPeak(c: Context): string | null {
 
 // Feelings the model's own scales produce. Feelings an event brings are merged in by feelingsOf.
 const FEELINGS: FeelingSpec[] = [
+  {
+    id: "cramps",
+    label: "Cramps",
+    organ: "uterus",
+    level: (c, at) => (c.tr.cycle ? crampLevel(c.tr.cycle, at) : 0),
+    cause: (c) => `Day ${Math.round(c.v("cycleDay"))} of your period`,
+    when: () => null,
+  },
   {
     id: "full",
     label: "Full",
@@ -1547,7 +1628,7 @@ function eventFeelingsOf(c: Context): Feeling[] {
         const remaining = Math.max(0, Math.log2(now / d.negligibleBelow) * f.halfLifeMin);
         fades = Math.max(c.t, event.ends) + remaining;
       }
-      out.push({ id: f.id, label: f.label, intensity: now, word: intensityWord(now, at(c.t + d.changeWindowMin)), cause: f.cause, when: fades === null ? null : `Fades ${whenWords(fades, c.t)}`, organ: f.organ });
+      out.push({ byClaude: event.preset === "custom", id: f.id, label: f.label, intensity: now, word: intensityWord(now, at(c.t + d.changeWindowMin)), cause: f.cause, when: fades === null ? null : `Fades ${whenWords(fades, c.t)}`, organ: f.organ });
     }
   }
   return out;
@@ -1854,6 +1935,18 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
     level: (c) => Math.max(c.v("alcohol") * 2, c.v("caffeine") / CAFFEINE.feltAboveMgL / 3, (c.v("bladderMl") / REFERENCE.bladder.capacityMl) * 0.3),
     sentence: clearingSentence,
   },
+  reproductive: {
+    words: [
+      [(c) => phaseOf(c) !== null, (c) => PHASE_WORD[phaseOf(c) ?? "follicular"]],
+      [always, "Quiet"],
+    ],
+    level: (c) => (c.tr.cycle ? CYCLE.cramps.amount * 0.5 : 0),
+    sentence: (c) => {
+      const phase = phaseOf(c);
+      if (phase) return `${PHASE_SAYS[phase].day}.`;
+      return c.tr.scenario.body.sex === "female" ? "No cycle logged." : "Nothing here is changing today.";
+    },
+  },
 };
 
 function firstWord(rows: readonly WordRow[], c: Context, reading: (id: ReadingId) => Reading) {
@@ -1882,6 +1975,7 @@ function systemsOf(c: Context, reading: (id: ReadingId) => Reading, headline: st
     brain: systemStatus("brain", c, reading),
     immune: systemStatus("immune", c, reading),
     clearing: systemStatus("clearing", c, reading),
+    reproductive: systemStatus("reproductive", c, reading),
   };
   const all = Object.values(parts);
   // Being ill is why the person is looking, however busy the other systems are.
@@ -1890,7 +1984,7 @@ function systemsOf(c: Context, reading: (id: ReadingId) => Reading, headline: st
   const marked = (part: RailEntry): SystemStatus => ({ ...part, emphasis: shown.has(part) });
   // The whole body is as busy as its busiest part and as loud as its loudest. Its sentence is the headline.
   const overview: SystemStatus = { ...firstWord(OVERVIEW_WORDS, c, reading), level: Math.max(...all.map((p) => p.level)), tone: worstTone(all.map((p) => p.tone)), sentence: headline, emphasis: false };
-  return { overview, digestion: marked(parts.digestion), energy: marked(parts.energy), circulation: marked(parts.circulation), muscles: marked(parts.muscles), brain: marked(parts.brain), immune: marked(parts.immune), clearing: marked(parts.clearing) };
+  return { overview, digestion: marked(parts.digestion), energy: marked(parts.energy), circulation: marked(parts.circulation), muscles: marked(parts.muscles), brain: marked(parts.brain), immune: marked(parts.immune), clearing: marked(parts.clearing), reproductive: marked(parts.reproductive) };
 }
 
 function mealInGut(c: Context): string | null {

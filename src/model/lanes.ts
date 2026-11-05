@@ -352,6 +352,7 @@ const PROCESS_READINGS: Partial<Record<string, ReadingId[]>> = {
   circulation: ["hr", "output", "flowGut", "flowMuscle"],
   alertness: ["alertness", "caffeine", "receptors"],
   clearing: ["caffeine", "alcohol", "bladder", "fluid"],
+  cycle: ["cycleDay", "estradiol", "progesterone"],
 };
 const EVENT_READINGS: Partial<Record<ResolvedEvent["preset"], ReadingId[]>> = {
   illness: ["temperature", "inflammation", "immune"],

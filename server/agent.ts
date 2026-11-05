@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/agent/actions";
 import { Intake } from "../src/model/simulate";
 import { foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
+import { NumberBook, unverifiedNumbers } from "./numberCheck";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/narrate";
@@ -33,6 +34,7 @@ What happened, and which tool records it:
 - A gym or bodyweight session, being ill, sexual activity, a stressful stretch, or a short night: log_event with the matching preset.
 - Anything else that happens to a body, such as a sauna, a long flight or an injury: log_event with the custom preset. The custom preset is for what no other preset covers, because it is shown as your estimate and has no published numbers behind it.
 - Something ongoing, such as a cold: log_event with until null, then end_event when they say it is over.
+- Their period starting or having started: set_cycle. It is a typical curve, so never present it as telling them when they ovulate or as usable for contraception.
 - Their body's measurements: set_body, only if they state them.
 
 Times: the current time is given below and is always right, and tools take minutes since 00:00 today. Earlier days are negative: 18:00 yesterday is -360. Past midnight it is still the same day until 04:00, so 01:30 is minute 1530. Log things that happened days ago too, because a late coffee, muscle soreness and illness are still acting today. What came over from yesterday is listed below with negative minutes and is already counted, so don't log it again.
@@ -67,6 +69,7 @@ Asking how a dangerous dose or self-harm would play out is not something to simu
 const ACTION_DESCRIPTIONS: Record<ActionName, string> = {
   correct_intake: "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
   set_sleep: "Sets last night's sleep. Past their usual bedtime the model counts them as still up, and it uses the real length of the night for how today feels. Returns a readout.",
+  set_cycle: "Sets when their latest period began. The model then places a typical menstrual cycle from that date: the hormones, a slightly warmer body and higher heart rate after ovulation, and lower insulin sensitivity. Pass null if they use a hormonal contraceptive, are pregnant or past menopause, because this curve doesn't apply. Returns a readout.",
   guide: "Walks the person through your explanation on the body, one step at a time. Each step moves the view and the time, and shows your words. The first step goes on screen immediately. A process id must exist in the readout at that point, so log first. Returns nothing to act on.",
   log_intake: "Records one food or drink at a time of day. The stomach, blood and organs respond immediately. Reusing an id replaces that entry. Returns a readout at the current time.",
   remove_intake: "Removes a logged food or drink by id. Returns a readout.",
@@ -121,13 +124,14 @@ function renderContext(state: BodyState, text: string, mode: Mode, history: { as
   const intakes = `${list(state.intakes.filter((i) => i.at >= 0))}${fromYesterday.length ? `\n\nYesterday, already counted:\n${list(fromYesterday)}` : ""}`;
   const activities = [...state.activities].sort((a, b) => a.from - b.from).map((a) => `- from ${clock(a.from)}: ${a.posture}`).join("\n");
   const substances = state.substances.length ? state.substances.map((s) => `- ${s.label} (id ${s.id}), ${s.doseMg} mg at ${clock(s.at)}`).join("\n") : "- none";
+  const cycle = state.cycle ? `Latest period began at minute ${state.cycle.start}, ${state.cycle.lengthDays}-day cycle.` : "No cycle logged.";
   const events = state.events.length
     ? state.events.map((e) => `- ${e.label} (id ${e.id}, ${e.preset}), from ${clock(e.from)}, ${e.until === null ? "still going on" : `until ${clock(e.until)}`}`).join("\n")
     : "- none";
   const earlier = history.length ? `\n\nEarlier in this exploration:\n${history.map((h) => `They asked: ${h.asked}\nYou answered: ${h.answered}`).join("\n")}` : "";
   return `<simulation${mode === "ask" ? ' kind="temporary copy of their day"' : ""}>
 ${date ? `Today is ${dayName(date)}. ` : ""}Current time: ${clock(state.now)}. Tools take times as minutes since 00:00.
-Body: ${state.body.sex}, ${state.body.age} years, ${state.body.heightCm} cm, ${state.body.weightKg} kg.
+Body: ${state.body.sex}, ${state.body.age} years, ${state.body.heightCm} cm, ${state.body.weightKg} kg.${state.body.sex === "female" ? ` ${cycle}` : ""}
 
 Already logged today:
 ${intakes}
@@ -165,6 +169,7 @@ const bodyStateShape = z.object({
   activities: z.array(z.object({ from: z.number(), posture: z.string() })),
   substances: z.array(z.object({ id: z.string(), label: z.string(), at: z.number(), doseMg: z.number() })),
   events: z.array(z.object({ id: z.string(), label: z.string(), preset: z.enum(PRESETS), from: z.number(), until: z.number().nullable() })),
+  cycle: z.object({ start: z.number(), lengthDays: z.number(), periodDays: z.number() }).nullable(),
   now: z.number(),
   assumptions: z.record(z.string(), z.string()),
 });
@@ -195,11 +200,17 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
 
   let state = initial;
   const started = performance.now();
-  const scenario = () => ({ body: state.body, intakes: state.intakes, activities: state.activities, substances: state.substances, events: state.events });
+  const scenario = () => ({ body: state.body, intakes: state.intakes, activities: state.activities, substances: state.substances, events: state.events, cycle: state.cycle });
   const trajectory = () => simulate(scenario());
+  // Everything Claude has been given, to check the numbers it states against.
+  const book = new NumberBook();
+  const told = (text: string) => {
+    book.add(text);
+    return { content: [{ type: "text" as const, text }] };
+  };
   const report = (at = state.now) => {
     const tr = trajectory();
-    return { content: [{ type: "text" as const, text: JSON.stringify({ ...readout(tr, at), where_things_are: whereabouts(tr, at).map((w) => ({ id: w.id, label: w.label, unit: w.unit, total: Math.round(w.total), places: w.places.map((p) => `${p.label} ${Math.round(p.share * 100)}%`) })) }) }] };
+    return told(JSON.stringify({ ...readout(tr, at), where_things_are: whereabouts(tr, at).map((w) => ({ id: w.id, label: w.label, unit: w.unit, total: Math.round(w.total), places: w.places.map((p) => `${p.label} ${Math.round(p.share * 100)}%`) })) }));
   };
 
   const applied = (Object.keys(ACTION_SCHEMAS) as ActionName[])
@@ -224,11 +235,12 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `${name} was not applied. ${e instanceof Error ? e.message : String(e)}` }], isError: true };
       }
+      if (action.name === "guide") for (const step of action.args.steps) step.unverified = unverifiedNumbers(step.say, book);
       send({ type: "action", name, args: action.args });
       if (action.name === "guide") return { content: [{ type: "text" as const, text: "On screen. Now call reply." }] };
       if (action.name === "what_if" && state.whatIf) {
         const alt = simulate({ ...scenario(), activities: state.whatIf.activities });
-        return { content: [{ type: "text" as const, text: JSON.stringify({ alternative: action.args.label, ...readout(alt, action.args.until) }) }] };
+        return told(JSON.stringify({ alternative: action.args.label, ...readout(alt, action.args.until) }));
       }
       return report();
     }),
@@ -259,7 +271,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
         "find_foods",
         "Looks foods up in the USDA FoodData Central table. Call it once with everything in the message, in generic food words, because the table has few brands: \"cola\" for a Coke, \"pizza cheese\", \"beer\". Returns up to 6 rows per query, each with an id for log_food, its composition and the portions the table knows. If nothing fits, search again with another word before estimating.",
         { queries: z.array(z.string().min(1)).min(1).max(12) },
-        async ({ queries }) => ({ content: [{ type: "text" as const, text: queries.map((query) => `${query}:\n${searchFoods(query).map(foodLine).join("\n") || "nothing found"}`).join("\n\n") }] }),
+        async ({ queries }) => told(queries.map((query) => `${query}:\n${searchFoods(query).map(foodLine).join("\n") || "nothing found"}`).join("\n\n")),
       ),
       tool("log_food", "Records one food or drink from the USDA table at a time of day. You give how much, and its composition comes from the table. Reusing an id replaces that entry. The stomach, blood and organs respond immediately. Returns a readout at the current time.", LOG_FOOD.shape, async (args) => logFood(LOG_FOOD.parse(args))),
       tool("read_body", "Reads the model's numbers at any minute of the day, now or in the future, without changing anything. Use it to check a forecast before stating it.", { at: z.number().int().min(0).max(1799).describe("Minutes since 00:00 today") }, async ({ at }) => report(at)),
@@ -271,7 +283,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
             .array(
               z.object({
                 text: z.string().describe(`One line of plain words with no lead-in, under ${REPLY_WORDS_UNDER} words`),
-                organ: z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat"]).optional().describe("The organ this line is about; hovering the line highlights it"),
+                organ: z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"]).optional().describe("The organ this line is about; hovering the line highlights it"),
               }),
             )
             .min(1)
@@ -281,7 +293,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
           const long = lines.filter((l) => l.text.trim().split(/\s+/).length >= REPLY_WORDS_UNDER);
           if (long.length) return { content: [{ type: "text" as const, text: `Not shown. Shorten to under ${REPLY_WORDS_UNDER} words: ${long.map((l) => `"${l.text}"`).join(", ")}. Call reply again.` }], isError: true };
           replied = true;
-          send({ type: "reply", lines });
+          send({ type: "reply", lines: lines.map((line) => ({ ...line, unverified: unverifiedNumbers(line.text, book) })) });
           return { content: [{ type: "text" as const, text: "Shown to the person. Your turn is over." }] };
         },
       ),
@@ -295,8 +307,10 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
   });
 
   try {
+    const prompt = renderContext(state, text, mode, history, date);
+    book.add(prompt);
     const run = query({
-      prompt: renderContext(state, text, mode, history, date),
+      prompt,
       options: {
         model: MODEL,
         effort: EFFORT,

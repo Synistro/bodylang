@@ -11,3 +11,7 @@ for sex in M F; do
   curl -sSf -o "$out/SBU_${sex}_Intestine_Large.glb" "$base/SBU_${sex}_Intestine_Large.glb"
   curl -sSf -o "$out/Allen_${sex}_Brain.glb" "$base/Allen_${sex}_Brain.glb"
 done
+for organ in Uterus Ovary_L Ovary_R Fallopian_Tube_L Fallopian_Tube_R; do
+  curl -sSf -o "$out/VH_F_${organ}.glb" "$base/VH_F_${organ}.glb"
+done
+curl -sSf -o "$out/VH_M_Prostate.glb" "$base/VH_M_Prostate.glb"

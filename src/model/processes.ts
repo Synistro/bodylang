@@ -1,6 +1,7 @@
+import { cycleDay, cyclePhase, liningShare, lutealShare } from "./cycle";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
-import { ALCOHOL, BLOOD_FLOW, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
+import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
 import { alcoholLedgerAt, caffeineLedgerAt, CustomSubstance, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
 import type { Tint } from "./state";
 import { foodKcalOf, formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
@@ -588,6 +589,9 @@ const TARGET_ROUTES: Record<OrganId, RouteId[]> = {
   bladder: ["descending", "to_kidney_L", "to_bladder_L"],
   muscle: ["descending", "leg_L"],
   fat: ["descending"],
+  uterus: ["descending"],
+  ovaries: ["descending"],
+  prostate: ["descending"],
 };
 
 const TARGET_SYSTEM: Record<OrganId, SystemId> = {
@@ -604,6 +608,9 @@ const TARGET_SYSTEM: Record<OrganId, SystemId> = {
   bladder: "clearing",
   muscle: "energy",
   fat: "energy",
+  uterus: "reproductive",
+  ovaries: "reproductive",
+  prostate: "reproductive",
 };
 
 function substanceLine(tr: Trajectory, substance: CustomSubstance, t: number): DoseLine {
@@ -1134,6 +1141,51 @@ type ProcessBuilder = (tr: Trajectory, t: number) => Process[];
 
 const newestFirst = (tr: Trajectory) => [...tr.scenario.intakes].sort((a, b) => b.at - a.at);
 
+const QUIET_FLOW = 0.15;
+
+// The hormones' loop, from the brain down to the uterus. It only exists once a cycle has been logged.
+function cycleProcess(tr: Trajectory, t: number): Process[] {
+  const { cycle } = tr;
+  if (!cycle) return [];
+  const v = (name: SeriesName) => value(tr, name, t);
+  const phase = cyclePhase(cycle, t);
+  const stops: Draft[] = [
+    {
+      id: "pituitary",
+      organ: "brain",
+      label: "Pituitary",
+      reading: `${Math.round(v("lh"))} IU/L LH`,
+      share: Math.min(1, v("lh") / (CYCLE.hormones.lh.base + CYCLE.hormones.lh.surge.amount)),
+      flow: phase === "ovulation" ? 1 : QUIET_FLOW,
+      say: phase === "ovulation" ? "A surge of LH from the base of the brain tells the ripest follicle to release its egg." : "The base of the brain keeps releasing a little LH and FSH, which tell the ovaries what to do.",
+      routes: [],
+    },
+    {
+      id: "ovaries",
+      organ: "ovaries",
+      label: "Ovaries",
+      reading: phase === "luteal" ? `${v("progesterone").toFixed(1)} nmol/L progesterone` : `${Math.round(v("estradiol"))} pmol/L estrogen`,
+      share: lutealShare(cycle, t),
+      flow: phase === "period" ? QUIET_FLOW : 0.6,
+      say: phase === "luteal" ? "The follicle that released the egg now makes progesterone, which warms the body a little." : "A growing follicle makes estrogen, which rebuilds the lining of the uterus.",
+      routes: ["from_brain", "descending"],
+    },
+    {
+      id: "uterus",
+      organ: "uterus",
+      label: "Uterus",
+      reading: `Day ${cycleDay(cycle, t)}`,
+      share: liningShare(cycle, t),
+      flow: phase === "period" ? 0.8 : 0.4,
+      say: phase === "period" ? "With progesterone gone, the lining sheds. That is the period." : phase === "luteal" ? "Progesterone keeps the lining ready. If no pregnancy starts, it falls and the lining sheds." : "Estrogen is thickening the lining again.",
+      routes: [],
+    },
+  ];
+  const here = phase === "period" ? "uterus" : phase === "ovulation" ? "pituitary" : "ovaries";
+  const headline = `Day ${cycleDay(cycle, t)} of ${cycle.lengthDays}: ${{ period: "your period", follicular: "the follicular phase", ovulation: "around ovulation", luteal: "the luteal phase" }[phase]}`;
+  return [{ id: "cycle", title: "Menstrual cycle", system: "reproductive", substance: "other", active: true, headline, stops: numbered(stops, here, "ahead", true) }];
+}
+
 // What came over from yesterday is only worth a line while it is still doing something.
 const stillHere = (from: number, line: Process) => (from >= 0 || line.active ? [line] : []);
 
@@ -1148,6 +1200,7 @@ const PROCESS_BUILDERS: ProcessBuilder[] = [
   (tr, t) => [circulationProcess(tr, t)],
   (tr, t) => [alertnessProcess(tr, t)],
   (tr, t) => [clearingProcess(tr, t)],
+  (tr, t) => cycleProcess(tr, t),
   (tr, t) =>
     newestFirst(tr)
       .filter((intake) => intake.alcoholG > 0)

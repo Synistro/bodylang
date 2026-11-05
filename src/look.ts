@@ -15,6 +15,7 @@ export const SYSTEM_HUE: Record<SystemId, Record<LookTheme, string>> = {
   brain: { plate: "#5e409d", xray: "#8b7ec8" },
   immune: { plate: "#24837b", xray: "#3aa99f" },
   clearing: { plate: "#205ea6", xray: "#4385be" },
+  reproductive: { plate: "#66800b", xray: "#879a39" },
 };
 
 // The system whose colour stands for "working" while nothing in particular is in focus.
@@ -35,6 +36,9 @@ export const ORGAN_HOME: Record<OrganId, SystemId> = {
   bladder: "clearing",
   muscle: "muscles",
   fat: "energy",
+  uterus: "reproductive",
+  ovaries: "reproductive",
+  prostate: "reproductive",
 };
 
 // Whose colour the screen is in. A process keeps its own system's colour, and an organ reached from
