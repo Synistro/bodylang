@@ -4,8 +4,8 @@ import { BodyEvent } from "./events";
 import { LANES } from "./params";
 import { dayMoments, dayStops, fitWindow, muscleStateLanes, processLanes, readingLanes, systemLanes, threadLanes, workedMuscleLanes } from "./lanes";
 import { Intake, Scenario, simulate } from "./simulate";
+import { hm } from "./testKit";
 
-const hm = (h: number, m = 0) => h * 60 + m;
 
 const COFFEE: Intake = { id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 245, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 95, alcoholG: 0, liquid: true };
 const PIZZA: Intake = { id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4, caffeineMg: 0, alcoholG: 0, liquid: false };

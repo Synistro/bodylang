@@ -5,8 +5,8 @@ import { isStill, Lane, systemLanes, threadLanes, workedMuscleLanes } from "../m
 import { Intake, Scenario, simulate } from "../model/simulate";
 import { systemById, SystemId } from "../model/systems";
 import { dayViewOf, viewStops, Walkthrough } from "./dayView";
+import { hm } from "../model/testKit";
 
-const hm = (h: number, m = 0) => h * 60 + m;
 
 const PIZZA: Intake = { id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4, caffeineMg: 0, alcoholG: 0, liquid: false };
 const SQUATS: BodyEvent = { id: "legs", label: "Squats", preset: "training", from: -1770, until: -1710, intensity: 0.8, muscles: [{ group: "quads", load: 1 }], symptoms: [], custom: null, source: "test" };

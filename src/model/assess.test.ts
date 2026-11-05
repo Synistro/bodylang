@@ -3,14 +3,13 @@ import { Assessment, assess, glucoseVerdict, insulinVerdict, Reading, ReadingId,
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { CustomSubstance, Intake, Scenario, simulate } from "./simulate";
 import { SYSTEMS } from "./systems";
+import { hm, NO_NUTRIENTS } from "./testKit";
 
-const none = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const hm = (h: number, m = 0) => h * 60 + m;
 
-const coffee: Intake = { ...none, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
-const sugarBar: Intake = { ...none, id: "sugar_bar", label: "Sugar bar", at: hm(16, 45), grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
-const pizza: Intake = { ...none, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
-const beer: Intake = { ...none, id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 1, alcoholG: 20, liquid: true };
+const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
+const sugarBar: Intake = { ...NO_NUTRIENTS, id: "sugar_bar", label: "Sugar bar", at: hm(16, 45), grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
+const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
+const beer: Intake = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 1, alcoholG: 20, liquid: true };
 const ibuprofen: CustomSubstance = { id: "ibuprofen", label: "Ibuprofen", at: hm(13), doseMg: 400, tmaxMin: 90, halfLifeH: 2, volumeLPerKg: 0.15, bioavailability: 0.9, targets: [{ organ: "brain", effect: "blocks the signal that makes pain" }], source: "test" };
 
 const day: Scenario = {
@@ -78,8 +77,8 @@ function stringsIn(a: Assessment): string[] {
 const SCENARIOS: Record<string, Scenario> = {
   "the test day": day,
   "nothing logged": { ...day, intakes: [] },
-  "a drink only": { ...day, intakes: [{ ...none, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }] },
-  "pure spirit": { ...day, intakes: [{ ...none, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true }] },
+  "a drink only": { ...day, intakes: [{ ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }] },
+  "pure spirit": { ...day, intakes: [{ ...NO_NUTRIENTS, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true }] },
   "a beer and a pill": { ...day, intakes: [beer, pizza], substances: [ibuprofen] },
   "a walk and a run": { ...day, activities: [{ from: hm(8), posture: "sitting" }, { from: hm(17), posture: "walking" }, { from: hm(18), posture: "running" }, { from: hm(19), posture: "standing" }, { from: hm(23), posture: "sleeping" }] },
   "another body": { ...day, body: { sex: "female", age: 62, heightCm: 158, weightKg: 92 } },
@@ -243,7 +242,7 @@ describe("later in the same meal", () => {
   });
 
   it("calls blood fat above 150 expected hours after a fatty meal", () => {
-    const fatty = simulate({ ...day, intakes: [{ ...none, id: "test_meal", label: "Fat test", at: hm(9), grams: 300, waterMl: 150, carbsG: 25, sugarG: 15, fatG: 75, proteinG: 10 }] });
+    const fatty = simulate({ ...day, intakes: [{ ...NO_NUTRIENTS, id: "test_meal", label: "Fat test", at: hm(9), grams: 300, waterMl: 150, carbsG: 25, sugarG: 15, fatG: 75, proteinG: 10 }] });
     const t = readingAt(hm(12, 15), "tg", fatty);
     expect(t.value).toBeGreaterThan(180);
     expect(t.verdict).toBe("expected");

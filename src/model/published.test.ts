@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { BodyEvent, maxHeartRate, muscleStateAt } from "./events";
 import { ACTIVITY, ALCOHOL, FASTING, FEEL, GLUCOSE, REFERENCE } from "./params";
 import { ActivitySpan, Body, Intake, intakeFlowsAt, ledgerAt, Scenario, simulate, Trajectory, value } from "./simulate";
+import { hm, NO_NUTRIENTS } from "./testKit";
 
-const none = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const hm = (h: number, m = 0) => h * 60 + m;
 const mmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
 const man: Body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 };
 const woman: Body = { sex: "female", age: 62, heightCm: 163, weightKg: 92 };
@@ -12,7 +11,7 @@ const wake: ActivitySpan[] = [{ from: 0, posture: "sleeping" }, { from: hm(7, 30
 const blank = { muscles: [], symptoms: [], custom: null, source: "" };
 
 const scenario = (intakes: Intake[], extra: Partial<Scenario> = {}): Scenario => ({ body: man, activities: wake, substances: [], intakes, events: [], ...extra });
-const food = (id: string, at: number, parts: Partial<Intake>): Intake => ({ ...none, id, label: id, at, ...parts });
+const food = (id: string, at: number, parts: Partial<Intake>): Intake => ({ ...NO_NUTRIENTS, id, label: id, at, ...parts });
 
 const peakOf = (series: Float32Array, from: number, to: number) => {
   let at = from;

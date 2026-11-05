@@ -10,17 +10,16 @@ import { CAFFEINE, ENERGY, FEEL, KIDNEY, MUSCLE_RECOVERY, REFERENCE, TRAINING } 
 import { processesAt, processesFor } from "./processes";
 import { SYSTEMS, systemById } from "./systems";
 import { threadsAt } from "./threads";
+import { hm, NO_NUTRIENTS } from "./testKit";
 
-const none = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const hm = (h: number, m = 0) => h * 60 + m;
 const toMmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
 const body = { sex: "male" as const, age: 30, heightCm: 180, weightKg: 80 };
 const anthro = anthropometrics(body);
 
 const base: Scenario = { body, activities: [{ from: hm(8), posture: "sitting" }], substances: [], intakes: [], events: [] };
-const coffee: Intake = { ...none, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
-const pizza: Intake = { ...none, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
-const water: Intake = { ...none, id: "water", label: "Water", at: hm(12), grams: 1000, waterMl: 1000, liquid: true };
+const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
+const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
+const water: Intake = { ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(12), grams: 1000, waterMl: 1000, liquid: true };
 
 const blank = { muscles: [], symptoms: [], custom: null, source: "" };
 const chestDay: BodyEvent = { ...blank, id: "chest", label: "Chest workout", preset: "training", from: hm(10), until: hm(11), intensity: 0.8, muscles: [{ group: "chest", load: 1 }, { group: "triceps", load: 0.6 }] };
@@ -612,7 +611,7 @@ describe("the rail", () => {
   });
 
   it("never lets the headline repeat the first notable item", () => {
-    const scenarios = [withEvents(flu), withEvents(chestDay), simulate({ ...base, intakes: [pizza, coffee] }), simulate({ ...base, intakes: [0, 1, 2, 3].map((n) => ({ ...none, id: `beer_${n}`, label: "Beer", at: hm(19) + n * 10, grams: 500, waterMl: 460, alcoholG: 20, liquid: true })) })];
+    const scenarios = [withEvents(flu), withEvents(chestDay), simulate({ ...base, intakes: [pizza, coffee] }), simulate({ ...base, intakes: [0, 1, 2, 3].map((n) => ({ ...NO_NUTRIENTS, id: `beer_${n}`, label: "Beer", at: hm(19) + n * 10, grams: 500, waterMl: 460, alcoholG: 20, liquid: true })) })];
     for (const tr of scenarios) {
       for (let t = hm(8); t <= hm(23); t += 10) {
         const a = assess(tr, t);
@@ -656,7 +655,7 @@ describe("threads", () => {
   });
 
   it("merges a sitting into one thread with a plain title", () => {
-    const bar: Intake = { ...none, id: "bar", label: "Sugar bar", at: pizza.at - 5, grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
+    const bar: Intake = { ...NO_NUTRIENTS, id: "bar", label: "Sugar bar", at: pizza.at - 5, grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
     const threads = threadsAt(simulate({ ...base, intakes: [bar, pizza] }), hm(17));
     expect(threads.map((t) => t.id)).toEqual(["meal:bar"]);
     expect(threads[0]).toMatchObject({ title: "Ate sugar bar and pizza", processId: "meal:bar", kind: "food" });
@@ -664,7 +663,7 @@ describe("threads", () => {
 
   it("gives alcohol and pills their own lines, and plain water none", () => {
     const ibuprofen = { id: "ibuprofen", label: "Ibuprofen", at: hm(13), doseMg: 400, tmaxMin: 90, halfLifeH: 2, volumeLPerKg: 0.15, bioavailability: 0.9, targets: [{ organ: "brain" as const, effect: "blocks the signal that makes pain" }], source: "test" };
-    const beer = { ...none, id: "beer", label: "Beer", at: hm(13), grams: 500, waterMl: 460, carbsG: 18, alcoholG: 20, liquid: true };
+    const beer = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(13), grams: 500, waterMl: 460, carbsG: 18, alcoholG: 20, liquid: true };
     const tr = simulate({ ...base, intakes: [beer, water], substances: [ibuprofen] });
     const threads = threadsAt(tr, hm(14));
     expect(threads.find((t) => t.id === "intake:beer")?.processId).toBe("alcohol:beer");
@@ -755,7 +754,7 @@ describe("the tools", () => {
   });
 
   it("opens with one short caption, with no lead-in and at most two sentences", () => {
-    const day = simulate({ ...base, intakes: [coffee, { ...pizza }, { ...none, id: "bar", label: "Sugar bar", at: pizza.at, grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 }] });
+    const day = simulate({ ...base, intakes: [coffee, { ...pizza }, { ...NO_NUTRIENTS, id: "bar", label: "Sugar bar", at: pizza.at, grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 }] });
     const lines = openingReply(day, hm(17));
     expect(lines).toHaveLength(1);
     expect(lines[0]).not.toHaveProperty("head");

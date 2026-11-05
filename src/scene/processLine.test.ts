@@ -7,8 +7,8 @@ import type { OrganMeta } from "./assets";
 import { RouteNetwork } from "./flows";
 import { PALETTES } from "./materials";
 import { ProcessLine } from "./processLine";
+import { NO_NUTRIENTS } from "../model/testKit";
 
-const none = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
 
 function lineFor(sex: Sex) {
   const meta: OrganMeta = JSON.parse(readFileSync(`public/assets/organs-${sex}.json`, "utf8"));
@@ -37,9 +37,9 @@ describe.each<Sex>(["male", "female"])("process lines on the %s body", (sex) => 
     activities: [{ from: 0, posture: "sleeping" }, { from: 450, posture: "sitting" }],
     substances: [],
     intakes: [
-      { ...none, id: "coffee", label: "Coffee", at: 510, grams: 250, waterMl: 245, caffeineMg: 95 },
-      { ...none, id: "pizza", label: "Pizza", at: 1005, grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 },
-      { ...none, id: "beer", label: "Beer", at: 1200, grams: 500, waterMl: 460, carbsG: 18, alcoholG: 20 },
+      { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: 510, grams: 250, waterMl: 245, caffeineMg: 95 },
+      { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: 1005, grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 },
+      { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: 1200, grams: 500, waterMl: 460, carbsG: 18, alcoholG: 20 },
     ],
   };
   const trajectory = simulate(scenario);

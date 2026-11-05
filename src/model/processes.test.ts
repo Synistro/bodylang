@@ -2,16 +2,15 @@ import { describe, expect, it } from "vitest";
 import { readout } from "./narrate";
 import { Process, processesAt, processesFor, ProcessStop } from "./processes";
 import { caffeineLedgerAt, CustomSubstance, Intake, ledgerAt, Scenario, simulate, value } from "./simulate";
+import { hm, NO_NUTRIENTS } from "./testKit";
 
-const none = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const hm = (h: number, m = 0) => h * 60 + m;
 
-const coffee: Intake = { ...none, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
-const sugarBar: Intake = { ...none, id: "sugar_bar", label: "Sugar bar", at: hm(16, 45), grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
-const pizza: Intake = { ...none, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
-const beer: Intake = { ...none, id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 1, alcoholG: 20, liquid: true };
-const vodka: Intake = { ...none, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true };
-const latte: Intake = { ...none, id: "latte", label: "Latte", at: hm(9), grams: 350, waterMl: 320, carbsG: 14, sugarG: 14, fatG: 9, proteinG: 9, caffeineMg: 80, liquid: true };
+const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
+const sugarBar: Intake = { ...NO_NUTRIENTS, id: "sugar_bar", label: "Sugar bar", at: hm(16, 45), grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
+const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
+const beer: Intake = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 1, alcoholG: 20, liquid: true };
+const vodka: Intake = { ...NO_NUTRIENTS, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true };
+const latte: Intake = { ...NO_NUTRIENTS, id: "latte", label: "Latte", at: hm(9), grams: 350, waterMl: 320, carbsG: 14, sugarG: 14, fatG: 9, proteinG: 9, caffeineMg: 80, liquid: true };
 const ibuprofen: CustomSubstance = { id: "ibuprofen", label: "Ibuprofen", at: hm(13), doseMg: 400, tmaxMin: 90, halfLifeH: 2, volumeLPerKg: 0.15, bioavailability: 0.9, targets: [{ organ: "brain", effect: "blocks the signal that makes pain" }], source: "test" };
 
 const day: Scenario = {
@@ -45,7 +44,7 @@ const LIVE_LINES = ["insulin", "circulation", "alertness", "clearing"];
 const SCENARIOS: Record<string, Scenario> = {
   "the test day": day,
   "nothing logged": { ...day, intakes: [] },
-  "water only": { ...day, intakes: [{ ...none, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }] },
+  "water only": { ...day, intakes: [{ ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }] },
   "pure spirit": { ...day, intakes: [vodka] },
   "two rounds": { ...day, intakes: [beer, { ...beer, id: "beer_2", at: hm(19, 30) }, pizza] },
   "a latte and a pill": { ...day, intakes: [latte], substances: [ibuprofen] },
@@ -275,7 +274,7 @@ describe("where the action is", () => {
 
 describe("special lines", () => {
   it("gives even a small snack a food line, and coffee with a splash of milk none", () => {
-    const small = simulate({ ...day, intakes: [{ ...none, id: "mint", label: "Mint", at: hm(9), grams: 5, carbsG: 4 }, { ...coffee, carbsG: 1, fatG: 1 }] });
+    const small = simulate({ ...day, intakes: [{ ...NO_NUTRIENTS, id: "mint", label: "Mint", at: hm(9), grams: 5, carbsG: 4 }, { ...coffee, carbsG: 1, fatG: 1 }] });
     const ids = processesAt(small, hm(9, 30)).map((p) => p.id);
     expect(ids).toContain("intake:mint");
     expect(lineAt("intake:coffee", hm(9, 30), small).system).toBe("brain");

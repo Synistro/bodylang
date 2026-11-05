@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { CAFFEINE } from "./params";
 import { caffeineLedgerAt, ledgerAt, LEDGER_KEYS, Scenario, simulate, value } from "./simulate";
+import { NO_NUTRIENTS } from "./testKit";
 
 const body = { sex: "male" as const, age: 30, heightCm: 178, weightKg: 75 };
 const awake = [{ from: 0, posture: "sleeping" as const }, { from: 450, posture: "sitting" as const }];
-const none = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
 const peakOf = (s: Float32Array, from: number, to: number) => {
   let best = from;
   for (let t = from; t <= to; t++) if (s[t] > s[best]) best = t;
@@ -12,7 +12,7 @@ const peakOf = (s: Float32Array, from: number, to: number) => {
 };
 
 describe("caffeine", () => {
-  const scenario: Scenario = { body, activities: awake, substances: [], intakes: [{ ...none, id: "c", label: "coffee", at: 510, grams: 250, waterMl: 245, caffeineMg: 95 }] };
+  const scenario: Scenario = { body, activities: awake, substances: [], intakes: [{ ...NO_NUTRIENTS, id: "c", label: "coffee", at: 510, grams: 250, waterMl: 245, caffeineMg: 95 }] };
   const tr = simulate(scenario);
 
   it("peaks within about an hour", () => {
@@ -35,7 +35,7 @@ describe("caffeine", () => {
 });
 
 describe("glucose", () => {
-  const ogtt = simulate({ body, activities: awake, substances: [], intakes: [{ ...none, id: "o", label: "75 g glucose", at: 540, grams: 300, waterMl: 225, carbsG: 75, sugarG: 0, liquid: true }] });
+  const ogtt = simulate({ body, activities: awake, substances: [], intakes: [{ ...NO_NUTRIENTS, id: "o", label: "75 g glucose", at: 540, grams: 300, waterMl: 225, carbsG: 75, sugarG: 0, liquid: true }] });
 
   it("reproduces a healthy oral glucose tolerance curve", () => {
     const p = peakOf(ogtt.series.glucose, 540, 800);
@@ -53,7 +53,7 @@ describe("glucose", () => {
   });
 
   it("walking after a meal lowers the glucose load compared with sitting", () => {
-    const meal = { ...none, id: "m", label: "meal", at: 780, grams: 400, waterMl: 150, carbsG: 90, sugarG: 20, fatG: 25, proteinG: 25 };
+    const meal = { ...NO_NUTRIENTS, id: "m", label: "meal", at: 780, grams: 400, waterMl: 150, carbsG: 90, sugarG: 20, fatG: 25, proteinG: 25 };
     const sit = simulate({ body, activities: awake, substances: [], intakes: [meal] });
     const walk = simulate({ body, activities: [...awake, { from: 790, posture: "walking" }, { from: 820, posture: "sitting" }], substances: [], intakes: [meal] });
     const area = (s: Float32Array) => s.slice(780, 960).reduce((a, b) => a + (b - 88), 0);
@@ -68,7 +68,7 @@ describe("glucose", () => {
 });
 
 describe("a 900 kcal mixed meal", () => {
-  const meal = { ...none, id: "p", label: "pizza", at: 1000, grams: 300, waterMl: 110, carbsG: 100, sugarG: 30, fatG: 38, proteinG: 32, fiberG: 5 };
+  const meal = { ...NO_NUTRIENTS, id: "p", label: "pizza", at: 1000, grams: 300, waterMl: 110, carbsG: 100, sugarG: 30, fatG: 38, proteinG: 32, fiberG: 5 };
   const tr = simulate({ body, activities: awake, substances: [], intakes: [meal] });
 
   it("stays in the stomach for hours, in line with an energy-limited rate", () => {
