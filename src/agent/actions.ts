@@ -16,7 +16,7 @@ const organ = z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas",
 const posture = z.enum(["sleeping", "sitting", "standing", "walking", "running"]);
 const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing", "reproductive"]);
 const eventMinute = z.number().int().min(-14 * 1440).max(1799).describe("Minutes since 00:00 today. Negative for earlier days: 18:00 yesterday is -360");
-const foodSource = z.discriminatedUnion("kind", [z.object({ kind: z.literal("table"), fdcId: z.number(), name: z.string(), dataset: z.string() }), z.object({ kind: z.literal("estimate") })]);
+const foodSource = z.discriminatedUnion("kind", [z.object({ kind: z.literal("table"), fdcId: z.number(), name: z.string(), dataset: z.string() }), z.object({ kind: z.literal("estimate") }), z.object({ kind: z.literal("recipe"), ingredients: z.array(z.object({ fdcId: z.number(), name: z.string(), grams: z.number() })) })]);
 const serving = z.object({ label: z.string().min(1).describe("What one serving is, in the singular, such as slice or cup"), grams: z.number().positive() });
 const wordsAtMost = (limit: number) => (text: string) => text.trim().split(/\s+/).length <= limit;
 const shortText = (limit: number) => z.string().min(1).refine(wordsAtMost(limit), `Keep this to ${limit} words or fewer`);
@@ -215,7 +215,8 @@ function withSleep(activities: ActivitySpan[], bed: number, wake: number): Activ
 
 const scaledTo = (intake: Intake, grams: number): Intake => {
   const by = grams / intake.grams;
-  return { ...intake, grams, waterMl: intake.waterMl * by, carbsG: intake.carbsG * by, sugarG: intake.sugarG * by, fatG: intake.fatG * by, proteinG: intake.proteinG * by, fiberG: intake.fiberG * by, caffeineMg: intake.caffeineMg * by, alcoholG: intake.alcoholG * by };
+  const source = intake.source?.kind === "recipe" ? { ...intake.source, ingredients: intake.source.ingredients.map((part) => ({ ...part, grams: part.grams * by })) } : intake.source;
+  return { ...intake, source, grams, waterMl: intake.waterMl * by, carbsG: intake.carbsG * by, sugarG: intake.sugarG * by, fatG: intake.fatG * by, proteinG: intake.proteinG * by, fiberG: intake.fiberG * by, caffeineMg: intake.caffeineMg * by, alcoholG: intake.alcoholG * by };
 };
 
 function storyFrom(custom: z.infer<typeof customStory>): CustomStory {

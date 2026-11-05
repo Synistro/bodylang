@@ -46,7 +46,7 @@ function holds(intake: Intake): string {
   return `${Math.round(intake.grams)} g, ${what}`;
 }
 
-const sourceWords = (intake: Intake) => (intake.source?.kind === "table" ? `USDA: ${intake.source.name}` : "Claude's estimate");
+const sourceWords = (intake: Intake) => (intake.source?.kind === "table" ? `USDA: ${intake.source.name}` : intake.source?.kind === "recipe" ? "Claude's recipe, USDA ingredients" : "Claude's estimate");
 
 function Stepper({ text, label, onLess, onMore, canLess }: { text: string; label: string; onLess: () => void; onMore: () => void; canLess: boolean }) {
   return (

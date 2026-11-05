@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
+import { combineIngredients, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 
 const first = (query: string) => searchFoods(query)[0]?.name ?? "";
 
@@ -33,6 +33,15 @@ describe("the food table", () => {
     expect(nutrientsOf(coffee, 240).caffeineMg).toBeGreaterThan(80);
     const beer = searchFoods("beer")[0];
     expect(nutrientsOf(beer, 355).alcoholG).toBeGreaterThan(8);
+  });
+
+  it("adds up a dish from its ingredients", () => {
+    const cheese = searchFoods("cottage cheese")[0];
+    const flour = searchFoods("wheat flour white")[0];
+    const { nutrients, source } = combineIngredients([{ food: cheese, grams: 120 }, { food: flour, grams: 30 }]);
+    expect(nutrients.grams).toBe(150);
+    expect(nutrients.carbsG).toBeCloseTo(nutrientsOf(cheese, 120).carbsG + nutrientsOf(flour, 30).carbsG);
+    expect(source).toMatchObject({ kind: "recipe", ingredients: [{ fdcId: cheese.fdcId, grams: 120 }, { fdcId: flour.fdcId, grams: 30 }] });
   });
 
   it("describes a food in one line with its id", () => {

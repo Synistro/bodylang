@@ -25,7 +25,7 @@ export interface Nutrients {
 }
 
 // Where what is in a food comes from: a row of the USDA table, or Claude's own estimate of it.
-export type FoodSource = { kind: "table"; fdcId: number; name: string; dataset: string } | { kind: "estimate" };
+export type FoodSource = { kind: "table"; fdcId: number; name: string; dataset: string } | { kind: "estimate" } | { kind: "recipe"; ingredients: { fdcId: number; name: string; grams: number }[] };
 
 // What one serving is, so a portion can be corrected in the units it was eaten in.
 export interface Serving {

@@ -95,6 +95,16 @@ export function nutrientsOf(food: Food, grams: number): Nutrients {
   return { grams, waterMl: water * per, carbsG: carbs * per, sugarG: sugar * per, fatG: fat * per, proteinG: protein * per, fiberG: fiber * per, caffeineMg: caffeine * per, alcoholG: alcohol * per };
 }
 
+// A dish is the sum of what went into it.
+export function combineIngredients(parts: { food: Food; grams: number }[]): { nutrients: Nutrients; source: FoodSource } {
+  const each = parts.map(({ food, grams }) => nutrientsOf(food, grams));
+  const total = (key: keyof Nutrients) => each.reduce((sum, n) => sum + n[key], 0);
+  return {
+    nutrients: { grams: total("grams"), waterMl: total("waterMl"), carbsG: total("carbsG"), sugarG: total("sugarG"), fatG: total("fatG"), proteinG: total("proteinG"), fiberG: total("fiberG"), caffeineMg: total("caffeineMg"), alcoholG: total("alcoholG") },
+    source: { kind: "recipe", ingredients: parts.map(({ food, grams }) => ({ fdcId: food.fdcId, name: food.name, grams })) },
+  };
+}
+
 export const sourceOf = (food: Food): FoodSource => ({ kind: "table", fdcId: food.fdcId, name: food.name, dataset: food.dataset });
 
 // One line per food: the id to log it with, what it is, what 100 g holds, and the portions the table knows.

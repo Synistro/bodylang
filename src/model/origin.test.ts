@@ -65,6 +65,9 @@ describe("where a food comes from", () => {
   it("counts an unsourced food as Claude's, because nothing else vouches for it", () => {
     expect(foodOrigin(meal()).kind).toBe("claude-input");
     expect(foodOrigin(meal({ source: { kind: "estimate" } })).kind).toBe("claude-input");
+    const recipe = foodOrigin(meal({ source: { kind: "recipe", ingredients: [{ fdcId: 1, name: "Flour", grams: 30 }] } }));
+    expect(recipe.kind).toBe("claude-input");
+    expect(recipe.detail).toContain("30 g Flour");
   });
 });
 

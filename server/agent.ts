@@ -5,7 +5,7 @@ import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/ag
 import { Intake } from "../src/model/simulate";
 import { cleanEnvironment } from "./claudeEnv";
 import { BuildStatus, startBuild } from "./extend";
-import { foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
+import { combineIngredients, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 import { NumberBook, unverifiedNumbers } from "./numberCheck";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
@@ -40,7 +40,7 @@ A deterministic physiology model computes everything. Your tools change its inpu
 This is their real day, running on the real clock and saved as they go.
 
 What happened, and which tool records it:
-- Food or drink: call find_foods once with everything in the message, then log_food for each one with the row that fits best. You decide only how much they had: use the serving they name, or a typical one from the row's portions, and say it in \`assumption\`. Only when no row is close, use log_intake with your own composition, which is shown to them as your estimate. For whole fruit pass fructose_share 0.6. Things eaten within 10 minutes show as one meal, with a process id of meal:<first id>.
+- Food or drink: call find_foods once with everything in the message, then log_food for each one with the row that fits best. You decide only how much they had: use the serving they name, or a typical one from the row's portions, and say it in \`assumption\`. A dish made of several ingredients, such as syrniki, pierogi, a stew or a homemade cake, needs log_dish unless a row is that same dish: never log it as its main ingredient, because the flour, sugar and frying oil would go missing. Include each ingredient in that find_foods call, and use a typical recipe scaled to what they ate. Only when no row is close, use log_intake with your own composition, which is shown to them as your estimate. For whole fruit pass fructose_share 0.6. Things eaten within 10 minutes show as one meal, with a process id of meal:<first id>.
 - A correction, such as "only one slice" or "that was an hour ago": correct_intake with the id already logged. Don't log it a second time.
 - A drug or supplement: define_substance, with published oral kinetics and where those come from in \`source\`. If you don't know the kinetics, say so in your reply and leave it out of the simulation.
 - Sitting, standing, walking, running or a nap: set_activity.
@@ -86,7 +86,7 @@ Asking how a dangerous dose or self-harm would play out is not something to simu
 
 const BRIEF_PROMPT = `
 
-Work in as few messages as you can, because the person is watching and each message costs them seconds. Send every call you can together in one message. Logging tools record and return nothing, so put read_body at the current time in the same message as your last log or view call, and then call reply. A reply alone in the next message is ideal. For a food: find_foods first, then all the log_food calls, the view and read_body together, then reply. This overrides what the other instructions say about each tool returning a readout.`;
+Work in as few messages as you can, because the person is watching and each message costs them seconds. Send every call you can together in one message. Logging tools record and return nothing, so put read_body at the current time in the same message as your last log or view call, and then call reply. A reply alone in the next message is ideal. For a food: find_foods first, then all the log_food and log_dish calls, the view and read_body together, then reply. This overrides what the other instructions say about each tool returning a readout.`;
 
 const ACTION_DESCRIPTIONS: Record<ActionName, string> = {
   correct_intake: "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
@@ -115,6 +115,17 @@ On a bad value the error names the parameter to fix. Returns a readout.`,
 };
 
 // Claude's own numbers are always marked as its estimate, so the marking is not its to choose.
+const LOG_DISH = z.object({
+  id: ACTION_SCHEMAS.log_intake.shape.id,
+  label: ACTION_SCHEMAS.log_intake.shape.label,
+  at: ACTION_SCHEMAS.log_intake.shape.at,
+  ingredients: z.array(z.object({ fdc_id: z.number().int().describe("The id of the row from find_foods"), grams: z.number().positive().describe("Grams of this ingredient in everything they ate, including oil the food absorbed") })).min(2),
+  serving_label: z.string().min(1).describe("What one serving is, in the singular, in the words they would use, such as piece or bowl"),
+  servings: z.number().positive().describe("How many servings they had"),
+  liquid: ACTION_SCHEMAS.log_intake.shape.liquid,
+  assumption: z.string().describe("The portion and recipe in a few words, shown to the person, such as Three syrniki, typical recipe"),
+});
+
 const OWN_ESTIMATE_SHAPE = ACTION_SCHEMAS.log_intake.omit({ source: true }).shape;
 
 const LOG_FOOD = z.object({
@@ -138,7 +149,7 @@ const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateStrin
 function renderContext(state: BodyState, text: string, mode: Mode, history: { asked: string; answered: string }[], date: string | null) {
   const clock = (m: number) => `${formatClock(m)} (minute ${m})`;
   const logged = (i: Intake) => {
-    const where = i.source?.kind === "table" ? `USDA: ${i.source.name}` : i.source?.kind === "estimate" ? "your estimate" : null;
+    const where = i.source?.kind === "table" ? `USDA: ${i.source.name}` : i.source?.kind === "estimate" ? "your estimate" : i.source?.kind === "recipe" ? `your recipe: ${i.source.ingredients.map((part) => `${Math.round(part.grams)} g ${part.name}`).join(", ")}` : null;
     return `- ${i.label} (id ${i.id}) at ${clock(i.at)}, ${Math.round(i.grams)} g${state.assumptions[i.id] ? `, ${state.assumptions[i.id]}` : ""}${where ? `, ${where}` : ""}`;
   };
   const list = (items: Intake[]) => (items.length ? items.map(logged).join("\n") : "- nothing yet");
@@ -306,6 +317,21 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
     return plan.brief ? recorded() : report();
   };
 
+  const logDish = (args: z.infer<typeof LOG_DISH>) => {
+    const parts = args.ingredients.map((part) => ({ food: foodById(part.fdc_id), grams: part.grams }));
+    const unknown = args.ingredients.filter((_, index) => !parts[index].food).map((part) => part.fdc_id);
+    if (unknown.length) return { content: [{ type: "text" as const, text: `log_dish was not applied. No food ${unknown.join(", ")}. Use ids find_foods returned.` }], isError: true };
+    const { nutrients: n, source } = combineIngredients(parts.map(({ food, grams }) => ({ food: food!, grams })));
+    const logged: Action = {
+      name: "log_intake",
+      args: { id: args.id, label: args.label, at: args.at, grams: n.grams, water_ml: n.waterMl, carbs_g: n.carbsG, sugar_g: n.sugarG, fat_g: n.fatG, protein_g: n.proteinG, fiber_g: n.fiberG, caffeine_mg: n.caffeineMg, alcohol_g: n.alcoholG, liquid: args.liquid, assumption: args.assumption, serving: { label: args.serving_label, grams: n.grams / args.servings }, source },
+    };
+    state = reduce(state, logged);
+    book.add(formatClock(args.at));
+    send({ type: "action", name: logged.name, args: logged.args });
+    return plan.brief ? recorded() : report();
+  };
+
   let replied = false;
   const allTools = [
       ...applied,
@@ -316,6 +342,7 @@ export async function runTell({ text, state: initial, mode, history, date }: Tel
         async ({ queries }) => told(queries.map((query) => `${query}:\n${searchFoods(query).map(foodLine).join("\n") || "nothing found"}`).join("\n\n")),
       ),
       tool("log_food", "Records one food or drink from the USDA table at a time of day. You give how much, and its composition comes from the table. Reusing an id replaces that entry. The stomach, blood and organs respond immediately. Returns a readout at the current time.", LOG_FOOD.shape, async (args) => logFood(LOG_FOOD.parse(args))),
+      tool("log_dish", "Records one dish made of several ingredients as a single entry at a time of day. You give each ingredient's USDA row and grams, the composition is added up from the table, and it is shown as your recipe. Reusing an id replaces that entry. Returns a readout at the current time.", LOG_DISH.shape, async (args) => logDish(LOG_DISH.parse(args))),
       tool(
         "add_process",
         "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for about ten minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",

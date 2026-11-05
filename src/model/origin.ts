@@ -68,6 +68,9 @@ function stillAtWork(tr: Trajectory, intake: Intake, t: number): boolean {
   return moving > kcalOf(intake) * PROCESS.heldInStomachShare || (caffeine ? caffeine.blood : 0) > intake.caffeineMg * PROCESS.heldInStomachShare;
 }
 
+const recipeWords = (ingredients: { name: string; grams: number }[]) => ingredients.map((part) => `${Math.round(part.grams)} g ${part.name}`).join(", ");
+
+// A recipe counts as Claude's: USDA gives each ingredient, but Claude chose how much of each.
 const composedByClaude = (intake: Intake) => intake.source?.kind !== "table";
 
 export function readingOrigin(reading: Reading, tr: Trajectory, t: number): Origin {
@@ -89,6 +92,7 @@ export function feelingOrigin(feeling: Feeling): Origin {
 export function foodOrigin(intake: Intake): Origin {
   const portion = intake.portionBy === "you" ? "You corrected the portion." : "Claude estimated the portion.";
   if (intake.source?.kind === "table") return { kind: "usda", detail: `${intake.source.name}. ${portion} The model computes what happens to it.` };
+  if (intake.source?.kind === "recipe") return { kind: "claude-input", detail: `Claude estimated the recipe: ${recipeWords(intake.source.ingredients)}. Each ingredient's composition is from USDA. ${portion} The model computes what happens to it.` };
   return { kind: "claude-input", detail: `Claude estimated what this contains. ${portion} The model computes what happens to it.` };
 }
 
