@@ -1,5 +1,6 @@
 import type { Feeling, Reading, ReadingId } from "./assess";
 import { ChannelId, curveStrength } from "./events";
+import { EXTENSIONS } from "./extensions";
 import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
 import type { Process } from "./processes";
 import { caffeineLedgerAt, Intake, kcalOf, ledgerAt, Trajectory } from "./simulate";
@@ -105,6 +106,10 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
   const known = LINE_SOURCES[process.id];
   if (known) return modelOrigin(known.evidence, known.source);
   const [kind, id] = process.id.split(/:(.*)/s);
+  if (kind === "ext") {
+    const extension = EXTENSIONS.find((e) => e.id === id);
+    return { kind: "claude", detail: `A separate Claude session wrote this process, and its tests passed. It reads the model and can't change it. ${extension ? `${EVIDENCE_WORDS[extension.evidence]} ${extension.source}` : ""}` };
+  }
   if (kind === "event") {
     const event = tr.events.find((e) => e.id === id);
     if (event?.preset === "custom") return { kind: "claude-input", detail: `Claude chose the numbers and wrote the words for this. Its source: ${event.source || "its own estimate"}.` };

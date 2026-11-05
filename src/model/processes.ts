@@ -1,4 +1,6 @@
 import { cycleDay, cyclePhase, liningShare, lutealShare } from "./cycle";
+import type { BodyView } from "./extensions/api";
+import { EXTENSIONS } from "./extensions";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
 import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
@@ -10,7 +12,7 @@ import type { SystemId } from "./systems";
 export type Substance = NonNullable<Tint>;
 
 // Named paths through the body, defined in src/scene/flows.ts. A stop lists the ones leading to it.
-export const ROUTE_IDS = ["esophagus", "stomach_out", "duodenum", "jejunum", "ileum", "colon", "portal_liver", "liver_out", "ivc", "svc", "to_lung_L", "to_lung_R", "from_lung_L", "from_lung_R", "arch", "carotid", "descending", "to_gut", "to_kidney_L", "to_kidney_R", "from_kidney_L", "from_kidney_R", "from_brain", "to_liver_art", "pancreas_portal", "lymph", "lymph_svc", "leg_L", "leg_R", "arm_L", "arm_R", "to_bladder_L", "to_bladder_R"] as const;
+export const ROUTE_IDS = ["esophagus", "stomach_out", "duodenum", "jejunum", "ileum", "colon", "portal_liver", "liver_out", "ivc", "svc", "to_lung_L", "to_lung_R", "from_lung_L", "from_lung_R", "arch", "carotid", "to_neck", "descending", "to_gut", "to_kidney_L", "to_kidney_R", "from_kidney_L", "from_kidney_R", "from_brain", "to_liver_art", "pancreas_portal", "lymph", "lymph_svc", "leg_L", "leg_R", "arm_L", "arm_R", "to_bladder_L", "to_bladder_R"] as const;
 
 export type RouteId = (typeof ROUTE_IDS)[number];
 
@@ -1186,6 +1188,34 @@ function cycleProcess(tr: Trajectory, t: number): Process[] {
   return [{ id: "cycle", title: "Menstrual cycle", system: "reproductive", substance: "other", active: true, headline, stops: numbered(stops, here, "ahead", true) }];
 }
 
+// What a process Claude added gets to read: the model's curves and what was logged, and nothing it can change.
+export function viewOf(tr: Trajectory): BodyView {
+  return {
+    body: tr.scenario.body,
+    restingBpm: tr.anthro.restingBpm,
+    value: (name, minute) => value(tr, name, minute),
+    events: tr.events.map((event) => ({ label: event.label, preset: event.preset, from: event.from, until: event.until })),
+  };
+}
+
+const broken = new Set<string>();
+
+// A process Claude added runs through its tests before it gets here. One that still fails on a real day
+// goes quiet rather than taking the page down, and says so once.
+function extensionLines(tr: Trajectory, t: number): Process[] {
+  const view = viewOf(tr);
+  return EXTENSIONS.flatMap((extension) => {
+    try {
+      const { active, headline, here, stops } = extension.at(view, t);
+      return [{ id: `ext:${extension.id}`, title: extension.title, system: extension.system, substance: "other" as const, active, headline, stops: numbered(stops, here, "ahead", true) }];
+    } catch (e: unknown) {
+      if (!broken.has(extension.id)) console.error(`The process ${extension.id} failed`, e);
+      broken.add(extension.id);
+      return [];
+    }
+  });
+}
+
 // What came over from yesterday is only worth a line while it is still doing something.
 const stillHere = (from: number, line: Process) => (from >= 0 || line.active ? [line] : []);
 
@@ -1201,6 +1231,7 @@ const PROCESS_BUILDERS: ProcessBuilder[] = [
   (tr, t) => [alertnessProcess(tr, t)],
   (tr, t) => [clearingProcess(tr, t)],
   (tr, t) => cycleProcess(tr, t),
+  (tr, t) => extensionLines(tr, t),
   (tr, t) =>
     newestFirst(tr)
       .filter((intake) => intake.alcoholG > 0)

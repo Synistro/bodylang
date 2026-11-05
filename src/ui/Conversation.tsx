@@ -6,6 +6,7 @@ import { applyWhatIf, clearWhatIf, Exchange, goToStep, Mode, setMode, useStore }
 import { organHover, useScrollFade } from "./hooks";
 import { ArrowUp, X } from "./icons";
 import { showOrgan } from "./navigation";
+import { BuildLine } from "./Build";
 import { sourced } from "./SourceTip";
 import { tell } from "./tell";
 
@@ -146,6 +147,7 @@ export function Answer() {
     <section className="answer" aria-label="Latest answer">
       {shown ? <ExchangeBlock key={shown.id} exchange={shown} onDismiss={() => setDismissed(shown.id)} /> : null}
       <WhatIfOffer />
+      <BuildLine />
     </section>
   );
 }

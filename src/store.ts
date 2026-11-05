@@ -55,6 +55,15 @@ export interface Ui {
   date: string | null; // the day being saved; null when nothing is, as in the demo
   dayProblem: string | null; // why your day could not be read or saved
   fixing: Fixing | null;
+  build: Build | null;
+}
+
+// A process a separate Claude session is adding, or has just finished with.
+export interface Build {
+  id: string;
+  title: string;
+  stage: "writing" | "testing" | "final" | "ready" | "failed" | "stopped";
+  message: string | null;
 }
 
 // The foods open for correcting, and where on the chart they were clicked.
@@ -127,6 +136,7 @@ let state: AppState = {
   date: null,
   dayProblem: null,
   fixing: null,
+  build: null,
 };
 
 const listeners = new Set<() => void>();

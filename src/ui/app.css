@@ -288,6 +288,15 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 [data-src-kind="claude-input"]:not(button):not(.day-plot), .said-number[data-src-kind="claude"] { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
 .day-row[data-src-kind="claude-input"] .day-value { text-decoration: underline dotted var(--ink-3); text-underline-offset: 0.2em; }
 
+/* A process being added, under the answer. */
+.build-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.8rem; padding-top: 0.6rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); text-wrap: pretty; }
+.build-line[data-working] > span { animation: breathe 2.4s ease-in-out infinite; }
+.build-line[data-failed] { color: var(--ink); }
+.build-line .link { font-size: var(--t-small); }
+.remove-process { display: block; margin-top: 1rem; font-size: var(--t-tiny); color: var(--ink-3); }
+@keyframes breathe { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .build-line[data-working] > span { animation: none; } }
+
 /* Correcting what you had, opened from a name along the top of the chart. */
 .fix { position: absolute; z-index: 3; left: clamp(0rem, var(--fix-x), calc(100% - 32rem)); bottom: calc(100% + 0.6rem); width: 32rem; max-width: 100%; padding: 0.7rem 1.1rem 0.8rem; border-radius: 0.8rem; background: var(--surface); outline: 1px solid var(--line-strong); outline-offset: -1px; animation: rise 160ms var(--ease) backwards; }
 .fix-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; font-size: var(--t-small); color: var(--ink-2); }

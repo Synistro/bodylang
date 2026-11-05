@@ -2,6 +2,7 @@ import { z } from "zod";
 import { carryOver, clockAt, DayDoc, firstDay, parseDayDoc } from "../model/day";
 import { dayDocOf, getState, restoreDay, setClock, setUi, subscribe } from "../store";
 import { WALL } from "../wall";
+import { followBuilds } from "./Build";
 import { playOpening } from "./opening";
 
 const lookSchema = z.object({ theme: z.enum(["plate", "xray"]), layers: z.object({ skin: z.boolean(), vessels: z.boolean() }) });
@@ -113,6 +114,7 @@ function rememberLook() {
 
 export function startDay() {
   rememberLook();
+  followBuilds();
   if (DEMO) {
     playOpening();
     return;

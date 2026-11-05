@@ -44,6 +44,16 @@ function bodyAgent(): Plugin {
             res.end(e instanceof Error ? e.message : String(e));
           });
       });
+      server.middlewares.use("/api/extend", (req, res) => {
+        server
+          .ssrLoadModule("/server/extend.ts")
+          .then((extend) => (extend as typeof import("./server/extend")).handleExtend(req, res))
+          .catch((e: unknown) => {
+            console.error("[bodylang] extend error", e);
+            if (!res.headersSent) res.statusCode = 400;
+            res.end(e instanceof Error ? e.message : String(e));
+          });
+      });
       server.middlewares.use("/api/tell", (req, res) => {
         if (req.method !== "POST") {
           res.statusCode = 405;
@@ -52,7 +62,7 @@ function bodyAgent(): Plugin {
         }
         server
           .ssrLoadModule("/server/agent.ts")
-          .then((bridge) => (bridge as typeof import("./server/agent")).handleTell(req, res))
+          .then((bridge) => (bridge as typeof import("./server/agent")).handleTell(req, res, (status) => server.ws.send("bodylang:build", status)))
           .catch((e: unknown) => {
             console.error("[bodylang] request error", e);
             if (!res.headersSent) res.statusCode = 400;

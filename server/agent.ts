@@ -3,6 +3,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/agent/actions";
 import { Intake } from "../src/model/simulate";
+import { cleanEnvironment } from "./claudeEnv";
+import { BuildStatus, startBuild } from "./extend";
 import { foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 import { NumberBook, unverifiedNumbers } from "./numberCheck";
 import { DATE_PATTERN } from "../src/model/day";
@@ -40,6 +42,8 @@ What happened, and which tool records it:
 Times: the current time is given below and is always right, and tools take minutes since 00:00 today. Earlier days are negative: 18:00 yesterday is -360. Past midnight it is still the same day until 04:00, so 01:30 is minute 1530. Log things that happened days ago too, because a late coffee, muscle soreness and illness are still acting today. What came over from yesterday is listed below with negative minutes and is already counted, so don't log it again.
 
 View: leave the screen showing what matters most for this message. After logging something, call show_system for the system it affects most, such as muscles after a workout, immune during an illness or digestion after a meal. When they ask about one organ, call focus_organ instead, and when they ask where one thing has got to or how something works, call show_process with an id from the readout. When a choice they could make would answer the question better than a description, call what_if; it draws the alternative on the timeline without changing anything.
+
+If they ask about an organ or a process of the body that the readout has no process for and no tool logs, such as the thyroid or melatonin, answer in a line from what you know, marked as your own knowledge, and call add_process once. A separate session then writes it, and it appears on the body once its tests pass, which takes a few minutes. Tell them that in your reply. Use it only for a lasting part of how a body works. Something that happened to them is log_event, and a drug is define_substance.
 
 If the message is really a question about something hypothetical, or asks you to explain how something works, log nothing, answer in a line, and add that the Ask switch by the message box can show it on the body.
 
@@ -152,17 +156,6 @@ ${text}
 </message>`;
 }
 
-// A session started from inside Claude Code inherits variables that point its child at that
-// session; the bridge should run as a plain Claude Code of its own.
-function cleanEnvironment() {
-  const env: Record<string, string> = {};
-  for (const [k, v] of Object.entries(process.env)) {
-    if (v === undefined || k === "CLAUDECODE" || k.startsWith("CLAUDE_CODE_") || k === "ANTHROPIC_BASE_URL") continue;
-    env[k] = v;
-  }
-  return env;
-}
-
 const bodyStateShape = z.object({
   body: z.object({ sex: z.enum(["male", "female"]), age: z.number(), heightCm: z.number(), weightKg: z.number() }),
   intakes: z.array(z.object({ id: z.string(), label: z.string(), at: z.number() })),
@@ -193,7 +186,7 @@ async function readBody(req: IncomingMessage) {
   return requestSchema.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
 }
 
-export async function handleTell(req: IncomingMessage, res: ServerResponse) {
+export async function handleTell(req: IncomingMessage, res: ServerResponse, buildChanged: (status: BuildStatus) => void) {
   const { text, state: initial, mode, history, date } = await readBody(req);
   res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });
   const send = (event: unknown) => res.write(`data: ${JSON.stringify(event)}\n\n`);
@@ -274,6 +267,19 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
         async ({ queries }) => told(queries.map((query) => `${query}:\n${searchFoods(query).map(foodLine).join("\n") || "nothing found"}`).join("\n\n")),
       ),
       tool("log_food", "Records one food or drink from the USDA table at a time of day. You give how much, and its composition comes from the table. Reusing an id replaces that entry. The stomach, blood and organs respond immediately. Returns a readout at the current time.", LOG_FOOD.shape, async (args) => logFood(LOG_FOOD.parse(args))),
+      tool(
+        "add_process",
+        "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for a few minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
+        {
+          id: z.string().describe("Lowercase letters and underscores, such as thyroid"),
+          title: z.string().max(40).describe("What it is called on screen, such as Thyroid"),
+          what: z.string().max(1000).describe("What the person wants to understand, in a sentence or two"),
+        },
+        async (request) => {
+          const result = startBuild(request, buildChanged);
+          return { content: [{ type: "text" as const, text: result.started ? "Started. Tell them it is being added and will appear on the body once its tests pass." : `Not started. ${result.reason}` }], isError: !result.started };
+        },
+      ),
       tool("read_body", "Reads the model's numbers at any minute of the day, now or in the future, without changing anything. Use it to check a forecast before stating it.", { at: z.number().int().min(0).max(1799).describe("Minutes since 00:00 today") }, async ({ at }) => report(at)),
       tool(
         "reply",

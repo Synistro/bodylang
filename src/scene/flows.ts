@@ -291,6 +291,7 @@ function buildRoutes(meta: OrganMeta, stomachPath: THREE.Curve<THREE.Vector3>, e
 
     arch: asVessel("arch", arch, { trunk: true }),
     carotid: asVessel("carotid", vessel(carotidRoot, ["left_common_carotid_artery_a", "left_common_carotid_artery_b", brain]), { feeders: ["arch"] }),
+    to_neck: asVessel("to_neck", vessel(carotidRoot, ["left_common_carotid_artery_a", lm("thyroid_cartilage")]), { feeders: ["arch"] }),
     descending: asVessel("descending", aorta, { trunk: true, feeders: ["arch"] }),
     to_gut: asVessel("to_gut", vessel(rootOn(aorta, meta.centerlines.superior_mesenteric_artery), ["superior_mesenteric_artery"]), { feeders: offAorta }),
     to_kidney_L: asVessel("to_kidney_L", vessel(arteryL.root, [arteryL.name, lm("hilum_of_kidney_L"), kidneyL]), { feeders: offAorta }),

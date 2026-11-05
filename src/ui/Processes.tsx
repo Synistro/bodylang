@@ -3,6 +3,7 @@ import { Origin, processOrigin } from "../model/origin";
 import { ProcessStop, StopState } from "../model/processes";
 import { currentProcesses, getState, setUi, useStore } from "../store";
 import { organHover, scrollBehavior, useMinute } from "./hooks";
+import { removeAddedProcess } from "./Build";
 import { Play } from "./icons";
 import { isNumeric } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
@@ -135,6 +136,11 @@ export function ProcessDetail({ processId }: { processId: string }) {
         <button type="button" className="action walk stagger" style={{ "--i": 1 }} onClick={() => setUi({ touring: true, stop: process.stops[0].number })}>
           <Play weight="fill" />
           Walk me through it
+        </button>
+      ) : null}
+      {process.id.startsWith("ext:") ? (
+        <button type="button" className="link remove-process" onClick={() => void removeAddedProcess(process.id)}>
+          Remove this process
         </button>
       ) : null}
     </div>

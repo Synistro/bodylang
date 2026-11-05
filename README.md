@@ -52,6 +52,8 @@ open "plash:reload"
 | `src/model/cycle.ts` | The menstrual cycle |
 | `server/agent.ts` | The Claude Code bridge, its system prompt and its tools |
 | `server/numberCheck.ts` | Checks every number in Claude's replies against what the model returned |
+| `server/extend.ts`, `server/extendCheck.ts` | The separate session that adds a process, and the checks before it lands |
+| `src/model/extensions/` | Processes Claude has added, and the contract they follow (`api.ts`) |
 | `server/days.ts` | Reads and writes the day files |
 | `server/foods.ts`, `server/foods.json` | The USDA food table and its search |
 | `pipeline/` | Python that builds `public/assets/` from the source meshes, and `server/foods.json` from USDA's files |
