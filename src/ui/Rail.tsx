@@ -70,7 +70,8 @@ function Fold({ open, children }: { open: boolean; children: ReactNode }) {
 function FocusLeaf() {
   const focus = useStore((s) => s.body.focus);
   const focusMuscle = useStore((s) => s.body.focusMuscle);
-  if (!focus) return null;
+  // Clicking the brain only moves the camera: it is the page you are already on.
+  if (!focus || focus === "brain") return null;
   return (
     <ul className="tree-leaves">
       <li>

@@ -29,6 +29,9 @@ export function PageHead() {
     title = MUSCLE_LABEL[focusMuscle];
     sentence = story.doing;
     origin = modelOrigin(story.evidence, story.source);
+  } else if (focus === "brain") {
+    title = systemById("brain").title;
+    sentence = assessment.systems.brain.sentence;
   } else if (focus) {
     const story = organStory(focus, tr, minute);
     title = ORGAN_NAME[focus];

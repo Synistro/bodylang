@@ -22,6 +22,44 @@ Write plain text with no markdown, lists or headings. Don't offer further help o
 
 Their numbers below come from the simulation of a typical body with their measurements. Use them only when they ask about themselves, and use no other number about them. General facts are from your own knowledge. Say "you may feel", never "you should feel". Never diagnose them or recommend a dose. If they describe an emergency or wanting to harm themselves, tell them to get help now.`;
 
+const NAME_MOST_CHARS = 60;
+
+const NAME_PROMPT = `You give a question a short name, for a narrow bar at the top of a health app. The question was dictated, so fix words that were clearly misheard, such as "muscle sorrow" for muscle soreness.
+
+Answer with only the name: 2 to 5 words saying what the question is about, in the language of the question, starting with a capital. No quotes and no punctuation at the end.
+
+For example, "Can you explain how muscle sorrow works? I know that sportsmen don't feel it as much" is named Why athletes feel less soreness, and "what would happen to my blood sugar if I ate a big bowl of pasta right now" is named A bowl of pasta now.`;
+
+// What comes back as a name, or null if it isn't one, in which case the question itself stays on screen.
+export function cleanName(raw: string): string | null {
+  const name = raw.trim().replace(/^["'“”]+|["'“”.?!]+$/g, "").trim();
+  return name && !name.includes("\n") && name.length <= NAME_MOST_CHARS ? name : null;
+}
+
+const nameRequestSchema = z.object({ text: z.string().min(1).max(4000) });
+
+// Runs beside the answer to an Ask, and has no tools, so all it can do is come up with a few words.
+export async function handleNameQuestion(req: IncomingMessage, res: ServerResponse) {
+  if (req.method !== "POST") {
+    res.statusCode = 405;
+    res.end();
+    return;
+  }
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  const { text } = nameRequestSchema.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+  let answer = "";
+  const run = query({
+    prompt: `<question>\n${text}\n</question>`,
+    options: { model: MODEL, effort: "low", maxTurns: 1, systemPrompt: NAME_PROMPT, tools: [], settingSources: [], persistSession: false, permissionMode: "dontAsk", env: cleanEnvironment() },
+  });
+  for await (const message of run) {
+    if (message.type === "result" && message.subtype === "success") answer = message.result;
+  }
+  res.setHeader("content-type", "application/json");
+  res.end(JSON.stringify({ name: cleanName(answer) }));
+}
+
 const turnSchema = z.object({ role: z.enum(["you", "claude"]), text: z.string().max(2000) });
 
 const requestSchema = z.object({

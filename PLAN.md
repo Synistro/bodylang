@@ -60,13 +60,13 @@ I checked this by having a script walk 40 views in real WebKit, with a table foo
 
 ## Selecting words to ask about them
 
-Select any words on screen, such as TRH in a walkthrough, and a small panel opens right above them. Claude Haiku 5.5 says what they mean in one short sentence, using the sentence they came from, and you can ask follow-ups in the same panel. It also has your current numbers, so "is mine low?" gets an answer from the model. This session has no tools at all, so it can only talk: it can't change your day, and the conversation is gone when you close the panel.
+Select words in any sentence or diagram, such as TRH in a walkthrough, and a small panel opens right above them. The names of rows and buttons are for clicking, so they don't do this. Claude Haiku 5.5 says what they mean in one short sentence, using the sentence they came from, and you can ask follow-ups in the same panel. It also has your current numbers, so "is mine low?" gets an answer from the model. This session has no tools at all, so it can only talk: it can't change your day, and the conversation is gone when you close the panel.
 
 ## How the screen is organised
 
 The body stands in the middle of the window. At the top left is the clock, with your measurements under it. Below them is the rail, an outline of the body: the systems as plain text, with the one you are in opened to show where you are. The message box is at the bottom of that column, with the latest answer as plain text above it. On the right is a page for where you are, in a column of the same width, so the body stays centered. Under the body is the day chart.
 
-The look uses the system font at 13 px for most text and 20 px at most, a warm near-black background with hairlines, and no shadows. Only the day chart and the organ diagrams sit on a panel. Icons are for finding your way and for controls everybody knows, so they appear on the list of systems and on the play, skip, send and close buttons, thin and in one quiet tone. Everything said on the page stays in words. It opens dark, and Light at the bottom right switches to a cream background.
+The look uses the system font at 13 px for most text and 20 px at most, a warm near-black background with hairlines, and no shadows. Only the day chart and the organ diagrams sit on a panel. Icons are for finding your way and for controls everybody knows, so they appear on the list of systems and on the play, skip, send and close buttons, thin and in one quiet tone. What you may feel also has a thin icon, in the colour of the part of the body it comes from. Everything said on the page stays in words. It opens dark, and Light at the bottom right switches to a cream background.
 
 Two questions organise everything:
 
@@ -102,7 +102,7 @@ These rules keep it quiet:
 
 The switch on the message box has two settings. **Tell** is for what happened, and it changes your day. **Ask** is for what would happen and how things work, and it cannot change your day.
 
-An Ask runs on a temporary copy of your day, with your real day set aside untouched. Claude's tools act on the copy, so the body, readings, rail and day chart all show the hypothetical. While you are exploring, a dashed frame runs around the window and a line at the top repeats your question with Back to your day. Leaving through that link, pressing Esc from the overview, or switching to Tell puts your real day back exactly as it was, and anything still on its way from Claude is dropped. A follow-up builds on the same copy. To make something real, switch to Tell and say it happened.
+An Ask runs on a temporary copy of your day, with your real day set aside untouched. Claude's tools act on the copy, so the body, readings, rail and day chart all show the hypothetical. While you are exploring, a dashed frame runs around the window and a line at the top shows your question with Back to your day. A long question gets a short name there from Claude Haiku, asked for beside the answer. Leaving through that link, pressing Esc from the overview, or switching to Tell puts your real day back exactly as it was, and anything still on its way from Claude is dropped. A follow-up builds on the same copy. To make something real, switch to Tell and say it happened.
 
 Ask for "what if I eat a burger and fries now" and Claude logs them on the copy, then answers in two parts. The short answer sits above the message box: "Burger and fries would push your blood sugar peak to 8.1 mmol/L around 18:04." A walkthrough sits above the day chart, and each step moves the view and the time and says what is happening and why. The day chart draws your real day in grey behind the hypothetical, so the difference is the picture. A question about a concept, such as how insulin works, changes nothing in your day and uses the same walkthrough to go through the organs involved. If the model has nothing for that concept, Claude also starts adding it, as the next section describes.
 

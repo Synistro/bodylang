@@ -25,6 +25,10 @@ interface Now {
   stress: ResolvedEvent | undefined;
 }
 
+// The brain is its whole system, so opening it and clicking it show one page: how you feel, the
+// drawing of what is happening, then what is acting on it.
+export const BRAIN_PAGE = { feel: ["alertness", "stressLevel", "reward"], acting: ["caffeine", "alcohol"] } satisfies Record<string, ReadingId[]>;
+
 const STOP_LIVE_FROM = 0.15;
 const COUGH_FEELING = "coughing";
 const FOOD_MIN_KCAL = 5;
@@ -100,7 +104,7 @@ function heart(now: Now): OrganStory {
 function brain({ v }: Now): OrganStory {
   let doing = v("drowsy") > DROWSY_FROM ? "Your tired signal is getting through, so you feel sleepy." : "Your tired signal is building slowly.";
   if (v("occupancy") * 100 >= CAFFEINE_FELT_FROM_PERCENT) doing = "Caffeine sits where your tired signal would land, so you feel more awake.";
-  return { doing, rows: ["caffeine", "alertness"], evidence: "B", source: SOURCES.adenosine };
+  return { doing, rows: [...BRAIN_PAGE.feel, ...BRAIN_PAGE.acting], evidence: "B", source: SOURCES.adenosine };
 }
 
 function coughing(event: ResolvedEvent, t: number) {

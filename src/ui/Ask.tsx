@@ -9,15 +9,16 @@ const GLIDE_MS = 700;
 // Says you are exploring and how to get back, for as long as you are.
 export function AskBar() {
   const asking = useStore((s) => s.asking !== null);
-  const question = useStore((s) => {
-    const last = s.exchanges[s.exchanges.length - 1];
-    return last && last.session === s.asking?.id ? last.text : "";
+  const last = useStore((s) => {
+    const newest = s.exchanges[s.exchanges.length - 1];
+    return newest && newest.session === s.asking?.id ? newest : null;
   });
   if (!asking) return null;
+  const shown = last?.name ?? last?.text ?? "";
   return (
     <div className="ask-bar">
-      <span className="ask-question" title={question}>
-        {question}
+      <span key={shown} className="ask-question" title={last?.text}>
+        {shown}
       </span>
       <span className="ask-note">Not saved</span>
       <button type="button" className="link" onClick={leaveAsk}>

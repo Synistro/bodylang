@@ -21,6 +21,23 @@ function parseAction(name: string, args: unknown): Action {
   return { name, args: ACTION_SCHEMAS[name].parse(args) } as Action;
 }
 
+const NAME_FROM_WORDS = 7;
+const nameSchema = z.object({ name: z.string().nullable() });
+
+// A long question gets a short name for the bar at the top, asked for beside the answer so neither waits
+// for the other. It only tidies the display, so without one the question itself just stays there.
+async function nameQuestion(id: number, text: string) {
+  if (text.trim().split(/\s+/).length < NAME_FROM_WORDS) return;
+  try {
+    const response = await fetch("/api/name-question", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+    if (!response.ok) return;
+    const { name } = nameSchema.parse(await response.json());
+    if (name) updateExchange(id, { name });
+  } catch {
+    // The full question is still on screen.
+  }
+}
+
 // Sends the sentence and the body it is about to the local Claude Code bridge, and applies each tool
 // call to the store as it streams back, so the body changes while Claude is still thinking.
 //
@@ -33,6 +50,7 @@ export async function tell(text: string) {
   // A suggestion belongs to the answer it came with. Claude can offer a new one.
   clearWhatIf();
   const id = beginExchange(text);
+  if (session !== null) void nameQuestion(id, text);
   const before = getState();
   const awake = mode === "tell" && before.date ? stayAwake(before.body.activities, before.body.now) : null;
   if (awake) dispatch({ name: "set_activity", args: awake });

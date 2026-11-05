@@ -9,7 +9,7 @@ export function curve(points: [number, number][], samples = 48): { d: string; ro
   return { d: tube.map((p, i) => `${i ? "L" : "M"}${tenth(p.x)} ${tenth(p.y)}`).join(""), route: polyline(tube) };
 }
 
-export type Placer = (progress: number, seat: number) => { x: number; y: number };
+export type Placer = (progress: number, seat: number) => { x: number; y: number; opacity?: number };
 
 export const along =
   (route: Polyline): Placer =>
@@ -62,6 +62,7 @@ export function createStream(dots: SVGCircleElement[], lifeSeconds: number, seed
       const at = place(age / lifeSeconds, seats[k]);
       dots[k].setAttribute("cx", tenth(at.x));
       dots[k].setAttribute("cy", tenth(at.y));
+      dots[k].style.opacity = at.opacity === undefined ? "" : tenth(at.opacity);
       dots[k].style.visibility = "visible";
     }
   };

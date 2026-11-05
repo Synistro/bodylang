@@ -90,6 +90,7 @@
 .liver-lane { transition-property: opacity; transition-duration: 240ms; }
 
 /* Brain */
+.brain-page { display: grid; gap: 0.9rem; }
 .brain-signal { fill: var(--ink-2); stroke: none; }
 .brain-caffeine { fill: var(--ink); stroke: var(--fig-salmon); stroke-width: 0.12rem; transition-property: opacity; transition-duration: 240ms; transition-timing-function: var(--ease); }
 .brain-caffeine:not([data-seated]) { opacity: 0; }

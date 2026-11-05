@@ -11,6 +11,7 @@ import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle } from "./navigation";
 import { ORGAN_NAME } from "./organ";
 import { sourced } from "./SourceTip";
+import { BrainPage } from "./StatePanel";
 import "./insets/insets.css";
 
 const WORKED_FROM = 0.05;
@@ -168,6 +169,13 @@ export function OrganCard() {
   const trajectory = useStore((s) => s.trajectory);
   const minute = useMinute();
   if (!focus) return null;
+  if (focus === "brain") {
+    return (
+      <aside className="organ-card" aria-label="Brain close-up">
+        <BrainPage />
+      </aside>
+    );
+  }
   if (focus === "muscle" && group) return <MusclePlate key={group} group={group} trajectory={trajectory} minute={minute} />;
   return <OrganPlate key={focus} organ={focus} trajectory={trajectory} minute={minute} />;
 }

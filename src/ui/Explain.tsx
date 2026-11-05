@@ -4,7 +4,8 @@ import { Explaining, getState, setUi, useStore } from "../store";
 import { X } from "./icons";
 
 const MOST_CHARS = 200;
-const OUTSIDE_FOR_SELECTING = ".composer, .transport, .controls, .tour-actions, .explain, .stepper, input, textarea, [role=slider]";
+// Only sentences and diagrams explain themselves. Names of rows and buttons are for clicking.
+const DESCRIPTIONS = ".tour-say, .page-sentence, .page-headline, .reading-why, .reading-more, .feel-cause, .stop-say, .reply-line, .organ-lines, .organ-substances, .item-note, .fix-note, .sources, .hint, .inset-art text";
 const AROUND = "p, li, h1, .reading, .stop, .tour, figure, .tree-leaf, .day-row, .reply";
 const AROUND_MOST_CHARS = 1000;
 const HIGHLIGHT = "explain-term";
@@ -27,7 +28,7 @@ function selectedWords(): { explaining: Explaining; range: Range } | null {
   const range = selection.getRangeAt(0);
   const node = range.commonAncestorContainer;
   const element = node instanceof Element ? node : node.parentElement;
-  if (!element?.closest(".sheet") || element.closest(OUTSIDE_FOR_SELECTING)) return null;
+  if (!element?.closest(".sheet") || !element.closest(DESCRIPTIONS)) return null;
   const { top, bottom, left, width } = range.getBoundingClientRect();
   const around = (element.closest(AROUND)?.textContent ?? element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, AROUND_MOST_CHARS);
   const page = document.querySelector(".page-name")?.textContent?.trim() ?? "";

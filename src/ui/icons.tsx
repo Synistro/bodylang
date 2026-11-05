@@ -1,9 +1,9 @@
-import { ArrowUp, Barbell, Brain, Dna, Heartbeat, Icon, IconProps, Lightning, Pause, PersonSimple, Play, ShieldPlus, SkipBack, SkipForward, X } from "@phosphor-icons/react";
+import { ArrowUp, Bandaids, Barbell, BatteryLow, Bed, BowlFood, Brain, Dna, Drop, Eye, Fire, ForkKnife, Heartbeat, Icon, IconProps, Leaf, Lightning, Moon, Pause, PersonSimple, Play, ShieldPlus, Sparkle, SkipBack, SkipForward, Thermometer, ThermometerSimple, Vibrate, Virus, Waves, Waveform, Wind, X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { SystemId } from "../model/systems";
 
 // Icons are for finding your way and for controls everybody already knows: the list of systems you
-// keep returning to, and play, skip, send, close. What is being said on the page stays in words.
+// keep returning to, what you may feel, and play, skip, send, close. Other text stays in words.
 export type Glyph = Icon | ((props: IconProps) => ReactNode);
 
 // Two organs the icon set doesn't draw, on its 256 grid and in its thin stroke, so they sit beside it.
@@ -31,5 +31,31 @@ export const SYSTEM_GLYPH: Record<SystemId, Glyph> = {
   clearing: Kidney,
   reproductive: Dna,
 };
+
+// What you may feel, each in the colour of the part of the body it comes from. A feeling Claude described
+// for something with no built-in curve has the plain mark.
+export const FEELING_LOOK: Record<string, { glyph: Glyph; system: SystemId }> = {
+  full: { glyph: BowlFood, system: "digestion" },
+  hungry: { glyph: ForkKnife, system: "digestion" },
+  warm: { glyph: ThermometerSimple, system: "circulation" },
+  hot: { glyph: Fire, system: "circulation" },
+  breathless: { glyph: Wind, system: "circulation" },
+  tense: { glyph: Waveform, system: "circulation" },
+  sleepy: { glyph: Moon, system: "brain" },
+  tired: { glyph: Bed, system: "brain" },
+  alert: { glyph: Eye, system: "brain" },
+  jittery: { glyph: Vibrate, system: "brain" },
+  relaxed: { glyph: Leaf, system: "brain" },
+  low: { glyph: BatteryLow, system: "energy" },
+  sore: { glyph: Barbell, system: "muscles" },
+  thirsty: { glyph: Drop, system: "clearing" },
+  coughing: { glyph: Virus, system: "immune" },
+  feverish: { glyph: Thermometer, system: "immune" },
+  stuffy: { glyph: Wind, system: "immune" },
+  sore_throat: { glyph: Bandaids, system: "immune" },
+  cramps: { glyph: Waves, system: "reproductive" },
+};
+
+export const FEELING_FROM_CLAUDE = Sparkle;
 
 export { ArrowUp, Pause, Play, SkipBack, SkipForward, X };

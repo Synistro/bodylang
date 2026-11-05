@@ -18,6 +18,7 @@ export interface Exchange {
   error?: string;
   scripted: boolean; // the opening scene: it sets the body up and has nothing to say
   session: number | null; // the Ask session this belongs to, which ends with it
+  name: string | null; // a few words for a long question, once Haiku has come up with them
 }
 
 export type Mode = "tell" | "ask";
@@ -300,7 +301,7 @@ export function clearWhatIf() {
 let nextExchangeId = 1;
 
 export function beginExchange(text: string, scripted = false) {
-  const exchange: Exchange = { id: nextExchangeId++, text, trace: [], reply: [], answer: "", status: "working", scripted, session: state.asking?.id ?? null };
+  const exchange: Exchange = { id: nextExchangeId++, text, trace: [], reply: [], answer: "", status: "working", scripted, session: state.asking?.id ?? null, name: null };
   setUi({ exchanges: [...state.exchanges, exchange] });
   return exchange.id;
 }

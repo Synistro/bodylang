@@ -281,9 +281,9 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .day-plot:focus-visible { outline-offset: 3px; }
 .day-plot canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: ew-resize; touch-action: none; }
 
-/* Text inside a row that is also a button can still be selected. */
-.sheet button { -webkit-user-select: text; user-select: text; }
-.composer button, .transport button, .controls button, .tour-actions button, .mode-switch button, .icon-button { -webkit-user-select: none; user-select: none; }
+/* Names of rows and buttons are for clicking. The sentences inside a reading or an answer can be selected. */
+.sheet button, .sheet .reading-head { -webkit-user-select: none; user-select: none; }
+.sheet .reading, .sheet .reply-line, .sheet .fold { -webkit-user-select: text; user-select: text; }
 
 /* What selected words mean, right above them. */
 ::highlight(explain-term) { background-color: var(--line-strong); color: var(--ink); }
@@ -376,7 +376,8 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .group-title { padding-bottom: 0.4rem; font-size: var(--t-small); color: var(--ink-3); }
 
 /* You may feel: the word, then why, on one grid */
-.feel { display: grid; grid-template-columns: 6rem minmax(0, 1fr); column-gap: 0.6rem; align-items: baseline; padding: 0.5rem 0; border-top: 1px solid var(--line); line-height: 1.4; }
+.feel { display: grid; grid-template-columns: 1.3rem 5.4rem minmax(0, 1fr); column-gap: 0.4rem; align-items: baseline; padding: 0.5rem 0; border-top: 1px solid var(--line); line-height: 1.4; }
+.feel-icon { width: 1.25rem; height: 1.25rem; align-self: start; margin-top: 0.14rem; }
 .feel-cause { color: var(--ink-2); font-size: var(--t-small); }
 .feel-when { display: block; color: var(--ink-3); }
 
