@@ -594,7 +594,7 @@ describe("the fixed quirks", () => {
 
 describe("the rail", () => {
   it("lists nine systems in order, with the agreed titles", () => {
-    expect(SYSTEMS.map((s) => s.title)).toEqual(["Overview", "Digestion", "Sugar & energy", "Heart & lungs", "Muscles", "Brain & mood", "Immune", "Liver & kidneys", "Reproductive"]);
+    expect(SYSTEMS.map((s) => s.title)).toEqual(["Overview", "Digestion", "Sugar & energy", "Heart & lungs", "Muscles", "Brain & mood", "Illness & recovery", "Liver & kidneys", "Reproductive"]);
     expect(systemById("clearing").title).toBe("Liver & kidneys");
     expect([...systemById("muscles").readings, ...systemById("muscles").more]).toHaveLength(MUSCLE_GROUPS.length);
     expect(systemById("immune").readings).toContain("temperature");

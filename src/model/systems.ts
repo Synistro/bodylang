@@ -23,7 +23,7 @@ export const SYSTEMS: SystemDef[] = [
   { id: "circulation", title: "Heart & lungs", organs: ["heart", "lungs"], readings: ["hr", "bloodPressure", "breaths", "flowGut"], more: ["output", "flowMuscle", "flowBrain", "flowKidneys"] },
   { id: "muscles", title: "Muscles", organs: ["muscle"], readings: muscleReadings.slice(0, 4), more: muscleReadings.slice(4) },
   { id: "brain", title: "Brain & mood", organs: ["brain"], readings: ["alertness", "stressLevel", "reward", "caffeine"], more: ["alcohol"] },
-  { id: "immune", title: "Immune", organs: ["spleen"], readings: ["temperature", "inflammation", "immune"], more: [] },
+  { id: "immune", title: "Illness & recovery", organs: ["spleen"], readings: ["temperature", "immune"], more: ["inflammation"] },
   { id: "clearing", title: "Liver & kidneys", organs: ["liver", "kidneys", "bladder"], readings: ["caffeine", "alcohol", "bladder", "fluid"], more: ["flowKidneys"] },
   { id: "reproductive", title: "Reproductive", organs: ["uterus", "ovaries", "prostate"], readings: ["cycleDay", "estradiol", "progesterone"], more: [] },
 ];

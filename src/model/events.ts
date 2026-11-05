@@ -112,6 +112,14 @@ export interface ResolvedEvent extends BodyEvent {
   liveStops: boolean; // every stop keeps going while it lasts, so none of them is ever behind you
 }
 
+// Where something being fought actually is, read from the first stop of its story.
+export function illnessSites(events: ResolvedEvent[], t: number, from: number): OrganId[] {
+  return events.flatMap((event) => {
+    const site = event.stops[0]?.organ;
+    return site && event.ends === null && effectAt(event, "immune", t) >= from ? [site] : [];
+  });
+}
+
 export interface MuscleState {
   work: number; // how hard it is working right now
   fatigue: number; // the strength it has lost for now

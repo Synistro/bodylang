@@ -1206,7 +1206,7 @@ const inflammationSpec = eventScaleSpec(
 );
 
 const immuneSpec = eventScaleSpec(
-  "Immune activity",
+  "Immune response",
   "spleen",
   "immune",
   REFERENCE.immune,
@@ -1838,9 +1838,13 @@ function brainSentence(c: Context, r: (id: ReadingId) => Reading): string {
 
 function immuneSentence(c: Context): string {
   const illness = fighting(c);
-  if (illness && hasFever(c)) return `Your immune system is fighting ${illness.causeName}, and your temperature is ${c.v("temperature").toFixed(1)}.`;
-  if (illness) return `Your immune system is fighting ${illness.causeName}.`;
-  return c.v("immune") >= REFERENCE.immune.high / 100 ? "Your immune system is winding down." : "Your immune system is quiet.";
+  if (illness) {
+    const day = Math.floor((c.t - illness.from) / 1440) + 1;
+    const site = illness.stops[0];
+    const where = site && site.organ !== "spleen" ? `, in your ${site.label.toLowerCase()}` : "";
+    return `${illness.label}, day ${day}${where}${hasFever(c) ? `, temperature ${c.v("temperature").toFixed(1)}` : ""}.`;
+  }
+  return c.v("immune") >= REFERENCE.immune.high / 100 ? "Your immune system is winding down." : "Nothing to fight right now.";
 }
 
 function clearingSentence(c: Context): string {

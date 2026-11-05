@@ -127,7 +127,7 @@ function spleen(now: Now): OrganStory {
   const { illness } = now;
   let doing = now.said ?? "Nothing to fight, with a few immune cells on patrol.";
   if (illness) doing = hasFever(now) ? `Your immune system turned up your temperature to fight ${illness.causeName}.` : `Immune cells are gathering to fight ${illness.causeName}.`;
-  return { doing, rows: ["inflammation", "immune"], evidence: illness ? illness.evidence : "C", source: illness ? illness.source : "General anatomy" };
+  return { doing, rows: ["temperature", "immune"], evidence: illness ? illness.evidence : "C", source: illness ? illness.source : "General anatomy" };
 }
 
 function kidneys(now: Now): OrganStory {

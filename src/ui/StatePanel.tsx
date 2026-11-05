@@ -122,12 +122,23 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
   const [showMore, setShowMore] = useState(false);
   const def = systemById(system);
   const present = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && hasSomethingToSay(r)));
-  const primary = present(def.readings);
-  const more = present(def.more);
+  const well = system === "immune" && assessment.systems.immune.quiet;
+  const primary = well ? [] : present(def.readings);
+  const more = well ? [] : present(def.more);
+  const symptoms = system === "immune" ? assessment.feelings.filter((f) => FEELING_LOOK[f.id]?.system === "immune" || f.byClaude) : [];
   const sex = useStore((s) => s.body.body.sex);
   const hint = assessment.systems[system].quiet && (system !== "reproductive" || sex === "female") ? QUIET_HINT[system] : undefined;
   return (
     <>
+      {symptoms.length ? (
+        <section className="group" aria-label="You may feel">
+          <ul>
+            {symptoms.map((f, i) => (
+              <FeelingRow key={f.id} feeling={f} index={i} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {primary.length ? (
         <section className="readings" aria-label="Readings">
           <ReadingList ids={primary} assessment={assessment} startIndex={0} />

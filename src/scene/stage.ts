@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { curveStrength, MuscleState, muscleStateAt, ResolvedEvent } from "../model/events";
+import { curveStrength, illnessSites, MuscleState, muscleStateAt, ResolvedEvent } from "../model/events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
-import { LIVER, MUSCLE_RECOVERY, STOMACH } from "../model/params";
+import { LIVER, MUSCLE_RECOVERY, REFERENCE, STOMACH } from "../model/params";
 import type { Process, ProcessStop } from "../model/processes";
 import { Body, ledgerAt, OrganId, POSTURES, Posture, Sex, Trajectory, value } from "../model/simulate";
 import { organStates } from "../model/state";
@@ -659,7 +659,8 @@ export class Stage {
       const spotlight = input.stop === null ? undefined : process.stops.find((s) => s.number === input.stop);
       return { kind: "process", process, stops, lit: spotlight ?? process.stops.find((s) => s.state === "here") ?? null };
     }
-    return { kind: "system", view: SYSTEM_VIEWS[input.system], organs: new Set(systemById(input.system).organs.filter((organ) => this.bodyHas(organ))) };
+    const sites = input.system === "immune" ? illnessSites(input.trajectory.events, input.t, REFERENCE.immune.high / 100) : [];
+    return { kind: "system", view: SYSTEM_VIEWS[input.system], organs: new Set([...systemById(input.system).organs, ...sites].filter((organ) => this.bodyHas(organ))) };
   }
 
   private eventOf(process: Process): ResolvedEvent | undefined {

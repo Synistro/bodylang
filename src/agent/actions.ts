@@ -6,7 +6,8 @@ import { CYCLE, DAY } from "../model/params";
 import { ROUTE_IDS } from "../model/processes";
 import { ActivitySpan, Body, CustomSubstance, Intake, OrganId, Posture, postureAt } from "../model/simulate";
 import { formatClock } from "../model/state";
-import type { SystemId } from "../model/systems";
+import { systemById, SystemId } from "../model/systems";
+import { ORGAN_HOME } from "../look";
 
 // The one vocabulary between language and the body: Claude calls these as tools, the scripted
 // opening replays them, and the browser and server share the same reducer.
@@ -332,7 +333,9 @@ export function reduce(state: BodyState, action: Action): BodyState {
       const wanted = action.args.organ;
       if ((wanted === "uterus" || wanted === "ovaries") && state.body.sex !== "female") throw new Error(`This body has no ${wanted}. Its sex is set to ${state.body.sex}.`);
       if (wanted === "prostate" && state.body.sex !== "male") throw new Error(`This body has no prostate. Its sex is set to ${state.body.sex}.`);
-      return { ...state, focus: action.args.organ, focusMuscle: action.args.organ === "muscle" ? action.args.muscle ?? null : null };
+      // An organ outside the section you are in takes you to its own, so the path always says where you are.
+      const elsewhere = wanted !== null && !state.process && state.system !== "overview" && !systemById(state.system).organs.includes(wanted);
+      return { ...state, system: elsewhere ? ORGAN_HOME[wanted] : state.system, focus: action.args.organ, focusMuscle: action.args.organ === "muscle" ? action.args.muscle ?? null : null };
     }
     case "guide":
       return state;

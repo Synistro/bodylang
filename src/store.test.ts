@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { reduce } from "./agent/actions";
 import { firstDay } from "./model/day";
 import { dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
 
@@ -56,5 +57,19 @@ describe("your day and the store", () => {
     const after = dayDocOf(getState());
     expect(after?.intakes).toBe(saved?.intakes);
     expect(after?.intakes.map((i) => i.id)).toEqual(["coffee"]);
+  });
+});
+
+describe("selecting an organ", () => {
+  const start = (system: "clearing" | "digestion" | "overview") => reduce(getState().body, { name: "show_system", args: { system } });
+  const focus = (body: ReturnType<typeof start>, organ: "lungs" | "liver") => reduce(body, { name: "focus_organ", args: { organ } });
+
+  it("goes to the organ's own section when it is not in this one", () => {
+    expect(focus(start("clearing"), "lungs").system).toBe("circulation");
+  });
+
+  it("stays when the organ belongs here, or when you came from the overview", () => {
+    expect(focus(start("digestion"), "liver").system).toBe("digestion");
+    expect(focus(start("overview"), "lungs").system).toBe("overview");
   });
 });
