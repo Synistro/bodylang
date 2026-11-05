@@ -5,12 +5,12 @@ import { SYSTEMS } from "../systems";
 import type { ExtensionState, ProcessExtension } from "./api";
 
 const ORGANS: readonly OrganId[] = ["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"];
-const SAY_WORDS_MOST = 32;
+const SAY_WORDS_MOST = 25;
 const STEP_MIN = 15;
 const STOPS = { least: 2, most: 6 };
 const CHEAP_MS_PER_CALL = 0.2;
 const CALLS_TIMED = 2000;
-const NOT_TO_BE_SAID = [/you should feel/i, /you have (?:a |an )?[a-z ]*(?:disease|disorder|syndrome|cancer|deficiency)/i, /\bdiagnos/i, /\btake \d/i];
+const NOT_TO_BE_SAID = [/\bnot just\b|\brather than\b|\bbut not\b|\bnot only\b/i, /you should feel/i, /you have (?:a |an )?[a-z ]*(?:disease|disorder|syndrome|cancer|deficiency)/i, /\bdiagnos/i, /\btake \d/i];
 
 const man: Body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 };
 const woman: Body = { sex: "female", age: 52, heightCm: 165, weightKg: 70 };
@@ -34,6 +34,8 @@ function checkState(state: ExtensionState, who: string, problem: (text: string) 
   const ids = new Set(stops.map((stop) => stop.id));
   if (ids.size !== stops.length) problem(`${who}: two stops share an id`);
   if (here !== null && !ids.has(here)) problem(`${who}: here is "${here}", which is no stop's id`);
+  if (state.active && here === null) problem(`${who}: it is active, so here must name the stop where the action is`);
+  if (!state.active && here !== null) problem(`${who}: it isn't active, so here must be null`);
   for (const stop of stops) {
     const name = `${who}, stop ${stop.id}`;
     if (!Number.isFinite(stop.share) || stop.share < 0 || stop.share > 1) problem(`${name}: share is ${stop.share}, and must be 0 to 1`);

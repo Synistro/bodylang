@@ -139,10 +139,11 @@ Parameters were tuned by hand toward these same targets, so treat every row of t
 
 ## The Claude Code connection
 
-The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 19 tools and no file or shell access:
+The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 20 tools and no file or shell access:
 
 - `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
 - 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
+- `add_process` asks a separate session to add something the model doesn't have.
 - `what_if` draws an alternative on the day chart, in Tell mode only.
 - `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at.
 - `read_body` returns the model's numbers at any time.
@@ -154,6 +155,37 @@ I ran eight real sentences through live Claude on 2026-11-05: a cold, a leg day 
 
 I ran ten questions through Ask the same way, once each, with the same caveat: burger and fries, how insulin works, a 5k run tonight, skipping the pizza, a bowl of pasta with a follow-up about walking, why coffee keeps you awake, a beer and an apple. Your real day was the same object afterwards every time, and leaving restored the same time and view. Asking about taking 40 paracetamol simulated nothing and told the person to get help. Asking a what-if in Tell mode logged nothing and pointed to the switch. Answers took 9 to 16 s, with the first change on screen after 4 to 11 s.
 
+## Claude adds what's missing
+
+Ask how your thyroid works when the model has no thyroid, and Claude answers in a line from its own knowledge and asks for the process to be added. A separate Claude Code session then writes it, and it appears on the body once every test passes. You can keep using the app in the meantime, and a small line above the message box says how far it has got, with Stop.
+
+```text
+"How does my thyroid work?"
+     │
+     ▼
+Chat ── add_process ──► separate session, in a throwaway copy of the repository
+(no files, no shell)         │  can read the code and write two files, nothing else
+                             ▼
+                     checks: only those two files changed, nothing past the contract,
+                     types pass, every test in the app passes
+                             │ all pass              │ any fails
+                             ▼                       ▼
+                     one commit in the repository    nothing changes, and it says why
+                             │
+                             ▼
+                     the running app reloads with the new line through the body
+```
+
+A process is one file in `src/model/extensions/`, following `api.ts`, plus its test: its parameters, a function saying what is happening at any minute, and a path through the vessels. It reads every curve the model computes and can't change any of them, so a wrong process can only be wrong about itself. Everything it says is marked as added by Claude, with its source and evidence grade.
+
+What keeps this narrow:
+
+- **The chat can't write.** It has no file or shell tools. All it can do is ask for a build.
+- **The session has no general tools.** It has six of its own: list and read files in the copy, write its process, write its test, run the checks, and finish. It has no shell, so it can't touch anything else or reach the network from a tool. It stops at 40 turns or $6.
+- **The code is read before it runs.** The process can import only the contract, and neither file can use the network, storage, the page, timers or `eval`. This is a check for an honest mistake or an odd request, and a determined author could probably find a way past a list like this. The real limits are that it runs only on your Mac, you asked for it, and it is one commit.
+- **Every test is the gate.** The contract test runs the process across four bodies and a whole day, and rejects one that throws, gives broken numbers, diagnoses, or never changes. Its own tests must run the real model. If anything in the app breaks, nothing lands.
+- **It can be undone.** Each process is its own commit, and Remove this process on its page takes it out as another commit.
+
 ## Build plan
 
 **Phase 1: your real day.** Built, and described under Your day.
@@ -162,11 +194,11 @@ I ran ten questions through Ask the same way, once each, with the same caveat: b
 
 **Phase 3: go further inside.** Built. Every organ has a diagram of its own process, moving at the rate the model computes: the kidney's filter, the bladder filling, the small intestine's fingers absorbing, water leaving the large intestine, fat cells taking in and releasing fat, the uterine lining, an ovary's follicle, and the prostate around the urethra. The type system requires a figure for every organ, and I measured motion in each new figure in real WebKit.
 
-**Phase 4: Claude extends the app.** Give a separate Claude Code session write access to this repo and a narrow contract for adding a process: a parameter file, a model function, a path through the vessels and a test, with the tests as the gate before hot reload. The chat path keeps no file or shell access. Done when a request for a process that doesn't exist yet ends with it on screen and its tests passing.
+**Phase 4: Claude extends the app.** Built, and described under Claude adds what's missing.
 
 **Phase 5: real signals.** Calibrate the model to you from a glucose monitor and wearable data, so "typical body" becomes your body. Done when the forecast's error against your own glucose readings is measured and shown.
 
-Phase 5 needs a glucose monitor and a wearable from you. Sizes are my judgment, without data behind them: phase 4 is medium, and 5 is large and open-ended.
+Phase 5 needs a glucose monitor and a wearable from you, and is large and open-ended by my judgment, without data behind it.
 
 Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 for turning language into quantities, with Opus writing the answer, and prompt caching.
 
@@ -196,6 +228,7 @@ Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 fo
 - Known gap in the model: two apples peak slightly below the target, because the fibre effect stays close to Benini 1995. A smaller fibre effect would hit the apple target and move further from that study. How far insulin falls and the stomach slows on a hard run is my estimate. Only the direction comes from published work.
 - Some sources were read only as a secondary reference or search snippet, including the running core temperature and the 10 mmHg per MET figure. `src/model/params.ts` keeps a source note beside each value.
 - Organs and muscles are warped from other bodies onto the Anny shape, so the fit is approximate and gets less accurate at extreme sizes. At very low or high BMI, a plain girth scale makes up the remaining weight, so those bodies look less natural.
+- A process Claude adds has no mesh of its own, so a thyroid is a line ending at the throat. It also can't change other numbers: a thyroid process can't raise your heart rate on screen.
 - The small intestine's loops are generated, so its shape is plausible and its exact course is invented.
 - Under 820 px wide, the layout stacks and hides the organ name labels and the lines from stop numbers to the body.
 - Inside an exploration, changing the body's measurements with the sliders changes the copy, so it goes when you leave.

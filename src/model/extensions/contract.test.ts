@@ -19,7 +19,7 @@ const sample: ProcessExtension = {
     return {
       active: level > 0.1,
       headline: level > 0.5 ? "High this morning." : "Low for now.",
-      here: "target",
+      here: level > 0.1 ? "target" : null,
       stops: [
         { id: "source", organ: "brain", label: "Source", reading: `${Math.round(level * 100)}%`, share: level, flow: level, say: "It starts here.", routes: [] },
         { id: "target", organ: "liver", label: "Target", reading: `${Math.round(view.value("glucose", minute))} mg/dL`, share: level / 2, flow: level, say: "It ends here.", routes: ["carotid"] },
@@ -83,6 +83,11 @@ describe("the contract for a new process", () => {
     expect(checkExtension(says("You have thyroid disease."), "sample").join()).toMatch(/can't say this/);
     expect(checkExtension(says("You should feel better."), "sample").join()).toMatch(/can't say this/);
     expect(checkExtension(says("Take 2 tablets."), "sample").join()).toMatch(/can't say this/);
+  });
+
+  it("wants to know where the action is, whenever there is any", () => {
+    expect(checkExtension(withAt((minute) => ({ ...good(minute), active: true, here: null })), "sample").join()).toMatch(/here must name/);
+    expect(checkExtension(withAt((minute) => ({ ...good(minute), active: false, here: "target" })), "sample").join()).toMatch(/here must be null/);
   });
 
   it("rejects one that isn't pure", () => {

@@ -54,7 +54,9 @@ const SCENARIOS: Record<string, Scenario> = {
 
 describe("the lines at 17:00", () => {
   it("lists one line per logged thing, plus how the body works", () => {
-    expect(processesAt(tr, hm(17)).map((p) => p.id).sort()).toEqual(["alertness", "circulation", "clearing", "fat-route", "insulin", "intake:coffee", "meal:sugar_bar"].sort());
+    // Processes Claude has added come on top, and are checked by their own contract.
+    const built = processesAt(tr, hm(17)).map((p) => p.id).filter((id) => !id.startsWith("ext:"));
+    expect(built.sort()).toEqual(["alertness", "circulation", "clearing", "fat-route", "insulin", "intake:coffee", "meal:sugar_bar"].sort());
   });
 
   it("files each line under its system", () => {
@@ -358,7 +360,7 @@ describe("every minute of every kind of day", () => {
           const here = p.stops.filter((s) => s.state === "here");
           expect(here.length, `${p.id} active=${p.active}`).toBe(p.active ? 1 : 0);
           const order = p.stops.map((s) => s.state);
-          if (LIVE_LINES.includes(p.id)) {
+          if (LIVE_LINES.includes(p.id) || p.id.startsWith("ext:")) {
             expect(order, `${p.id} is live, so nothing is behind you`).not.toContain("passed");
           } else if (here.length) {
             const at = order.indexOf("here");

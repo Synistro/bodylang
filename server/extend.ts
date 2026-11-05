@@ -84,7 +84,7 @@ export async function quickChecks(worktree: string, id: string): Promise<string 
   if (reasons.length) return reasons.join("\n");
   const types = await shell("node_modules/.bin/tsc", ["--noEmit", "-p", "."], worktree, CHECK_TIMEOUT_MS);
   if (types) return `Type check failed:\n${types}`;
-  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes.test.ts"], worktree, CHECK_TIMEOUT_MS);
+  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes.test.ts", "src/model/events.test.ts"], worktree, CHECK_TIMEOUT_MS);
   return tests ? `Tests failed:\n${tests}` : null;
 }
 
@@ -113,8 +113,9 @@ How it should be:
 - Put every tunable number in \`params\`, and read it from there. Use params defined above the extension as a const.
 - Follow what the model really computes. Use its curves where they relate, such as inflammation during an illness or the clock for a daily rhythm. Say plainly what the model doesn't capture.
 - Pick \`organ\` from the real organs where a stop sits on one, and otherwise null with a route, so it sits where the route ends. There are no meshes for anything else.
-- Every sentence is plain words for someone with no medical training. Say "you may feel", never "you should feel". Never diagnose, name a condition they have, or recommend a dose. Headlines are under 14 words, and each \`say\` is at most 32.
+- Every sentence is plain words for someone with no medical training. Say "you may feel", never "you should feel". Never diagnose, name a condition they have, or recommend a dose. Headlines are under 14 words, and each \`say\` is at most 25. Avoid "not just", "rather than" and "not only".
 - Nothing random or stateful: the same minute always gives the same answer.
+- Only those two files can change, so if a test you didn't write fails, the fix is in your process, and the failure says what it wants.
 
 Call run_checks after writing, fix whatever it reports, and call finish once it passes. Only finish after a clean run_checks. If you can't make it pass, call finish anyway and say why.`;
 }

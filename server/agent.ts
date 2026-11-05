@@ -14,8 +14,14 @@ import { processesAt } from "../src/model/processes";
 import { simulate } from "../src/model/simulate";
 import { formatClock, whereabouts } from "../src/model/state";
 
-const MODEL = process.env.BODYLANG_MODEL ?? "claude-opus-5-5";
-const EFFORT = "low";
+// Who does what for one message. With a second model, the first records what happened and the second
+// writes the answer from the result.
+export interface TellPlan {
+  act: { model: string; effort: "low" | "medium" | "high" };
+  answer: { model: string; effort: "low" | "medium" | "high" } | null;
+}
+
+const PLAN: TellPlan = { act: { model: process.env.BODYLANG_MODEL ?? "claude-opus-5-5", effort: "low" }, answer: null };
 const MAX_TURNS = 14;
 const MAX_REQUEST_BYTES = 200_000;
 
@@ -69,6 +75,15 @@ Then explain it on the body by calling guide, once, after anything you log and b
 Then call reply, once, with the short answer: the result of the what-if, compared with their day as it is, or the idea in plain words. The steps carry the explanation, so don't repeat them.
 
 Asking how a dangerous dose or self-harm would play out is not something to simulate. Log nothing, show nothing, and reply that they should talk to someone now, such as a doctor or a local crisis line.`;
+
+// For when the recording and the answer are two steps.
+const ACT_PROMPT = `
+
+Someone else writes the answer after you. Your job in this step is only to record what happened and set the view, so call the tools you need, and then stop, with no text of your own. If nothing should be recorded, such as for a question or an emergency, stop right away. Ask for read_body only if a tool needs a number from it.`;
+
+const ANSWER_PROMPT = `
+
+Everything they said has already been recorded, and the screen is set. Your job in this step is only the answer: use the readout below, call read_body if you need another minute, and then call reply.`;
 
 const ACTION_DESCRIPTIONS: Record<ActionName, string> = {
   correct_intake: "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
@@ -187,12 +202,42 @@ async function readBody(req: IncomingMessage) {
 }
 
 export async function handleTell(req: IncomingMessage, res: ServerResponse, buildChanged: (status: BuildStatus) => void) {
-  const { text, state: initial, mode, history, date } = await readBody(req);
+  const input = await readBody(req);
   res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });
-  const send = (event: unknown) => res.write(`data: ${JSON.stringify(event)}\n\n`);
+  const abort = new AbortController();
+  // The request stream is finished once its body has been read, so only the response reports a disconnect.
+  res.on("close", () => {
+    if (!res.writableEnded) abort.abort();
+  });
+  const measured = await runTell(input, PLAN, (event) => res.write(`data: ${JSON.stringify(event)}\n\n`), abort, buildChanged);
+  console.log(`[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, $${measured.costUsd.toFixed(4)}`);
+  res.end();
+}
+
+export interface TellMeasure {
+  subtype: string;
+  totalMs: number;
+  firstOutputMs: number | null; // when the first model started answering, which shows what starting up costs
+  firstActionMs: number | null; // when something first changed on screen
+  replyMs: number | null;
+  turns: number;
+  costUsd: number;
+}
+
+type TellInput = Awaited<ReturnType<typeof readBody>>;
+
+// One message, from the sentence to the answer, with each change sent on as it happens.
+export async function runTell({ text, state: initial, mode, history, date }: TellInput, plan: TellPlan, emit: (event: unknown) => void, abort: AbortController, buildChanged: (status: BuildStatus) => void): Promise<TellMeasure> {
+  const started = performance.now();
+  const elapsed = () => Math.round(performance.now() - started);
+  const measure: TellMeasure = { subtype: "success", totalMs: 0, firstOutputMs: null, firstActionMs: null, replyMs: null, turns: 0, costUsd: 0 };
+  const send = (event: { type: string; [key: string]: unknown }) => {
+    if (event.type === "action" && measure.firstActionMs === null) measure.firstActionMs = elapsed();
+    if (event.type === "reply" && measure.replyMs === null) measure.replyMs = elapsed();
+    emit(event);
+  };
 
   let state = initial;
-  const started = performance.now();
   const scenario = () => ({ body: state.body, intakes: state.intakes, activities: state.activities, substances: state.substances, events: state.events, cycle: state.cycle });
   const trajectory = () => simulate(scenario());
   // Everything Claude has been given, to check the numbers it states against.
@@ -228,6 +273,8 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, buil
       } catch (e: unknown) {
         return { content: [{ type: "text" as const, text: `${name} was not applied. ${e instanceof Error ? e.message : String(e)}` }], isError: true };
       }
+      // A time it just recorded is on the chart, so saying it back adds nothing of its own.
+      for (const [key, minute] of Object.entries(action.args)) if (["at", "from", "until", "bed", "wake"].includes(key) && typeof minute === "number") book.add(formatClock(minute));
       if (action.name === "guide") for (const step of action.args.steps) step.unverified = unverifiedNumbers(step.say, book);
       send({ type: "action", name, args: action.args });
       if (action.name === "guide") return { content: [{ type: "text" as const, text: "On screen. Now call reply." }] };
@@ -250,15 +297,13 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, buil
       args: { id: args.id, label: args.label, at: args.at, grams, water_ml: n.waterMl, carbs_g: n.carbsG, sugar_g: n.sugarG, fat_g: n.fatG, protein_g: n.proteinG, fiber_g: n.fiberG, caffeine_mg: n.caffeineMg, alcohol_g: n.alcoholG, liquid: args.liquid, fructose_share: args.fructose_share, assumption: args.assumption, serving: { label: args.serving_label, grams: args.serving_grams }, source: sourceOf(food) },
     };
     state = reduce(state, logged);
+    book.add(formatClock(args.at));
     send({ type: "action", name: logged.name, args: logged.args });
     return report();
   };
 
   let replied = false;
-  const server = createSdkMcpServer({
-    name: "body",
-    version: "0.0.0",
-    tools: [
+  const allTools = [
       ...applied,
       tool(
         "find_foods",
@@ -303,28 +348,20 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, buil
           return { content: [{ type: "text" as const, text: "Shown to the person. Your turn is over." }] };
         },
       ),
-    ],
-  });
+  ];
 
-  const abort = new AbortController();
-  // The request stream is finished once its body has been read, so only the response reports a disconnect.
-  res.on("close", () => {
-    if (!res.writableEnded) abort.abort();
-  });
-
-  try {
-    const prompt = renderContext(state, text, mode, history, date);
+  const step = async (who: TellPlan["act"], system: string, prompt: string, keep: (name: string) => boolean) => {
     book.add(prompt);
     const run = query({
       prompt,
       options: {
-        model: MODEL,
-        effort: EFFORT,
+        model: who.model,
+        effort: who.effort,
         maxTurns: MAX_TURNS,
-        systemPrompt: mode === "ask" ? SYSTEM_PROMPT + ASK_PROMPT : SYSTEM_PROMPT,
+        systemPrompt: (mode === "ask" ? SYSTEM_PROMPT + ASK_PROMPT : SYSTEM_PROMPT) + system,
         tools: [],
         allowedTools: ["mcp__body__*"],
-        mcpServers: { body: server },
+        mcpServers: { body: createSdkMcpServer({ name: "body", version: "0.0.0", tools: allTools.filter((t) => keep(t.name)) }) },
         settingSources: [],
         persistSession: false,
         permissionMode: "dontAsk",
@@ -333,17 +370,33 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, buil
       },
     });
     for await (const message of run) {
+      if (message.type === "assistant" && measure.firstOutputMs === null) measure.firstOutputMs = elapsed();
       if (message.type === "result") {
-        console.log(`[bodylang] ${message.subtype} in ${Math.round(performance.now() - started)} ms, ${message.num_turns} turns, $${message.total_cost_usd.toFixed(4)}`);
+        measure.turns += message.num_turns;
+        measure.costUsd += message.total_cost_usd;
+        measure.subtype = message.subtype;
         if (message.subtype !== "success") send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
       }
+    }
+  };
+
+  try {
+    const prompt = renderContext(state, text, mode, history, date);
+    if (plan.answer) {
+      const writes = new Set(["reply", "read_body", "guide"]);
+      await step(plan.act, ACT_PROMPT, prompt, (name) => !writes.has(name));
+      await step(plan.answer, ANSWER_PROMPT, `${renderContext(state, text, mode, history, date)}\n\nThe readout now:\n${report().content[0].text}`, (name) => writes.has(name));
+    } else {
+      await step(plan.act, "", prompt, () => true);
     }
     if (!replied) console.warn("[bodylang] finished without calling reply");
   } catch (e: unknown) {
     const reason = e instanceof Error ? e.message : String(e);
     console.error("[bodylang] bridge error", reason);
     send({ type: "error", message: `Claude Code could not run: ${reason}` });
+    measure.subtype = "error";
   }
   send({ type: "done" });
-  res.end();
+  measure.totalMs = elapsed();
+  return measure;
 }

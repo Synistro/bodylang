@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { processOrigin } from "../model/origin";
 import { selectedProcess, setUi, useStore } from "../store";
 import { X } from "./icons";
+import { sourced } from "./SourceTip";
 
 const AUTO_ADVANCE_MS = 6000;
 
@@ -14,6 +16,7 @@ export function Tour() {
   const spotlight = useStore((s) => s.stop);
   const focused = useStore((s) => s.body.focus !== null);
   const process = useStore((s) => (s.touring ? selectedProcess(s) : null));
+  const tr = useStore((s) => s.trajectory);
   const [auto, setAuto] = useState(false);
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export function Tour() {
   }, [touring, auto, isLast, index, spotlight]);
 
   if (!touring || !process || !current) return null;
+  const from = sourced(processOrigin(tr, process));
 
   return (
     <aside className="tour" aria-label={`Walking through ${process.title}`}>
@@ -62,7 +66,9 @@ export function Tour() {
           {current.number}
         </span>
         <span className="tour-label">{current.label}</span>
-        <span className="tour-reading">{current.reading}</span>
+        <span className="tour-reading" {...from}>
+          {current.reading}
+        </span>
         <span className="tour-count">
           {index + 1} of {stops.length}
         </span>
@@ -70,7 +76,7 @@ export function Tour() {
           <X />
         </button>
       </div>
-      <p key={current.id} className="tour-say" aria-live="polite">
+      <p key={current.id} className="tour-say" aria-live="polite" {...from}>
         {current.say}
       </p>
       <div className="tour-actions">

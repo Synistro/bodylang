@@ -28,7 +28,7 @@ export interface ExtensionStop {
   reading: string; // the number at this stop, with its unit, or a word. An empty string shows nothing
   share: number; // 0 to 1: how much of the thing is here, or how strongly this stop is working. Drawn across the day
   flow: number; // 0 to 1: how fast it is moving into this stop. Sets how thick the line is
-  say: string; // one or two plain sentences on what happens here now, at most 32 words
+  say: string; // one or two plain sentences on what happens here now, at most 25 words
   routes: RouteId[]; // the vessels leading here from the previous stop. Empty for a jump
   from?: string; // the id of the stop this one branches from, if not the one before it
 }
@@ -36,7 +36,7 @@ export interface ExtensionStop {
 export interface ExtensionState {
   active: boolean; // false when nothing is happening in it right now
   headline: string; // one sentence on how it is now, under 14 words
-  here: string | null; // the id of the stop where the action is now, or null for none in particular
+  here: string | null; // the id of the stop where the action is now. Always one while active, and null when not
   stops: ExtensionStop[]; // 2 to 6
 }
 

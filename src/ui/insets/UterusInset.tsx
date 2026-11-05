@@ -54,7 +54,7 @@ const Drawing = memo(function Drawing() {
       {Array.from({ length: 10 }, (_, k) => <circle key={k} data-part="hormone" className="flow-dot-quiet" r="1.3" />)}
       <text x="176" y="130">The lining</text>
       <path className="leader" d="M180 123L140 88" />
-      <text x="232" y="96" textAnchor="end">Hormones arrive</text>
+      <text x="232" y="74" textAnchor="end">Hormones arrive</text>
     </>
   );
 });
