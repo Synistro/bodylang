@@ -23,12 +23,23 @@ export interface Nutrients {
   alcoholG: number;
 }
 
+// Where what is in a food comes from: a row of the USDA table, or Claude's own estimate of it.
+export type FoodSource = { kind: "table"; fdcId: number; name: string; dataset: string } | { kind: "estimate" };
+
+// What one serving is, so a portion can be corrected in the units it was eaten in.
+export interface Serving {
+  label: string;
+  grams: number;
+}
+
 export interface Intake extends Nutrients {
   id: string;
   label: string;
   at: number;
   liquid?: boolean;
   fructoseShare?: number; // of its sugar; table sugar is 0.5, whole fruit 0.6 to 0.67
+  source?: FoodSource;
+  serving?: Serving;
 }
 
 export interface ActivitySpan {
@@ -290,10 +301,18 @@ export function mealDipOf(kcal: number, sinceMin: number): number {
   return FEEL.postMealDipStrength * Math.min(1, kcal / FEEL.postMealDipFullKcal) * phase * Math.exp(1 - phase);
 }
 
+// How long before 00:00 today the run has to start, in whole days so the clock it starts on stays 00:00.
+function leadInMinutes({ intakes, substances, activities }: Scenario): number {
+  const earliest = Math.min(0, ...intakes.map((i) => i.at), ...substances.map((s) => s.at), ...activities.map((a) => a.from));
+  return Math.min(DAY.carryDaysMost, Math.ceil(-earliest / 1440)) * 1440;
+}
+
 export function simulate(scenario: Scenario): Trajectory {
   const anthro = anthropometrics(scenario.body);
   const { body } = scenario;
-  const n = DAY.minutes + 1;
+  // Whatever is still in the body from yesterday gets there by running yesterday first.
+  const leadIn = leadInMinutes(scenario);
+  const n = leadIn + DAY.minutes + 1;
   const series = Object.fromEntries(SERIES.map((s) => [s, new Float32Array(n)])) as Record<SeriesName, Float32Array>;
 
   const halfLife = scenario.caffeineHalfLifeH ?? anthro.caffeineHalfLifeH;
@@ -303,8 +322,8 @@ export function simulate(scenario: Scenario): Trajectory {
   const activities = [...scenario.activities].sort((a, b) => a.from - b.from);
   // Sorted so the same events give the same bits, whatever order they were told in.
   const events = [...(scenario.events ?? [])].sort((a, b) => a.from - b.from || (a.id < b.id ? -1 : 1)).map((event) => resolveEvent(event, { body, anthro }));
-  const channels = channelSeries(events, n, activityBouts(activities, { body, anthro }));
-  const muscleWork = muscleWorkSeries(events, n);
+  const channels = channelSeries(events, n, activityBouts(activities, { body, anthro }), -leadIn);
+  const muscleWork = muscleWorkSeries(events, n, -leadIn);
   const maxBpm = maxHeartRate(body.age);
 
   const tracks: IntakeTrack[] = scenario.intakes
@@ -365,13 +384,13 @@ export function simulate(scenario: Scenario): Trajectory {
   let afterglow = 0;
   let digest = 0;
   let fluidDeficitMl = 0;
-  let lastFed: number = FASTING.assumedLastMealMin;
+  let lastFed: number = FASTING.assumedLastMealMin - leadIn;
   // The day before counts: last night's bedtime and how long ago you woke carry into sleep pressure.
   const wakingHoursYesterday = (DAY.sleepMin - DAY.wakeMin) / 60;
-  const startsAwake = postureAt(activities, 0) !== "sleeping";
+  const startsAwake = postureAt(activities, -leadIn) !== "sleeping";
   let hoursAwake = startsAwake ? wakingHoursYesterday + (1440 - DAY.sleepMin) / 60 : 0;
   let sleepPressure = startsAwake ? hoursAwake * FEEL.sleepPressurePerHour : wakingHoursYesterday * FEEL.sleepPressurePerHour * Math.exp(-((1440 - DAY.sleepMin) / 60) / FEEL.sleepPressureDecayTauH);
-  let wokeAt = startsAwake ? 0 : -Infinity;
+  let wokeAt = startsAwake ? -leadIn : -Infinity;
 
   const fatKg = Math.max(0, body.weightKg - anthro.leanKg);
   const Vg = GLUCOSE.distributionDlPerKgLean * (anthro.leanKg + GLUCOSE.distributionFatShare * fatKg);
@@ -381,12 +400,25 @@ export function simulate(scenario: Scenario): Trajectory {
   const widmark = (body.sex === "male" ? ALCOHOL.widmarkMale : ALCOHOL.widmarkFemale) * body.weightKg;
   const alcoholElimGPerMin = (ALCOHOL.eliminationGPerLPerH * widmark) / 60;
 
-  for (let t = 0; t < n; t++) {
+  for (let i = 0; i < n; i++) {
+    const t = i - leadIn;
+    // A day nobody logged in full would otherwise read as a day of fasting. Only what the log can
+    // really say carries over: what is still in the gut and blood, and how you slept.
+    if (t === 0 && leadIn > 0) {
+      liverGlycogen = LIVER.glycogenStartG;
+      muscleGlycogen = anthro.muscleGlycogenMaxG * 0.75;
+      fatStored = 0;
+      fluidDeficitMl = 0;
+      bladder = KIDNEY.bladderStartMl;
+      lastFed = Math.max(lastFed, FASTING.assumedLastMealMin);
+      if (stomachKcalBefore(tracks) <= 25) lastMealEnd = -Infinity;
+      if (postureAt(activities, 0) === "sleeping") wokeAt = -Infinity;
+    }
     const posture = postureAt(activities, t);
     const asleep = posture === "sleeping";
     if (!asleep && !Number.isFinite(wokeAt)) wokeAt = t;
     hoursAwake = asleep ? 0 : hoursAwake + 1 / 60;
-    const stress = Math.min(1, channels.stress[t]);
+    const stress = Math.min(1, channels.stress[i]);
 
     for (const k of tracks) {
       if (k.intake.at === t) {
@@ -516,10 +548,10 @@ export function simulate(scenario: Scenario): Trajectory {
       const cleared = s.body * ke;
       s.body -= cleared;
       s.cleared += cleared;
-      s.series[t] = s.body / (s.substance.volumeLPerKg * body.weightKg);
-      s.ledger[t * 3] = s.gut;
-      s.ledger[t * 3 + 1] = s.body;
-      s.ledger[t * 3 + 2] = s.cleared;
+      s.series[i] = s.body / (s.substance.volumeLPerKg * body.weightKg);
+      s.ledger[i * 3] = s.gut;
+      s.ledger[i * 3 + 1] = s.body;
+      s.ledger[i * 3 + 2] = s.cleared;
     }
 
     alcoholBodyG += alcoholAbsorbed;
@@ -527,21 +559,21 @@ export function simulate(scenario: Scenario): Trajectory {
     const foodSpeedsAlcohol = 1 + ALCOHOL.foodEliminationGain * Math.min(1, digest / ALCOHOL.foodEffectFullFromDigestion);
     alcoholBodyG = Math.max(0, alcoholBodyG - (alcoholElimGPerMin * foodSpeedsAlcohol * alcoholGPerL) / (ALCOHOL.eliminationKmGPerL + alcoholGPerL));
     const obligateUrineMl = KIDNEY.urineMlPerMin * (asleep ? KIDNEY.sleepingUrineFactor : 1);
-    bodyWater = Math.max(0, bodyWater + waterAbsorbed - KIDNEY.insensibleMlPerMin - channels.fluidLoss[t]);
+    bodyWater = Math.max(0, bodyWater + waterAbsorbed - KIDNEY.insensibleMlPerMin - channels.fluidLoss[i]);
     const waterOut = bodyWater * KIDNEY.waterExcretionRatePerMin;
     bodyWater -= waterOut;
     bladder += obligateUrineMl + waterOut;
-    fluidDeficitMl = Math.max(0, fluidDeficitMl + channels.fluidLoss[t] + KIDNEY.insensibleMlPerMin + obligateUrineMl - waterAbsorbed);
+    fluidDeficitMl = Math.max(0, fluidDeficitMl + channels.fluidLoss[i] + KIDNEY.insensibleMlPerMin + obligateUrineMl - waterAbsorbed);
     if (bladder > KIDNEY.voidAtMl && posture !== "sleeping") bladder = 40;
 
     // Insulin and glucose: Bergman's minimal model, with an incretin term because oral glucose
     // releases more insulin than the same glucose by vein.
-    const moving = Math.max(posture === "running" ? 1.5 : posture === "walking" ? 1 : 0, muscleWork[t] * COUPLING.afterglowPerMuscleWork);
+    const moving = Math.max(posture === "running" ? 1.5 : posture === "walking" ? 1 : 0, muscleWork[i] * COUPLING.afterglowPerMuscleWork);
     afterglow += (moving - afterglow) / (moving > afterglow ? INSULIN.afterglowRiseMin : INSULIN.afterglowDecayMin);
-    const eventSensitivity = Math.max(COUPLING.lowestInsulinSensitivity, 1 + channels.insulinSensitivity[t]);
+    const eventSensitivity = Math.max(COUPLING.lowestInsulinSensitivity, 1 + channels.insulinSensitivity[i]);
     const activityBoost = INSULIN.activityBoost[posture] * (1 + INSULIN.afterglowGain * afterglow) * eventSensitivity;
     if (stomachKcalBefore(tracks) > 25) lastFed = t;
-    const fastDrift = Math.max(0, Math.min(1, ((t - lastFed) / 60 - FASTING.driftStartsAfterH) / (FASTING.driftFullAfterH - FASTING.driftStartsAfterH)));
+    const fastDrift = t < 0 ? 0 : Math.max(0, Math.min(1, ((t - lastFed) / 60 - FASTING.driftStartsAfterH) / (FASTING.driftFullAfterH - FASTING.driftStartsAfterH)));
     const restingGlucose = anthro.baselineGlucose - FASTING.glucoseDropMgDl * fastDrift;
     const restingInsulin = INSULIN.baselineUUPerMl * (1 - FASTING.insulinDropShare * fastDrift);
     const dG = G - previousG;
@@ -555,13 +587,13 @@ export function simulate(scenario: Scenario): Trajectory {
     I += secretion - INSULIN.clearancePerMin * (I - restingInsulin);
     X += -INSULIN.actionDecayPerMin * X + INSULIN.actionDecayPerMin * sensitivity * activityBoost * Math.max(0, I - restingInsulin);
 
-    const exerciseG = MUSCLE.uptakeGPerMinByActivity[posture] + TRAINING.uptakeGPerMinFullBody * muscleWork[t];
+    const exerciseG = MUSCLE.uptakeGPerMinByActivity[posture] + TRAINING.uptakeGPerMinFullBody * muscleWork[i];
     const insulinFraction = Math.min(1, Math.max(0, I - restingInsulin) / GLUCOSE.insulinEffectUpper);
     const liverAvailable = liverGlycogen > 5 ? 1 : 0.4;
     // The liver replaces what working muscle takes, unless insulin is holding it back.
     const exerciseMatchG = exerciseG * GLUCOSE.exerciseHepaticMatch * (1 - GLUCOSE.exerciseLiverInsulinBrake * insulinFraction) * liverAvailable;
     const basalHepaticG = hepaticBase * (1 - GLUCOSE.hepaticSuppression * insulinFraction) * liverAvailable;
-    const extraHepaticG = basalHepaticG * channels.liverOutput[t];
+    const extraHepaticG = basalHepaticG * channels.liverOutput[i];
     const hepaticOutput = basalHepaticG + extraHepaticG + exerciseMatchG;
     const insulinUptakeMgDl = X * G;
     const massUptakeMgDl = GLUCOSE.effectiveness * (G - restingGlucose);
@@ -577,7 +609,7 @@ export function simulate(scenario: Scenario): Trajectory {
     const toMuscleG = insulinUptakeG * GLUCOSE.muscleShare + exerciseG;
     const toLiverG = insulinUptakeG * GLUCOSE.liverShare;
     const toFatG = insulinUptakeG * GLUCOSE.fatShare;
-    muscleGlycogen = Math.max(0, Math.min(anthro.muscleGlycogenMaxG, muscleGlycogen + insulinUptakeG * GLUCOSE.muscleShare - MUSCLE.glycogenBurnGPerMinByActivity[posture] - TRAINING.glycogenGPerMinFullBody * muscleWork[t]));
+    muscleGlycogen = Math.max(0, Math.min(anthro.muscleGlycogenMaxG, muscleGlycogen + insulinUptakeG * GLUCOSE.muscleShare - MUSCLE.glycogenBurnGPerMinByActivity[posture] - TRAINING.glycogenGPerMinFullBody * muscleWork[i]));
     liverGlycogen = Math.min(LIVER.glycogenMaxG, Math.max(0, liverGlycogen + (toLiverG + liverDirectG * 0.7) * LIVER.glucoseToGlycogen - (hepaticOutput - exerciseMatchG) * LIVER.glycogenShareOfOutput * (liverGlycogen / (liverGlycogen + LIVER.glycogenSparingG)) - exerciseMatchG * LIVER.exerciseFromGlycogen * (liverGlycogen / (liverGlycogen + 5))));
 
     const totalBloodG = tracks.reduce((s, k) => s + k.bloodGlucoseG, 0);
@@ -638,10 +670,10 @@ export function simulate(scenario: Scenario): Trajectory {
     if (stomachKcal > 25 || gutKcal > 25) lastMealEnd = t;
 
     // Heart and blood distribution
-    const hr = Math.min(maxBpm, anthro.restingBpm + HEART.byActivity[posture] + HEART.digestionGain * digest + HEART.caffeineGainPerMgL * caffeineMgL + channels.heartRate[t]);
+    const hr = Math.min(maxBpm, anthro.restingBpm + HEART.byActivity[posture] + HEART.digestionGain * digest + HEART.caffeineGainPerMgL * caffeineMgL + channels.heartRate[i]);
     const strokeMl = HEART.strokeVolumeMlPerKgLean * anthro.leanKg;
     const cardiacOutput = (hr * strokeMl) / 1000;
-    const flowMuscle = BLOOD_FLOW.rest.muscle + BLOOD_FLOW.activityMuscleGain[posture] + channels.muscleFlow[t];
+    const flowMuscle = BLOOD_FLOW.rest.muscle + BLOOD_FLOW.activityMuscleGain[posture] + channels.muscleFlow[i];
     const movingCut = 1 - BLOOD_FLOW.activityGutKidneyCut[posture];
     const flowGut = (BLOOD_FLOW.rest.gut + BLOOD_FLOW.digestionGutGain * digest) * (1 - COUPLING.stressCutsGutFlow * stress) * movingCut;
     const flowKidneys = BLOOD_FLOW.rest.kidneys * movingCut;
@@ -651,8 +683,8 @@ export function simulate(scenario: Scenario): Trajectory {
     const met = ENERGY.mets[posture];
     const postureKcal = postureKcalPerHour(anthro.bmrKcalPerDay, body.weightKg, met);
     const thermicKcalPerHour = (absorbedCarbsG * 4 + absorbedFatG * 9 + absorbedProteinG * 4) * 60 * ENERGY.thermicShare;
-    const kcalPerHour = postureKcal * (1 + channels.metabolism[t]) + thermicKcalPerHour;
-    const trainingFuel = COUPLING.trainingCarbFuelGain * Math.min(1, muscleWork[t] / COUPLING.trainingFuelFullFromWork);
+    const kcalPerHour = postureKcal * (1 + channels.metabolism[i]) + thermicKcalPerHour;
+    const trainingFuel = COUPLING.trainingCarbFuelGain * Math.min(1, muscleWork[i] / COUPLING.trainingFuelFullFromWork);
     const carbFuel = Math.min(0.95, ENERGY.carbFuelBase + ENERGY.carbFuelInsulinGain * insulinFraction + (posture === "running" ? 0.3 : 0) + trainingFuel);
     const burnPerMin = kcalPerHour / 60;
     const burnBudget = burnPerMin * carbFuel * 0.15;
@@ -670,77 +702,77 @@ export function simulate(scenario: Scenario): Trajectory {
 
     // How it should feel
     const hours = t / 60;
-    const circadianDip = FEEL.circadianDipDepth * Math.exp(-(((hours % 24) - FEEL.circadianDipHour) ** 2) / (2 * FEEL.circadianDipWidthH ** 2));
+    const circadianDip = FEEL.circadianDipDepth * Math.exp(-((((hours + 48) % 24) - FEEL.circadianDipHour) ** 2) / (2 * FEEL.circadianDipWidthH ** 2));
     sleepPressure = asleep ? sleepPressure * Math.exp(-1 / (FEEL.sleepPressureDecayTauH * 60)) : sleepPressure + FEEL.sleepPressurePerHour / 60;
     let mealDip = 0;
     for (const k of tracks) mealDip += mealDipOf(k.kcal, t - k.intake.at);
-    const drowsiness = channels.drowsiness[t];
+    const drowsiness = channels.drowsiness[i];
     const drowsy = Math.min(1, Math.max(0, mealDip * (1 - caffeineFelt * 0.7) + circadianDip * 0.4 + sleepPressure * 0.6 + drowsiness - COUPLING.drowsyPerStress * stress));
-    const alertness = Math.min(1, Math.max(FEEL.alertnessFloorAwake, FEEL.alertnessRested + caffeineFelt * 0.55 - circadianDip - sleepPressure - mealDip * 0.45 - COUPLING.alertnessPerDrowsiness * drowsiness + COUPLING.alertnessPerStress * stress + COUPLING.alertnessPerReward * channels.reward[t]));
+    const alertness = Math.min(1, Math.max(FEEL.alertnessFloorAwake, FEEL.alertnessRested + caffeineFelt * 0.55 - circadianDip - sleepPressure - mealDip * 0.45 - COUPLING.alertnessPerDrowsiness * drowsiness + COUPLING.alertnessPerStress * stress + COUPLING.alertnessPerReward * channels.reward[i]));
     const fullness = Math.min(1, Math.max(0, (stomachMl - STOMACH.restingVolumeMl) / (STOMACH.fullnessMl - STOMACH.restingVolumeMl)));
     const sinceEmpty = t - lastMealEnd;
     const sinceWoke = t - wokeAt;
     const emptyDrive = Number.isFinite(sinceEmpty) ? sinceEmpty / FEEL.hungerAfterEmptyMin : FEEL.hungerOnWaking + ((1 - FEEL.hungerOnWaking) * sinceWoke) / FEEL.hungerFastingFullMin;
-    const hunger = asleep ? 0 : Math.min(1, Math.max(0, Math.min(FEEL.hungerPlateau, emptyDrive) * (1 - fullness) * (1 + channels.appetite[t])));
+    const hunger = asleep ? 0 : Math.min(1, Math.max(0, Math.min(FEEL.hungerPlateau, emptyDrive) * (1 - fullness) * (1 + channels.appetite[i])));
     const jitter = Math.min(1, Math.max(0, (caffeineFelt - FEEL.jitterFromCaffeineFelt) / (1 - FEEL.jitterFromCaffeineFelt)));
     const crash = Math.min(1, Math.max(0, (FEEL.lowSugarFeltFromMgDl - G) / (FEEL.lowSugarFeltFromMgDl - FEEL.lowSugarFullAtMgDl)));
 
     // Record
-    series.glucose[t] = G;
-    series.insulin[t] = I;
-    series.insulinAction[t] = X;
-    series.tg[t] = TG;
-    series.caffeine[t] = caffeineMgL;
-    series.occupancy[t] = occupancy;
-    series.alcohol[t] = alcoholBodyG / widmark;
-    series.hr[t] = hr;
-    series.breaths[t] = HEART.breathsByActivity[posture] + digest * 1.5 + channels.breathing[t];
-    series.cardiacOutput[t] = cardiacOutput;
-    series.flowBrain[t] = BLOOD_FLOW.rest.brain / flowTotal;
-    series.flowHeart[t] = BLOOD_FLOW.rest.heart / flowTotal;
-    series.flowKidneys[t] = flowKidneys / flowTotal;
-    series.flowGut[t] = flowGut / flowTotal;
-    series.flowMuscle[t] = flowMuscle / flowTotal;
-    series.stomachMl[t] = stomachMl;
-    series.stomachKcal[t] = stomachKcal;
-    series.gutKcal[t] = gutKcal;
-    series.emptyingKcalPerMin[t] = energyRate;
-    series.glucoseAbsorbMgMin[t] = absorbedGlucoseSystemicMg;
-    series.fatAbsorbGMin[t] = absorbedFatG;
-    series.proteinAbsorbGMin[t] = absorbedProteinG;
-    series.insulinSecretion[t] = secretion;
-    series.liverGlycogen[t] = liverGlycogen;
-    series.muscleGlycogen[t] = muscleGlycogen;
-    series.fatStoredG[t] = fatStored;
-    series.bladderMl[t] = bladder;
-    series.kcalPerHour[t] = kcalPerHour;
-    series.carbFuel[t] = carbFuel;
-    series.fullness[t] = fullness;
-    series.alertness[t] = alertness;
-    series.drowsy[t] = drowsy;
-    series.jitter[t] = jitter;
-    series.hunger[t] = hunger;
-    series.crash[t] = crash;
-    series.muscleUptakeGMin[t] = toMuscleG;
-    series.hepaticOutputGMin[t] = hepaticOutput;
-    series.liverUptakeGMin[t] = toLiverG + liverDirectG;
-    series.posture[t] = POSTURE_INDEX[posture];
-    series.digestion[t] = digest;
-    series.mealDip[t] = mealDip;
-    series.sleepPressure[t] = sleepPressure;
-    series.hoursAwake[t] = hoursAwake;
-    series.caffeineFelt[t] = caffeineFelt;
-    series.temperature[t] = BODY_TEMPERATURE.meanC + BODY_TEMPERATURE.swingC * Math.cos((2 * Math.PI * (hours - BODY_TEMPERATURE.peakHour)) / 24) + channels.temperature[t];
-    series.stressLevel[t] = stress;
-    series.inflammation[t] = Math.min(1, channels.inflammation[t]);
-    series.immune[t] = Math.min(1, channels.immune[t]);
-    series.reward[t] = Math.min(1, channels.reward[t]);
-    series.fluidBalance[t] = -fluidDeficitMl;
-    series.systolic[t] = RESTING_SYSTOLIC_MMHG + channels.bloodPressure[t] + CAFFEINE.bloodPressureGainMmHgPerMgL * caffeineMgL;
-    series.muscleWork[t] = muscleWork[t];
+    series.glucose[i] = G;
+    series.insulin[i] = I;
+    series.insulinAction[i] = X;
+    series.tg[i] = TG;
+    series.caffeine[i] = caffeineMgL;
+    series.occupancy[i] = occupancy;
+    series.alcohol[i] = alcoholBodyG / widmark;
+    series.hr[i] = hr;
+    series.breaths[i] = HEART.breathsByActivity[posture] + digest * 1.5 + channels.breathing[i];
+    series.cardiacOutput[i] = cardiacOutput;
+    series.flowBrain[i] = BLOOD_FLOW.rest.brain / flowTotal;
+    series.flowHeart[i] = BLOOD_FLOW.rest.heart / flowTotal;
+    series.flowKidneys[i] = flowKidneys / flowTotal;
+    series.flowGut[i] = flowGut / flowTotal;
+    series.flowMuscle[i] = flowMuscle / flowTotal;
+    series.stomachMl[i] = stomachMl;
+    series.stomachKcal[i] = stomachKcal;
+    series.gutKcal[i] = gutKcal;
+    series.emptyingKcalPerMin[i] = energyRate;
+    series.glucoseAbsorbMgMin[i] = absorbedGlucoseSystemicMg;
+    series.fatAbsorbGMin[i] = absorbedFatG;
+    series.proteinAbsorbGMin[i] = absorbedProteinG;
+    series.insulinSecretion[i] = secretion;
+    series.liverGlycogen[i] = liverGlycogen;
+    series.muscleGlycogen[i] = muscleGlycogen;
+    series.fatStoredG[i] = fatStored;
+    series.bladderMl[i] = bladder;
+    series.kcalPerHour[i] = kcalPerHour;
+    series.carbFuel[i] = carbFuel;
+    series.fullness[i] = fullness;
+    series.alertness[i] = alertness;
+    series.drowsy[i] = drowsy;
+    series.jitter[i] = jitter;
+    series.hunger[i] = hunger;
+    series.crash[i] = crash;
+    series.muscleUptakeGMin[i] = toMuscleG;
+    series.hepaticOutputGMin[i] = hepaticOutput;
+    series.liverUptakeGMin[i] = toLiverG + liverDirectG;
+    series.posture[i] = POSTURE_INDEX[posture];
+    series.digestion[i] = digest;
+    series.mealDip[i] = mealDip;
+    series.sleepPressure[i] = sleepPressure;
+    series.hoursAwake[i] = hoursAwake;
+    series.caffeineFelt[i] = caffeineFelt;
+    series.temperature[i] = BODY_TEMPERATURE.meanC + BODY_TEMPERATURE.swingC * Math.cos((2 * Math.PI * (hours - BODY_TEMPERATURE.peakHour)) / 24) + channels.temperature[i];
+    series.stressLevel[i] = stress;
+    series.inflammation[i] = Math.min(1, channels.inflammation[i]);
+    series.immune[i] = Math.min(1, channels.immune[i]);
+    series.reward[i] = Math.min(1, channels.reward[i]);
+    series.fluidBalance[i] = -fluidDeficitMl;
+    series.systolic[i] = RESTING_SYSTOLIC_MMHG + channels.bloodPressure[i] + CAFFEINE.bloodPressureGainMmHgPerMgL * caffeineMgL;
+    series.muscleWork[i] = muscleWork[i];
 
     for (const k of tracks) {
-      const o = t * LEDGER_SIZE;
+      const o = i * LEDGER_SIZE;
       k.ledger[o] = k.stomachCarb * 4 + k.stomachFat * 9 + k.stomachProtein * 4;
       k.ledger[o + 1] = k.gutCarb * 4 + k.gutFat * 9 + k.gutProtein * 4;
       k.ledger[o + 2] = k.bloodGlucoseG * 4 + k.bloodFatG * 9 + k.bloodAminoG * 4;
@@ -749,23 +781,24 @@ export function simulate(scenario: Scenario): Trajectory {
       k.ledger[o + 5] = k.dest.fat;
       k.ledger[o + 6] = k.dest.burned;
       k.ledger[o + 7] = k.dest.colon;
-      const c = t * 4;
+      const c = i * 4;
       k.caffeineLedger[c] = k.stomachCaffeine;
       k.caffeineLedger[c + 1] = k.gutCaffeine;
       k.caffeineLedger[c + 2] = k.caffeineBody;
       k.caffeineLedger[c + 3] = k.caffeineCleared;
-      k.flows.set([k.stomachFat, k.gutFat, k.bloodFatG, k.fatCleared, k.carbsAbsorbedPerMin, k.fatAbsorbedPerMin, k.stomachAlcohol, k.gutAlcohol, k.alcoholAbsorbed], t * FLOW_SIZE);
+      k.flows.set([k.stomachFat, k.gutFat, k.bloodFatG, k.fatCleared, k.carbsAbsorbedPerMin, k.fatAbsorbedPerMin, k.stomachAlcohol, k.gutAlcohol, k.alcoholAbsorbed], i * FLOW_SIZE);
     }
   }
 
+  // Everything handed out starts at 00:00 today, so the lead-in is invisible to whoever reads it.
   return {
     scenario,
     anthro,
-    series,
-    intakeLedgers: new Map(tracks.map((k) => [k.intake.id, { kcal: k.kcal, ledger: k.ledger, caffeineMg: k.intake.caffeineMg, caffeineLedger: k.caffeineLedger, flows: k.flows, alcoholG: k.intake.alcoholG }])),
-    substances: new Map(substanceTracks.map((s) => [s.substance.id, { series: s.series, ledger: s.ledger, substance: s.substance }])),
+    series: Object.fromEntries(SERIES.map((name) => [name, series[name].subarray(leadIn)])) as Record<SeriesName, Float32Array>,
+    intakeLedgers: new Map(tracks.map((k) => [k.intake.id, { kcal: k.kcal, ledger: k.ledger.subarray(leadIn * LEDGER_SIZE), caffeineMg: k.intake.caffeineMg, caffeineLedger: k.caffeineLedger.subarray(leadIn * 4), flows: k.flows.subarray(leadIn * FLOW_SIZE), alcoholG: k.intake.alcoholG }])),
+    substances: new Map(substanceTracks.map((s) => [s.substance.id, { series: s.series.subarray(leadIn), ledger: s.ledger.subarray(leadIn * 3), substance: s.substance }])),
     events,
-    channels,
+    channels: Object.fromEntries((Object.keys(channels) as ChannelId[]).map((id) => [id, channels[id].subarray(leadIn)])) as Record<ChannelId, Float32Array>,
     muscleEvents: [...(scenario.events ?? []), ...runSessions(activities)],
   };
 }

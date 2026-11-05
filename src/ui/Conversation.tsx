@@ -7,7 +7,7 @@ import { ArrowUp, X } from "./icons";
 import { showOrgan } from "./navigation";
 import { tell } from "./tell";
 
-const SAMPLE_REPLY: ReplyLine[] = [{ text: "Working out what happened and running it through the model." }, { text: "The answer appears here." }];
+const SAMPLE_REPLY: ReplyLine[] = [{ text: "Working out what happened and running it through the model." }, { text: "The answer appears here, in a line or two." }, { text: "And what you may feel." }];
 const WHAT_IF_PEAK_WINDOW_MINUTES = 360;
 const WHAT_IF_MIN_PEAK_CHANGE = 0.05;
 const MG_DL_PER_MMOL = 18.016;

@@ -10,11 +10,13 @@ import type { SystemId } from "../model/systems";
 // The one vocabulary between language and the body: Claude calls these as tools, the scripted
 // opening replays them, and the browser and server share the same reducer.
 
-const minute = z.number().int().min(0).max(1799).describe("Minutes since 00:00 today, for example 16:45 is 1005");
+const minute = z.number().int().min(-1440).max(1799).describe("Minutes since 00:00 today, for example 16:45 is 1005. Yesterday is negative: 23:00 yesterday is -60");
 const organ = z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat"]);
 const posture = z.enum(["sleeping", "sitting", "standing", "walking", "running"]);
 const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing"]);
 const eventMinute = z.number().int().min(-14 * 1440).max(1799).describe("Minutes since 00:00 today. Negative for earlier days: 18:00 yesterday is -360");
+const foodSource = z.discriminatedUnion("kind", [z.object({ kind: z.literal("table"), fdcId: z.number(), name: z.string(), dataset: z.string() }), z.object({ kind: z.literal("estimate") })]);
+const serving = z.object({ label: z.string().min(1).describe("What one serving is, in the singular, such as slice or cup"), grams: z.number().positive() });
 const wordsAtMost = (limit: number) => (text: string) => text.trim().split(/\s+/).length <= limit;
 const shortText = (limit: number) => z.string().min(1).refine(wordsAtMost(limit), `Keep this to ${limit} words or fewer`);
 
@@ -87,9 +89,25 @@ export const ACTION_SCHEMAS = {
     liquid: z.boolean().describe("True for drinks"),
     fructose_share: z.number().min(0).max(1).optional().describe("Share of its sugar that is fructose, if it differs from table sugar's 0.5. About 0.6 for whole fruit such as apples"),
     assumption: z.string().describe("The portion you assumed, in a few words, shown to the person"),
+    serving: serving.optional().describe("What one serving is, so they can correct the portion in those units"),
+    source: foodSource.optional(),
   }),
+  correct_intake: z
+    .object({
+      id: z.string(),
+      grams: z.number().positive().optional().describe("How much they really had. Everything in the food scales with it"),
+      at: minute.optional().describe("When they really had it"),
+      assumption: z.string().optional().describe("The corrected portion in a few words, shown to the person"),
+    })
+    .refine((a) => a.grams !== undefined || a.at !== undefined, "Give grams, at, or both"),
   remove_intake: z.object({ id: z.string() }),
   set_activity: z.object({ posture, from: minute, until: minute.optional().describe("When the activity ends; the previous activity resumes") }),
+  set_sleep: z
+    .object({
+      bed: minute.describe("When they went to sleep. Before midnight this is negative: 23:30 yesterday is -30"),
+      wake: minute.describe("When they woke up today"),
+    })
+    .refine((a) => a.wake > a.bed, "wake must be later than bed"),
   set_body: z.object({
     sex: z.enum(["male", "female"]).optional(),
     age: z.number().min(18).max(90).optional(),
@@ -177,6 +195,21 @@ function withActivity(activities: ActivitySpan[], posture: Posture, from: number
   return next.sort((a, b) => a.from - b.from);
 }
 
+// The night they describe. Past their usual bedtime they were still up, and once awake they stay up.
+function withSleep(activities: ActivitySpan[], bed: number, wake: number): ActivitySpan[] {
+  const usualBed = DAY.sleepMin - 1440;
+  const afterwards = postureAt(activities, wake);
+  const kept = activities.filter((a) => a.from < Math.min(bed, usualBed) || a.from > wake);
+  const up: ActivitySpan[] = bed > usualBed ? [{ from: usualBed, posture: "sitting" }] : [];
+  const next: ActivitySpan[] = [...kept, ...up, { from: bed, posture: "sleeping" }, { from: wake, posture: afterwards === "sleeping" ? "standing" : afterwards }];
+  return next.sort((a, b) => a.from - b.from);
+}
+
+const scaledTo = (intake: Intake, grams: number): Intake => {
+  const by = grams / intake.grams;
+  return { ...intake, grams, waterMl: intake.waterMl * by, carbsG: intake.carbsG * by, sugarG: intake.sugarG * by, fatG: intake.fatG * by, proteinG: intake.proteinG * by, fiberG: intake.fiberG * by, caffeineMg: intake.caffeineMg * by, alcoholG: intake.alcoholG * by };
+};
+
 function storyFrom(custom: z.infer<typeof customStory>): CustomStory {
   return {
     systems: custom.systems,
@@ -205,13 +238,25 @@ export function reduce(state: BodyState, action: Action): BodyState {
         alcoholG: a.alcohol_g,
         liquid: a.liquid,
         fructoseShare: a.fructose_share,
+        source: a.source,
+        serving: a.serving,
       };
       return { ...state, intakes: [...state.intakes.filter((i) => i.id !== a.id), intake], assumptions: { ...state.assumptions, [a.id]: a.assumption } };
+    }
+    case "correct_intake": {
+      const { id, grams, at, assumption } = action.args;
+      const intake = state.intakes.find((i) => i.id === id);
+      if (!intake) throw new Error(`No food or drink with id ${id}. Known ids: ${state.intakes.map((i) => i.id).join(", ") || "none"}`);
+      if (grams !== undefined && intake.grams <= 0) throw new Error(`${intake.label} was logged with no weight, so log it again with its real amount.`);
+      const corrected = { ...(grams === undefined ? intake : scaledTo(intake, grams)), at: at ?? intake.at };
+      return { ...state, intakes: state.intakes.map((i) => (i.id === id ? corrected : i)), assumptions: assumption === undefined ? state.assumptions : { ...state.assumptions, [id]: assumption } };
     }
     case "remove_intake":
       return { ...state, intakes: state.intakes.filter((i) => i.id !== action.args.id), process: state.process === `intake:${action.args.id}` || state.process === `meal:${action.args.id}` ? null : state.process };
     case "set_activity":
       return { ...state, activities: withActivity(state.activities, action.args.posture, action.args.from, action.args.until), whatIf: null };
+    case "set_sleep":
+      return { ...state, activities: withSleep(state.activities, action.args.bed, action.args.wake), whatIf: null };
     case "set_body": {
       const a = action.args;
       return {
@@ -294,10 +339,16 @@ export function traceLine(action: Action): string {
       const kcal = Math.round(Math.max(0, a.carbs_g - a.fiber_g) * 4 + a.fat_g * 9 + a.protein_g * 4 + a.alcohol_g * 7);
       return `log_intake ${a.label}, ${clock(a.at)}, ${a.caffeine_mg > 0 && kcal < 30 ? `${a.caffeine_mg} mg caffeine` : `${kcal} kcal`}`;
     }
+    case "correct_intake": {
+      const { id, grams, at } = action.args;
+      return `correct_intake ${id}${grams === undefined ? "" : `, ${Math.round(grams)} g`}${at === undefined ? "" : `, at ${clock(at)}`}`;
+    }
     case "remove_intake":
       return `remove_intake ${action.args.id}`;
     case "set_activity":
       return `set_activity ${action.args.posture}, from ${clock(action.args.from)}`;
+    case "set_sleep":
+      return `set_sleep ${clock(action.args.bed)} to ${clock(action.args.wake)}`;
     case "set_body":
       return `set_body ${Object.entries(action.args).map(([k, v]) => `${k} ${v}`).join(", ")}`;
     case "set_now":

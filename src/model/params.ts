@@ -242,6 +242,12 @@ export const DAY = {
   minutes: 30 * 60, // the simulation runs into the next morning so forecasts never hit a wall
   wakeMin: 7 * 60 + 30,
   sleepMin: 23 * 60 + 30,
+  rolloverMin: 4 * 60, // a new day starts here, so a late night still belongs to the day it began in
+  carryDaysMost: 2, // how many days back the simulation may run first
+  stillUpMin: 30, // after you last said something past bedtime, how long you are taken to stay up
+  intakeCarryDays: 1,
+  substanceCarryDays: 2,
+  eventCarryDays: 14,
 } as const;
 
 // The typical ranges every reading is judged against, with where each one comes from. Thresholds
@@ -496,7 +502,7 @@ export const FEELING_DISPLAY = {
 // How numbers become markers and line weight on a process drawn through the body.
 // The day chart along the bottom: what it draws, and when it calls something over.
 export const LANES = {
-  from: 6 * 60,
+  from: DAY.rolloverMin,
   to: 28 * 60,
   stepMin: 5,
   most: 4,

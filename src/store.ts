@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { Action, BodyState, GuideStep, reduce, traceLine } from "./agent/actions";
+import { DayDoc } from "./model/day";
 import { CAFFEINE, LANES } from "./model/params";
 import type { MuscleGroup } from "./model/muscleGroups";
 import { ReplyLine } from "./model/narrate";
@@ -51,6 +52,15 @@ export interface Ui {
   touring: boolean;
   mode: Mode;
   asking: Asking | null;
+  date: string | null; // the day being saved; null when nothing is, as in the demo
+  dayProblem: string | null; // why your day could not be read or saved
+  fixing: Fixing | null;
+}
+
+// The foods open for correcting, and where on the chart they were clicked.
+export interface Fixing {
+  ids: string[];
+  x: number;
 }
 
 export interface Derived {
@@ -113,6 +123,9 @@ let state: AppState = {
   touring: false,
   mode: "tell",
   asking: null,
+  date: null,
+  dayProblem: null,
+  fixing: null,
 };
 
 const listeners = new Set<() => void>();
@@ -122,6 +135,13 @@ function emit() {
 }
 
 export const getState = () => state;
+
+export function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 export function setUi(patch: Partial<Ui>) {
   state = { ...state, ...patch };
@@ -194,8 +214,31 @@ export function leaveAsk() {
   const asking = state.asking;
   if (!asking) return;
   asking.cancel?.();
-  state = { ...state, body: asking.real, ...asking.realDerived, t: asking.realT, asking: null, playing: false, stop: null, touring: false, hover: null, hoverMuscle: null, hoverLane: null };
+  state = { ...state, body: asking.real, ...asking.realDerived, t: asking.realT, asking: null, playing: false, stop: null, touring: false, hover: null, hoverMuscle: null, hoverLane: null, fixing: null };
   emit();
+}
+
+// Your day as a file. Nothing about what is on screen goes in, and neither does a copy being explored.
+export function dayDocOf(s: AppState): DayDoc | null {
+  if (!s.date || s.asking) return null;
+  const { body, intakes, activities, substances, events, assumptions } = s.body;
+  return { version: 1, date: s.date, body, intakes, activities, substances, events, assumptions };
+}
+
+// Puts a saved day in place, keeping whatever view you are on.
+export function restoreDay(doc: DayDoc, minute: number) {
+  const atNow = Math.abs(state.t - state.body.now) < 1;
+  setBodyState(
+    { ...state.body, body: doc.body, intakes: doc.intakes, activities: doc.activities, substances: doc.substances, events: doc.events, assumptions: doc.assumptions, whatIf: null, now: minute },
+    { date: doc.date, dayProblem: null, ...(atNow ? { t: minute } : {}) },
+  );
+}
+
+// The clock moved on. A view resting on now moves with it, and one you scrubbed away stays put.
+export function setClock(minute: number) {
+  if (minute === state.body.now) return;
+  const atNow = !state.playing && Math.abs(state.t - state.body.now) < 1;
+  setBodyState({ ...state.body, now: minute }, atNow ? { t: minute } : {});
 }
 
 export function setMode(mode: Mode) {
@@ -259,11 +302,5 @@ export function selectedProcess(s: AppState): Process | null {
 }
 
 export function useStore<T>(selector: (s: AppState) => T): T {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => selector(state),
-  );
+  return useSyncExternalStore(subscribe, () => selector(state));
 }

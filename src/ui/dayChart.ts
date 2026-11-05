@@ -25,6 +25,13 @@ interface Anchor {
 export interface DayChartEvents {
   scrub: (minute: number) => void;
   pointAtLane: (lane: Lane | null) => void;
+  fixMoment: (moment: Moment, x: number) => void;
+}
+
+interface MomentHit {
+  moment: Moment;
+  left: number;
+  right: number;
 }
 
 // The chart's rows, in rem. The column of names beside it uses the same numbers.
@@ -45,6 +52,9 @@ const LANE_MARGIN_PX = 3;
 const FUTURE_DASH = [3, 3];
 const GHOST_NOTE = "Grey is your day";
 const SNAP_PX = { lanes: 7, top: 22 };
+const TICK_REACH_PX = 7;
+const STILL_CLICK_PX = 4;
+const CORRECTABLE_DOTS = [1, 2];
 const MOTION = { viewPerSecond: 9, heightPerSecond: 14, drawInSeconds: 0.45 };
 const LEAST_SPAN_MIN = 120;
 const VIEW_MARGIN_MIN = 10;
@@ -84,6 +94,8 @@ export class DayChart {
   private pointedId: string | null = null;
   private pointer: { x: number; y: number; free: boolean } | null = null;
   private dragging = false;
+  private momentHits: MomentHit[] = [];
+  private pressedMoment: { moment: Moment; x: number } | null = null;
   private theme: LookTheme = "xray";
   private colors = { ink: "#cecdc3", ink2: "#9f9d96", ink3: "#878580", line: "rgba(206,205,195,.09)", surface: "#1c1b1a" };
   private colorsStale = true;
@@ -294,12 +306,13 @@ export class DayChart {
     this.pointer = { x, y, free: e.shiftKey };
     this.dirty = true;
     if (this.dragging) {
+      if (this.pressedMoment && Math.abs(x - this.pressedMoment.x) > STILL_CLICK_PX) this.pressedMoment = null;
       this.events.scrub(this.landing(x, y, e.shiftKey).at);
       return;
     }
     const lane = this.laneAtY(y);
     if ((lane?.id ?? null) !== this.pointedId) this.events.pointAtLane(lane);
-    this.canvas.style.cursor = y < this.topHeight() && this.landing(x, y, e.shiftKey).label ? "pointer" : "ew-resize";
+    this.canvas.style.cursor = y < this.topHeight() && (this.momentAt(x) || this.landing(x, y, e.shiftKey).label) ? "pointer" : "ew-resize";
   };
 
   private readonly left = () => {
@@ -314,13 +327,22 @@ export class DayChart {
     this.dragging = true;
     const { x, y } = this.local(e);
     this.pointer = { x, y, free: e.shiftKey };
-    this.events.scrub(this.landing(x, y, e.shiftKey).at);
+    const moment = y < this.topHeight() ? this.momentAt(x) : null;
+    this.pressedMoment = moment?.intakes.length ? { moment, x } : null;
+    this.events.scrub(moment ? moment.at : this.landing(x, y, e.shiftKey).at);
   };
 
-  private readonly released = () => {
+  private readonly released = (e: PointerEvent) => {
     this.dragging = false;
     this.dirty = true;
+    const pressed = this.pressedMoment;
+    this.pressedMoment = null;
+    if (pressed && e.type === "pointerup") this.events.fixMoment(pressed.moment, this.x(pressed.moment.at));
   };
+
+  private momentAt(x: number): Moment | null {
+    return this.momentHits.find((hit) => x >= hit.left && x <= hit.right)?.moment ?? null;
+  }
 
   private readonly resetView = () => {
     this.manual = null;
@@ -635,6 +657,7 @@ export class DayChart {
       }
     }
     let free = 0;
+    const hits: MomentHit[] = [];
     for (const moment of this.moments) {
       if (moment.at < this.view.from || moment.at > this.view.to) continue;
       const x = this.x(moment.at);
@@ -643,10 +666,27 @@ export class DayChart {
       const wide = c.measureText(moment.label).width;
       const left = x + gap;
       const right = left + wide;
-      if (left < free || right > this.width || taken.some((t) => left < t.right + gap && right > t.left - gap)) continue;
+      if (left < free || right > this.width || taken.some((t) => left < t.right + gap && right > t.left - gap)) {
+        hits.push({ moment, left: x - TICK_REACH_PX, right: x + TICK_REACH_PX });
+        continue;
+      }
+      hits.push({ moment, left: x - TICK_REACH_PX, right });
       c.fillStyle = hover?.label === moment.label ? this.colors.ink : this.colors.ink2;
       c.fillText(moment.label, left, labelY);
+      // A dotted underline says this one can be corrected.
+      if (moment.intakes.length) {
+        const y = labelY + (TEXT_REM * this.rem) / 2 + 1.5;
+        c.beginPath();
+        c.moveTo(left, y);
+        c.lineTo(right, y);
+        c.setLineDash(CORRECTABLE_DOTS);
+        c.lineWidth = 1;
+        c.strokeStyle = this.colors.ink3;
+        c.stroke();
+        c.setLineDash([]);
+      }
       free = right + gap * 2;
     }
+    this.momentHits = hits;
   }
 }

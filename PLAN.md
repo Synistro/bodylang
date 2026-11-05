@@ -2,22 +2,19 @@
 
 Bodylang is one 3D human body that shows what is happening inside you right now. You say in plain words what you ate, drank, took, did or came down with. Claude Code turns that into function calls, a physiology model recalculates your day, and the body, readings and day chart redraw from the result.
 
-It runs on your Mac: `pnpm dev`, then http://localhost:5183, or as your desktop wallpaper through Plash at http://localhost:5183/?wall. You type in the box at the bottom left. [README.md](README.md) has the setup. "I" in this document is Claude, the session that built it.
+It runs on your Mac: `pnpm dev`, then http://localhost:5183, or as your desktop wallpaper through Plash at http://localhost:5183/?wall. You type in the box at the bottom left. It follows the real clock and saves your day, so you can close it and come back. [README.md](README.md) has the setup. "I" in this document is Claude, the session that built it.
 
 ## How it works
 
-The page opens with this sentence, replayed from a script so it needs no Claude call:
-
-> It's 5 pm. 15 minutes ago I ate a sugar bar with pizza, and I had coffee this morning. Is the coffee still working? What's happening in my body now, where does it all go, and what should I feel? I'm sitting.
-
-Anything you type afterwards takes the live path:
+You say something like "two slices of pizza at 13:10", and it takes this path:
 
 ```text
 your sentence
      │
      ▼
-Claude Code ── calls functions ──► log_intake(pizza, 16:45, 72 g carbs, 26 g fat, ...)
-     ▲  │                          log_event(Chest and triceps workout, training, ...)
+Claude Code ── calls functions ──► find_foods(pizza) ──► rows of the USDA table
+     ▲  │                          log_food(pizza, 13:10, row 2708615, 2 slices of 107 g)
+     │  │                          log_event(Chest and triceps workout, training, ...)
      │  │                          show_system(digestion)
      │  │                                  │
      │  │                                  ▼
@@ -27,9 +24,21 @@ Claude Code ── calls functions ──► log_intake(pizza, 16:45, 72 g carbs
   answer, up to 3 short lines      3D body, readings, sentences, day chart
 ```
 
-The default body is a 30-year-old man, 180 cm and 80 kg. You change it from the line under the clock, or by saying so. For that body, the opening scene gives these results at 17:00. Blood sugar is 4.7 mmol/L and peaks at 6.9 near 17:53. The stomach holds 540 ml and empties near 22:37. Meal fat peaks later, near 19:50, because it reaches the blood through the lymph. The morning coffee has 0.59 mg/L of caffeine left, which blocks about 4 of every 100 tired signals in the brain. A 15 minute walk now would lower the sugar peak by 0.2 mmol/L, which is the kind of alternative Claude can offer under an answer.
+The default body is a 30-year-old man, 180 cm and 80 kg. You change it from the line under the clock, or by saying so. http://localhost:5183/?demo replays a scripted day without calling Claude or saving anything: "It's 5 pm. 15 minutes ago I ate a sugar bar with pizza, and I had coffee this morning. I'm sitting." For that body, it gives these results at 17:00. Blood sugar is 4.7 mmol/L and peaks at 6.9 near 17:53. The stomach holds 540 ml and empties near 22:37. Meal fat peaks later, near 19:50, because it reaches the blood through the lymph. The morning coffee has 0.59 mg/L of caffeine left, which blocks about 4 of every 100 tired signals in the brain. A 15 minute walk now would lower the sugar peak by 0.2 mmol/L, which is the kind of alternative Claude can offer under an answer.
 
 The body, readings, sentences and day chart all read this one calculation, and nothing is animated by hand. This rule comes from the [Teardown](https://x.com/elvar_official/status/2116174609355571402) article you sent. Once the day is calculated, the state of the body at any moment depends only on the time of day, so dragging across the day chart replays it.
+
+## Your day
+
+**The clock is real.** Now follows your Mac's clock, and the view rests on it unless you scrub away. A day runs from 04:00 to 04:00, so 01:30 still belongs to the day it began in. Saying something past bedtime, or before the usual wake-up, counts you as awake, because you are talking.
+
+**The day is saved.** Each date gets one file in `~/.bodylang/days/`, written a moment after anything changes. It stays on your Mac and out of the repository. A copy being explored in Ask is never written. If you have the page open twice, such as a window and the wallpaper, a save on one appears on the other.
+
+**The next day starts from the last.** Yesterday stays in the new day's file with negative minutes, and the calculation runs yesterday first. A coffee at 23:00 yesterday is minute -60, and its caffeine, along with alcohol, blood fat, whatever is still in the stomach and how long you slept, are simply still there at 00:00. Glycogen and fasting start from their usual morning values, because a partly logged yesterday would otherwise read as a day without food. Things from yesterday show on screen only while they are still doing something. Events last longer: an illness keeps going until you end it, and a finished one stays for 14 days. After days away, the model assumes a usual night.
+
+**Food comes from a table.** `server/foods.json` holds 12,750 foods from USDA FoodData Central, with composition per 100 g and real portion weights. Claude searches it, picks the row and decides only how much you had. If nothing fits, it uses its own composition, and the food is marked as Claude's estimate.
+
+**Every estimate can be corrected.** Foods have a dotted underline along the top of the day chart. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
 
 ## How the screen is organised
 
@@ -57,7 +66,7 @@ The day chart answers one question at every level: what is going on, how much, a
 
 The overview draws one row per thread in a neutral colour, a system one per reading or worked muscle, a thread one per stop, and an organ its own readings, each in the colour of what is in focus.
 
-You move through the chart the way you would in a player. The skip buttons go to the previous or next moment: what you logged, each named end, and now. Play runs forward to the last of those moments. Dragging or clicking anywhere on the chart moves the body through time and snaps to those moments, unless you hold shift. The top corner says Now, or Back to now once you have moved away. Hovering previews any minute without moving anything. Focus, under the names, shows the stretch from where this began to where it ends, and glides there when you change level. Whole day shows 06:00 to 04:00. A sideways swipe or a pinch also moves around.
+You move through the chart the way you would in a player. The skip buttons go to the previous or next moment: what you logged, each named end, and now. Play runs forward to the last of those moments. Dragging or clicking anywhere on the chart moves the body through time and snaps to those moments, unless you hold shift. The top corner says Now, or Back to now once you have moved away. Hovering previews any minute without moving anything. Focus, under the names, shows the stretch from where this began to where it ends, and glides there when you change level. Whole day shows 04:00 to 04:00. A sideways swipe or a pinch also moves around.
 
 These rules keep it quiet:
 
@@ -89,7 +98,7 @@ Ask for "what if I eat a burger and fries now" and Claude logs them on the copy,
 
 ## The physiology model
 
-The model is about 5,900 lines of TypeScript with no dependencies. It runs in one-minute steps from midnight to 06:00 the next day, and one recalculation takes about 5 ms. Muscle soreness uses curves that reach past that window, so yesterday's leg day still counts today. It covers gastric emptying, absorption, glucose and insulin (Bergman's minimal model), blood fat, caffeine, alcohol, water balance, temperature, blood-flow split and energy use. A per-food ledger in kcal answers "where is my pizza right now".
+The model is about 5,900 lines of TypeScript with no dependencies. It runs in one-minute steps from midnight to 06:00 the next day, after first running yesterday when anything from yesterday is logged. One recalculation takes about 3 ms without yesterday and 5 ms with it. Muscle soreness uses curves that reach past that window, so last week's leg day still counts today. It covers gastric emptying, absorption, glucose and insulin (Bergman's minimal model), blood fat, caffeine, alcohol, water balance, temperature, blood-flow split and energy use. A per-food ledger in kcal answers "where is my pizza right now".
 
 It handles anything that can happen to a body with one mechanism. An event pushes on channels, such as heart rate, temperature, stress, immune activity or insulin sensitivity, through a simple curve. Readings and feelings then follow from the same calculation. Claude picks a preset (training, illness, sex, stress, poor sleep) when one fits, and composes a custom event from the same channels when none does, such as a sauna. Custom events are marked as Claude's estimate.
 
@@ -108,9 +117,11 @@ Parameters were tuned by hand toward these same targets, so treat every row of t
 
 ## The Claude Code connection
 
-The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 15 tools and no file or shell access:
+The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Opus 5.5 at low effort. Claude gets 17 tools and no file or shell access:
 
-- 12 tools change the simulation or the view: `log_intake`, `remove_intake`, `set_activity`, `set_body`, `set_now`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process`, `focus_organ` and `what_if`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working. Ask mode leaves out `set_now` and `what_if`, because a question moves neither the clock nor anything real.
+- `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
+- 12 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
+- `what_if` draws an alternative on the day chart, in Tell mode only.
 - `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at.
 - `read_body` returns the model's numbers at any time.
 - `reply` shows the answer, at most three lines of under 18 words each.
@@ -123,7 +134,7 @@ I ran ten questions through Ask the same way, once each, with the same caveat: b
 
 ## Build plan
 
-**Phase 1: your real day.** Use the real clock, save the day to disk, and carry it across midnight, which means handing caffeine, alcohol, blood fat and sleep pressure over to the next day's calculation. Add a food lookup against USDA FoodData Central so composition comes from a table and Claude estimates only the portion. Show each estimate on the day chart so you can correct it in a click or a sentence. Done when you can use it for a full day and reopen it the next morning.
+**Phase 1: your real day.** Built, and described under Your day.
 
 **Phase 2: a model you can trust further.** Exercise, illness and water balance are in, and each close-up shows its evidence grade when you hover over its Source link. Next come fitting curves to published datasets, the menstrual cycle, and marking what the model computed apart from what Claude added from its own knowledge. Done when every number and sentence on screen shows where it came from.
 
@@ -133,7 +144,7 @@ I ran ten questions through Ask the same way, once each, with the same caveat: b
 
 **Phase 5: real signals.** Calibrate the model to you from a glucose monitor and wearable data, so "typical body" becomes your body. Done when the forecast's error against your own glucose readings is measured and shown.
 
-Phases 2, 3 and 4 don't depend on each other or on phase 1. Phase 5 needs phase 1's real clock, plus a glucose monitor and a wearable from you. Sizes are my judgment, without data behind them: phases 1, 3 and 4 are medium, 2 and 5 are large and open-ended.
+Phases 2, 3 and 4 don't depend on each other. Phase 5 needs a glucose monitor and a wearable from you. Sizes are my judgment, without data behind them: phases 3 and 4 are medium, 2 and 5 are large and open-ended.
 
 Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 for turning language into quantities, with Opus writing the answer, and prompt caching.
 
@@ -157,14 +168,14 @@ Response speed and voice input are a separate track. I'd try Claude Haiku 5.5 fo
 ## Limits
 
 - This shows estimates for a typical body with your measurements. It has no chronic diseases, no medications other than what Claude adds, and no individual gut differences. A cold is an event with a limited course.
-- Claude estimates portions, and those estimates move every number downstream. Phase 1 lets you correct them.
+- Claude estimates portions, and those estimates move every number downstream. You can correct them on the day chart.
+- The USDA table holds American foods and few brands, so a local dish may have only a rough match.
 - Claude can add facts from its own knowledge that the model doesn't compute.
 - Known gaps in the model: insulin stays high during a run after food, when it should fall. The stomach doesn't slow in hard exercise. Heart output runs low at high intensity. Two apples peak slightly below the target, because the fibre effect stays close to Benini 1995. A smaller fibre effect would hit the apple target and move further from that study.
 - Some sources were read only as a secondary reference or search snippet, including the running core temperature and the 10 mmHg per MET figure. `src/model/params.ts` keeps a source note beside each value.
 - Organs and muscles are warped from other bodies onto the Anny shape, so the fit is approximate and gets less accurate at extreme sizes. At very low or high BMI, a plain girth scale makes up the remaining weight, so those bodies look less natural.
 - The small intestine's loops are generated, so its shape is plausible and its exact course is invented.
 - Under 820 px wide, the layout stacks and hides the organ name labels and the lines from stop numbers to the body.
-- "Now" stays at the time a message sets, and a reload starts the day over, until phase 1.
 - Inside an exploration, changing the body's measurements with the sliders changes the copy, so it goes when you leave.
 - Sliders stay live while Claude is answering, and Claude keeps the state it started with, so moving one mid-answer can leave its numbers out of step with the screen until the next message.
 - I last measured performance on the first mock, so the current scene has no frame rate on record.

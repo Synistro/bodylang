@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ACTION_SCHEMAS, Action, ActionName } from "../agent/actions";
+import { stayAwake } from "../model/day";
 import { beginExchange, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rememberAsked, setAskCancel, updateExchange } from "../store";
 
 const replyEvent = z.object({
@@ -32,6 +33,9 @@ export async function tell(text: string) {
   // A suggestion belongs to the answer it came with. Claude can offer a new one.
   clearWhatIf();
   const id = beginExchange(text);
+  const before = getState();
+  const awake = mode === "tell" && before.date ? stayAwake(before.body.activities, before.body.now) : null;
+  if (awake) dispatch({ name: "set_activity", args: awake });
   const s = getState();
   const stop = new AbortController();
   if (session !== null) setAskCancel(() => stop.abort());
@@ -40,7 +44,7 @@ export async function tell(text: string) {
     const response = await fetch("/api/tell", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text, state: s.body, mode, history: s.asking?.history ?? [] }),
+      body: JSON.stringify({ text, state: s.body, mode, history: s.asking?.history ?? [], date: s.date }),
       signal: stop.signal,
     });
     if (!response.ok || !response.body) throw new Error(`The Claude Code bridge answered ${response.status}.`);

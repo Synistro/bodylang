@@ -15,7 +15,7 @@ import { applyHues } from "./marks";
 import { goUp, showMuscle, showOrgan, showSystem } from "./navigation";
 import { isOrganId } from "./organ";
 import { OrganCard } from "./OrganCard";
-import { playOpening } from "./opening";
+import { startDay } from "./day";
 import { PageHead } from "./PageHead";
 import { Rail } from "./Rail";
 import { StatePanel } from "./StatePanel";
@@ -25,7 +25,7 @@ import { Tour } from "./Tour";
 const PLAY_MINUTES_PER_SECOND = 34;
 const WALL_IDLE_BEFORE_CYCLE_MS = 3 * 60 * 1000;
 const WALL_SYSTEM_DWELL_MS = 40 * 1000;
-const CREDITS = "Organs and vessels: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Muscles and bones: BodyParts3D, © The Database Center for Life Science, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
+const CREDITS = "Food composition: USDA FoodData Central, public domain. Organs and vessels: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Muscles and bones: BodyParts3D, © The Database Center for Life Science, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
 
 if (WALL) document.documentElement.dataset.wall = "";
 document.documentElement.dataset.theme = getState().theme === "xray" ? "dark" : "light";
@@ -61,6 +61,7 @@ function useEscape() {
       if (e.key !== "Escape") return;
       e.stopPropagation();
       if (e.target instanceof HTMLTextAreaElement) e.target.blur();
+      else if (getState().fixing) setUi({ fixing: null });
       else if (getState().bodyOpen) setUi({ bodyOpen: false });
       else if (atTopLevel() && getState().asking) leaveAsk();
       else goUp();
@@ -110,8 +111,10 @@ function useStillWhileHidden() {
 
 function Foot() {
   const [credits, setCredits] = useState(false);
+  const problem = useStore((s) => s.dayProblem);
   return (
     <div className="foot">
+      {problem ? <p className="foot-problem">{problem}</p> : null}
       {credits ? <p className="credits">{CREDITS}</p> : null}
       <p className="foot-line">
         Estimates, not medical advice.{" "}
@@ -153,7 +156,7 @@ export function App() {
         setStage(next);
         startBeacon(next.frameListeners);
         if (import.meta.env.DEV) Object.assign(window, { stage: next, bodylang: { setUi, setBody, dispatch, getState } });
-        playOpening();
+        startDay();
       })
       .catch((e: unknown) => setFailed(e instanceof Error ? e.message : String(e)));
     return () => {

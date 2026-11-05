@@ -179,11 +179,19 @@ const PLACE_LABEL: Record<string, { label: string; organ: OrganId | null }> = {
   cleared: { label: "Cleared by liver", organ: "liver" },
 };
 
+// Whether something from yesterday is still on its way anywhere, or has long since arrived.
+function stillMoving(tr: Trajectory, intake: Intake, t: number): boolean {
+  const food = ledgerAt(tr, intake.id, t);
+  const caffeine = caffeineLedgerAt(tr, intake.id, t);
+  return (food ? food.stomach + food.intestine + food.blood : 0) > kcalOf(intake) * PROCESS.heldInStomachShare || (caffeine ? caffeine.stomach + caffeine.intestine + caffeine.blood : 0) > intake.caffeineMg * PROCESS.heldInStomachShare;
+}
+
 // "Where is my pizza right now?" — reads straight from the model's conserved ledgers.
 export function whereabouts(tr: Trajectory, t: number): Whereabouts[] {
   const out: Whereabouts[] = [];
   for (const intake of tr.scenario.intakes) {
     if (intake.at > t) continue;
+    if (intake.at < 0 && !stillMoving(tr, intake, t)) continue;
     const kcal = kcalOf(intake);
     const caffeine = caffeineLedgerAt(tr, intake.id, t);
     if (caffeine && kcal < 30) {

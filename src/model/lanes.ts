@@ -36,6 +36,7 @@ export interface Lane {
 export interface Moment {
   at: number;
   label: string;
+  intakes: string[]; // what can be corrected by clicking it
 }
 
 const NOT_COMPARED = { ghost: null, hypothetical: false };
@@ -423,9 +424,16 @@ export function systemLanes(tr: Trajectory, now: number, system: SystemId, real:
 
 // What you logged today, in order, to name along the top of the chart.
 export function dayMoments(tr: Trajectory, now: number): Moment[] {
+  const meals = mealGroups(tr.scenario.intakes);
+  // The foods and drinks a moment stands for, which are what you can correct by clicking it.
+  const intakesOf = (threadId: string) => {
+    const meal = meals.find((group) => mealProcessId(group) === threadId);
+    if (meal) return meal.map((intake) => intake.id);
+    return tr.scenario.intakes.filter((intake) => threadId === `intake:${intake.id}`).map((intake) => intake.id);
+  };
   return threadsAt(tr, now)
     .filter((thread) => thread.at >= LANES.from && thread.at <= LANES.to)
-    .map((thread) => ({ at: thread.at, label: thread.name }))
+    .map((thread) => ({ at: thread.at, label: thread.name, intakes: intakesOf(thread.id) }))
     .sort((a, b) => a.at - b.at);
 }
 

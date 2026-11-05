@@ -1134,12 +1134,15 @@ type ProcessBuilder = (tr: Trajectory, t: number) => Process[];
 
 const newestFirst = (tr: Trajectory) => [...tr.scenario.intakes].sort((a, b) => b.at - a.at);
 
+// What came over from yesterday is only worth a line while it is still doing something.
+const stillHere = (from: number, line: Process) => (from >= 0 || line.active ? [line] : []);
+
 const PROCESS_BUILDERS: ProcessBuilder[] = [
-  (tr, t) => mealGroups(tr.scenario.intakes).reverse().map((group) => foodProcess(tr, group, t)),
+  (tr, t) => mealGroups(tr.scenario.intakes).reverse().flatMap((group) => stillHere(group[0].at, foodProcess(tr, group, t))),
   (tr, t) =>
     newestFirst(tr)
       .filter((intake) => intake.caffeineMg > 0)
-      .map((intake) => doseProcess(caffeineLine(tr, intake, t), t)),
+      .flatMap((intake) => stillHere(intake.at, doseProcess(caffeineLine(tr, intake, t), t))),
   (tr, t) => [insulinProcess(tr, t)],
   (tr, t) => [fatRouteProcess(tr, t)],
   (tr, t) => [circulationProcess(tr, t)],
@@ -1148,8 +1151,8 @@ const PROCESS_BUILDERS: ProcessBuilder[] = [
   (tr, t) =>
     newestFirst(tr)
       .filter((intake) => intake.alcoholG > 0)
-      .map((intake) => doseProcess(alcoholLine(tr, intake, t), t)),
-  (tr, t) => tr.scenario.substances.map((substance) => doseProcess(substanceLine(tr, substance, t), t)),
+      .flatMap((intake) => stillHere(intake.at, doseProcess(alcoholLine(tr, intake, t), t))),
+  (tr, t) => tr.scenario.substances.flatMap((substance) => stillHere(substance.at, doseProcess(substanceLine(tr, substance, t), t))),
   (tr, t) => [...tr.events].sort((a, b) => b.from - a.from).map((event) => eventProcess(event, t)),
 ];
 

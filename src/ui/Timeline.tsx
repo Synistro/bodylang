@@ -6,6 +6,7 @@ import type { Stage } from "../scene/stage";
 import { getState, selectedProcess, setUi, useStore } from "../store";
 import { viewSystemOf } from "../look";
 import { DAY_HOURS_REM, DAY_ROWS_REM, DAY_TOP_REM, DayChart } from "./dayChart";
+import { FoodFix } from "./FoodFix";
 import { useFrame } from "./hooks";
 import { organStory } from "./insets/organStory";
 import { Pause, Play, SkipBack, SkipForward } from "./icons";
@@ -92,7 +93,11 @@ export function Timeline({ stage }: { stage: Stage | null }) {
     const el = canvas.current;
     const list = rows.current;
     if (!el || !list) return;
-    const made = new DayChart(el, list, { scrub: (minute) => setUi({ t: minute, playing: false }), pointAtLane });
+    const made = new DayChart(el, list, {
+      scrub: (minute) => setUi({ t: minute, playing: false }),
+      pointAtLane,
+      fixMoment: (moment, x) => setUi({ fixing: { ids: moment.intakes, x: (plot.current?.offsetLeft ?? 0) + x } }),
+    });
     chart.current = made;
     return () => {
       made.dispose();
@@ -186,7 +191,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
           <button type="button" className="toggle" role="radio" aria-checked={!wholeDay} title="From where this began to where it ends" onClick={() => showRange(false)}>
             Focus
           </button>
-          <button type="button" className="toggle" role="radio" aria-checked={wholeDay} title="06:00 to 04:00" onClick={() => showRange(true)}>
+          <button type="button" className="toggle" role="radio" aria-checked={wholeDay} title={`${formatClock(DAY_FROM)} to ${formatClock(DAY_TO)}`} onClick={() => showRange(true)}>
             Whole day
           </button>
         </div>
@@ -194,6 +199,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
       <div ref={plot} className="day-plot" role="slider" tabIndex={0} aria-label="Time of day" aria-valuemin={DAY_FROM} aria-valuemax={DAY_TO} onKeyDown={key}>
         <canvas ref={canvas} aria-hidden="true" />
       </div>
+      <FoodFix />
     </section>
   );
 }

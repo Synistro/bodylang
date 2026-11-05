@@ -34,6 +34,16 @@ function bodyAgent(): Plugin {
           res.end();
         });
       });
+      server.middlewares.use("/api/day", (req, res) => {
+        server
+          .ssrLoadModule("/server/days.ts")
+          .then((days) => (days as typeof import("./server/days")).handleDay(req, res, (writer) => server.ws.send("bodylang:day", { writer })))
+          .catch((e: unknown) => {
+            console.error("[bodylang] day file error", e);
+            if (!res.headersSent) res.statusCode = 400;
+            res.end(e instanceof Error ? e.message : String(e));
+          });
+      });
       server.middlewares.use("/api/tell", (req, res) => {
         if (req.method !== "POST") {
           res.statusCode = 405;

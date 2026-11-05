@@ -176,8 +176,8 @@ describe("the day chart's lanes", () => {
 
   it("names what was logged, in order", () => {
     expect(dayMoments(day([COFFEE, PIZZA]), hm(17))).toEqual([
-      { at: COFFEE.at, label: "Coffee" },
-      { at: PIZZA.at, label: "Pizza" },
+      { at: COFFEE.at, label: "Coffee", intakes: ["coffee"] },
+      { at: PIZZA.at, label: "Pizza", intakes: ["pizza"] },
     ]);
   });
 

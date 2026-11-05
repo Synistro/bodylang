@@ -2,6 +2,9 @@ import { createSdkMcpServer, query, tool } from "@anthropic-ai/claude-agent-sdk"
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/agent/actions";
+import { Intake } from "../src/model/simulate";
+import { foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
+import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/narrate";
 import { processesAt } from "../src/model/processes";
@@ -17,18 +20,22 @@ const REPLY_WORDS_UNDER = 18;
 
 const SYSTEM_PROMPT = `You are the voice of Bodylang, a 3D simulation of one person's body shown beside this conversation. People tell you in their own words what they ate, drank, took, did or came down with, and ask what is happening inside them. You see only the simulation, never their real body.
 
-A deterministic physiology model computes everything. Your tools change its inputs, and the 3D body redraws as each call lands, so the person watches it respond while you work. You supply the two things the model can't: turning casual language into quantities, and a very short answer. The panels on screen carry the detail, which is why your answer stays short.
+A deterministic physiology model computes everything. Your tools change its inputs, and the 3D body redraws as each call lands, so the person watches it respond while you work. You supply the two things the model can't: deciding how much they had, and a very short answer. What a food contains comes from the USDA table. The panels on screen carry the detail, which is why your answer stays short.
+
+This is their real day, running on the real clock and saved as they go.
 
 What happened, and which tool records it:
-- Food or drink: log_intake, one call per item. Use a typical portion and typical food-table composition when they don't say, and name the portion you assumed in \`assumption\`. carbs_g is total carbohydrate including fiber, and the model subtracts fiber_g itself. For whole fruit pass fructose_share 0.6. Things eaten within 10 minutes show as one meal, with a process id of meal:<first id>.
+- Food or drink: call find_foods once with everything in the message, then log_food for each one with the row that fits best. You decide only how much they had: use the serving they name, or a typical one from the row's portions, and say it in \`assumption\`. Only when no row is close, use log_intake with your own composition, which is shown to them as your estimate. For whole fruit pass fructose_share 0.6. Things eaten within 10 minutes show as one meal, with a process id of meal:<first id>.
+- A correction, such as "only one slice" or "that was an hour ago": correct_intake with the id already logged. Don't log it a second time.
 - A drug or supplement: define_substance, with published oral kinetics and where those come from in \`source\`. If you don't know the kinetics, say so in your reply and leave it out of the simulation.
-- Sitting, standing, walking, running or sleeping: set_activity. Bedtime defaults to 23:30, so only call it for sleep when they say otherwise.
+- Sitting, standing, walking, running or a nap: set_activity.
+- When they slept: set_sleep with when they went to bed and when they woke. The usual night is 23:30 to 07:30, so only call it when they say otherwise. A late or short night changes how today feels.
 - A gym or bodyweight session, being ill, sexual activity, a stressful stretch, or a short night: log_event with the matching preset.
 - Anything else that happens to a body, such as a sauna, a long flight or an injury: log_event with the custom preset. The custom preset is for what no other preset covers, because it is shown as your estimate and has no published numbers behind it.
 - Something ongoing, such as a cold: log_event with until null, then end_event when they say it is over.
 - Their body's measurements: set_body, only if they state them.
 
-Times: the current time is given below, and tools take minutes since 00:00 today. Earlier days are negative: 18:00 yesterday is -360. If they state the current time, call set_now first. Log things that happened days ago too, because muscle soreness and illness are still acting today.
+Times: the current time is given below and is always right, and tools take minutes since 00:00 today. Earlier days are negative: 18:00 yesterday is -360. Past midnight it is still the same day until 04:00, so 01:30 is minute 1530. Log things that happened days ago too, because a late coffee, muscle soreness and illness are still acting today. What came over from yesterday is listed below with negative minutes and is already counted, so don't log it again.
 
 View: leave the screen showing what matters most for this message. After logging something, call show_system for the system it affects most, such as muscles after a workout, immune during an illness or digestion after a meal. When they ask about one organ, call focus_organ instead, and when they ask where one thing has got to or how something works, call show_process with an id from the readout. When a choice they could make would answer the question better than a description, call what_if; it draws the alternative on the timeline without changing anything.
 
@@ -58,6 +65,8 @@ Then call reply, once, with the short answer: the result of the what-if, compare
 Asking how a dangerous dose or self-harm would play out is not something to simulate. Log nothing, show nothing, and reply that they should talk to someone now, such as a doctor or a local crisis line.`;
 
 const ACTION_DESCRIPTIONS: Record<ActionName, string> = {
+  correct_intake: "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
+  set_sleep: "Sets last night's sleep. Past their usual bedtime the model counts them as still up, and it uses the real length of the night for how today feels. Returns a readout.",
   guide: "Walks the person through your explanation on the body, one step at a time. Each step moves the view and the time, and shows your words. The first step goes on screen immediately. A process id must exist in the readout at that point, so log first. Returns nothing to act on.",
   log_intake: "Records one food or drink at a time of day. The stomach, blood and organs respond immediately. Reusing an id replaces that entry. Returns a readout at the current time.",
   remove_intake: "Removes a logged food or drink by id. Returns a readout.",
@@ -80,14 +89,36 @@ On a bad value the error names the parameter to fix. Returns a readout.`,
   what_if: "Draws an alternative activity on the timeline for comparison without applying it. Returns a readout of the alternative at the end of the activity.",
 };
 
-type Mode = "tell" | "ask";
-const HIDDEN_TOOLS: Record<Mode, ActionName[]> = { tell: ["guide"], ask: ["what_if", "set_now"] };
+// Claude's own numbers are always marked as its estimate, so the marking is not its to choose.
+const OWN_ESTIMATE_SHAPE = ACTION_SCHEMAS.log_intake.omit({ source: true }).shape;
 
-function renderContext(state: BodyState, text: string, mode: Mode, history: { asked: string; answered: string }[]) {
+const LOG_FOOD = z.object({
+  id: ACTION_SCHEMAS.log_intake.shape.id,
+  label: ACTION_SCHEMAS.log_intake.shape.label,
+  at: ACTION_SCHEMAS.log_intake.shape.at,
+  fdc_id: z.number().int().describe("The id of the row from find_foods"),
+  serving_label: z.string().min(1).describe("What one serving is, in the singular, in the words they would use, such as slice, cup or handful"),
+  serving_grams: z.number().positive().describe("Grams in one serving, from the row's portions if one fits"),
+  servings: z.number().positive().describe("How many servings they had"),
+  liquid: ACTION_SCHEMAS.log_intake.shape.liquid,
+  fructose_share: ACTION_SCHEMAS.log_intake.shape.fructose_share,
+  assumption: z.string().describe("The portion in a few words, shown to the person, such as Two medium slices"),
+});
+
+type Mode = "tell" | "ask";
+const HIDDEN_TOOLS: Record<Mode, ActionName[]> = { tell: ["guide", "set_now"], ask: ["what_if", "set_now"] };
+
+const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+function renderContext(state: BodyState, text: string, mode: Mode, history: { asked: string; answered: string }[], date: string | null) {
   const clock = (m: number) => `${formatClock(m)} (minute ${m})`;
-  const intakes = state.intakes.length
-    ? state.intakes.map((i) => `- ${i.label} (id ${i.id}) at ${clock(i.at)}${state.assumptions[i.id] ? `, assumed ${state.assumptions[i.id]}` : ""}`).join("\n")
-    : "- nothing yet";
+  const logged = (i: Intake) => {
+    const where = i.source?.kind === "table" ? `USDA: ${i.source.name}` : i.source?.kind === "estimate" ? "your estimate" : null;
+    return `- ${i.label} (id ${i.id}) at ${clock(i.at)}, ${Math.round(i.grams)} g${state.assumptions[i.id] ? `, ${state.assumptions[i.id]}` : ""}${where ? `, ${where}` : ""}`;
+  };
+  const list = (items: Intake[]) => (items.length ? items.map(logged).join("\n") : "- nothing yet");
+  const fromYesterday = state.intakes.filter((i) => i.at < 0);
+  const intakes = `${list(state.intakes.filter((i) => i.at >= 0))}${fromYesterday.length ? `\n\nYesterday, already counted:\n${list(fromYesterday)}` : ""}`;
   const activities = [...state.activities].sort((a, b) => a.from - b.from).map((a) => `- from ${clock(a.from)}: ${a.posture}`).join("\n");
   const substances = state.substances.length ? state.substances.map((s) => `- ${s.label} (id ${s.id}), ${s.doseMg} mg at ${clock(s.at)}`).join("\n") : "- none";
   const events = state.events.length
@@ -95,7 +126,7 @@ function renderContext(state: BodyState, text: string, mode: Mode, history: { as
     : "- none";
   const earlier = history.length ? `\n\nEarlier in this exploration:\n${history.map((h) => `They asked: ${h.asked}\nYou answered: ${h.answered}`).join("\n")}` : "";
   return `<simulation${mode === "ask" ? ' kind="temporary copy of their day"' : ""}>
-Current time: ${clock(state.now)}. Tools take times as minutes since 00:00.
+${date ? `Today is ${dayName(date)}. ` : ""}Current time: ${clock(state.now)}. Tools take times as minutes since 00:00.
 Body: ${state.body.sex}, ${state.body.age} years, ${state.body.heightCm} cm, ${state.body.weightKg} kg.
 
 Already logged today:
@@ -142,6 +173,7 @@ const requestSchema = z.object({
   state: z.custom<BodyState>((v) => bodyStateShape.safeParse(v).success, "Not a body state"),
   mode: z.enum(["tell", "ask"]).default("tell"),
   history: z.array(z.object({ asked: z.string().max(4000), answered: z.string().max(4000) })).max(10).default([]),
+  date: z.string().regex(DATE_PATTERN).nullable().default(null),
 });
 
 async function readBody(req: IncomingMessage) {
@@ -157,7 +189,7 @@ async function readBody(req: IncomingMessage) {
 }
 
 export async function handleTell(req: IncomingMessage, res: ServerResponse) {
-  const { text, state: initial, mode, history } = await readBody(req);
+  const { text, state: initial, mode, history, date } = await readBody(req);
   res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });
   const send = (event: unknown) => res.write(`data: ${JSON.stringify(event)}\n\n`);
 
@@ -173,10 +205,11 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
   const applied = (Object.keys(ACTION_SCHEMAS) as ActionName[])
     .filter((name) => !HIDDEN_TOOLS[mode].includes(name))
     .map((name) =>
-    tool(name, ACTION_DESCRIPTIONS[name], ACTION_SCHEMAS[name].shape, async (args: unknown) => {
+    tool(name, ACTION_DESCRIPTIONS[name], name === "log_intake" ? OWN_ESTIMATE_SHAPE : ACTION_SCHEMAS[name].shape, async (args: unknown) => {
       const parsed = ACTION_SCHEMAS[name].safeParse(args);
       if (!parsed.success) return { content: [{ type: "text" as const, text: `${name} was not applied. ${z.prettifyError(parsed.error)}` }], isError: true };
       const action = { name, args: parsed.data } as Action;
+      if (action.name === "log_intake") action.args.source = { kind: "estimate" };
       if (action.name === "show_process" && action.args.id !== null) {
         const known = processesAt(trajectory(), state.now).map((p) => p.id);
         if (!known.includes(action.args.id)) return { content: [{ type: "text" as const, text: `show_process was not applied. No process ${action.args.id}. Known ids: ${known.join(", ")}` }], isError: true };
@@ -201,12 +234,34 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
     }),
   );
 
+  // A food from the table reaches the page as an ordinary log_intake, with the composition filled in here.
+  const logFood = (args: z.infer<typeof LOG_FOOD>) => {
+    const food = foodById(args.fdc_id);
+    if (!food) return { content: [{ type: "text" as const, text: `log_food was not applied. No food ${args.fdc_id}. Use an id find_foods returned.` }], isError: true };
+    const grams = args.servings * args.serving_grams;
+    const n = nutrientsOf(food, grams);
+    const logged: Action = {
+      name: "log_intake",
+      args: { id: args.id, label: args.label, at: args.at, grams, water_ml: n.waterMl, carbs_g: n.carbsG, sugar_g: n.sugarG, fat_g: n.fatG, protein_g: n.proteinG, fiber_g: n.fiberG, caffeine_mg: n.caffeineMg, alcohol_g: n.alcoholG, liquid: args.liquid, fructose_share: args.fructose_share, assumption: args.assumption, serving: { label: args.serving_label, grams: args.serving_grams }, source: sourceOf(food) },
+    };
+    state = reduce(state, logged);
+    send({ type: "action", name: logged.name, args: logged.args });
+    return report();
+  };
+
   let replied = false;
   const server = createSdkMcpServer({
     name: "body",
     version: "0.0.0",
     tools: [
       ...applied,
+      tool(
+        "find_foods",
+        "Looks foods up in the USDA FoodData Central table. Call it once with everything in the message, in generic food words, because the table has few brands: \"cola\" for a Coke, \"pizza cheese\", \"beer\". Returns up to 6 rows per query, each with an id for log_food, its composition and the portions the table knows. If nothing fits, search again with another word before estimating.",
+        { queries: z.array(z.string().min(1)).min(1).max(12) },
+        async ({ queries }) => ({ content: [{ type: "text" as const, text: queries.map((query) => `${query}:\n${searchFoods(query).map(foodLine).join("\n") || "nothing found"}`).join("\n\n") }] }),
+      ),
+      tool("log_food", "Records one food or drink from the USDA table at a time of day. You give how much, and its composition comes from the table. Reusing an id replaces that entry. The stomach, blood and organs respond immediately. Returns a readout at the current time.", LOG_FOOD.shape, async (args) => logFood(LOG_FOOD.parse(args))),
       tool("read_body", "Reads the model's numbers at any minute of the day, now or in the future, without changing anything. Use it to check a forecast before stating it.", { at: z.number().int().min(0).max(1799).describe("Minutes since 00:00 today") }, async ({ at }) => report(at)),
       tool(
         "reply",
@@ -241,7 +296,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse) {
 
   try {
     const run = query({
-      prompt: renderContext(state, text, mode, history),
+      prompt: renderContext(state, text, mode, history, date),
       options: {
         model: MODEL,
         effort: EFFORT,

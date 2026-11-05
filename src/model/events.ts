@@ -497,7 +497,8 @@ export function resolveEvent(event: BodyEvent, who: EventBody): ResolvedEvent {
 export const effectAt = (event: ResolvedEvent, channel: ChannelId, t: number) => event.effects.reduce((sum, e) => (e.channel === channel ? sum + e.amount * curveStrength(e, event.from, event.ends, t) : sum), 0);
 
 // Channels nothing pushes on share this one array, so a recompute stays cheap with no events.
-export function channelSeries(events: ResolvedEvent[], minutes: number, bouts: ActivityBout[] = []): Record<ChannelId, Float32Array> {
+// Index 0 is minute `start`, which is before 00:00 today when yesterday is being run first.
+export function channelSeries(events: ResolvedEvent[], minutes: number, bouts: ActivityBout[] = [], start = 0): Record<ChannelId, Float32Array> {
   const zero = new Float32Array(minutes);
   const series: Record<ChannelId, Float32Array> = {
     heartRate: zero,
@@ -521,21 +522,22 @@ export function channelSeries(events: ResolvedEvent[], minutes: number, bouts: A
     for (const effect of source.effects) {
       if (series[effect.channel] === zero) series[effect.channel] = new Float32Array(minutes);
       const out = series[effect.channel];
-      for (let t = 0; t < minutes; t++) out[t] += effect.amount * curveStrength(effect, source.from, source.end, t);
+      for (let i = 0; i < minutes; i++) out[i] += effect.amount * curveStrength(effect, source.from, source.end, i + start);
     }
   }
   return series;
 }
 
 // Share of the body's muscle working at each minute, weighted by how much muscle each group holds.
-export function muscleWorkSeries(events: ResolvedEvent[], minutes: number): Float32Array {
+export function muscleWorkSeries(events: ResolvedEvent[], minutes: number, start = 0): Float32Array {
   const out = new Float32Array(minutes);
   for (const event of events) {
     if (event.ends === null || !event.muscles.length) continue;
     const share = event.muscles.reduce((sum, m) => sum + m.load * MUSCLE_MASS_SHARE[m.group], 0) * event.intensity;
     const fall = MUSCLE_RECOVERY.workFallHalfLifeMin;
-    for (let t = Math.max(0, event.from); t < minutes; t++) {
-      out[t] += t <= event.ends ? share : share * decay(t - event.ends, fall);
+    for (let i = Math.max(0, event.from - start); i < minutes; i++) {
+      const t = i + start;
+      out[i] += t <= event.ends ? share : share * decay(t - event.ends, fall);
     }
   }
   return out;
