@@ -1,6 +1,6 @@
 import { CheckedWords } from "./Conversation";
 import { useEffect, useState } from "react";
-import { closeGuide, getState, goToStep, isOnChart, leaveAsk, setUi, useStore } from "../store";
+import { closeGuide, getState, goToStep, isOnChart, leaveAsk, setUi, stepMinute, useStore } from "../store";
 import { X } from "./icons";
 
 const AUTO_ADVANCE_MS = 7000;
@@ -56,9 +56,10 @@ export function Guide() {
   const isLast = guide !== null && index === guide.length - 1;
 
   useEffect(() => {
-    if (step?.at === null || step?.at === undefined || !isOnChart(step.at)) return;
-    return glideTo(step.at);
-  }, [step]);
+    const minute = guide ? stepMinute(guide, index) : null;
+    if (minute === null || !isOnChart(minute)) return;
+    return glideTo(minute);
+  }, [guide, index]);
 
   useEffect(() => {
     if (!guide) return;

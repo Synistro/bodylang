@@ -1,11 +1,13 @@
 import { useSyncExternalStore } from "react";
 import { Action, BodyState, GuideStep, reduce, traceLine } from "./agent/actions";
+import { ORGAN_HOME } from "./look";
 import { DayDoc } from "./model/day";
 import { CAFFEINE, LANES } from "./model/params";
 import type { MuscleGroup } from "./model/muscleGroups";
 import { ReplyLine } from "./model/narrate";
 import { followProcess, Process, processesAt } from "./model/processes";
 import { Scenario, simulate, Trajectory } from "./model/simulate";
+import { systemById } from "./model/systems";
 import type { Theme } from "./scene/stage";
 
 export interface Exchange {
@@ -191,7 +193,7 @@ export function dispatch(action: Action, exchangeId?: number) {
   const next = reduce(state.body, action);
   const extra: Partial<Ui> = {};
   if (action.name === "guide" && state.asking) {
-    setBodyState(viewOfStep(next, action.args.steps[0]), { asking: { ...state.asking, guide: action.args.steps, step: 0, guideOpen: true, moment: momentOfStep(action.args.steps[0]) }, stop: null, touring: false });
+    setBodyState(viewOfStep(next, action.args.steps[0]), { asking: { ...state.asking, guide: action.args.steps, step: 0, guideOpen: true, moment: momentOfStep(action.args.steps, 0) }, stop: null, touring: false });
     return;
   }
   // Moving "now" brings the view with it; a viewer who scrubbed elsewhere gets pulled back.
@@ -212,16 +214,29 @@ export function setPostureNow(posture: BodyState["activities"][number]["posture"
 
 export const isOnChart = (minute: number) => minute >= LANES.from && minute <= LANES.to;
 
-const momentOfStep = (step: GuideStep) => (step.at !== null && !isOnChart(step.at) ? step.at : null);
+// The minute a step shows. One with no time stays at the step before it, wherever you came from, and null
+// means no step so far has named a time.
+export function stepMinute(steps: readonly GuideStep[], index: number): number | null {
+  for (let i = index; i >= 0; i--) {
+    const { at } = steps[i];
+    if (at !== null) return at;
+  }
+  return null;
+}
 
+const momentOfStep = (steps: readonly GuideStep[], index: number) => {
+  const minute = stepMinute(steps, index);
+  return minute !== null && !isOnChart(minute) ? minute : null;
+};
+
+// A step on an organ gives that organ one place in the outline: the section you are in if it belongs there,
+// otherwise its own. A process would nest the row under it, and an organ in close-up draws no process line,
+// so naming one on some steps and not others would only make the row jump between them.
 function viewOfStep(body: BodyState, step: GuideStep): BodyState {
-  return {
-    ...body,
-    system: step.system ?? body.system,
-    process: step.process,
-    focus: step.organ,
-    focusMuscle: step.organ === "muscle" ? step.muscle : null,
-  };
+  const { organ } = step;
+  if (!organ) return { ...body, system: step.system ?? body.system, process: step.process, focus: null, focusMuscle: null };
+  const belongsHere = systemById(body.system).organs.includes(organ);
+  return { ...body, system: belongsHere ? body.system : ORGAN_HOME[organ], process: null, focus: organ, focusMuscle: organ === "muscle" ? step.muscle : null };
 }
 
 let nextAskId = 1;
@@ -303,7 +318,7 @@ export function goToStep(index: number) {
   const asking = state.asking;
   const step = asking?.guide?.[index];
   if (!asking || !step) return;
-  setBodyState(viewOfStep(state.body, step), { asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(step) }, stop: null, touring: false, playing: false });
+  setBodyState(viewOfStep(state.body, step), { asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(asking.guide ?? [], index) }, stop: null, touring: false, playing: false });
 }
 
 export function closeGuide() {

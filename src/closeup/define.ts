@@ -16,7 +16,7 @@ export interface Place {
 // Something a level sends across the body, drawn on the body when a step lights that level. `here` is the
 // place the close-up shows, and `through` names the skeleton's joints on the way.
 export interface Travel {
-  kind: "nerve" | "blood";
+  kind: "nerve" | "blood" | "lymph" | "food";
   from: "here" | OrganId;
   through: string[];
   to: "here" | OrganId;
@@ -29,6 +29,7 @@ interface Definition<O extends OrganId, K extends string> {
   settings: Record<K, string>; // what each level means, in words Claude reads
   fromModel: FromModel<K>;
   travels: Partial<Record<K, Travel>>;
+  about?: string; // what Sources should say about how the model's numbers became this drawing
 }
 
 type Amounts<K extends string> = Partial<Record<K, number>>;
@@ -64,7 +65,8 @@ export interface Adjustment<K extends string> {
 
 export const AS_THE_MODEL_SAYS: Adjustment<never> = { light: null, set: {}, times: {} };
 
-interface Directions<K extends string> {
+export interface Directions<K extends string> {
+  basis: string | null;
   light: readonly K[];
   set: Amounts<K>;
   compare: { this_label: string; other_label: string; times: Amounts<K> } | null;
@@ -76,7 +78,7 @@ export interface Panel<K extends string> {
 }
 
 // One drawing, or two to compare, from what a step asks for.
-export function panelsOf<K extends string>(step: Directions<K> | null): Panel<K>[] {
+export function panelsOf<K extends string>(step: Omit<Directions<K>, "basis"> | null): Panel<K>[] {
   if (!step) return [{ label: null, adjustment: AS_THE_MODEL_SAYS }];
   const { light, set, compare } = step;
   if (!compare) return [{ label: null, adjustment: { light, set, times: {} } }];

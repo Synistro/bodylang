@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { closeupSpec } from "../closeup/list";
+import { closeupOf, closeupSpec } from "../closeup/list";
 import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS } from "../model/events";
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
 import type { Cycle } from "../model/cycle";
@@ -67,14 +67,14 @@ const STEP_REACHES_DAYS = 8;
 const guideStep = z.object({
   title: shortText(6).describe("What this step is about, in a few words, such as The pancreas answers"),
   say: shortText(32).describe("One or two plain sentences, at most 32 words"),
-  system: system.nullable().describe("The body system to show, or null to stay where the last step was"),
-  process: z.string().nullable().describe("A process id from the readout to draw as a line through the body, or null"),
+  system: system.nullable().describe("The body system to show, or null to stay where the last step was. A step with an organ shows that organ's own"),
+  process: z.string().nullable().describe("A process id from the readout to draw as a line through the body, or null. A step with an organ draws no line, so leave this null there"),
   organ: organ.nullable().describe("An organ to fly into, which also shows its diagram, or null"),
   muscle: z.enum(MUSCLE_GROUPS).nullable().describe("With organ muscle, the group to go to; otherwise null"),
-  at: z.number().int().min(-STEP_REACHES_DAYS * 1440).max(STEP_REACHES_DAYS * 1440).nullable().describe("The minute to move to, so the body shows that moment, or null to stay at the same time. It counts from 00:00 today, so an earlier day is negative"),
-  closeup: closeupSpec.nullable().describe("What this step points at in the close-up beside the body, or null to leave the close-up as the model draws it"),
+  at: z.number().int().min(-STEP_REACHES_DAYS * 1440).max(STEP_REACHES_DAYS * 1440).nullable().describe("The minute to move to, so the body shows that moment, or null to stay at the same moment as the step before. It counts from 00:00 today, so an earlier day is negative"),
+  closeup: closeupSpec.nullable().describe("What this step points at in the close-up beside the body. Every step on an organ listed under close-ups needs one. Null otherwise"),
   unverified: z.array(z.string()).optional().describe("Leave this out. The app fills it in"),
-}).refine((step) => !step.closeup || step.closeup.organ === step.organ, "A close-up has to be of the organ the step flies to").refine((step) => {
+}).refine((step) => !step.closeup || step.closeup.organ === step.organ, "A close-up has to be of the organ the step flies to").refine((step) => step.closeup || !step.organ || !closeupOf(step.organ), "A step on this organ needs a closeup, with light naming what it is about").refine((step) => {
   const closeup = step.closeup;
   return !closeup || closeup.basis !== null || (Object.keys(closeup.set).length === 0 && closeup.compare === null);
 }, "Numbers in set or compare need a basis");

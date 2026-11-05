@@ -1,8 +1,13 @@
-import { memo } from "react";
-import { value } from "../../model/simulate";
+import { memo, useId } from "react";
+import type { Levels } from "../../closeup/define";
+import { beatsPerMinute, heartCloseup } from "../../closeup/heart";
+import { closeupInset, Look } from "./closeupInset";
 import { bump, part, parts, tenth } from "./draw";
-import { InsetProps, Painter, useInsetPainter } from "./loop";
-import { Plate } from "./Plate";
+import type { Frame, InsetProps } from "./loop";
+import { setLit } from "./parts/part";
+import type { PlateWords } from "./Plate";
+
+type Setting = (typeof heartCloseup.keys)[number];
 
 type CavityPart = "atrium" | "ventricle" | "valve";
 
@@ -71,10 +76,10 @@ const AORTA = "M84 40C82 24 90 14 106 13C114 12 121 14 126 19";
 const MUSCLE_HATCH = Array.from({ length: 36 }, (_, i) => `M${10 + i * 5} 20L${-30 + i * 5} 176`).join("");
 
 const ROUTES = [
-  { label: "Brain", series: "flowBrain", y: 26 },
-  { label: "Gut", series: "flowGut", y: 68 },
-  { label: "Kidneys", series: "flowKidneys", y: 110 },
-  { label: "Muscle", series: "flowMuscle", y: 152 },
+  { key: "brain", label: "Brain", y: 26 },
+  { key: "gut", label: "Gut", y: 68 },
+  { key: "kidneys", label: "Kidneys", y: 110 },
+  { key: "muscle", label: "Muscle", y: 152 },
 ] as const;
 const AORTA_END = { x: 126, y: 19 };
 const ROUTE_END_X = 182;
@@ -83,15 +88,17 @@ const BEAD_SHARE_OF_WEIGHT = 0.55;
 const BEAD_TRAVEL_PER_BEAT = 12;
 const BEAD_PERIOD = 9.1;
 
-function createHeartPainter(art: SVGSVGElement): Painter {
+function paintHeart(art: SVGSVGElement) {
   const cavities = parts<SVGPathElement>(art, "cavity");
+  const routes = parts<SVGGElement>(art, "route");
   const streams = parts<SVGPathElement>(art, "stream");
   const beads = parts<SVGPathElement>(art, "beads");
+  const shares = parts<SVGTextElement>(art, "share");
   const whole = part<SVGGElement>(art, "whole-heart");
   let beatPhase = 0;
   let offset = 0;
-  return ({ dt, still }, { trajectory, t }) => {
-    const hr = value(trajectory, "hr", t);
+  return ({ dt, still }: Frame, { levels, lit }: Look<Setting>) => {
+    const hr = beatsPerMinute(levels.rate);
     if (!still) beatPhase += dt * (hr / 60);
     const phase = still ? 0.28 : beatPhase % 1;
     // The upper part of each cavity squeezes first, the lower part just after.
@@ -99,9 +106,10 @@ function createHeartPainter(art: SVGSVGElement): Painter {
     const bottom = bump(phase, 0.28, 0.12);
     const wholeScale = Math.round((1 - WHOLE_HEART_SQUEEZE * bottom) * 1000) / 1000;
     whole.setAttribute("transform", `translate(${HEART_CENTER.x} ${HEART_CENTER.y}) scale(${wholeScale}) translate(${-HEART_CENTER.x} ${-HEART_CENTER.y})`);
+    setLit(whole, lit.rate);
     CAVITIES.forEach((cavity, i) => cavities[i].setAttribute("d", cavityPath(cavity, top, bottom)));
     // The streams leave the aorta side by side, so the split reads by weight like a river dividing.
-    const weights = ROUTES.map((route) => value(trajectory, route.series, t) * WEIGHT_PER_SHARE);
+    const weights = ROUTES.map((route) => levels[route.key] * WEIGHT_PER_SHARE);
     let stacked = AORTA_END.y - weights.reduce((a, b) => a + b, 0) / 2;
     ROUTES.forEach((route, i) => {
       const startY = stacked + weights[i] / 2;
@@ -112,6 +120,9 @@ function createHeartPainter(art: SVGSVGElement): Painter {
       streams[i].style.strokeWidth = tenth(weights[i]);
       beads[i].style.strokeWidth = tenth(weights[i] * BEAD_SHARE_OF_WEIGHT);
       beads[i].setAttribute("stroke-dashoffset", tenth(((offset % BEAD_PERIOD) + BEAD_PERIOD) % BEAD_PERIOD));
+      setLit(routes[i], lit[route.key]);
+      const share = `${route.label} ${Math.round(levels[route.key] * 100)}%`;
+      if (shares[i].textContent !== share) shares[i].textContent = share;
     });
     // Blood moves on each squeeze of the ventricles.
     if (!still) offset -= dt * (hr / 60) * BEAD_TRAVEL_PER_BEAT * (0.25 + 2.6 * bottom);
@@ -119,24 +130,26 @@ function createHeartPainter(art: SVGSVGElement): Painter {
 }
 
 const Drawing = memo(function Drawing() {
+  const clip = useId();
   return (
     <>
       <defs>
-        <clipPath id="heart-muscle">
+        <clipPath id={clip}>
           <path d={HEART_OUTLINE} />
         </clipPath>
       </defs>
       {ROUTES.map((route) => (
-        <g key={route.label}>
+        <g key={route.key} data-part="route">
           <path data-part="stream" className="heart-stream" />
           <path data-part="beads" className="heart-beads" strokeDasharray={`0.1 ${BEAD_PERIOD - 0.1}`} />
+          <text data-part="share" x="186" y={route.y + 2.5} />
         </g>
       ))}
       <path className="heart-vessel-wall heart-aorta" d={AORTA} />
       <path className="heart-vessel-bore heart-aorta" d={AORTA} />
       <g data-part="whole-heart">
         <path className="fill-paper" d={HEART_OUTLINE} />
-        <g clipPath="url(#heart-muscle)">
+        <g clipPath={`url(#${clip})`}>
           <path className="heart-muscle" d={MUSCLE_HATCH} />
         </g>
         <path className="line-ink" d={HEART_OUTLINE} />
@@ -148,18 +161,9 @@ const Drawing = memo(function Drawing() {
   );
 });
 
-export function HeartInset(props: InsetProps) {
-  const art = useInsetPainter(createHeartPainter, props);
-  const { trajectory, t } = props;
-  const label = `${Math.round(value(trajectory, "hr", t))} beats a minute`;
-  return (
-    <Plate caption={label} describe={`A section through a beating heart. ${label}. Line weight shows the share of blood going to the brain, gut, kidneys and muscle.`} artRef={art}>
-      <Drawing />
-      {ROUTES.map((route) => (
-        <text key={route.label} x="186" y={route.y + 2.5}>
-          {route.label} {Math.round(value(trajectory, route.series, t) * 100)}%
-        </text>
-      ))}
-    </Plate>
-  );
+function useHeartPlate(_props: InsetProps, levels: Levels<Setting>): PlateWords {
+  const caption = `${Math.round(beatsPerMinute(levels.rate))} beats a minute`;
+  return { caption, describe: `A section through a beating heart. ${caption}. Line weight shows the share of blood going to the brain, gut, kidneys and muscle.` };
 }
+
+export const HeartInset = closeupInset(heartCloseup, { Drawing, paint: paintHeart, usePlate: useHeartPlate });

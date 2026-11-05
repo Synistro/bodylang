@@ -87,8 +87,8 @@ Two views work together during a step. The body shows where something is and wha
 
 A step's \`at\` can reach other days for a muscle, in the order things happen: during the session, hours after, now, days later. The close-up and the muscle's colour on the body follow it, and the chart stays on today. For anything else, stay within today.
 
-A step can direct a close-up through \`closeup\`:
-- light is what the step is about. It stands out and the rest dims, and whatever it sends across the body, such as a pain signal to the brain, is drawn on the body. Use it whenever a close-up has this, because it tells them where to look.
+A step on an organ listed below must direct its close-up through \`closeup\`:
+- light is what the step is about. It stands out and the rest dims, and whatever it sends across the body, such as a pain signal to the brain, is drawn on the body. List first what the step is most about, because only the first one that travels is drawn.
 - set is for what the model can't know in this case. Leave it empty otherwise, because the model's numbers are real and yours are shown as your illustration.
 - compare adds a second drawing below the first, for a question about a difference such as trained and untrained. Its times scale the lower drawing's levels, and basis says where the difference comes from.
 Stay on one organ through the steps when they are watching one tissue change.

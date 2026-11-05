@@ -68,7 +68,11 @@ describe("what Claude can ask for", () => {
 
   it("accepts a step that only points at something, days away from the chart", () => {
     expect(parse(directed).success).toBe(true);
-    expect(parse(null).success).toBe(true);
+  });
+
+  it("wants a step on an organ with a close-up to point at something", () => {
+    expect(parse(null).success).toBe(false);
+    expect(parse(null, "kidneys").success).toBe(true);
   });
 
   it("refuses a level the drawing doesn't have", () => {
@@ -87,7 +91,7 @@ describe("what Claude can ask for", () => {
 
   it("tells Claude what each level means", () => {
     expect(closeupOf("muscle")?.keys).toContain("immune");
-    expect(closeupOf("heart")).toBeNull();
+    expect(closeupOf("kidneys")).toBeNull();
     expect(closeupGuidance()).toContain("immune (How many immune cells");
   });
 });

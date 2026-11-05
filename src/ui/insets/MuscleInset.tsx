@@ -1,21 +1,17 @@
 import { memo } from "react";
-import { Panel, panelsOf } from "../../closeup/define";
-import type { CloseupStep } from "../../closeup/list";
-import { MUSCLE_BASIS, muscleCloseup } from "../../closeup/muscle";
+import { muscleCloseup } from "../../closeup/muscle";
 import { BodyEvent, muscleStateAt, MuscleState } from "../../model/events";
 import type { MuscleGroup } from "../../model/muscleGroups";
 import { MUSCLE_RECOVERY, REFERENCE } from "../../model/params";
-import { chartOffsetHours, closeupOnScreen, useStore } from "../../store";
-import { sourced } from "../SourceTip";
-import { closeupPainter, Look } from "./closeupPainter";
-import "./closeup.css";
+import { chartOffsetHours, useStore } from "../../store";
+import { closeupInset, Look } from "./closeupInset";
 import { lerp, part, parts, smoothstep, tenth } from "./draw";
-import { Frame, InsetProps, useInsetPainter } from "./loop";
+import type { Frame, InsetProps } from "./loop";
 import { nerve } from "./parts/nerve";
 import { setLit, setShown, setWord } from "./parts/part";
 import { Tag } from "./parts/Tag";
 import { vessel } from "./parts/vessel";
-import { ART_WIDTH, Plate } from "./Plate";
+import { ART_WIDTH, PlateWords } from "./Plate";
 import { createStream, Placer } from "./stream";
 
 type Setting = (typeof muscleCloseup.keys)[number];
@@ -197,8 +193,6 @@ function paintMuscle(art: SVGSVGElement) {
   };
 }
 
-const painter = closeupPainter(muscleCloseup, paintMuscle);
-
 const RESTING: MuscleState = { work: 0, fatigue: 0, soreness: 0, repair: 0, glycogenUsed: 0 };
 
 const worked = (events: BodyEvent[], muscle: MuscleGroup | null, t: number) => events.some((event) => event.from <= t && event.muscles.some((m) => m.group === muscle));
@@ -220,29 +214,11 @@ const awayWords = (hours: number) => {
   return hours < 0 ? `${span} earlier` : `${span} later`;
 };
 
-function MusclePanel({ label, adjustment, ...props }: InsetProps & Panel<Setting>) {
-  const art = useInsetPainter(painter, { ...props, adjustment });
-  const { trajectory, t, muscle } = props;
+function useMusclePlate({ trajectory, t, muscle }: InsetProps): PlateWords {
   const away = useStore(chartOffsetHours);
   const word = fibreWord(muscle ? muscleStateAt(trajectory.muscleEvents, muscle, t) : RESTING, worked(trajectory.muscleEvents, muscle, t));
-  const caption = label ?? `Muscle fibres: ${word}`;
-  return (
-    <Plate caption={caption} note={away === null ? undefined : { text: awayWords(away) }} describe={`Muscle fibres with a blood vessel above them and a nerve below. ${caption}.`} artRef={art}>
-      <Drawing />
-    </Plate>
-  );
+  const caption = `Muscle fibres: ${word}`;
+  return { caption, note: away === null ? undefined : { text: awayWords(away) }, describe: `Muscle fibres with a blood vessel above them and a nerve below. ${caption}.` };
 }
 
-const basisOf = (step: CloseupStep | null) => (step?.basis ? `${MUSCLE_BASIS} Some levels here are Claude's illustration. Its basis: ${step.basis}` : MUSCLE_BASIS);
-
-export function MuscleInset(props: InsetProps) {
-  const step = useStore(closeupOnScreen);
-  const directed = step?.organ === "muscle" ? step : null;
-  return (
-    <div {...sourced({ kind: directed?.basis ? "claude-input" : "model", detail: basisOf(directed) })}>
-      {panelsOf<Setting>(directed).map((panel) => (
-        <MusclePanel key={panel.label ?? "only"} {...props} {...panel} />
-      ))}
-    </div>
-  );
-}
+export const MuscleInset = closeupInset(muscleCloseup, { Drawing, paint: paintMuscle, usePlate: useMusclePlate });

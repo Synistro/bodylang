@@ -6,11 +6,14 @@ export const ART_HEIGHT = 180;
 const ART_TEXT_SIZE = 7.2; // in figure units, so it keeps its proportion to the drawing
 const CAPTION_AT = { x: 8, y: 13, noteY: 21 }; // inside the rounded edge of the figure's card
 
-interface PlateProps {
+export interface PlateWords {
   caption: string; // one short label and the number, set inside the figure
   captionHint?: string; // what the plain word stands for, on hover
   note?: { text: string; tone?: "attention" }; // a quieter second line, only when the figure needs it
   describe: string; // what a screen reader gets in place of the drawing
+}
+
+interface PlateProps extends PlateWords {
   artRef: RefObject<SVGSVGElement | null>;
   children: ReactNode;
 }

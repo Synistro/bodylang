@@ -1,9 +1,11 @@
 /* Parts: anatomy keeps its own colour in every close-up, whatever view is open. */
 .plate { --fig-blood: #af3029; --fig-nerve: #ad8301; }
 :root[data-theme="dark"] .plate { --fig-blood: #d14d41; --fig-nerve: #d0a215; }
-.inset-art .part-vessel-wall, .inset-art .part-vessel-blood { vector-effect: none; stroke-linecap: butt; fill: none; }
+.inset-art .part-vessel-wall, .inset-art .part-vessel-inside { vector-effect: none; stroke-linecap: butt; fill: none; }
 .part-vessel-wall { stroke: color-mix(in srgb, var(--fig-blood) 70%, var(--bg)); }
-.part-vessel-blood { stroke: color-mix(in srgb, var(--fig-blood) 16%, var(--bg)); }
+.part-vessel-inside { stroke: color-mix(in srgb, var(--fig-blood) 16%, var(--bg)); }
+[data-tone="lymph"] .part-vessel-wall { stroke: var(--line-strong); }
+[data-tone="lymph"] .part-vessel-inside { stroke: var(--bg); }
 .part-red-cell { fill: var(--fig-blood); stroke: none; }
 .part-nerve { fill: none; stroke: var(--fig-nerve); stroke-width: 0.1rem; }
 .part-nerve-ending { fill: var(--fig-nerve); stroke: none; }
@@ -46,3 +48,7 @@
 .body-travel[data-kind="nerve"] circle { fill: var(--fig-nerve); }
 .body-travel[data-kind="blood"] path { stroke: var(--fig-blood); }
 .body-travel[data-kind="blood"] circle { fill: var(--ink); }
+.body-travel[data-kind="lymph"] path { stroke: var(--ink-3); }
+.body-travel[data-kind="lymph"] circle { fill: var(--ink-2); }
+.body-travel[data-kind="food"] path { stroke: var(--hue-digestion); }
+.body-travel[data-kind="food"] circle { fill: var(--hue-digestion); }

@@ -1,12 +1,17 @@
 import { z } from "zod";
 import type { OrganId } from "../model/simulate";
+import { brainCloseup } from "./brain";
 import type { Levels, Place, Travel } from "./define";
+import { heartCloseup } from "./heart";
 import { muscleCloseup } from "./muscle";
+import { pancreasCloseup } from "./pancreas";
+import { smallIntestineCloseup } from "./smallIntestine";
+import { stomachCloseup } from "./stomach";
 
 // The organs whose close-up a step can direct. A new one is one more entry in each of these two lists, and
 // the tool schema and Claude's instructions follow from them.
-const CLOSEUPS = [muscleCloseup] as const;
-export const closeupSpec = z.discriminatedUnion("organ", [muscleCloseup.spec]);
+const CLOSEUPS = [muscleCloseup, brainCloseup, stomachCloseup, smallIntestineCloseup, pancreasCloseup, heartCloseup] as const;
+export const closeupSpec = z.discriminatedUnion("organ", [muscleCloseup.spec, brainCloseup.spec, stomachCloseup.spec, smallIntestineCloseup.spec, pancreasCloseup.spec, heartCloseup.spec]);
 export type CloseupStep = z.infer<typeof closeupSpec>;
 
 export interface AnyCloseup {

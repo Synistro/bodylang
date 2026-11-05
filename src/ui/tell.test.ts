@@ -104,7 +104,7 @@ describe("asking never touches your day", () => {
   it("walks through a guide, each step moving the view, and leaving restores it", async () => {
     const before = getState();
     setMode("ask");
-    const steps = [step({ system: "energy", process: "insulin" }), step({ organ: "pancreas", at: 1100 })];
+    const steps = [step({ system: "energy", process: "insulin" }), step({ organ: "pancreas", at: 1100, closeup: { organ: "pancreas", light: ["insulin"], set: {}, compare: null, basis: null } })];
     vi.stubGlobal("fetch", async () => streamOf({ type: "action", name: "guide", args: { steps } }, { type: "reply", lines: [{ text: "Insulin moves sugar." }] }, { type: "done" }));
     await tell("explain insulin");
     expect(getState().body).toMatchObject({ system: "energy", process: "insulin", focus: null });

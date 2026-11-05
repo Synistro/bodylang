@@ -1,10 +1,16 @@
-import { memo } from "react";
+import { memo, useId } from "react";
+import type { Levels } from "../../closeup/define";
+import { STOMACH_FULL, stomachCloseup } from "../../closeup/stomach";
 import { REFERENCE, STOMACH } from "../../model/params";
 import { value } from "../../model/simulate";
 import { WAVE_SPEEDUP } from "../../scene/tract";
-import { bump, clamp01, easeToward, lerp, part, parts, pointAlong, polyline, tenth, sampleTube, seededRandom, smoothstep, TubeSample } from "./draw";
-import { InsetProps, Painter, useInsetPainter } from "./loop";
-import { ART_HEIGHT, ART_WIDTH, Plate } from "./Plate";
+import { closeupInset, Look } from "./closeupInset";
+import { bump, easeToward, lerp, part, parts, pointAlong, polyline, tenth, sampleTube, seededRandom, smoothstep, TubeSample } from "./draw";
+import type { Frame, InsetProps } from "./loop";
+import { setLit } from "./parts/part";
+import { ART_HEIGHT, ART_WIDTH, PlateWords } from "./Plate";
+
+type Setting = (typeof stomachCloseup.keys)[number];
 
 // The lower stomach in figure coordinates, from where the plate crops it down to the outlet.
 const LUMEN = sampleTube(
@@ -94,7 +100,7 @@ function tubeWalls(tube: TubeSample[]) {
   return `${side(1)}${side(-1)}`;
 }
 
-function createStomachPainter(art: SVGSVGElement): Painter {
+function paintStomach(art: SVGSVGElement) {
   const lumenClip = part<SVGPathElement>(art, "lumen-clip");
   const belowClip = part<SVGPathElement>(art, "below-clip");
   const hatch = part<SVGPathElement>(art, "hatch");
@@ -107,6 +113,9 @@ function createStomachPainter(art: SVGSVGElement): Painter {
   const gateFar = part<SVGEllipseElement>(art, "gate-far");
   const pieces = parts<SVGPathElement>(art, "piece");
   const leaving = parts<SVGCircleElement>(art, "leaving");
+  const contents = part<SVGGElement>(art, "contents");
+  const food = part<SVGGElement>(art, "food");
+  const outlet = parts<SVGGElement>(art, "outlet");
 
   const radii = new Float32Array(LUMEN.length);
   const leavingBorn = new Float32Array(LEAVING_POOL).fill(-Infinity);
@@ -115,19 +124,17 @@ function createStomachPainter(art: SVGSVGElement): Painter {
   let phase = 0;
   let lastRelease = -1;
   let carriedKcal = 0;
-  let fill = -1;
-  let foodShown = 0;
   let wasLiquid: boolean | null = null;
 
-  return ({ dt, clock, still }, { trajectory, t }) => {
-    const ml = value(trajectory, "stomachMl", t);
-    const kcal = value(trajectory, "stomachKcal", t);
-    const rate = value(trajectory, "emptyingKcalPerMin", t);
-
-    const fillTarget = clamp01((ml - STOMACH.restingVolumeMl) / (STOMACH.fullnessMl - STOMACH.restingVolumeMl));
-    fill = still || fill < 0 ? fillTarget : easeToward(fill, fillTarget, dt, 5);
-    const foodTarget = smoothstep(2, 80, kcal);
-    foodShown = still ? foodTarget : easeToward(foodShown, foodTarget, dt, 5);
+  return ({ dt, clock, still }: Frame, { levels, lit }: Look<Setting>) => {
+    const fill = levels.fullness;
+    const ml = lerp(STOMACH.restingVolumeMl, STOMACH.fullnessMl, fill);
+    const kcal = levels.food * STOMACH_FULL.kcal;
+    const rate = levels.emptying * STOMACH_FULL.emptyingKcalPerMin;
+    const foodShown = smoothstep(2, 80, kcal);
+    setLit(contents, lit.fullness);
+    setLit(food, lit.food);
+    for (const group of outlet) setLit(group, lit.emptying);
 
     if (!still) phase += dt / WAVE_PERIOD_SECONDS;
     const wave = still ? STILL_WAVE_PHASE : phase % 1;
@@ -263,43 +270,51 @@ function createStomachPainter(art: SVGSVGElement): Painter {
 }
 
 const Drawing = memo(function Drawing() {
+  const id = useId();
+  const clip = { lumen: `${id}lumen`, below: `${id}below`, crop: `${id}crop` };
   return (
     <>
       <defs>
-        <clipPath id="stomach-lumen">
+        <clipPath id={clip.lumen}>
           <path data-part="lumen-clip" />
         </clipPath>
-        <clipPath id="stomach-below">
+        <clipPath id={clip.below}>
           <path data-part="below-clip" />
         </clipPath>
-        <clipPath id="stomach-crop">
+        <clipPath id={clip.crop}>
           <rect x="0" y={CROP_Y} width={ART_WIDTH} height={ART_HEIGHT - CROP_Y} />
         </clipPath>
       </defs>
-      <g clipPath="url(#stomach-crop)">
+      <g clipPath={`url(#${clip.crop})`}>
         <path className="line-soft" d={tubeWalls(DUODENUM)} />
-        <g clipPath="url(#stomach-lumen)">
-          <g clipPath="url(#stomach-below)">
+        <g data-part="contents" clipPath={`url(#${clip.lumen})`}>
+          <g clipPath={`url(#${clip.below})`}>
             <path data-part="hatch" className="stomach-hatch" d={hatchLines()} />
           </g>
           <path data-part="surface" className="stomach-surface" />
         </g>
-        {SLOTS.map((slot, k) => (
-          <path key={k} data-part="piece" className="stomach-piece" d={PIECE_SHAPES[slot.shape]} />
-        ))}
+        <g data-part="food">
+          {SLOTS.map((slot, k) => (
+            <path key={k} data-part="piece" className="stomach-piece" d={PIECE_SHAPES[slot.shape]} />
+          ))}
+        </g>
         <path data-part="wall-fill" className="fill-paper" fillRule="evenodd" />
         <path data-part="fibres" className="stomach-fibres" />
         <path data-part="lining" className="stomach-lining" />
         <path data-part="wall-lines" className="line-ink" />
-        {Array.from({ length: LEAVING_POOL }, (_, k) => (
-          <circle key={k} data-part="leaving" className="stomach-leaving" r="1.6" />
-        ))}
-        <ellipse data-part="gate-near" className="stomach-gate" rx="3.6" ry="3" />
-        <ellipse data-part="gate-far" className="stomach-gate" rx="3.6" ry="3" />
+        <g data-part="outlet">
+          {Array.from({ length: LEAVING_POOL }, (_, k) => (
+            <circle key={k} data-part="leaving" className="stomach-leaving" r="1.6" />
+          ))}
+          <ellipse data-part="gate-near" className="stomach-gate" rx="3.6" ry="3" />
+          <ellipse data-part="gate-far" className="stomach-gate" rx="3.6" ry="3" />
+        </g>
       </g>
-      <path className="leader" d={`M${OUTLET.x} 62V${OUTLET.y - 11}`} />
-      <text x={OUTLET.x} y="58" textAnchor="middle">Outlet</text>
-      <text x="29" y="150">To intestine</text>
+      <g data-part="outlet">
+        <path className="leader" d={`M${OUTLET.x} 62V${OUTLET.y - 11}`} />
+        <text x={OUTLET.x} y="58" textAnchor="middle">Outlet</text>
+        <text x="29" y="150">To intestine</text>
+      </g>
     </>
   );
 });
@@ -310,12 +325,9 @@ function leavingLabel(rate: number, kcal: number, ml: number) {
   return ml > STOMACH.restingVolumeMl + REFERENCE.stomach.emptyAboveRestingMl ? "Leaving: liquid" : "Empty";
 }
 
-export function StomachInset(props: InsetProps) {
-  const art = useInsetPainter(createStomachPainter, props);
-  const label = leavingLabel(value(props.trajectory, "emptyingKcalPerMin", props.t), value(props.trajectory, "stomachKcal", props.t), value(props.trajectory, "stomachMl", props.t));
-  return (
-    <Plate caption={label} note={{ text: `Shown ${WAVE_SPEEDUP}× faster` }} describe={`A cross-section of the lower stomach and its outlet. ${label}.`} artRef={art}>
-      <Drawing />
-    </Plate>
-  );
+function useStomachPlate({ trajectory, t }: InsetProps, _levels: Levels<Setting>): PlateWords {
+  const caption = leavingLabel(value(trajectory, "emptyingKcalPerMin", t), value(trajectory, "stomachKcal", t), value(trajectory, "stomachMl", t));
+  return { caption, note: { text: `Shown ${WAVE_SPEEDUP}× faster` }, describe: `A cross-section of the lower stomach and its outlet. ${caption}.` };
 }
+
+export const StomachInset = closeupInset(stomachCloseup, { Drawing, paint: paintStomach, usePlate: useStomachPlate });
