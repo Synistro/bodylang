@@ -7,7 +7,7 @@ import type { Process, ProcessStop } from "../model/processes";
 import { Body, ledgerAt, OrganId, POSTURES, Posture, Sex, Trajectory, value } from "../model/simulate";
 import { organStates } from "../model/state";
 import { SYSTEMS, SystemId, systemById } from "../model/systems";
-import { ACCENT_SYSTEM, SYSTEM_HUE, viewSystemOf } from "../look";
+import { ACCENT_SYSTEM, organHue, viewSystemOf } from "../look";
 import { WALL, WALL_FPS, WALL_PIXEL_RATIO } from "../wall";
 import { OrganAsset, loadBody, loadOrgans } from "./assets";
 import { CameraRig, FramingSource, Insets } from "./camera";
@@ -557,8 +557,7 @@ export class Stage {
     c.store.set(palette.store);
     for (const { id } of SYSTEMS) {
       const ramp = this.ramps[id];
-      // The softer tone on either ground: an organ is a large shape, and a strong one would shout.
-      ramp.high.set(SYSTEM_HUE[id].xray);
+      ramp.high.set(organHue(id, theme));
       ramp.low.set(palette.tone1).lerp(ramp.high, RAMP.lowShare);
       ramp.calm.set(palette.tone3).lerp(ramp.high, RAMP.calmShare);
     }

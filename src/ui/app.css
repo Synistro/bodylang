@@ -34,38 +34,38 @@
 }
 /* Paper */
 :root, :root[data-theme="light"] {
-  --bg: #fffcf0;
-  --surface: #f7f4e6;
-  --ink: #100f0f;
-  --ink-2: #575653;
-  --ink-3: #878580;
-  --faint: #b7b5ac;
-  --line: rgba(16, 15, 15, 0.09);
-  --line-strong: rgba(16, 15, 15, 0.18);
-  --band: rgba(16, 15, 15, 0.12);
-  --wash: rgba(16, 15, 15, 0.04);
-  --note: #ad8301;
+  --bg: #ffffff;
+  --surface: #f1f1f1;
+  --ink: #17181a;
+  --ink-2: #5c5b56;
+  --ink-3: #6f6e68;
+  --faint: #a3a29c;
+  --line: rgba(23, 24, 26, 0.1);
+  --line-strong: rgba(23, 24, 26, 0.2);
+  --band: rgba(23, 24, 26, 0.12);
+  --wash: rgba(23, 24, 26, 0.06);
+  --note: #8f6c00;
   --concern: #af3029;
-  --skullet-base: rgba(16, 15, 15, 0.07);
+  --skullet-base: rgba(23, 24, 26, 0.07);
   --skullet-highlight: rgba(255, 255, 255, 0.6);
   --skullet-radius: 0.4rem;
 }
 /* Black */
 :root[data-theme="dark"] {
-  --bg: #100f0f;
-  --surface: #1c1b1a;
-  --ink: #cecdc3;
-  --ink-2: #9f9d96;
-  --ink-3: #878580;
-  --faint: #575653;
-  --line: rgba(206, 205, 195, 0.09);
-  --line-strong: rgba(206, 205, 195, 0.18);
-  --band: rgba(206, 205, 195, 0.16);
-  --wash: rgba(206, 205, 195, 0.05);
+  --bg: #110f0e;
+  --surface: #1d1b1a;
+  --ink: #d0cec6;
+  --ink-2: #a19e97;
+  --ink-3: #8a8782;
+  --faint: #595652;
+  --line: rgba(208, 206, 198, 0.09);
+  --line-strong: rgba(208, 206, 198, 0.18);
+  --band: rgba(208, 206, 198, 0.16);
+  --wash: rgba(208, 206, 198, 0.05);
   --note: #d0a215;
   --concern: #d14d41;
-  --skullet-base: rgba(206, 205, 195, 0.08);
-  --skullet-highlight: rgba(206, 205, 195, 0.1);
+  --skullet-base: rgba(208, 206, 198, 0.08);
+  --skullet-highlight: rgba(208, 206, 198, 0.1);
   color-scheme: dark;
 }
 :root[data-wall] { --safe-top: 33px; }
@@ -224,6 +224,8 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 
 .composer { flex: none; display: grid; gap: 0.5rem; padding: 0.8rem 0.7rem 0.6rem 1rem; border: 1px solid var(--line-strong); border-radius: 0.8rem; background: var(--surface); pointer-events: auto; transition: border-color 120ms; }
 .composer[data-mode="ask"] { border-style: dashed; }
+/* On white the panel's grey is edge enough. Focus and the dashed Ask edge still show. */
+:root[data-theme="light"] .composer:not(:focus-within, [data-mode="ask"]) { border-color: transparent; }
 .composer-foot { display: flex; align-items: center; justify-content: space-between; min-height: 1.8rem; }
 .mode-switch { display: flex; gap: 1rem; font-size: var(--t-small); }
 .mode-switch button { position: relative; color: var(--ink-3); transition: color 120ms; }

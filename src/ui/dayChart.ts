@@ -97,7 +97,7 @@ export class DayChart {
   private momentHits: MomentHit[] = [];
   private pressedMoment: { moment: Moment; x: number } | null = null;
   private theme: LookTheme = "xray";
-  private colors = { ink: "#cecdc3", ink2: "#9f9d96", ink3: "#878580", line: "rgba(206,205,195,.09)", surface: "#1c1b1a" };
+  private colors = { ink: "#d0cec6", ink2: "#a19e97", ink3: "#8a8782", line: "rgba(208,206,198,.09)", surface: "#1d1b1a" };
   private colorsStale = true;
   private dirty = true;
   private settled = false;

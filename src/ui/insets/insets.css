@@ -34,7 +34,7 @@
   --fig-ochre: #bc5215; /* food and fuel */
   margin: 0;
 }
-:root[data-theme="dark"] .inset { --fig-ochre: #da702c; }
+:root[data-theme="dark"] .inset { --fig-ochre: #d97540; }
 
 .inset-art { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 1rem; background: var(--surface); }
 .inset-art path, .inset-art circle, .inset-art ellipse { vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
