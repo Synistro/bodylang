@@ -98,8 +98,14 @@ function checkState(state: ExtensionState, who: string, problem: (text: string) 
     if (!Number.isFinite(stop.flow) || stop.flow < 0 || stop.flow > 1)
       problem(`${name}: flow is ${stop.flow}, and must be 0 to 1`);
     if (!stop.label.trim()) problem(`${name}: the label is empty`);
+    if (stop.label.trim().split(/\s+/).length > 2)
+      problem(`${name}: the label "${stop.label}" must be one or two words`);
     if (/NaN|undefined|Infinity/.test(`${stop.reading} ${stop.say} ${stop.label} ${headline}`))
       problem(`${name}: its words contain a broken number: "${stop.reading} ${stop.say}"`);
+    if (stop.reading.includes("%"))
+      problem(
+        `${name}: its reading "${stop.reading}" is a percentage. A 0 to 1 scale reads as levelWord from ./api, and a measurement as a number with its unit`,
+      );
     if (stop.say.trim().split(/\s+/).length > SAY_WORDS_MOST) problem(`${name}: say is over ${SAY_WORDS_MOST} words`);
     if (stop.organ !== null && !ORGANS.includes(stop.organ)) problem(`${name}: there is no organ "${stop.organ}"`);
     for (const route of stop.routes)

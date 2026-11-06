@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { processOrigin } from "../origin";
 import { processesAt } from "../processes/processes";
 import { simulate } from "../engine/simulate";
-import type { ExtensionState, ProcessExtension } from "./api";
+import { type ExtensionState, levelWord, type ProcessExtension } from "./api";
 import { checkExtension } from "./check";
 import { EXTENSIONS } from "./index";
 
@@ -25,7 +25,7 @@ const sample: ProcessExtension = {
           id: "source",
           organ: "brain",
           label: "Source",
-          reading: `${Math.round(level * 100)}%`,
+          reading: levelWord(level),
           share: level,
           flow: level,
           say: "It starts here.",
@@ -102,6 +102,22 @@ describe("the contract for a new process", () => {
       stops: good(minute).stops.map((stop) => ({ ...stop, reading: `${NaN} ng/dL` })),
     }));
     expect(checkExtension(nan, "sample").join()).toMatch(/broken number/);
+  });
+
+  it("wants a scale in words, with no percentage", () => {
+    const percent = withAt((minute) => {
+      const state = good(minute);
+      return { ...state, stops: state.stops.map((stop) => ({ ...stop, reading: "9%" })) };
+    });
+    expect(checkExtension(percent, "sample").join()).toMatch(/is a percentage.*levelWord/);
+  });
+
+  it("wants a label of one or two words, which is all a chart row has room for", () => {
+    const long = withAt((minute) => {
+      const state = good(minute);
+      return { ...state, stops: state.stops.map((stop) => ({ ...stop, label: "Far too long a label" })) };
+    });
+    expect(checkExtension(long, "sample").join()).toMatch(/one or two words/);
   });
 
   it("rejects a route or organ that doesn't exist", () => {

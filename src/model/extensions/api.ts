@@ -3,6 +3,9 @@ import type { RouteId, SystemId, OrganId } from "../ids";
 import type { Body } from "../scenario";
 import type { SeriesName } from "../engine/trajectory";
 
+// The word the app gives any 0 to 1 scale: Quiet, Mild, Moderate or Strong.
+export { levelWord } from "../words";
+
 // The contract for adding a process the model doesn't have. One file in this folder exports `extension`,
 // and the app finds it, lists it, and draws it through the body like any other process.
 //
@@ -30,7 +33,7 @@ export interface ExtensionStop {
   id: string;
   organ: OrganId | null; // the organ it sits on, or null to sit where its route ends
   label: string; // one or two words
-  reading: string; // the number at this stop, with its unit, or a word. An empty string shows nothing
+  reading: string; // the number at this stop, with its unit, or a word. A 0 to 1 scale reads as levelWord, never a percentage. An empty string shows nothing
   share: number; // 0 to 1: how much of the thing is here, or how strongly this stop is working. Drawn across the day
   flow: number; // 0 to 1: how fast it is moving into this stop. Sets how thick the line is
   say: string; // one or two plain sentences on what happens here now, at most 25 words

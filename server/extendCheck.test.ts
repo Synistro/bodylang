@@ -39,6 +39,10 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
     expect(check("const stops = [1, 2]; const i = 0; const next = stops[i + 1]; const named = stops[0];")).toBe("");
   });
 
+  it("lets a process use the app's word for a scale", () => {
+    expect(check('import { levelWord } from "./api"; const word = levelWord(0.5);')).toBe("");
+  });
+
   it("says which line", () => {
     expect(check('const a = 1;\nfetch("x");')).toMatch(/line 2/);
   });

@@ -1,4 +1,4 @@
-import type { BodyView, ExtensionState, ExtensionStop, ProcessExtension } from "./api";
+import { type BodyView, type ExtensionState, type ExtensionStop, levelWord, type ProcessExtension } from "./api";
 
 // Every tunable number. Typical levels and timing come from the studies in `source`; the exact
 // curve shape, and treating "awake at night" as "lights on", are Claude's estimates.
@@ -42,7 +42,8 @@ function level(view: BodyView, minute: number) {
 }
 
 const clockTime = (minute: number) => {
-  const total = Math.floor(hourOf(minute) * 60);
+  // From the minute itself, because hourOf(182) * 60 comes to 181.99999 and would read 03:01.
+  const total = Math.floor(((minute % 1440) + 1440) % 1440);
   const hh = Math.floor(total / 60);
   const mm = total % 60;
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
@@ -107,7 +108,7 @@ function at(view: BodyView, minute: number): ExtensionState {
     {
       id: "blood",
       organ: "heart",
-      label: "Melatonin in blood",
+      label: "In blood",
       reading: pgText,
       share,
       flow: signal,
@@ -122,11 +123,13 @@ function at(view: BodyView, minute: number): ExtensionState {
       id: "sleep",
       organ: "brain",
       label: "Sleepiness",
-      reading: asleep ? "Asleep" : `${Math.round(drowsy * 100)}%`,
+      reading: asleep ? "Asleep" : levelWord(drowsy),
       share: asleep ? share : drowsy,
       flow: share,
       say: asleep
-        ? `Melatonin tells the body clock it is night and helps cool you, now ${temp.toFixed(1)} °C. The model's temperature has its own rhythm.`
+        ? active
+          ? `Melatonin tells the body clock it is night and helps cool you, now ${temp.toFixed(1)} °C. The model's temperature has its own rhythm.`
+          : "You are asleep while the body clock says it is day, so melatonin stays low."
         : active
           ? "Melatonin quiets the clock's wake signal, and you may feel sleepier. The model's sleepiness comes from time awake."
           : "With little melatonin about, the body clock keeps pushing you to stay awake.",

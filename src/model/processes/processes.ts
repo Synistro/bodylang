@@ -41,7 +41,7 @@ const broken = new Set<string>();
 
 // A process Claude added runs through its tests before it gets here. One that still fails on a real day
 // goes quiet rather than taking the page down, and says so once.
-function extensionLines(tr: Trajectory, t: number): Process[] {
+export function extensionLines(tr: Trajectory, t: number): Process[] {
   const view = viewOf(tr);
   return EXTENSIONS.flatMap((extension) => {
     try {

@@ -1,14 +1,14 @@
 import { assess, readingCurve } from "./assess/assess";
 import { hasSomethingToSay, Reading } from "./assess/types";
 import { normalAgainAt } from "./assess/muscles";
-import { ReadingId, OrganId, processIds } from "./ids";
+import { ReadingId, OrganId, parseProcessId, processIds } from "./ids";
 import { eventLevelAt } from "./events/curves";
 import { muscleStateAt } from "./events/muscles";
 import { MuscleState, ResolvedEvent } from "./events/types";
 import { MuscleGroup } from "./muscleGroups";
 import { DAY, LANES, MUSCLE_RECOVERY, REFERENCE } from "./params";
 import { mealGroups, mealProcessId, Process } from "./processes/line";
-import { processesAt } from "./processes/processes";
+import { extensionLines, processesAt } from "./processes/processes";
 import { alcoholLedgerAt, caffeineLedgerAt, ledgerAt, Trajectory } from "./engine/trajectory";
 import { foodKcalOf, Intake } from "./scenario";
 import { formatClock, levelWord, whenWords } from "./words";
@@ -455,6 +455,9 @@ export function processLanes(tr: Trajectory, now: number, processId: string, rea
       if (shares[s]) shares[s][i] = stop.share;
     });
   }
+  // An added process's share says how strongly a stop works, which means nothing as a percentage,
+  // so its lane says what its stop says at that minute.
+  const added = parseProcessId(processId).kind === "ext";
   const peaks = shares.map((share) => share.reduce((most, v) => Math.max(most, v), 0));
   const kept = new Set(process.stops.map((_, s) => s).filter((s) => peaks[s] >= LANES.stopWorthALaneFrom));
   return process.stops.flatMap((stop, s) => {
@@ -474,7 +477,9 @@ export function processLanes(tr: Trajectory, now: number, processId: string, rea
         values: fromLevels(at),
         band: null,
         ...NOT_COMPARED,
-        read: (minute: number) => percent(at(minute)),
+        read: added
+          ? (minute: number) => extensionLines(tr, minute).find((p) => p.id === processId)?.stops[s]?.reading ?? ""
+          : (minute: number) => percent(at(minute)),
         mark: clears === null ? null : ended("Clear", clears),
         beyond: null,
         target: { kind: "stop" as const, number: stop.number },

@@ -14,6 +14,7 @@ import {
   workedMuscleLanes,
 } from "./lanes";
 import { simulate } from "./engine/simulate";
+import { processesAt } from "./processes/processes";
 import { Intake, Scenario } from "./scenario";
 import { hm, NO_NUTRIENTS } from "./testKit";
 
@@ -219,6 +220,19 @@ describe("the day chart's lanes", () => {
     expect(insulin[0].read(hm(17))).toMatch(/mmol\/L$/);
     const legs = processLanes(day([], [LEG_DAY]), hm(14), "event:legs");
     expect(legs.map((l) => l.id).sort()).toEqual(["glutes", "quads"]);
+  });
+
+  it("reads an added process as its stops read at that exact minute, and a food as how much is where", () => {
+    const tr = day([COFFEE, PIZZA]);
+    const lanes = processLanes(tr, hm(12), "ext:thyroid");
+    expect(lanes.length).toBeGreaterThan(1);
+    // Before the chart begins, and between its samples.
+    for (const minute of [hm(3, 2), hm(12, 2)]) {
+      const line = processesAt(tr, minute).find((p) => p.id === "ext:thyroid");
+      for (const lane of lanes)
+        expect(lane.read(minute)).toBe(line?.stops.find((stop) => stop.label === lane.label)?.reading);
+    }
+    expect(processLanes(tr, hm(17), "intake:pizza")[0].read(hm(13))).toMatch(/%$/);
   });
 
   it("says a stop cleared when it did, however long ago that was", () => {
