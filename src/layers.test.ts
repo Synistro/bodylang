@@ -6,13 +6,13 @@ import { describe, expect, it } from "vitest";
 const MAY_IMPORT: Record<string, readonly string[]> = {
   model: [],
   look: ["model"],
-  agent: ["closeup", "look", "model"],
-  closeup: ["agent", "model"],
-  server: ["agent", "closeup", "model"],
+  actions: ["closeup", "look", "model"],
+  closeup: ["actions", "model"],
+  server: ["actions", "closeup", "model"],
   scene: ["look", "model", "wall"],
   wall: [],
-  store: ["agent", "look", "model", "scene"],
-  ui: ["agent", "closeup", "look", "model", "scene", "store", "wall"],
+  store: ["actions", "look", "model", "scene"],
+  ui: ["actions", "closeup", "look", "model", "scene", "store", "wall"],
   main: ["ui"],
 };
 

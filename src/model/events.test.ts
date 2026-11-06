@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { ACTION_SCHEMAS, BodyState, reduce, traceLine } from "../agent/actions";
+import { ACTION_SCHEMAS, BodyState, reduce, traceLine } from "../actions/actions";
 import { assess, Assessment, heartVerdict } from "./assess";
 import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, resolveEvent } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";

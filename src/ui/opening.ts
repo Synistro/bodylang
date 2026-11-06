@@ -1,4 +1,4 @@
-import { Action } from "../agent/actions";
+import { Action } from "../actions/actions";
 import { openingReply } from "../model/narrate";
 import { beginExchange, dispatch, getState, setUi, updateExchange } from "../store";
 

@@ -1,7 +1,7 @@
 import { createSdkMcpServer, query, tool } from "@anthropic-ai/claude-agent-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
-import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/agent/actions";
+import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/actions/actions";
 import { simulate } from "../src/model/simulate";
 import { Intake } from "../src/model/scenario";
 import { cleanEnvironment } from "./claudeEnv";

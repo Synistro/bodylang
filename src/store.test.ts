@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { reduce } from "./agent/actions";
+import { reduce } from "./actions/actions";
 import { firstDay } from "./model/day";
 import { dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
 

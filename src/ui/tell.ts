@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ACTION_SCHEMAS, Action, ActionName } from "../agent/actions";
+import { ACTION_SCHEMAS, Action, ActionName } from "../actions/actions";
 import { stayAwake } from "../model/day";
 import { beginExchange, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rememberAsked, setAskCancel, updateExchange } from "../store";
 
