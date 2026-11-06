@@ -5,7 +5,7 @@ import { hasSomethingToSay } from "./assess/types";
 import { crampLevel, Cycle, cycleDay, cyclePhase, daysIntoCycle, hormonesAt, liningShare, minutesToNextPeriod } from "./cycle";
 import { carryOver, firstDay } from "./day";
 import { CYCLE, DAY } from "./params";
-import { processesAt } from "./processes";
+import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 
 const woman = { sex: "female", age: 30, heightCm: 168, weightKg: 62 } as const;

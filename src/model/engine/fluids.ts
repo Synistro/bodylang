@@ -1,5 +1,6 @@
 import { ALCOHOL, HEART, KIDNEY, STOMACH } from "../params";
-import { Absorbed, Emptying, gutKcalOf } from "./gut";
+import { Absorbed, Emptying } from "./gut";
+import { gutKcalOf } from "./tracks";
 import type { BodyConstants, Minute, Pools } from "./pools";
 
 export function stepAlcoholAndFluids(pools: Pools, absorbed: Absorbed, { posture, asleep, i }: Minute, { channels, alcoholVolumeL, alcoholEliminationGPerMin }: BodyConstants) {

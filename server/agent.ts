@@ -13,7 +13,7 @@ import { traceTrack } from "./track";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/readout";
-import { processesAt } from "../src/model/processes";
+import { processesAt } from "../src/model/processes/processes";
 import { formatClock } from "../src/model/words";
 import { whereabouts } from "../src/model/whereabouts";
 import { ORGANS } from "../src/model/ids";

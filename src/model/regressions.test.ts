@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Action, BodyState, reduce } from "../actions/actions";
 import { assess } from "./assess/assess";
-import { followProcess, processesAt } from "./processes";
+import { followProcess, processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 import { anthropometrics } from "./engine/anthropometrics";
 import { Intake, postureAt, Scenario } from "./scenario";

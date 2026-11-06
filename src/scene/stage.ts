@@ -3,7 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { curveStrength, EventTrack, illnessSites, MuscleState, muscleStateAt, ResolvedEvent, TrackFrom } from "../model/events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import { LIVER, MUSCLE_RECOVERY, REFERENCE, STOMACH } from "../model/params";
-import type { Process, ProcessStop } from "../model/processes";
+import type { Process, ProcessStop } from "../model/processes/line";
 import { Body, POSTURES, Posture, Sex } from "../model/scenario";
 import { ledgerAt, Trajectory, value } from "../model/engine/trajectory";
 import { OrganId, SystemId } from "../model/ids";

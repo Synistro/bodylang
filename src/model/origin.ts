@@ -3,7 +3,7 @@ import type { ReadingId } from "./ids";
 import { ChannelId, curveStrength } from "./events";
 import { EXTENSIONS } from "./extensions";
 import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
-import { mealGroups, mealProcessId, Process } from "./processes";
+import { mealGroups, mealProcessId, Process } from "./processes/line";
 import { caffeineLedgerAt, ledgerAt, Trajectory } from "./engine/trajectory";
 import { foodKcalOf, Intake } from "./scenario";
 

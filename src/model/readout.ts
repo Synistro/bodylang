@@ -1,7 +1,7 @@
 import { CAFFEINE } from "./params";
 import { muscleStateAt } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
-import { processesAt } from "./processes";
+import { processesAt } from "./processes/processes";
 import { Trajectory, value } from "./engine/trajectory";
 import { threadsAt } from "./threads";
 import type { OrganId } from "./ids";

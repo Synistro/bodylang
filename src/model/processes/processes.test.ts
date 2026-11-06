@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { readout } from "./readout";
-import { Process, processesAt, processesFor, ProcessStop } from "./processes";
-import { simulate } from "./engine/simulate";
-import { caffeineLedgerAt, ledgerAt, value } from "./engine/trajectory";
-import { CustomSubstance, Intake, Scenario } from "./scenario";
-import { hm, NO_NUTRIENTS } from "./testKit";
+import { readout } from "../readout";
+import { Process, ProcessStop } from "./line";
+import { processesAt, processesFor } from "./processes";
+import { simulate } from "../engine/simulate";
+import { caffeineLedgerAt, ledgerAt, value } from "../engine/trajectory";
+import { CustomSubstance, Intake, Scenario } from "../scenario";
+import { hm, NO_NUTRIENTS } from "../testKit";
 
 
 const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };

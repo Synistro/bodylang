@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { assess } from "./assess/assess";
 import { foodOrigin, processOrigin, readingOrigin } from "./origin";
-import { processesAt } from "./processes";
+import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 import { Intake } from "./scenario";
 import type { BodyEvent } from "./events";

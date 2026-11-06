@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Origin, processOrigin } from "../model/origin";
-import { ProcessStop, StopState } from "../model/processes";
+import { ProcessStop, StopState } from "../model/processes/line";
 import { currentProcesses, getState, setUi, useStore } from "../store";
 import { organHover, scrollBehavior, useMinute } from "./hooks";
 import { removeAddedProcess } from "./ProcessBuild";

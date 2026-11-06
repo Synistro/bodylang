@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GUT, HEART } from "../params";
-import { processesAt } from "../processes";
+import { processesAt } from "../processes/processes";
 import { foodKcalOf, POSTURES } from "../scenario";
 import { hm, NO_NUTRIENTS } from "../testKit";
 import { SCENARIOS } from "../testScenarios";

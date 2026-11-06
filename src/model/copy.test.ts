@@ -5,7 +5,7 @@ import { ReadingId } from "./ids";
 import { maxHeartRate } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./readout";
-import { processesAt } from "./processes";
+import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 import { Trajectory, value } from "./engine/trajectory";
 import { formatClock, whenWords } from "./words";

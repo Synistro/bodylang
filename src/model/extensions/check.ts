@@ -1,5 +1,5 @@
 import { DAY, PROCESS } from "../params";
-import { viewOf } from "../processes";
+import { viewOf } from "../processes/processes";
 import { ORGANS, ROUTE_IDS } from "../ids";
 import { simulate } from "../engine/simulate";
 import { Body, Scenario } from "../scenario";

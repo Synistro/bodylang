@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { Process, ProcessStop, processesAt } from "../model/processes";
+import { Process, ProcessStop } from "../model/processes/line";
+import { processesAt } from "../model/processes/processes";
 import { simulate } from "../model/engine/simulate";
 import { Scenario, Sex } from "../model/scenario";
 import type { OrganMeta } from "./assets";

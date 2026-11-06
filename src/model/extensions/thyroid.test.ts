@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { viewOf } from "../processes";
+import { viewOf } from "../processes/processes";
 import { simulate } from "../engine/simulate";
 import { type Scenario } from "../scenario";
 import { checkExtension } from "./check";

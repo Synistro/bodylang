@@ -3,7 +3,7 @@ import { activityBouts, ChannelId, channelSeries, maxHeartRate, muscleWorkSeries
 import { ALCOHOL, CAFFEINE, CYCLE, DAY, FASTING, FEEL, GLUCOSE, INSULIN, KIDNEY, LIPID, LIVER, MUSCLE, STOMACH } from "../params";
 import { ActivitySpan, Body, Posture, postureAt, Scenario } from "../scenario";
 import { alcoholVolumeL, Anthropometrics, anthropometrics } from "./anthropometrics";
-import { heldInGutKcal, newIntakeTrack, newSubstanceTrack, IntakeTrack, SubstanceTrack } from "./gut";
+import { heldInGutKcal, newIntakeTrack, newSubstanceTrack, IntakeTrack, SubstanceTrack } from "./tracks";
 
 // What stays the same for one body across one run.
 export interface BodyConstants {

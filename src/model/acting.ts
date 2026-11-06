@@ -1,4 +1,5 @@
-import { Process, processesAt, ProcessStop } from "./processes";
+import { Process, ProcessStop } from "./processes/line";
+import { processesAt } from "./processes/processes";
 import type { Trajectory } from "./engine/trajectory";
 import type { OrganId } from "./ids";
 

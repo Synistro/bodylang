@@ -13,7 +13,7 @@ import { anthropometrics } from "./engine/anthropometrics";
 import { Intake, postureAt, Scenario } from "./scenario";
 import { Trajectory, value } from "./engine/trajectory";
 import { CAFFEINE, ENERGY, FEEL, KIDNEY, MUSCLE_RECOVERY, REFERENCE, TRAINING } from "./params";
-import { processesAt, processesFor } from "./processes";
+import { processesAt, processesFor } from "./processes/processes";
 import { SYSTEMS, systemById } from "./systems";
 import { threadsAt } from "./threads";
 import { hm, NO_NUTRIENTS } from "./testKit";

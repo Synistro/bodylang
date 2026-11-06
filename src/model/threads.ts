@@ -1,6 +1,7 @@
 import { eventLevelAt, muscleStateFromEvent, ResolvedEvent } from "./events";
 import { PROCESS, REFERENCE } from "./params";
-import { hasFoodLine, mealGroups, mealProcessId, mealTitle, Process, processesAt, ProcessStop } from "./processes";
+import { hasFoodLine, mealGroups, mealProcessId, mealTitle, Process, ProcessStop } from "./processes/line";
+import { processesAt } from "./processes/processes";
 import { foodKcalOf } from "./scenario";
 import { Trajectory, value } from "./engine/trajectory";
 import { formatClock, inSentence } from "./words";

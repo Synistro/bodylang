@@ -3,7 +3,7 @@ import { Lane, muscleStateLanes, MuscleSubject, processLanes, readingLanes, syst
 import { LANES, REFERENCE } from "../model/params";
 import { assess } from "../model/assess/assess";
 import { foodOrigin, modelOrigin, Origin, processOrigin, readingOrigin, SENTENCE_ORIGIN } from "../model/origin";
-import { processesAt } from "../model/processes";
+import { processesAt } from "../model/processes/processes";
 import type { Trajectory } from "../model/engine/trajectory";
 import { formatClock } from "../model/words";
 import type { Stage } from "../scene/stage";

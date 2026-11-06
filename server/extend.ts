@@ -88,7 +88,7 @@ export async function quickChecks(worktree: string, id: string, signal: AbortSig
   if (reasons.length) return reasons.join("\n");
   const types = await shell("node_modules/.bin/tsc", ["--noEmit", "-p", "."], worktree, CHECK_TIMEOUT_MS, signal);
   if (types) return `Type check failed:\n${types}`;
-  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes.test.ts", "src/model/events.test.ts"], worktree, CHECK_TIMEOUT_MS, signal);
+  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes/processes.test.ts", "src/model/events.test.ts"], worktree, CHECK_TIMEOUT_MS, signal);
   return tests ? `Tests failed:\n${tests}` : null;
 }
 
@@ -109,7 +109,7 @@ Write two files, with write_process and write_test:
 
 Also read these, for what you can use:
 - SERIES in src/model/engine/trajectory.ts: every curve \`view.value\` can read, such as "temperature", "hoursAwake", "stressLevel", "inflammation", "glucose".
-- ROUTE_IDS in src/model/ids.ts and an example such as alertnessProcess in src/model/processes.ts: the vessels a line can follow, and how a good process reads. "to_neck" ends at the throat, for something in the neck.
+- ROUTE_IDS in src/model/ids.ts and an example such as alertnessProcess in src/model/processes/body.ts: the vessels a line can follow, and how a good process reads. "to_neck" ends at the throat, for something in the neck.
 - src/model/extensions/contract.test.ts: a small working sample, and everything the contract checks.
 
 How it should be:

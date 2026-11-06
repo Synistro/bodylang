@@ -1,6 +1,7 @@
 import { COUPLING, ENERGY, FASTING, GLUCOSE, INSULIN, KCAL_PER_G, LIPID, LIVER, MUSCLE, PROTEIN, STOMACH, TRAINING } from "../params";
 import { postureKcalPerHour } from "./anthropometrics";
-import { Absorbed, heldInGutKcal } from "./gut";
+import { Absorbed } from "./gut";
+import { heldInGutKcal } from "./tracks";
 import type { BodyConstants, Minute, Pools } from "./pools";
 
 const { carb: CARB, protein: PROTEIN_KCAL, fat: FAT } = KCAL_PER_G;
