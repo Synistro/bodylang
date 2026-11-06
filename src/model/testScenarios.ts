@@ -60,6 +60,9 @@ const threeMeals = [breakfast, lunch, dinner];
 // A wide set of days, which the word sweeps and the golden test both run through.
 export const SCENARIOS: Record<string, Scenario> = {
   "nothing logged": day([]),
+  "after ovulation": { ...day(threeMeals), body: woman, cycle: { start: -20 * 1440, lengthDays: 28, periodDays: 5 } },
+  "a period starting": { ...day(threeMeals), body: woman, cycle: { start: -1440, lengthDays: 31, periodDays: 5 } },
+  "far too much coffee": day([1, 2, 3].map((n) => food(`coffee_${n}`, `Coffee ${n}`, hm(8 + n), { grams: 250, waterMl: 240, caffeineMg: 300, liquid: true }))),
   "the opening day": day([coffee, sugarBar, pizza]),
   "three meals": day(threeMeals),
   "two apples": day([apples]),

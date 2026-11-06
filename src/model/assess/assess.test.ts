@@ -377,6 +377,12 @@ describe("the reading table", () => {
   it("covers every reading a system asks for", () => {
     for (const system of SYSTEMS) for (const id of system.readings) expect(ALL_READINGS).toContain(id);
   });
+
+  it("puts every reading on a page, because one on no system is computed and never seen", () => {
+    // Receptors are only ever drawn on the alertness line's chart.
+    const onAPage = new Set<string>(["receptors", ...SYSTEMS.flatMap((system) => [...system.readings, ...system.more])]);
+    expect(ALL_READINGS.filter((id) => !onAPage.has(id))).toEqual([]);
+  });
 });
 
 describe("every minute of every kind of day", () => {

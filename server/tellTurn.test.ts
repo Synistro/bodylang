@@ -3,7 +3,8 @@ import { Action, ACTION_SCHEMAS } from "../src/actions/schemas";
 import { BodyState, reduce } from "../src/actions/reduce";
 import type { TellEvent } from "../src/wire";
 import { searchFoods } from "./foods";
-import { actionToolsFor, planFor, systemPromptFor, TellPlan } from "./tellPrompt";
+import { PRESETS } from "../src/model/events/types";
+import { ACTION_DESCRIPTIONS, actionToolsFor, planFor, systemPromptFor, TellPlan } from "./tellPrompt";
 import { startTurn, TellInput } from "./tellTurn";
 
 // A turn with no Claude in it: each test calls the tools the way Claude would, in the order it would.
@@ -108,6 +109,10 @@ describe("what gets checked in a reply", () => {
 });
 
 describe("what each mode can reach", () => {
+  it("tells Claude about every event preset, which no compiler can check in a sentence", () => {
+    expect(PRESETS.filter((preset) => !ACTION_DESCRIPTIONS.log_event.includes(`- ${preset}:`))).toEqual([]);
+  });
+
   const OWN_TOOLS = ["find_foods", "log_food", "log_dish", "add_process", "read_body", "reply"];
   const everyTool = [...Object.keys(ACTION_SCHEMAS), ...OWN_TOOLS];
   const namedIn = (prompt: string) => everyTool.filter((name) => new RegExp(`\\b${name}\\b`).test(prompt));

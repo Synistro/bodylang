@@ -7,7 +7,7 @@ import { SCENARIOS } from "../testScenarios";
 import { maxHeartRate } from "../events/muscles";
 import { heartFromCaffeine, heartFromDigestion } from "./heart";
 import { simulate } from "./simulate";
-import { LEDGER_KEYS, ledgerAt, value } from "./trajectory";
+import { LEDGER_KEYS, ledgerAt, SERIES, value } from "./trajectory";
 
 const EVERY_DAY = Object.entries(SCENARIOS).map(([name, scenario]) => [name, simulate(scenario)] as const);
 const SAMPLES = Array.from({ length: 60 }, (_, i) => i * 30);
@@ -57,5 +57,12 @@ describe("who gets the credit for sugar leaving the blood", () => {
     const process = line({ body, activities: [...activities], intakes: [rice], substances: [], events: [] }, hm(13));
     expect(process?.active).toBe(true);
     expect(process?.stops.find((stop) => stop.id === "muscle")?.say).toMatch(/Insulin opens/);
+  });
+});
+
+describe("the curves", () => {
+  it("are all written by the loop, because a name in SERIES with no line in recordSeries stays at zero", () => {
+    const moved = (name: (typeof SERIES)[number]) => EVERY_DAY.some(([, tr]) => tr.series[name].some((v) => v !== 0));
+    expect(SERIES.filter((name) => !moved(name))).toEqual([]);
   });
 });
