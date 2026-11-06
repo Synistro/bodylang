@@ -22,6 +22,7 @@ export const SOURCES = {
 } as const;
 
 export const STOMACH = {
+  fedAboveKcal: 25, // below this, what is left in the gut no longer counts as still being fed
   liquidHalfLifeMin: 12, // water alone
   liquidHalfLifeWithSolidsMin: 42,
   // Against Tougas et al., Am J Gastroenterol 2000: a 255 kcal low-fat meal is 69% retained at 1 h,
@@ -47,6 +48,8 @@ export const STOMACH = {
 } as const;
 
 export const GUT = {
+  fiberKcalPerG: 2, // what the colon's bacteria make of it
+  waterAbsorbedShare: 0.9,
   carbRatePerMin: 0.08, // fitted to the 75 g glucose test: peak near 40 min
   fatRatePerMin: 0.0115,
   proteinRatePerMin: 0.016,
@@ -58,6 +61,7 @@ export const GUT = {
 } as const;
 
 export const GLUCOSE = {
+  fatStoredShare: 0.35, // of the glucose sent to fat, what ends up stored as fat
   baselineMgDl: 88,
   baselineAgeGain: 0.1, // per year above 40
   baselineBmiGain: 0.45, // per BMI point above 25
@@ -84,6 +88,7 @@ export const GLUCOSE = {
 } as const;
 
 export const INSULIN = {
+  afterglowFromMoving: { walking: 1, running: 1.5 },
   baselineUUPerMl: 8,
   clearancePerMin: 0.11,
   glucoseGain: 0.075,
@@ -111,6 +116,10 @@ export const INSULIN = {
 } as const;
 
 export const LIVER = {
+  lowGlycogenG: 5, // under this, its output falls to lowGlycogenOutputShare
+  lowGlycogenOutputShare: 0.4,
+  directUptakeStoredShare: 0.7,
+  exerciseSparingG: 5,
   glycogenStartG: 85,
   glycogenShareOfOutput: 0.45, // the rest of fasting glucose output comes from gluconeogenesis
   glycogenSparingG: 22,
@@ -120,6 +129,7 @@ export const LIVER = {
 } as const;
 
 export const MUSCLE = {
+  glycogenStartShare: 0.75,
   glycogenPerKgLean: 5.6,
   // Set so whole-body glucose disposal fits a moderate run, net of what muscle burns from its own glycogen.
   uptakeGPerMinByActivity: { sleeping: 0, sitting: 0, standing: 0.02, walking: 0.2, running: 0.6 },
@@ -163,6 +173,9 @@ export const ALCOHOL = {
 } as const;
 
 export const HEART = {
+  digestionFullKcal: 600,
+  digestionGutWeight: 1.3,
+  breathsPerDigestion: 1.5,
   restBpmMale: 66,
   restBpmFemale: 71,
   bmiGain: 0.5,
@@ -200,6 +213,9 @@ export const BLOOD_FLOW = {
 } as const;
 
 export const ENERGY = {
+  carbFuelMost: 0.95,
+  carbFuelRunningGain: 0.3,
+  storedShareOfCarbBurn: 0.15,
   mets: { sleeping: 0.95, sitting: 1.3, standing: 1.6, walking: 3.3, running: 8.5 },
   thermicShare: 0.1,
   carbFuelBase: 0.38,
@@ -207,6 +223,7 @@ export const ENERGY = {
 } as const;
 
 export const KIDNEY = {
+  afterVoidMl: 40,
   urineMlPerMin: 0.35, // the least the kidneys can make, about 500 ml a day; anything drunk comes on top
   insensibleMlPerMin: 0.5, // skin and breath, net of the water metabolism makes. Ratnatunga 1991 measured 1 to 1.2 L a day gross
   // ICS 2002, via Hofmeester 2015: a healthy young adult makes at most 20% of the day's urine in the
@@ -219,6 +236,12 @@ export const KIDNEY = {
 } as const;
 
 export const FEEL = {
+  postMealDipFromKcal: 60,
+  caffeineBluntsMealDip: 0.7,
+  circadianDrowsyShare: 0.4,
+  sleepPressureDrowsyShare: 0.6,
+  caffeineAlertnessGain: 0.55,
+  mealDipAlertnessShare: 0.45,
   postMealDipPeakMin: 80,
   // Scale chosen so a normal day reads about 40 at 14:30 and 43 at 20:30. My estimate.
   postMealDipStrength: 0.2,
