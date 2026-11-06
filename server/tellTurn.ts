@@ -63,8 +63,7 @@ export function startTurn({ text, state: initial, mode, depth, history, date }: 
   let guided = false;
   let remindedToGuide = false;
 
-  const scenario = () => ({ body: state.body, intakes: state.intakes, activities: state.activities, substances: state.substances, events: state.events, cycle: state.cycle });
-  const trajectory = () => simulate(scenario());
+  const trajectory = () => simulate(state.day);
 
   // Everything Claude has been given, to check the numbers it states against.
   const book = new NumberBook();
@@ -102,7 +101,7 @@ export function startTurn({ text, state: initial, mode, depth, history, date }: 
       if (unknown.length) return refusal(`guide was not applied. No process ${unknown.join(", ")}. Known ids: ${known.join(", ")}`);
     }
     const track = action.name === "log_event" ? action.args.custom?.track : null;
-    if (track) track.crossed = traceTrack(track.aim, track.from, state.body.sex);
+    if (track) track.crossed = traceTrack(track.aim, track.from, state.day.body.sex);
     try {
       apply(action);
     } catch (e: unknown) {
@@ -114,8 +113,8 @@ export function startTurn({ text, state: initial, mode, depth, history, date }: 
       guided = true;
       return answer("On screen. Now call reply.");
     }
-    if (action.name === "what_if" && state.whatIf) {
-      const alternative = simulate({ ...scenario(), activities: state.whatIf.activities });
+    if (action.name === "what_if" && state.view.whatIf) {
+      const alternative = simulate({ ...state.day, activities: state.view.whatIf.activities });
       return told(JSON.stringify({ alternative: action.args.label, ...readout(alternative, action.args.until) }));
     }
     if (track) return report(state.now, { this_line_crosses: track.crossed?.map((part) => part.name) ?? [] });

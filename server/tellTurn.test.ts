@@ -11,19 +11,17 @@ const BRIEF = planFor("tell", "simple");
 const FULL: TellPlan = { ...BRIEF, brief: false };
 
 const start: BodyState = {
-  body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
-  activities: [{ from: 0, posture: "sleeping" }, { from: 450, posture: "standing" }],
-  intakes: [],
-  substances: [],
-  events: [],
-  cycle: null,
+  day: {
+    body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+    activities: [{ from: 0, posture: "sleeping" }, { from: 450, posture: "standing" }],
+    intakes: [],
+    substances: [],
+    events: [],
+    cycle: null,
+    assumptions: {},
+  },
   now: 800,
-  system: "overview",
-  process: null,
-  focus: null,
-  focusMuscle: null,
-  whatIf: null,
-  assumptions: {},
+  view: { system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null },
 };
 
 const input = (over: Partial<TellInput> = {}): TellInput => ({ text: "I had some pizza", state: start, mode: "tell", depth: "simple", history: [], date: "2026-11-06", ...over });
@@ -53,15 +51,15 @@ describe("one turn", () => {
     await call("log_event", { id: "chest", label: "Chest", preset: "training", from: 600, until: 660, intensity: 0.6, muscles: [{ group: "chest", load: 1 }], symptoms: [], source: "", custom: null });
     await call("show_system", { system: "digestion" });
     expect(replayed(events, start)).toEqual(turn.state());
-    expect(turn.state().intakes.map((intake) => intake.id)).toEqual(["pizza"]);
-    expect(turn.state().system).toBe("digestion");
+    expect(turn.state().day.intakes.map((intake) => intake.id)).toEqual(["pizza"]);
+    expect(turn.state().view.system).toBe("digestion");
   });
 
   it("marks a food from the table as the table's, and Claude's own as an estimate", async () => {
     const { turn, call } = turnOf();
     await call("log_food", loggedPizza());
     await call("log_intake", { id: "soup", label: "Soup", at: 795, grams: 300, water_ml: 250, carbs_g: 10, sugar_g: 2, fat_g: 4, protein_g: 5, fiber_g: 1, caffeine_mg: 0, alcohol_g: 0, liquid: true, assumption: "A bowl" });
-    const sources = Object.fromEntries(turn.state().intakes.map((intake) => [intake.id, intake.source?.kind]));
+    const sources = Object.fromEntries(turn.state().day.intakes.map((intake) => [intake.id, intake.source?.kind]));
     expect(sources).toEqual({ pizza: "table", soup: "estimate" });
   });
 

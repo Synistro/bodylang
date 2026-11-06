@@ -82,7 +82,7 @@ function FoodRow({ intake }: { intake: Intake }) {
 // What was eaten at one moment on the chart. Every step redraws the curves behind it straight away.
 export function FoodFix() {
   const fixing = useStore((s) => s.fixing);
-  const intakes = useStore((s) => s.body.intakes);
+  const intakes = useStore((s) => s.day.intakes);
   const root = useRef<HTMLDivElement>(null);
   const shown = fixing ? intakes.filter((intake) => fixing.ids.includes(intake.id)) : [];
   const open = fixing !== null && shown.length > 0;

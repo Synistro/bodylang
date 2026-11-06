@@ -107,8 +107,8 @@ const NUMBER_ORIGIN_WHAT_IF: Origin = { kind: "model", detail: "Claude suggested
 function WhatIfOffer() {
   const tr = useStore((s) => s.trajectory);
   const whatIf = useStore((s) => s.whatIf);
-  const meta = useStore((s) => s.body.whatIf);
-  const now = useStore((s) => s.body.now);
+  const meta = useStore((s) => s.view.whatIf);
+  const now = useStore((s) => s.now);
   if (!whatIf || !meta) return null;
   const peak = (series: Float32Array) => {
     let best = 0;

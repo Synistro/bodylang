@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ACTION_SCHEMAS } from "../../actions/schemas";
-import { BodyState, reduce } from "../../actions/reduce";
+import { reduce } from "../../actions/reduce";
 import { traceLine } from "../../actions/trace";
 import { assess } from "../assess/assess";
 import { Assessment } from "../assess/types";
@@ -22,6 +22,7 @@ import { processesAt, processesFor } from "../processes/processes";
 import { SYSTEMS, systemById } from "../systems";
 import { threadsAt } from "../threads";
 import { hm, NO_NUTRIENTS } from "../testKit";
+import { stateWith } from "../../actions/testState";
 
 const toMmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
 const body = { sex: "male" as const, age: 30, heightCm: 180, weightKg: 80 };
@@ -684,37 +685,37 @@ describe("threads", () => {
 });
 
 describe("the tools", () => {
-  const state: BodyState = { body, intakes: [], activities: base.activities, substances: [], events: [], cycle: null, now: hm(12), system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null, assumptions: {} };
+  const state = stateWith({ body, activities: base.activities });
   const args = { id: "cold", label: "Cold", preset: "illness", from: hm(8), until: null, intensity: 0.4, muscles: [], symptoms: ["cough"], source: "", custom: null };
 
   it("passes a food's fructose share through, and leaves fibre out of the energy it traces", () => {
     const apples = { id: "apples", label: "Two apples", at: hm(9), grams: 364, water_ml: 310, carbs_g: 50, sugar_g: 38, fat_g: 0, protein_g: 0, fiber_g: 9, caffeine_mg: 0, alcohol_g: 0, liquid: false, fructose_share: 0.6, assumption: "Two medium apples" };
     const parsed = ACTION_SCHEMAS.log_intake.parse(apples);
-    expect(reduce(state, { name: "log_intake", args: parsed }).intakes[0].fructoseShare).toBe(0.6);
+    expect(reduce(state, { name: "log_intake", args: parsed }).day.intakes[0].fructoseShare).toBe(0.6);
     expect(traceLine({ name: "log_intake", args: parsed })).toContain("164 kcal");
     const { fructose_share: _unused, ...plainFood } = apples;
-    expect(reduce(state, { name: "log_intake", args: ACTION_SCHEMAS.log_intake.parse(plainFood) }).intakes[0].fructoseShare).toBeUndefined();
+    expect(reduce(state, { name: "log_intake", args: ACTION_SCHEMAS.log_intake.parse(plainFood) }).day.intakes[0].fructoseShare).toBeUndefined();
   });
 
   it("hides a line when the food it follows is removed", () => {
-    const showing: BodyState = { ...state, process: "meal:bar", intakes: [{ ...pizza, id: "bar" }] };
-    expect(reduce(showing, { name: "remove_intake", args: { id: "bar" } }).process).toBeNull();
+    const showing = stateWith({ body, activities: base.activities, intakes: [{ ...pizza, id: "bar" }] }, { process: "meal:bar" });
+    expect(reduce(showing, { name: "remove_intake", args: { id: "bar" } }).view.process).toBeNull();
   });
 
   it("logs and ends an event through the reducer", () => {
     const logged = reduce(state, { name: "log_event", args: ACTION_SCHEMAS.log_event.parse(args) });
-    expect(logged.events).toHaveLength(1);
-    expect(logged.events[0]).toMatchObject({ id: "cold", until: null, symptoms: ["cough"] });
+    expect(logged.day.events).toHaveLength(1);
+    expect(logged.day.events[0]).toMatchObject({ id: "cold", until: null, symptoms: ["cough"] });
     const ended = reduce(logged, { name: "end_event", args: ACTION_SCHEMAS.end_event.parse({ id: "cold", at: hm(13) }) });
-    expect(ended.events[0].until).toBe(hm(13));
+    expect(ended.day.events[0].until).toBe(hm(13));
     const replaced = reduce(logged, { name: "log_event", args: ACTION_SCHEMAS.log_event.parse({ ...args, intensity: 0.9 }) });
-    expect(replaced.events).toHaveLength(1);
-    expect(replaced.events[0].intensity).toBe(0.9);
+    expect(replaced.day.events).toHaveLength(1);
+    expect(replaced.day.events[0].intensity).toBe(0.9);
   });
 
   it("stores and traces the clinical label, whatever Claude typed", () => {
     const typed = ACTION_SCHEMAS.log_event.parse({ ...args, id: "s", label: "Hot night", preset: "sex", symptoms: [] });
-    expect(reduce(state, { name: "log_event", args: typed }).events[0].label).toBe("Sexual activity");
+    expect(reduce(state, { name: "log_event", args: typed }).day.events[0].label).toBe("Sexual activity");
     expect(traceLine({ name: "log_event", args: typed })).not.toContain("Hot");
   });
 
@@ -747,8 +748,8 @@ describe("the tools", () => {
   it("turns a custom story into the model's own shape", () => {
     const story = { systems: ["circulation"], effects: [{ channel: "heartRate", amount: 40, rise_min: 10, half_life_min: 10 }], feelings: [], stops: [{ organ: "heart", muscle: null, label: "Skin", after_min: 3, say: "Blood moves to your skin.", routes: ["arch"] }] };
     const logged = reduce(state, { name: "log_event", args: ACTION_SCHEMAS.log_event.parse({ ...args, preset: "custom", symptoms: [], custom: story }) });
-    expect(logged.events[0].custom?.effects[0]).toMatchObject({ riseMin: 10, halfLifeMin: 10 });
-    expect(logged.events[0].custom?.stops[0]).toMatchObject({ afterMin: 3, routes: ["arch"] });
+    expect(logged.day.events[0].custom?.effects[0]).toMatchObject({ riseMin: 10, halfLifeMin: 10 });
+    expect(logged.day.events[0].custom?.stops[0]).toMatchObject({ afterMin: 3, routes: ["arch"] });
   });
 
   it("traces events in one readable line, even from yesterday", () => {

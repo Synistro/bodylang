@@ -136,7 +136,7 @@ function TrackLine({ stage, track }: { stage: Stage; track: EventTrack }) {
 export function BodyTrace({ stage }: { stage: Stage }) {
   const step = useStore(stepOnScreen);
   const track = useStore(trackOnScreen);
-  const muscle = useStore((s) => s.body.focusMuscle);
+  const muscle = useStore((s) => s.view.focusMuscle);
   const trajectory = useStore((s) => s.trajectory);
   const minute = useMuscleMinute();
   const organ = step?.organ ?? null;

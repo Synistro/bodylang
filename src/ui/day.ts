@@ -60,7 +60,7 @@ function put(doc: DayDoc, minute: number) {
 async function load() {
   const clock = clockAt(new Date());
   const newest = await readNewest();
-  const doc = newest ? carryOver(newest, clock.date) : firstDay(clock.date, getState().body.body);
+  const doc = newest ? carryOver(newest, clock.date) : firstDay(clock.date, getState().day.body);
   put(doc, clock.minute);
   // A new date starts a new file. The wallpaper only ever reads.
   if (!WALL && (!newest || newest.date !== doc.date)) void write(doc);

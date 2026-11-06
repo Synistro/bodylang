@@ -131,7 +131,7 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
   const primary = well ? [] : present(def.readings);
   const more = well ? [] : present(def.more);
   const symptoms = system === "immune" ? assessment.feelings.filter((f) => FEELING_LOOK[f.id]?.system === "immune" || f.byClaude) : [];
-  const sex = useStore((s) => s.body.body.sex);
+  const sex = useStore((s) => s.day.body.sex);
   const hint = assessment.systems[system].quiet && (system !== "reproductive" || sex === "female") ? QUIET_HINT[system] : undefined;
   return (
     <>
@@ -266,9 +266,9 @@ function PanelContent({ system, processId }: { system: SystemId; processId: stri
 // The detail for the current level. It stays mounted behind an organ close-up, so coming back lands
 // exactly where you left.
 export function SystemPage() {
-  const system = useStore((s) => s.body.system);
-  const processId = useStore((s) => s.body.process);
-  const focused = useStore((s) => s.body.focus !== null);
+  const system = useStore((s) => s.view.system);
+  const processId = useStore((s) => s.view.process);
+  const focused = useStore((s) => s.view.focus !== null);
   const scroller = useRef<HTMLElement>(null);
   const level = `${system}/${processId ?? ""}`;
   useScrollFade(scroller);

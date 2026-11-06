@@ -259,7 +259,7 @@ function StopNumbers({ stage, stops }: { stage: Stage; stops: ProcessStop[] }) {
 function HoverName({ stage }: { stage: Stage }) {
   const hover = useStore((s) => s.hover);
   const hoverMuscle = useStore((s) => s.hoverMuscle);
-  const focus = useStore((s) => s.body.focus);
+  const focus = useStore((s) => s.view.focus);
   const el = useRef<HTMLDivElement>(null);
   const organ: OrganId | null = isOrganId(hover) ? hover : null;
   const pointed = hoverMuscle ? { id: `muscle:${hoverMuscle}` as const, name: MUSCLE_LABEL[hoverMuscle] } : organ ? { id: organ, name: ORGAN_NAME[organ] } : null;
@@ -287,9 +287,9 @@ function HoverName({ stage }: { stage: Stage }) {
 }
 
 export function AtlasKeys({ stage }: { stage: Stage }) {
-  const processId = useStore((s) => s.body.process);
+  const processId = useStore((s) => s.view.process);
   const tr = useStore((s) => s.trajectory);
-  const focus = useStore((s) => s.body.focus);
+  const focus = useStore((s) => s.view.focus);
   const minute = useMinute();
   const process = useMemo(() => (processId ? selectedProcess(getState()) : null), [processId, tr, minute]);
   const [lit, setLit] = useState<{ id: AnchorId; name: string }[]>([]);

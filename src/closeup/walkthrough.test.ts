@@ -54,7 +54,7 @@ describe("a walkthrough step that shows a minute off the day chart", () => {
 describe("where a step puts an organ in the outline", () => {
   const onOrgan = (over: Partial<GuideStep>): GuideStep => ({ ...step(null), ...over });
   const place = () => {
-    const { system, process, focus } = getState().body;
+    const { system, process, focus } = getState().view;
     return { system, process, focus };
   };
 
@@ -98,7 +98,7 @@ describe("what a step shows beside an organ", () => {
 
   it("keeps the process it is about out of the outline, and still knows it", () => {
     walkthrough({ ...step(null), process: "event:squats" });
-    expect(getState().body.process).toBeNull();
+    expect(getState().view.process).toBeNull();
     expect(processOnScreen(getState())).toBe("event:squats");
     leaveAsk();
   });

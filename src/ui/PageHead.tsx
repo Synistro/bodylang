@@ -12,10 +12,10 @@ import { sourced } from "./sources";
 // overview has no name of its own, only the sentence.
 export function PageHead() {
   const tr = useStore((s) => s.trajectory);
-  const system = useStore((s) => s.body.system);
-  const processId = useStore((s) => s.body.process);
-  const focus = useStore((s) => s.body.focus);
-  const focusMuscle = useStore((s) => s.body.focusMuscle);
+  const system = useStore((s) => s.view.system);
+  const processId = useStore((s) => s.view.process);
+  const focus = useStore((s) => s.view.focus);
+  const focusMuscle = useStore((s) => s.view.focusMuscle);
   const minute = useMinute();
   const muscleAt = useMuscleMinute();
   // A drawing Claude composed is about the step, and the step's words are on screen beside it.

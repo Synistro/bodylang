@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { reduce } from "./actions/reduce";
 import { firstDay } from "./model/day";
-import { dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
+import { bodyOf, dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
 
 const body = { sex: "female", age: 41, heightCm: 170, weightKg: 62 } as const;
 const coffee = { id: "coffee", label: "Coffee", at: 500, grams: 240, water_ml: 238, carbs_g: 0, sugar_g: 0, fat_g: 0, protein_g: 0, fiber_g: 0, caffeine_mg: 96, alcohol_g: 0, liquid: true, assumption: "One cup" };
@@ -16,8 +16,8 @@ describe("your day and the store", () => {
   it("puts a saved day in place at the real time", () => {
     const s = getState();
     expect(s.date).toBe("2026-11-05");
-    expect(s.body.now).toBe(12 * 60);
-    expect(s.body.body).toEqual(body);
+    expect(s.now).toBe(12 * 60);
+    expect(s.day.body).toEqual(body);
   });
 
   it("turns back into the same file", () => {
@@ -30,14 +30,14 @@ describe("your day and the store", () => {
 
   it("moves a view resting on now along with the clock", () => {
     setClock(12 * 60 + 1);
-    expect(getState().body.now).toBe(12 * 60 + 1);
+    expect(getState().now).toBe(12 * 60 + 1);
     expect(getState().t).toBe(12 * 60 + 1);
   });
 
   it("leaves a view you scrubbed away where you put it", () => {
     setUi({ t: 9 * 60 });
     setClock(12 * 60 + 1);
-    expect(getState().body.now).toBe(12 * 60 + 1);
+    expect(getState().now).toBe(12 * 60 + 1);
     expect(getState().t).toBe(9 * 60);
   });
 
@@ -61,15 +61,15 @@ describe("your day and the store", () => {
 });
 
 describe("selecting an organ", () => {
-  const start = (system: "clearing" | "digestion" | "overview") => reduce(getState().body, { name: "show_system", args: { system } });
+  const start = (system: "clearing" | "digestion" | "overview") => reduce(bodyOf(getState()), { name: "show_system", args: { system } });
   const focus = (body: ReturnType<typeof start>, organ: "lungs" | "liver") => reduce(body, { name: "focus_organ", args: { organ } });
 
   it("goes to the organ's own section when it is not in this one", () => {
-    expect(focus(start("clearing"), "lungs").system).toBe("circulation");
+    expect(focus(start("clearing"), "lungs").view.system).toBe("circulation");
   });
 
   it("stays when the organ belongs here, or when you came from the overview", () => {
-    expect(focus(start("digestion"), "liver").system).toBe("digestion");
-    expect(focus(start("overview"), "lungs").system).toBe("overview");
+    expect(focus(start("digestion"), "liver").view.system).toBe("digestion");
+    expect(focus(start("overview"), "lungs").view.system).toBe("overview");
   });
 });

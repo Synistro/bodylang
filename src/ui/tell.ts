@@ -1,6 +1,6 @@
 import { ACTION_SCHEMAS, Action, ActionName } from "../actions/schemas";
 import { stayAwake } from "../model/day";
-import { beginExchange, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rememberAsked, setAskCancel, updateExchange } from "../store";
+import { beginExchange, bodyOf, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rememberAsked, setAskCancel, updateExchange } from "../store";
 import { nameReplySchema, readEvents, tellEventSchema } from "../wire";
 
 function isActionName(name: string): name is ActionName {
@@ -42,7 +42,7 @@ export async function tell(text: string) {
   const id = beginExchange(text);
   if (session !== null) void nameQuestion(id, text);
   const before = getState();
-  const awake = mode === "tell" && before.date ? stayAwake(before.body.activities, before.body.now) : null;
+  const awake = mode === "tell" && before.date ? stayAwake(before.day.activities, before.now) : null;
   if (awake) dispatch({ name: "set_activity", args: awake });
   const s = getState();
   const stop = new AbortController();
@@ -52,7 +52,7 @@ export async function tell(text: string) {
     const response = await fetch("/api/tell", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text, state: s.body, mode, depth: s.depth, history: s.asking?.history ?? [], date: s.date }),
+      body: JSON.stringify({ text, state: bodyOf(s), mode, depth: s.depth, history: s.asking?.history ?? [], date: s.date }),
       signal: stop.signal,
     });
     if (!response.ok) throw new Error(`The Claude Code bridge answered ${response.status}.`);

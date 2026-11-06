@@ -24,9 +24,9 @@ function Slider({ id, label, unit, min, max, step, value: v, onChange }: { id: s
 }
 
 export function Header() {
-  const body = useStore((s) => s.body.body);
+  const body = useStore((s) => s.day.body);
   const t = useStore((s) => Math.round(s.t));
-  const now = useStore((s) => s.body.now);
+  const now = useStore((s) => s.now);
   const tr = useStore((s) => s.trajectory);
   const open = useStore((s) => s.bodyOpen);
   const root = useRef<HTMLElement>(null);
@@ -87,7 +87,7 @@ export function ViewControls() {
   const layers = useStore((s) => s.layers);
   const theme = useStore((s) => s.theme);
   // The muscle views draw no vessels, so their toggle would do nothing there.
-  const noVessels = useStore((s) => s.body.focus === "muscle" || (s.body.system === "muscles" && !s.body.process && !s.body.focus));
+  const noVessels = useStore((s) => s.view.focus === "muscle" || (s.view.system === "muscles" && !s.view.process && !s.view.focus));
   return (
     <div className="controls" role="group" aria-label="How the figure is drawn">
       <button type="button" className="toggle" aria-pressed={layers.skin} onClick={() => setUi({ layers: { ...getState().layers, skin: !layers.skin } })}>

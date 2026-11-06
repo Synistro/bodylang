@@ -18,7 +18,7 @@ const food = (id: string, at: number, parts: Partial<Intake> = {}): Intake => ({
 const day = (parts: Partial<Scenario>): Scenario => ({ body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], ...parts });
 const training = (id: string, from: number, until: number | null, group: "chest" | "back" | "quads") => ({ id, label: id, preset: "training" as const, from, until, intensity: 0.8, muscles: [{ group, load: 1 }], symptoms: [], custom: null, source: "" });
 
-const start: BodyState = { body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], cycle: null, now: 1020, system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null, assumptions: {} };
+const start: BodyState = { day: { body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], cycle: null, assumptions: {} }, now: 1020, view: { system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null } };
 const apply = (state: BodyState, action: Action) => reduce(state, action);
 
 describe("a meal with a drink in it", () => {
@@ -80,20 +80,20 @@ describe("an event's end", () => {
   it("refuses a time before the event started", () => {
     const logged = apply(start, { name: "log_event", args: { id: "cold", label: "Cold", preset: "illness", from: 600, until: null, intensity: 0.5, muscles: [], symptoms: ["fever"], custom: null, source: "" } });
     expect(() => apply(logged, { name: "end_event", args: { id: "cold", at: 300 } })).toThrow(/can't end/);
-    expect(apply(logged, { name: "end_event", args: { id: "cold", at: 700 } }).events[0].until).toBe(700);
+    expect(apply(logged, { name: "end_event", args: { id: "cold", at: 700 } }).day.events[0].until).toBe(700);
   });
 });
 
 describe("a span that ends after bedtime", () => {
   it("ends in sleep", () => {
     const next = apply(start, { name: "set_activity", args: { posture: "walking", from: 1400, until: 1425 } });
-    expect(postureAt(next.activities, 1420)).toBe("walking");
-    expect(postureAt(next.activities, 1500)).toBe("sleeping");
+    expect(postureAt(next.day.activities, 1420)).toBe("walking");
+    expect(postureAt(next.day.activities, 1500)).toBe("sleeping");
   });
 
   it("returns to what you were doing before bedtime", () => {
     const next = apply(start, { name: "set_activity", args: { posture: "walking", from: 1000, until: 1015 } });
-    expect(postureAt(next.activities, 1100)).toBe("sitting");
+    expect(postureAt(next.day.activities, 1100)).toBe("sitting");
   });
 });
 

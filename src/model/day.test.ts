@@ -6,6 +6,7 @@ import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 import { postureAt, Scenario } from "./scenario";
 import { threadsAt } from "./threads";
+import { stateWith } from "../actions/testState";
 
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
 const nothing = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
@@ -171,8 +172,8 @@ describe("staying awake", () => {
     const now = 25 * 60;
     const args = stayAwake(spans, now);
     expect(args).toEqual({ posture: "sitting", from: DAY.sleepMin, until: now + DAY.stillUpMin });
-    const state = { activities: spans } as BodyState;
-    const next = reduce(state, { name: "set_activity", args: args! }).activities;
+    const state = stateWith({ activities: spans });
+    const next = reduce(state, { name: "set_activity", args: args! }).day.activities;
     expect(postureAt(next, now + 5)).toBe("sitting");
     expect(postureAt(next, now + DAY.stillUpMin + 5)).toBe("sleeping");
   });
@@ -180,17 +181,17 @@ describe("staying awake", () => {
   it("counts someone up early as up from then on", () => {
     const spans = typicalDayFromYesterday();
     const args = stayAwake(spans, 6 * 60);
-    const next = reduce({ activities: spans } as BodyState, { name: "set_activity", args: args! }).activities;
+    const next = reduce(stateWith({ activities: spans }), { name: "set_activity", args: args! }).day.activities;
     expect(postureAt(next, 6 * 60 + 10)).toBe("sitting");
     expect(postureAt(next, DAY.wakeMin + 10)).toBe("standing");
   });
 });
 
 describe("telling it about last night", () => {
-  const state = () => ({ activities: typicalDayFromYesterday() }) as BodyState;
+  const state = () => stateWith({ activities: typicalDayFromYesterday() });
 
   it("takes a late bedtime and a late wake-up", () => {
-    const next = reduce(state(), { name: "set_sleep", args: { bed: 90, wake: 9 * 60 } }).activities;
+    const next = reduce(state(), { name: "set_sleep", args: { bed: 90, wake: 9 * 60 } }).day.activities;
     expect(postureAt(next, -10)).toBe("sitting");
     expect(postureAt(next, 60)).toBe("sitting");
     expect(postureAt(next, 100)).toBe("sleeping");
@@ -199,24 +200,24 @@ describe("telling it about last night", () => {
   });
 
   it("takes an early night", () => {
-    const next = reduce(state(), { name: "set_sleep", args: { bed: -120, wake: 6 * 60 } }).activities;
+    const next = reduce(state(), { name: "set_sleep", args: { bed: -120, wake: 6 * 60 } }).day.activities;
     expect(postureAt(next, -100)).toBe("sleeping");
     expect(postureAt(next, 6 * 60 + 10)).toBe("standing");
   });
 });
 
 describe("correcting what was logged", () => {
-  const logged = () => ({ intakes: [dinner(13 * 60)], assumptions: { dinner: "Two plates" } }) as unknown as BodyState;
+  const logged = () => stateWith({ intakes: [dinner(13 * 60)], assumptions: { dinner: "Two plates" } });
 
   it("scales everything in the food", () => {
     const next = reduce(logged(), { name: "correct_intake", args: { id: "dinner", grams: 250, assumption: "One plate" } });
-    expect(next.intakes[0]).toMatchObject({ grams: 250, carbsG: 40, fatG: 20, proteinG: 20, fiberG: 3 });
-    expect(next.assumptions.dinner).toBe("One plate");
+    expect(next.day.intakes[0]).toMatchObject({ grams: 250, carbsG: 40, fatG: 20, proteinG: 20, fiberG: 3 });
+    expect(next.day.assumptions.dinner).toBe("One plate");
   });
 
   it("moves it in time without changing it", () => {
     const next = reduce(logged(), { name: "correct_intake", args: { id: "dinner", at: 12 * 60 } });
-    expect(next.intakes[0]).toMatchObject({ at: 12 * 60, grams: 500, carbsG: 80 });
+    expect(next.day.intakes[0]).toMatchObject({ at: 12 * 60, grams: 500, carbsG: 80 });
   });
 
   it("names the known ids when the id is wrong", () => {
@@ -224,7 +225,7 @@ describe("correcting what was logged", () => {
   });
 
   it("redraws the curves", () => {
-    const run = (s: BodyState) => simulate({ body, intakes: s.intakes, activities: typicalDayFromYesterday(), substances: [], events: [] });
+    const run = (s: BodyState) => simulate({ body, intakes: s.day.intakes, activities: typicalDayFromYesterday(), substances: [], events: [] });
     const more = run(logged());
     const less = run(reduce(logged(), { name: "correct_intake", args: { id: "dinner", grams: 250 } }));
     expect(less.series.stomachKcal[13 * 60 + 30]).toBeLessThan(more.series.stomachKcal[13 * 60 + 30]);

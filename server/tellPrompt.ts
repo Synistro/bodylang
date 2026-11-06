@@ -158,25 +158,25 @@ On a bad value the error names the parameter to fix. Returns a readout.`,
 
 const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
-export function renderContext(state: BodyState, text: string, mode: Mode, history: { asked: string; answered: string }[], date: string | null) {
+export function renderContext({ day, now }: BodyState, text: string, mode: Mode, history: { asked: string; answered: string }[], date: string | null) {
   const clock = (m: number) => `${formatClock(m)} (minute ${m})`;
   const logged = (i: Intake) => {
     const where = i.source?.kind === "table" ? `USDA: ${i.source.name}` : i.source?.kind === "estimate" ? "your estimate" : i.source?.kind === "recipe" ? `your recipe: ${i.source.ingredients.map((part) => `${Math.round(part.grams)} g ${part.name}`).join(", ")}` : null;
-    return `- ${i.label} (id ${i.id}) at ${clock(i.at)}, ${Math.round(i.grams)} g${state.assumptions[i.id] ? `, ${state.assumptions[i.id]}` : ""}${where ? `, ${where}` : ""}`;
+    return `- ${i.label} (id ${i.id}) at ${clock(i.at)}, ${Math.round(i.grams)} g${day.assumptions[i.id] ? `, ${day.assumptions[i.id]}` : ""}${where ? `, ${where}` : ""}`;
   };
   const list = (items: Intake[]) => (items.length ? items.map(logged).join("\n") : "- nothing yet");
-  const fromYesterday = state.intakes.filter((i) => i.at < 0);
-  const intakes = `${list(state.intakes.filter((i) => i.at >= 0))}${fromYesterday.length ? `\n\nYesterday, already counted:\n${list(fromYesterday)}` : ""}`;
-  const activities = [...state.activities].sort((a, b) => a.from - b.from).map((a) => `- from ${clock(a.from)}: ${a.posture}`).join("\n");
-  const substances = state.substances.length ? state.substances.map((s) => `- ${s.label} (id ${s.id}), ${s.doseMg} mg at ${clock(s.at)}`).join("\n") : "- none";
-  const cycle = state.cycle ? `Latest period began at minute ${state.cycle.start}, ${state.cycle.lengthDays}-day cycle.` : "No cycle logged.";
-  const events = state.events.length
-    ? state.events.map((e) => `- ${e.label} (id ${e.id}, ${e.preset}), from ${clock(e.from)}, ${e.until === null ? "still going on" : `until ${clock(e.until)}`}`).join("\n")
+  const fromYesterday = day.intakes.filter((i) => i.at < 0);
+  const intakes = `${list(day.intakes.filter((i) => i.at >= 0))}${fromYesterday.length ? `\n\nYesterday, already counted:\n${list(fromYesterday)}` : ""}`;
+  const activities = [...day.activities].sort((a, b) => a.from - b.from).map((a) => `- from ${clock(a.from)}: ${a.posture}`).join("\n");
+  const substances = day.substances.length ? day.substances.map((s) => `- ${s.label} (id ${s.id}), ${s.doseMg} mg at ${clock(s.at)}`).join("\n") : "- none";
+  const cycle = day.cycle ? `Latest period began at minute ${day.cycle.start}, ${day.cycle.lengthDays}-day cycle.` : "No cycle logged.";
+  const events = day.events.length
+    ? day.events.map((e) => `- ${e.label} (id ${e.id}, ${e.preset}), from ${clock(e.from)}, ${e.until === null ? "still going on" : `until ${clock(e.until)}`}`).join("\n")
     : "- none";
   const earlier = history.length ? `\n\nEarlier in this exploration:\n${history.map((h) => `They asked: ${h.asked}\nYou answered: ${h.answered}`).join("\n")}` : "";
   return `<simulation${mode === "ask" ? ' kind="temporary copy of their day"' : ""}>
-${date ? `Today is ${dayName(date)}. ` : ""}Current time: ${clock(state.now)}. Tools take times as minutes since 00:00.
-Body: ${state.body.sex}, ${state.body.age} years, ${state.body.heightCm} cm, ${state.body.weightKg} kg.${state.body.sex === "female" ? ` ${cycle}` : ""}
+${date ? `Today is ${dayName(date)}. ` : ""}Current time: ${clock(now)}. Tools take times as minutes since 00:00.
+Body: ${day.body.sex}, ${day.body.age} years, ${day.body.heightCm} cm, ${day.body.weightKg} kg.${day.body.sex === "female" ? ` ${cycle}` : ""}
 
 Already logged today:
 ${intakes}

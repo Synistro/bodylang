@@ -2,8 +2,7 @@ import { createSdkMcpServer, query } from "@anthropic-ai/claude-agent-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import type { BodyState } from "../src/actions/reduce";
-import { DATE_PATTERN } from "../src/model/day";
-import { PRESETS } from "../src/model/events/types";
+import { DATE_PATTERN, dayContentSchema } from "../src/model/day";
 import { BuildStatus, TellEvent } from "../src/wire";
 import { claudeDefaults } from "./claude";
 import { openEventStream, readJson } from "./http";
@@ -14,16 +13,7 @@ import { startTurn, TellInput } from "./tellTurn";
 const MAX_TURNS = 14;
 const MAX_REQUEST_BYTES = 200_000;
 
-const bodyStateShape = z.object({
-  body: z.object({ sex: z.enum(["male", "female"]), age: z.number(), heightCm: z.number(), weightKg: z.number() }),
-  intakes: z.array(z.object({ id: z.string(), label: z.string(), at: z.number() })),
-  activities: z.array(z.object({ from: z.number(), posture: z.string() })),
-  substances: z.array(z.object({ id: z.string(), label: z.string(), at: z.number(), doseMg: z.number() })),
-  events: z.array(z.object({ id: z.string(), label: z.string(), preset: z.enum(PRESETS), from: z.number(), until: z.number().nullable() })),
-  cycle: z.object({ start: z.number(), lengthDays: z.number(), periodDays: z.number() }).nullable(),
-  now: z.number(),
-  assumptions: z.record(z.string(), z.string()),
-});
+const bodyStateShape = z.object({ day: dayContentSchema, now: z.number(), view: z.looseObject({ system: z.string(), process: z.string().nullable() }) });
 
 const requestSchema = z.object({
   text: z.string().min(1).max(4000),

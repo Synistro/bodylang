@@ -12,10 +12,10 @@ const endTour = () => setUi({ touring: false, stop: null });
 // The walkthrough speaks from just above the message box, where the eye already is while the camera flies. The
 // controls start from the process in the panel; Esc is handled with the other moves up a level.
 export function Tour() {
-  const processId = useStore((s) => s.body.process);
+  const processId = useStore((s) => s.view.process);
   const touring = useStore((s) => s.touring);
   const spotlight = useStore((s) => s.stop);
-  const focused = useStore((s) => s.body.focus !== null);
+  const focused = useStore((s) => s.view.focus !== null);
   const process = useStore((s) => (s.touring ? selectedProcess(s) : null));
   const tr = useStore((s) => s.trajectory);
   const [auto, setAuto] = useState(false);

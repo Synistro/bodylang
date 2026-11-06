@@ -16,8 +16,8 @@ export const showMuscle = (muscle: MuscleGroup) => dispatch({ name: "focus_organ
 export function goUp() {
   const s = getState();
   if (s.touring) setUi({ touring: false, stop: null });
-  else if (s.body.focus) showOrgan(null);
+  else if (s.view.focus) showOrgan(null);
   else if (s.stop !== null) setUi({ stop: null });
-  else if (s.body.process) showProcess(null);
-  else if (s.body.system !== "overview") showSystem("overview");
+  else if (s.view.process) showProcess(null);
+  else if (s.view.system !== "overview") showSystem("overview");
 }

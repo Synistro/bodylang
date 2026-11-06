@@ -41,14 +41,14 @@ function sceneInput(s: AppState) {
     t: s.t,
     muscleMinute: muscleMinute(s),
     track: trackOnScreen(s),
-    body: s.body.body,
+    body: s.day.body,
     theme: s.theme,
     layers: s.layers,
-    system: s.body.system,
+    system: s.view.system,
     process: selectedProcess(s),
     stop: s.stop,
-    focus: s.body.focus,
-    focusMuscle: s.body.focusMuscle,
+    focus: s.view.focus,
+    focusMuscle: s.view.focusMuscle,
     hoverMuscle: s.hoverMuscle,
     hover: isOrganId(s.hover) ? s.hover : null,
     insets: freeArea(),
@@ -57,7 +57,7 @@ function sceneInput(s: AppState) {
 
 const atTopLevel = () => {
   const s = getState();
-  return !s.touring && !s.body.focus && s.stop === null && !s.body.process && s.body.system === "overview";
+  return !s.touring && !s.view.focus && s.stop === null && !s.view.process && s.view.system === "overview";
 };
 
 // Esc goes up one level, and from the top of an exploration, back to your day. Caught first, so anything else listening for Esc doesn't move a second level.
@@ -87,7 +87,7 @@ function useWallCycle() {
       const s = getState();
       const statuses = assessmentAt(s.trajectory, Math.round(s.t)).systems;
       const stops = SYSTEMS.filter((system) => system.id === "overview" || !statuses[system.id].quiet);
-      const at = stops.findIndex((system) => system.id === s.body.system);
+      const at = stops.findIndex((system) => system.id === s.view.system);
       showSystem(stops[(at + 1) % stops.length].id);
       timer = window.setTimeout(next, WALL_SYSTEM_DWELL_MS);
     };
@@ -120,7 +120,7 @@ function Foot() {
   const [credits, setCredits] = useState(false);
   const [sources, setSources] = useState<SourceEntry[] | null>(null);
   const problem = useStore((s) => s.dayProblem);
-  const level = useStore((s) => `${s.body.system}/${s.body.process}/${s.body.focus}/${s.body.focusMuscle}`);
+  const level = useStore((s) => `${s.view.system}/${s.view.process}/${s.view.focus}/${s.view.focusMuscle}`);
 
   // The list is about what was on screen when you asked, so it closes when you go somewhere else.
   useEffect(() => setSources(null), [level]);
@@ -158,7 +158,7 @@ export function App() {
   const [failed, setFailed] = useState<string | null>(null);
   const theme = useStore((s) => s.theme);
   const playing = useStore((s) => s.playing);
-  const view = useStore((s) => viewSystemOf({ system: s.body.system, process: selectedProcess(s), focus: s.body.focus }));
+  const view = useStore((s) => viewSystemOf({ system: s.view.system, process: selectedProcess(s), focus: s.view.focus }));
   const asking = useStore((s) => s.asking !== null);
   const directed = useStore((s) => closeupOnScreen(s) !== null || composedOnScreen(s) !== null);
   useFreeArea(sheet, asking);

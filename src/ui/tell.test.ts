@@ -56,11 +56,11 @@ describe("asking never touches your day", () => {
     setMode("ask");
     vi.stubGlobal("fetch", async () => streamOf(logBurger, { type: "reply", lines: [{ text: "Sugar peaks higher." }] }, { type: "done" }));
     await tell("what if I eat a burger");
-    expect(getState().body.intakes.map((i) => i.id)).toContain("burger");
-    expect(getState().asking?.real).toBe(before.body);
+    expect(getState().day.intakes.map((i) => i.id)).toContain("burger");
+    expect(getState().asking?.real.day).toBe(before.day);
 
     leaveAsk();
-    expect(getState().body).toBe(before.body);
+    expect(getState().day).toBe(before.day);
     expect(getState().trajectory).toBe(before.trajectory);
     expect(getState().t).toBe(before.t);
     expect(getState().asking).toBeNull();
@@ -76,7 +76,7 @@ describe("asking never touches your day", () => {
     leaveAsk();
     deliver(streamOf(logBurger, { type: "reply", lines: [{ text: "Too late." }] }, { type: "done" }));
     await answering;
-    expect(getState().body).toBe(before.body);
+    expect(getState().day).toBe(before.day);
     expect(latest().status).toBe("done");
     expect(latest().reply).toEqual([]);
   });
@@ -87,29 +87,29 @@ describe("asking never touches your day", () => {
     vi.stubGlobal("fetch", async () => streamOf(logBurger, { type: "reply", lines: [{ text: "Higher." }] }, { type: "done" }));
     await tell("what if I eat a burger");
     setMode("tell");
-    expect(getState().body).toBe(before.body);
-    const sent: { mode: string; state: { intakes: { id: string }[] } }[] = [];
+    expect(getState().day).toBe(before.day);
+    const sent: { mode: string; state: { day: { intakes: { id: string }[] } } }[] = [];
     vi.stubGlobal("fetch", async (_: string, init: { body: string }) => {
       sent.push(JSON.parse(init.body));
       return streamOf({ type: "reply", lines: [{ text: "Logged." }] }, { type: "done" });
     });
     await tell("I had a walk");
     expect(sent[0].mode).toBe("tell");
-    expect(sent[0].state.intakes.map((i) => i.id)).not.toContain("burger");
+    expect(sent[0].state.day.intakes.map((i) => i.id)).not.toContain("burger");
   });
 
   it("keeps follow-ups on the same copy and tells Claude what was said", async () => {
     setMode("ask");
     vi.stubGlobal("fetch", async () => streamOf(logBurger, { type: "reply", lines: [{ text: "Sugar peaks higher." }] }, { type: "done" }));
     await tell("what if I eat a burger");
-    const sent: { history: { asked: string; answered: string }[]; state: { intakes: { id: string }[] } }[] = [];
+    const sent: { history: { asked: string; answered: string }[]; state: { day: { intakes: { id: string }[] } } }[] = [];
     vi.stubGlobal("fetch", async (_: string, init: { body: string }) => {
       sent.push(JSON.parse(init.body));
       return streamOf({ type: "reply", lines: [{ text: "Lower." }] }, { type: "done" });
     });
     await tell("and if I walk after");
     expect(sent[0].history).toEqual([{ asked: "what if I eat a burger", answered: "Sugar peaks higher." }]);
-    expect(sent[0].state.intakes.map((i) => i.id)).toContain("burger");
+    expect(sent[0].state.day.intakes.map((i) => i.id)).toContain("burger");
   });
 
   it("walks through a guide, each step moving the view, and leaving restores it", async () => {
@@ -118,12 +118,12 @@ describe("asking never touches your day", () => {
     const steps = [step({ system: "energy", process: "insulin" }), step({ organ: "pancreas", at: 1100, closeup: { organ: "pancreas", light: ["insulin"], set: {}, compare: null, basis: null } })];
     vi.stubGlobal("fetch", async () => streamOf({ type: "action", name: "guide", args: { steps } }, { type: "reply", lines: [{ text: "Insulin moves sugar." }] }, { type: "done" }));
     await tell("explain insulin");
-    expect(getState().body).toMatchObject({ system: "energy", process: "insulin", focus: null });
+    expect(getState().view).toMatchObject({ system: "energy", process: "insulin", focus: null });
     expect(getState().asking?.guideOpen).toBe(true);
     goToStep(1);
-    expect(getState().body).toMatchObject({ system: "energy", process: null, focus: "pancreas" });
+    expect(getState().view).toMatchObject({ system: "energy", process: null, focus: "pancreas" });
     expect(getState().trajectory).toBe(before.trajectory);
     leaveAsk();
-    expect(getState().body).toBe(before.body);
+    expect(getState().day).toBe(before.day);
   });
 });

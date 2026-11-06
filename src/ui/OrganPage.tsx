@@ -161,8 +161,8 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
 }
 
 export function OrganPage() {
-  const focus = useStore((s) => s.body.focus);
-  const group = useStore((s) => s.body.focusMuscle);
+  const focus = useStore((s) => s.view.focus);
+  const group = useStore((s) => s.view.focusMuscle);
   const trajectory = useStore((s) => s.trajectory);
   const minute = useMinute();
   if (!focus) return null;

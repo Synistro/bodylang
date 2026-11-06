@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reduce, BodyState } from "../actions/reduce";
+import { reduce } from "../actions/reduce";
 import { assess } from "./assess/assess";
 import { hasSomethingToSay } from "./assess/types";
 import { crampLevel, Cycle, cycleDay, cyclePhase, daysIntoCycle, hormonesAt, liningShare, minutesToNextPeriod } from "./cycle";
@@ -7,6 +7,7 @@ import { carryOver, firstDay } from "./day";
 import { CYCLE, DAY } from "./params";
 import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
+import { stateWith } from "../actions/testState";
 
 const woman = { sex: "female", age: 30, heightCm: 168, weightKg: 62 } as const;
 const man = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
@@ -157,20 +158,20 @@ describe("how it reads", () => {
 });
 
 describe("telling it", () => {
-  const state = () => ({ cycle: null }) as BodyState;
+  const state = () => stateWith();
 
   it("uses a usual cycle unless told otherwise", () => {
-    expect(reduce(state(), { name: "set_cycle", args: { last_start: -4320 } }).cycle).toEqual({ start: -4320, lengthDays: CYCLE.lengthDays, periodDays: CYCLE.periodDays });
+    expect(reduce(state(), { name: "set_cycle", args: { last_start: -4320 } }).day.cycle).toEqual({ start: -4320, lengthDays: CYCLE.lengthDays, periodDays: CYCLE.periodDays });
   });
 
   it("keeps a length it was told, across a new start date", () => {
     const told = reduce(state(), { name: "set_cycle", args: { last_start: -4320, length_days: 32 } });
-    expect(reduce(told, { name: "set_cycle", args: { last_start: 480 } }).cycle?.lengthDays).toBe(32);
+    expect(reduce(told, { name: "set_cycle", args: { last_start: 480 } }).day.cycle?.lengthDays).toBe(32);
   });
 
   it("clears it", () => {
     const told = reduce(state(), { name: "set_cycle", args: { last_start: -4320 } });
-    expect(reduce(told, { name: "set_cycle", args: { last_start: null } }).cycle).toBeNull();
+    expect(reduce(told, { name: "set_cycle", args: { last_start: null } }).day.cycle).toBeNull();
   });
 
   it("stays on the same day of the cycle across a new date", () => {

@@ -42,9 +42,8 @@ function markTerm(range: Range | null) {
 
 async function streamAnswer(explaining: Explaining, turns: Turn[], signal: AbortSignal, onText: (text: string) => void) {
   // The numbers are for the moment on screen, which may be somewhere you scrubbed to.
-  const { body, t } = getState();
+  const { day, t } = getState();
   const { term, around, page } = explaining;
-  const day = { body: body.body, intakes: body.intakes, activities: body.activities, substances: body.substances, events: body.events, cycle: body.cycle, assumptions: body.assumptions };
   const response = await fetch("/api/explain", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ term, around, page, turns, now: Math.round(t), day }), signal });
   if (!response.ok) throw new Error(`The explanation failed with ${response.status}.`);
   for await (const event of readEvents(response, explainEventSchema)) {

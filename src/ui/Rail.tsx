@@ -64,8 +64,8 @@ function Fold({ open, children }: { open: boolean; children: ReactNode }) {
 
 // The one row that is exactly where you are, nested under whatever you came through.
 function FocusLeaf() {
-  const focus = useStore((s) => s.body.focus);
-  const focusMuscle = useStore((s) => s.body.focusMuscle);
+  const focus = useStore((s) => s.view.focus);
+  const focusMuscle = useStore((s) => s.view.focusMuscle);
   // Clicking the brain only moves the camera: it is the page you are already on.
   if (!focus || focus === "brain") return null;
   return (
@@ -81,9 +81,9 @@ function FocusLeaf() {
 
 function Leaves({ system }: { system: SystemId }) {
   const leaves = useLeaves(system);
-  const processId = useStore((s) => s.body.process);
-  const focused = useStore((s) => s.body.focus !== null);
-  const selected = useStore((s) => (s.body.process ? currentProcesses(s).find((p) => p.id === s.body.process) ?? null : null));
+  const processId = useStore((s) => s.view.process);
+  const focused = useStore((s) => s.view.focus !== null);
+  const selected = useStore((s) => (s.view.process ? currentProcesses(s).find((p) => p.id === s.view.process) ?? null : null));
   // Something selected from elsewhere, such as by Claude, still needs its place in the outline.
   const shown = selected && !leaves.some((leaf) => leaf.id === selected.id) ? [...leaves, { id: selected.id, title: selected.title, note: "", active: true, organ: null, origin: SENTENCE_ORIGIN }] : leaves;
   return (
@@ -114,8 +114,8 @@ function Leaves({ system }: { system: SystemId }) {
 // The outline of the body: the systems, with the one you are in opened to where you are. Reading it
 // tells you the level you are on, and any row in it takes you there.
 export function Rail() {
-  const system = useStore((s) => s.body.system);
-  const atSystem = useStore((s) => !s.body.process && !s.body.focus);
+  const system = useStore((s) => s.view.system);
+  const atSystem = useStore((s) => !s.view.process && !s.view.focus);
   const tr = useStore((s) => s.trajectory);
   const minute = useMinute();
   const statuses = assessmentAt(tr, minute).systems;

@@ -28,11 +28,11 @@ const KEY_STEP = { today: { small: 5, large: 30 }, days: { small: 60, large: 360
 // What this page is, as far as the day panel cares: what it draws today and what it is about.
 function useDayView(): DayView {
   const tr = useStore((s) => s.trajectory);
-  const now = useStore((s) => Math.round(s.body.now));
-  const system = useStore((s) => s.body.system);
-  const processId = useStore((s) => s.body.process);
-  const focus = useStore((s) => s.body.focus);
-  const focusMuscle = useStore((s) => s.body.focusMuscle);
+  const now = useStore((s) => Math.round(s.now));
+  const system = useStore((s) => s.view.system);
+  const processId = useStore((s) => s.view.process);
+  const focus = useStore((s) => s.view.focus);
+  const focusMuscle = useStore((s) => s.view.focusMuscle);
   const real = useStore((s) => (s.asking && s.asking.realDerived.trajectory !== s.trajectory ? s.asking.realDerived.trajectory : null));
   const yourDay = useStore(yourDayWhileAsking);
   const steps = useStore((s) => (s.asking?.guideOpen && !s.touring ? s.asking.guide : null));
@@ -119,7 +119,7 @@ function LaneRow({ lane, hot, origin }: { lane: Lane; hot: boolean; origin: Orig
 export function DayPanel({ stage }: { stage: Stage | null }) {
   const theme = useStore((s) => s.theme);
   const tr = useStore((s) => s.trajectory);
-  const now = useStore((s) => s.body.now);
+  const now = useStore((s) => s.now);
   const playing = useStore((s) => s.playing);
   const dayMoment = useStore((s) => s.dayMoment);
   const hoverLane = useStore((s) => s.hoverLane);
@@ -127,10 +127,10 @@ export function DayPanel({ stage }: { stage: Stage | null }) {
   const lanes = lanesOf(view);
   const overDays = runsOverDays(view);
   const cursorOf = (s: AppState) => (overDays ? muscleMinute(s) : s.t);
-  const selected = useStore((s) => s.body.process);
+  const selected = useStore((s) => s.view.process);
   const origins = useMemo(() => new Map(lanes.map((lane) => [lane.id, laneOrigin(tr, lane, Math.round(now), selected)])), [lanes, tr, now, selected]);
   const stops = useMemo(() => viewStops(view, now).map((stop) => stop.at), [view, now]);
-  const away = useStore((s) => Math.abs(Math.round(cursorOf(s)) - Math.round(s.body.now)) >= 1);
+  const away = useStore((s) => Math.abs(Math.round(cursorOf(s)) - Math.round(s.now)) >= 1);
   const previous = useStore((s) => stops.filter((at) => at < cursorOf(s) - 0.5).at(-1) ?? null);
   const next = useStore((s) => stops.find((at) => at > cursorOf(s) + 0.5) ?? null);
   const overDaysRef = useRef(overDays);

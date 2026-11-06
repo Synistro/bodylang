@@ -33,21 +33,19 @@ const PLANS = flag("plans", Object.keys(ALL_PLANS).join(",")).split(",");
 
 const NOW = 14 * 60 + 30;
 const pizza = { id: "pizza", label: "Pizza", at: 790, grams: 214, waterMl: 92, carbsG: 71, sugarG: 7.6, fatG: 20.7, proteinG: 24, fiberG: 4.9, caffeineMg: 0, alcoholG: 0, source: { kind: "table", fdcId: 2708615, name: "Pizza, cheese", dataset: "FNDDS" }, serving: { label: "slice", grams: 107 } };
-const base = (over = {}) => ({
-  body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
-  intakes: [],
-  activities: [{ from: -1440, posture: "sleeping" }, { from: -990, posture: "standing" }, { from: -30, posture: "sleeping" }, { from: 450, posture: "standing" }],
-  substances: [],
-  events: [],
-  cycle: null,
+const base = (day = {}) => ({
+  day: {
+    body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+    intakes: [],
+    activities: [{ from: -1440, posture: "sleeping" }, { from: -990, posture: "standing" }, { from: -30, posture: "sleeping" }, { from: 450, posture: "standing" }],
+    substances: [],
+    events: [],
+    cycle: null,
+    assumptions: {},
+    ...day,
+  },
   now: NOW,
-  system: "overview",
-  process: null,
-  focus: null,
-  focusMuscle: null,
-  whatIf: null,
-  assumptions: {},
-  ...over,
+  view: { system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null },
 });
 
 const logged = (actions) => actions.filter((a) => /^(log_|set_|define_|correct_|remove_|end_)/.test(a.name));

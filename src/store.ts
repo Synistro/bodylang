@@ -10,7 +10,7 @@ import { ReplyLine } from "./model/readout";
 import { followProcess, processesAt } from "./model/processes/processes";
 import { Process } from "./model/processes/line";
 import { simulate } from "./model/engine/simulate";
-import { Scenario } from "./model/scenario";
+import type { Body, Posture } from "./model/scenario";
 import { Trajectory } from "./model/engine/trajectory";
 import type { Theme } from "./look";
 import type { BuildStatus } from "./wire";
@@ -92,43 +92,34 @@ export interface Derived {
   whatIf: Trajectory | null;
 }
 
-export interface AppState extends Ui, Derived {
-  body: BodyState;
-}
-
-const START = {
-  body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
-  activities: [
-    { from: 0, posture: "sleeping" },
-    { from: 450, posture: "standing" },
-  ],
-} satisfies Pick<Scenario, "body" | "activities">;
+export interface AppState extends Ui, Derived, BodyState {}
 
 const initialBody: BodyState = {
-  ...START,
-  intakes: [],
-  substances: [],
-  events: [],
-  cycle: null,
+  day: {
+    body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+    activities: [
+      { from: 0, posture: "sleeping" },
+      { from: 450, posture: "standing" },
+    ],
+    intakes: [],
+    substances: [],
+    events: [],
+    cycle: null,
+    assumptions: {},
+  },
   now: 12 * 60,
-  system: "overview",
-  process: null,
-  focus: null,
-  focusMuscle: null,
-  whatIf: null,
-  assumptions: {},
+  view: { system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null },
 };
 
-function derive(b: BodyState): Derived {
-  const scenario: Scenario = { body: b.body, intakes: b.intakes, activities: b.activities, substances: b.substances, events: b.events, cycle: b.cycle };
+function derive({ day, view }: BodyState): Derived {
   return {
-    trajectory: simulate(scenario),
-    whatIf: b.whatIf ? simulate({ ...scenario, activities: b.whatIf.activities }) : null,
+    trajectory: simulate(day),
+    whatIf: view.whatIf ? simulate({ ...day, activities: view.whatIf.activities }) : null,
   };
 }
 
 let state: AppState = {
-  body: initialBody,
+  ...initialBody,
   ...derive(initialBody),
   t: initialBody.now,
   playing: false,
@@ -173,19 +164,20 @@ export function setUi(patch: Partial<Ui>) {
   emit();
 }
 
+// What a turn and a reducer work on, without what the store derived from it.
+export const bodyOf = ({ day, now, view }: BodyState): BodyState => ({ day, now, view });
+
 function setBodyState(next: BodyState, extra: Partial<Ui> = {}) {
-  const physiologyChanged =
-    next.body !== state.body.body || next.intakes !== state.body.intakes || next.activities !== state.body.activities || next.substances !== state.body.substances || next.events !== state.body.events || next.cycle !== state.body.cycle || next.whatIf !== state.body.whatIf;
-  const derived = physiologyChanged ? derive(next) : null;
+  const derived = next.day !== state.day || next.view.whatIf !== state.view.whatIf ? derive(next) : null;
   const trajectory = derived?.trajectory ?? state.trajectory;
-  const process = next.process === null ? null : followProcess(trajectory, next.process, Math.round(state.t));
-  const walkthrough = process === next.process ? {} : { stop: null, touring: false };
-  state = { ...state, body: { ...next, process }, ...derived, ...walkthrough, ...extra };
+  const process = next.view.process === null ? null : followProcess(trajectory, next.view.process, Math.round(state.t));
+  const walkthrough = process === next.view.process ? {} : { stop: null, touring: false };
+  state = { ...state, day: next.day, now: next.now, view: { ...next.view, process }, ...derived, ...walkthrough, ...extra };
   emit();
 }
 
 export function dispatch(action: Action, exchangeId?: number) {
-  const next = reduce(state.body, action);
+  const next = reduce(bodyOf(state), action);
   const extra: Partial<Ui> = {};
   if (action.name === "guide" && state.asking) {
     setBodyState(viewOfStep(next, action.args.steps[0]), { asking: { ...state.asking, guide: action.args.steps, step: 0, guideOpen: true, moment: momentOfStep(action.args.steps, 0) }, stop: null, touring: false });
@@ -199,12 +191,12 @@ export function dispatch(action: Action, exchangeId?: number) {
   setBodyState(next, extra);
 }
 
-export function setBody(patch: Partial<BodyState["body"]>) {
-  setBodyState({ ...state.body, body: { ...state.body.body, ...patch } });
+export function setBody(patch: Partial<Body>) {
+  setBodyState({ ...bodyOf(state), day: { ...state.day, body: { ...state.day.body, ...patch } } });
 }
 
-export function setPostureNow(posture: BodyState["activities"][number]["posture"]) {
-  dispatch({ name: "set_activity", args: { posture, from: Math.round(state.body.now) } });
+export function setPostureNow(posture: Posture) {
+  dispatch({ name: "set_activity", args: { posture, from: Math.round(state.now) } });
 }
 
 export const isOnChart = (minute: number) => minute >= LANES.from && minute <= LANES.to;
@@ -229,9 +221,10 @@ const momentOfStep = (steps: readonly GuideStep[], index: number) => {
 // so naming one on some steps and not others would only make the row jump between them.
 function viewOfStep(body: BodyState, step: GuideStep): BodyState {
   const { organ } = step;
-  if (!organ) return { ...body, system: step.system ?? body.system, process: step.process, focus: null, focusMuscle: null };
-  const belongsHere = systemById(body.system).organs.includes(organ);
-  return { ...body, system: belongsHere ? body.system : ORGAN_HOME[organ], process: null, focus: organ, focusMuscle: organ === "muscle" ? step.muscle : null };
+  const { view } = body;
+  if (!organ) return { ...body, view: { ...view, system: step.system ?? view.system, process: step.process, focus: null, focusMuscle: null } };
+  const belongsHere = systemById(view.system).organs.includes(organ);
+  return { ...body, view: { ...view, system: belongsHere ? view.system : ORGAN_HOME[organ], process: null, focus: organ, focusMuscle: organ === "muscle" ? step.muscle : null } };
 }
 
 let nextAskId = 1;
@@ -243,9 +236,9 @@ export function enterAsk() {
   const id = nextAskId++;
   state = {
     ...state,
-    body: { ...state.body, whatIf: null },
+    view: { ...state.view, whatIf: null },
     whatIf: null,
-    asking: { id, real: state.body, realDerived: { trajectory, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, moment: null, cancel: null },
+    asking: { id, real: bodyOf(state), realDerived: { trajectory, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, moment: null, cancel: null },
   };
   emit();
   return id;
@@ -256,31 +249,27 @@ export function leaveAsk() {
   const asking = state.asking;
   if (!asking) return;
   asking.cancel?.();
-  state = { ...state, body: asking.real, ...asking.realDerived, t: asking.realT, asking: null, playing: false, stop: null, touring: false, hover: null, hoverMuscle: null, hoverLane: null, fixing: null };
+  state = { ...state, ...asking.real, ...asking.realDerived, t: asking.realT, asking: null, playing: false, stop: null, touring: false, hover: null, hoverMuscle: null, hoverLane: null, fixing: null };
   emit();
 }
 
 // Your day as a file. Nothing about what is on screen goes in, and neither does a copy being explored.
 export function dayDocOf(s: AppState): DayDoc | null {
   if (!s.date || s.asking) return null;
-  const { body, intakes, activities, substances, events, cycle, assumptions } = s.body;
-  return { version: 1, date: s.date, body, intakes, activities, substances, events, cycle, assumptions };
+  return { version: 1, date: s.date, ...s.day };
 }
 
 // Puts a saved day in place, keeping whatever view you are on.
-export function restoreDay(doc: DayDoc, minute: number) {
-  const atNow = Math.abs(state.t - state.body.now) < 1;
-  setBodyState(
-    { ...state.body, body: doc.body, intakes: doc.intakes, activities: doc.activities, substances: doc.substances, events: doc.events, cycle: doc.cycle, assumptions: doc.assumptions, whatIf: null, now: minute },
-    { date: doc.date, dayProblem: null, ...(atNow ? { t: minute } : {}) },
-  );
+export function restoreDay({ version: _version, date, ...day }: DayDoc, minute: number) {
+  const atNow = Math.abs(state.t - state.now) < 1;
+  setBodyState({ day, now: minute, view: { ...state.view, whatIf: null } }, { date, dayProblem: null, ...(atNow ? { t: minute } : {}) });
 }
 
 // The clock moved on. A view resting on now moves with it, and one you scrubbed away stays put.
 export function setClock(minute: number) {
-  if (minute === state.body.now) return;
-  const atNow = !state.playing && Math.abs(state.t - state.body.now) < 1;
-  setBodyState({ ...state.body, now: minute }, atNow ? { t: minute } : {});
+  if (minute === state.now) return;
+  const atNow = !state.playing && Math.abs(state.t - state.now) < 1;
+  setBodyState({ ...bodyOf(state), now: minute }, atNow ? { t: minute } : {});
 }
 
 export function setMode(mode: Mode) {
@@ -336,7 +325,7 @@ export function goToStep(index: number) {
   const asking = state.asking;
   const step = asking?.guide?.[index];
   if (!asking || !step) return;
-  setBodyState(viewOfStep(state.body, step), { asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(asking.guide ?? [], index) }, stop: null, touring: false, playing: false });
+  setBodyState(viewOfStep(bodyOf(state), step), { asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(asking.guide ?? [], index) }, stop: null, touring: false, playing: false });
 }
 
 export function closeGuide() {
@@ -352,12 +341,12 @@ export function setAskCancel(cancel: (() => void) | null) {
 }
 
 export function applyWhatIf() {
-  if (!state.body.whatIf) return;
-  setBodyState({ ...state.body, activities: state.body.whatIf.activities, whatIf: null });
+  const { whatIf } = state.view;
+  if (whatIf) setBodyState({ ...bodyOf(state), day: { ...state.day, activities: whatIf.activities }, view: { ...state.view, whatIf: null } });
 }
 
 export function clearWhatIf() {
-  setBodyState({ ...state.body, whatIf: null });
+  setBodyState({ ...bodyOf(state), view: { ...state.view, whatIf: null } });
 }
 
 let nextExchangeId = 1;
@@ -384,7 +373,7 @@ export function currentProcesses(s: AppState): Process[] {
 }
 
 export function selectedProcess(s: AppState): Process | null {
-  return s.body.process ? currentProcesses(s).find((p) => p.id === s.body.process) ?? null : null;
+  return s.view.process ? currentProcesses(s).find((p) => p.id === s.view.process) ?? null : null;
 }
 
 export function useStore<T>(selector: (s: AppState) => T): T {
