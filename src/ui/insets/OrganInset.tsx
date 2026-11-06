@@ -1,6 +1,7 @@
 import { Component, type ComponentType, type ReactNode } from "react";
+import { readsLikeYourDay, stepUsesDrawing } from "../../closeup/list";
 import type { OrganId } from "../../model/ids";
-import { composedOnScreen, useStore } from "../../store";
+import { closeupOnScreen, composedOnScreen, useStore, yourDayWhileAsking } from "../../store";
 import { BladderInset } from "./BladderInset";
 import { ComposedInset } from "./ComposedInset";
 import { BrainInset } from "./BrainInset";
@@ -55,7 +56,16 @@ class DrawingBoundary extends Component<{ children: ReactNode }, { failed: strin
 
 export function OrganInset({ organ, trajectory, t, muscle }: InsetProps & { organ: OrganId }) {
   const composed = useStore(composedOnScreen);
+  const step = useStore(closeupOnScreen);
+  const yourDay = useStore(yourDayWhileAsking);
   const Figure = FIGURES[organ];
+  if (
+    yourDay &&
+    !composed &&
+    !stepUsesDrawing(step, organ) &&
+    readsLikeYourDay(organ, { trajectory, muscle }, yourDay, t)
+  )
+    return null;
   return (
     <DrawingBoundary key={organ}>
       {composed ? <ComposedInset spec={composed} /> : <Figure trajectory={trajectory} t={t} muscle={muscle} />}

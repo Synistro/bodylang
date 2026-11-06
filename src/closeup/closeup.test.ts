@@ -4,7 +4,9 @@ import type { BodyEvent } from "../model/events/types";
 import type { Trajectory } from "../model/engine/trajectory";
 import type { OrganId } from "../model/ids";
 import { AS_THE_MODEL_SAYS, levelsAt, litLevels, panelsOf } from "./define";
-import { closeupGuidance, closeupOf } from "./list";
+import { simulate } from "../model/engine/simulate";
+import { SCENARIOS } from "../model/testScenarios";
+import { closeupGuidance, closeupOf, type CloseupStep, readsLikeYourDay, stepUsesDrawing } from "./list";
 import { muscleCloseup } from "./muscle";
 
 const session = {
@@ -151,5 +153,35 @@ describe("what Claude can ask for", () => {
     expect(closeupOf("muscle")?.keys).toContain("immune");
     expect(closeupOf("no_such_organ" as OrganId)).toBeNull();
     expect(closeupGuidance()).toContain("immune (How many immune cells");
+  });
+});
+
+describe("a drawing while exploring", () => {
+  const during = 21 * 60 + 10;
+  const added = (name: keyof typeof SCENARIOS, onto: Partial<(typeof SCENARIOS)[keyof typeof SCENARIOS]>) => ({
+    place: { trajectory: simulate(SCENARIOS[name]), muscle: null },
+    yourDay: simulate({ ...SCENARIOS[name], ...onto }),
+  });
+
+  it("is about a question that moved it, and not about one that left it alone", () => {
+    const { place, yourDay } = added("sex", { events: [] });
+    expect(readsLikeYourDay("heart", place, yourDay, during)).toBe(false);
+    expect(readsLikeYourDay("brain", place, yourDay, during)).toBe(true);
+    expect(readsLikeYourDay("stomach", place, yourDay, during)).toBe(true);
+  });
+
+  it("keeps the brain's caffeine when the question is the coffee", () => {
+    const { place, yourDay } = added("far too much coffee", { intakes: [] });
+    expect(readsLikeYourDay("brain", place, yourDay, 12 * 60)).toBe(false);
+  });
+
+  it("stays when a step points at something in it", () => {
+    const step = (changes: Partial<CloseupStep>) =>
+      ({ organ: "brain", light: [], set: {}, compare: null, basis: null, ...changes }) as CloseupStep;
+    expect(stepUsesDrawing(step({ light: ["caffeine"] }), "brain")).toBe(true);
+    expect(stepUsesDrawing(step({ set: { tired: 0.5 } }), "brain")).toBe(true);
+    expect(stepUsesDrawing(step({}), "brain")).toBe(false);
+    expect(stepUsesDrawing(step({ light: ["caffeine"] }), "heart")).toBe(false);
+    expect(stepUsesDrawing(null, "brain")).toBe(false);
   });
 });
