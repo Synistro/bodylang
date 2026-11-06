@@ -43,12 +43,17 @@ function saveWhenChanged() {
   saved = doc;
   window.clearTimeout(timer);
   timer = window.setTimeout(() => {
+    timer = 0;
     if (saved) void write(saved);
   }, SAVE_AFTER_MS);
 }
 
+// A day that came from the file has nothing to save. Saving it anyway would tell the other pages, and they
+// would answer the same way, around and around.
 function put(doc: DayDoc, minute: number) {
   restoreDay(doc, minute);
+  window.clearTimeout(timer);
+  timer = 0;
   saved = dayDocOf(getState());
 }
 
@@ -67,7 +72,8 @@ function tick(wanted: { reload: boolean }) {
   if (s.asking || !s.date) return;
   if (wanted.reload) {
     wanted.reload = false;
-    void load().catch(problem);
+    // An edit still waiting to be saved is newer than what another page wrote, and will replace it.
+    if (!timer) void load().catch(problem);
     return;
   }
   const clock = clockAt(new Date());
