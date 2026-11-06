@@ -7,7 +7,7 @@ import { openingReply, readout } from "./narrate";
 import { processesAt } from "./processes";
 import { simulate } from "./simulate";
 import { Trajectory, value } from "./engine/trajectory";
-import { formatClock, whenWords } from "./state";
+import { formatClock, whenWords } from "./words";
 import { SYSTEMS } from "./systems";
 import { threadsAt } from "./threads";
 import { hm } from "./testKit";

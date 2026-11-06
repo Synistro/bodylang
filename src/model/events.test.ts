@@ -5,7 +5,7 @@ import { assess, Assessment, heartVerdict } from "./assess";
 import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, resolveEvent } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./narrate";
-import { levelWord } from "./state";
+import { levelWord } from "./words";
 import { simulate } from "./simulate";
 import { anthropometrics } from "./engine/anthropometrics";
 import { Intake, postureAt, Scenario } from "./scenario";

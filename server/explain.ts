@@ -4,7 +4,7 @@ import { z } from "zod";
 import { dayContentSchema, DayContent } from "../src/model/day";
 import { readout } from "../src/model/narrate";
 import { simulate } from "../src/model/simulate";
-import { formatClock } from "../src/model/state";
+import { formatClock } from "../src/model/words";
 import { cleanEnvironment } from "./claudeEnv";
 
 const MODEL = process.env.BODYLANG_EXPLAIN_MODEL ?? "claude-haiku-5-5";

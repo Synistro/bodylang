@@ -14,7 +14,8 @@ import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/narrate";
 import { processesAt } from "../src/model/processes";
-import { formatClock, whereabouts } from "../src/model/state";
+import { formatClock } from "../src/model/words";
+import { whereabouts } from "../src/model/whereabouts";
 import { ORGANS } from "../src/model/ids";
 
 // Which model answers, and how. tools/speed-bench.mjs measured these, and PLAN.md has the results. In a

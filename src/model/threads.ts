@@ -3,7 +3,7 @@ import { PROCESS, REFERENCE } from "./params";
 import { hasFoodLine, mealGroups, mealProcessId, mealTitle, Process, processesAt, ProcessStop } from "./processes";
 import { foodKcalOf } from "./scenario";
 import { Trajectory, value } from "./engine/trajectory";
-import { formatClock, inSentence } from "./state";
+import { formatClock, inSentence } from "./words";
 
 // One thing the person told the body about, shown on the top level as one line.
 export interface Thread {

@@ -5,7 +5,8 @@ import { processesAt } from "./processes";
 import { Trajectory, value } from "./engine/trajectory";
 import { threadsAt } from "./threads";
 import type { OrganId } from "./ids";
-import { forecast, formatClock, inSentence, levelWord } from "./state";
+import { forecast } from "./forecast";
+import { formatClock, inSentence, levelWord } from "./words";
 
 export interface ReplyLine {
   text: string;

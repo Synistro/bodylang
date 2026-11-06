@@ -8,7 +8,7 @@ import { CYCLE, DAY } from "../model/params";
 import { ROUTE_IDS, SystemId, OrganId, ORGANS } from "../model/ids";
 import { shortText } from "./shortText";
 import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt, SUBSTANCE_ROUTES } from "../model/scenario";
-import { formatClock } from "../model/state";
+import { formatClock } from "../model/words";
 import { systemById } from "../model/systems";
 import { ORGAN_HOME } from "../look";
 

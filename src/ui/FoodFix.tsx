@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { foodOrigin } from "../model/origin";
 import { kcalOf, Intake } from "../model/scenario";
-import { formatClock } from "../model/state";
+import { formatClock } from "../model/words";
 import { dispatch, setUi, useStore } from "../store";
 import { X } from "./icons";
 import { sourced } from "./SourceTip";

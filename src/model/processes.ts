@@ -8,7 +8,7 @@ import { alcoholLedgerAt, caffeineLedgerAt, intakeFlowsAt, Ledger, ledgerAt, Ser
 import { alcoholVolumeL } from "./engine/anthropometrics";
 import { CustomSubstance, foodKcalOf, SubstanceRoute, Intake, POSTURES } from "./scenario";
 import { OrganId } from "./ids";
-import { formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
+import { formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./words";
 import type { SystemId, RouteId, Substance } from "./ids";
 
 

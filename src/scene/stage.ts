@@ -7,7 +7,7 @@ import type { Process, ProcessStop } from "../model/processes";
 import { Body, POSTURES, Posture, Sex } from "../model/scenario";
 import { ledgerAt, Trajectory, value } from "../model/engine/trajectory";
 import { OrganId, SystemId } from "../model/ids";
-import { organStates } from "../model/state";
+import { organStates } from "./organStates";
 import { ORGAN_NAME, SYSTEMS, systemById } from "../model/systems";
 import { ACCENT_SYSTEM, organHue, viewSystemOf } from "../look";
 import { WALL, WALL_FPS, WALL_PIXEL_RATIO } from "../wall";

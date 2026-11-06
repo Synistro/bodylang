@@ -5,7 +5,7 @@ import { assess } from "../model/assess";
 import { foodOrigin, modelOrigin, Origin, processOrigin, readingOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { processesAt } from "../model/processes";
 import type { Trajectory } from "../model/engine/trajectory";
-import { formatClock } from "../model/state";
+import { formatClock } from "../model/words";
 import type { Stage } from "../scene/stage";
 import { systemById } from "../model/systems";
 import { AppState, getState, goToStep, muscleMinute, releaseMoment, selectedProcess, setUi, showMuscleMinute, useStore, yourDayWhileAsking } from "../store";

@@ -6,7 +6,7 @@ import { DAY, LANES, MUSCLE_RECOVERY, REFERENCE } from "./params";
 import { mealGroups, mealProcessId, Process, processesAt } from "./processes";
 import { alcoholLedgerAt, caffeineLedgerAt, ledgerAt, Trajectory } from "./engine/trajectory";
 import { foodKcalOf, Intake } from "./scenario";
-import { formatClock, levelWord, whenWords } from "./state";
+import { formatClock, levelWord, whenWords } from "./words";
 import type { SystemId } from "./ids";
 import { systemById } from "./systems";
 import { Thread, threadsAt } from "./threads";

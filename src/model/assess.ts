@@ -7,7 +7,9 @@ import { caffeineLedgerAt, intakeFlowsAt, SeriesName, Trajectory, value } from "
 import { foodKcalOf, Intake, kcalOf, Posture, POSTURES } from "./scenario";
 import { postureKcalPerHour } from "./engine/anthropometrics";
 import { OrganId, SystemId } from "./ids";
-import { arrivingFoods, foodsInStomach, forecast as stateForecast, formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./state";
+import { arrivingFoods, foodsInStomach } from "./whereabouts";
+import { forecast as stateForecast } from "./forecast";
+import { formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./words";
 import { systemById } from "./systems";
 import type { ReadingId } from "./ids";
 

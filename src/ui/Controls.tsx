@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { POSTURES, Posture, Sex } from "../model/scenario";
 import { value } from "../model/engine/trajectory";
 import { modelOrigin, Origin } from "../model/origin";
-import { formatClock } from "../model/state";
+import { formatClock } from "../model/words";
 import { getState, setBody, setPostureNow, setUi, useStore } from "../store";
 import { sourced } from "./SourceTip";
 

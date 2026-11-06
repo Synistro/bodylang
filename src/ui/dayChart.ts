@@ -1,7 +1,7 @@
 import { ACCENT_SYSTEM, LookTheme, SYSTEM_HUE } from "../look";
 import { DAY_SPAN, fitWindow, Lane, Moment, Span } from "../model/lanes";
 import { LANES } from "../model/params";
-import { formatClock } from "../model/state";
+import { formatClock } from "../model/words";
 import { DayView, lanesOf, runsOverDays, viewStops } from "./dayView";
 
 interface Range {
