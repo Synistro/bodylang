@@ -41,6 +41,14 @@ describe("checking Claude's numbers against the model's", () => {
     expect(unverifiedNumbers("It reached 6.3. Then it fell.", readout)).toEqual([]);
   });
 
+  it("passes a time rounded to the quarter hour, and nothing further away", () => {
+    const told = book("empties near 01:16, peak 23:53");
+    expect(unverifiedNumbers("Done around 01:15.", told)).toEqual([]);
+    expect(unverifiedNumbers("Peaks around 00:00.", told)).toEqual([]);
+    expect(unverifiedNumbers("Done around 01:30.", told)).toEqual(["01:30"]);
+    expect(unverifiedNumbers("Done at 01:17.", told)).toEqual(["01:17"]);
+  });
+
   it("matches a clock with or without its leading zero", () => {
     expect(unverifiedNumbers("Since 8:30 this morning.", book("at 08:30"))).toEqual([]);
   });

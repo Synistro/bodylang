@@ -5,6 +5,8 @@ const LOOSE_NUMBER = /\d+(?:\.\d+)?/g;
 const CLOCK = /\b\d{1,2}:\d{2}\b/g;
 const SAID_NUMBER = /(?<![\w.:,])(\d{1,2}:\d{2}|\d+(?:\.\d+)?)(%?)(?![\w:]|\.\d)/g;
 
+const minuteOf = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3));
+
 export class NumberBook {
   private readonly values = new Set<number>();
   private readonly clocks = new Set<string>();
@@ -15,9 +17,21 @@ export class NumberBook {
     for (const number of text.replace(CLOCK, " ").match(LOOSE_NUMBER) ?? []) this.values.add(Number(number));
   }
 
+  // A time rounded to the quarter hour is how a person says it, so 01:16 backs up "around 01:15".
+  private knowsClock(clock: string): boolean {
+    if (this.clocks.has(clock)) return true;
+    const said = minuteOf(clock);
+    if (said % 15 !== 0) return false;
+    for (const known of this.clocks) {
+      const apart = Math.abs(minuteOf(known) - said);
+      if (Math.min(apart, 1440 - apart) <= 7) return true;
+    }
+    return false;
+  }
+
   // A number said to fewer decimals still matches, so 6.31 backs up "6.3", and 0.65 backs up "65%".
   knows(token: string, percent: boolean): boolean {
-    if (token.includes(":")) return this.clocks.has(token.padStart(5, "0"));
+    if (token.includes(":")) return this.knowsClock(token.padStart(5, "0"));
     const said = Number(token);
     const decimals = token.split(".")[1]?.length ?? 0;
     const within = 0.5 * 10 ** -decimals + 1e-9;
