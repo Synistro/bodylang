@@ -4,4 +4,3 @@ dist
 /pipeline/cache/
 /.venv-pipeline/
 __pycache__/
-/proofs/

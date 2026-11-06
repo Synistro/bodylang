@@ -82,7 +82,7 @@ swiftc tools/webkitshot.swift -o /tmp/webkitshot
 ```
 
 ```bash
-/tmp/webkitshot "http://localhost:5183/" 1440 900 7 out.png 'window.bodylang.dispatch({name:"show_system",args:{system:"immune"}})'
+/tmp/webkitshot "http://localhost:5183/?demo" 1440 900 14 /tmp/out.png 'window.bodylang.dispatch({name:"show_system",args:{system:"immune"}})'
 ```
 
 ## Rebuild the assets

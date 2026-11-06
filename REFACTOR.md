@@ -37,6 +37,7 @@ The work differs from the plan in these places:
 - **B7** stops a clock vouching for its parts. The rule that integers match within 0.5 stays.
 - **B13** leaves `read_body` at today only, with a line in the prompt that says so.
 - **B15** hides the model's caption when a step sets levels (`captionFromModel`). The lungs' cough word under reduced motion stays, because it still says what the drawing means.
+- **B11** leaves Digestion's four rows sharing one sentence, because it says where the food is. Across the 33 days, sampled every 5 minutes, the loosest pairing is "Working" with "absorbing the last of the meal", at 1 sample of 7,953.
 - **C2** gives the walkthrough the arrow keys whenever it is open (`s.touring || s.asking?.guideOpen`).
 - **C8** fixes the leaked listener. Geometries are still not disposed on a Fast Refresh remount.
 - **C10** adds `DrawingBoundary` around a drawing. `parts()` still returns empty for a misnamed part.
