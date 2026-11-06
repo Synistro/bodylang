@@ -1,8 +1,9 @@
 import { crampLevel, cyclePhase, CyclePhase, lutealShare, minutesToNextPeriod } from "./cycle";
 import { BodyEvent, ChannelId, curveStrength, effectAt, endOf, maxHeartRate, muscleStateAt, MuscleState, MuscleWork, namesOf, ResolvedEvent } from "./events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "./muscleGroups";
-import { FEEL, ACTIVITY, BLOOD_FLOW, CAFFEINE, CYCLE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
-import { mealDipOf } from "./engine/feel";
+import { ACTIVITY, BLOOD_FLOW, CAFFEINE, CYCLE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
+import { drowsyFromMeal, drowsyFromSleepPressure, mealDipOf } from "./engine/feel";
+import { heartFromCaffeine, heartFromDigestion } from "./engine/heart";
 import { caffeineLedgerAt, intakeFlowsAt, SeriesName, Trajectory, value } from "./engine/trajectory";
 import { foodKcalOf, Intake, kcalOf, Posture, POSTURES } from "./scenario";
 import { postureKcalPerHour } from "./engine/anthropometrics";
@@ -411,8 +412,8 @@ function movedWord(c: Context): string {
 function heartCauses(c: Context): { name: string; bpm: number }[] {
   const fixedRows = [
     { name: movedWord(c), bpm: fromMoving(c, "heartRate") },
-    { name: "digestion", bpm: HEART.digestionGain * c.v("digestion") },
-    { name: "caffeine", bpm: HEART.caffeineGainPerMgL * c.v("caffeine") },
+    { name: "digestion", bpm: heartFromDigestion(c.v("digestion")) },
+    { name: "caffeine", bpm: heartFromCaffeine(c.v("caffeine")) },
     { name: "your cycle", bpm: fromCycle(c, "heartRate") },
   ];
   const named = (e: ResolvedEvent) => (e.preset === "illness" && effectAt(e, "temperature", c.t) >= PROCESS.feverNamedFromC ? "the fever" : e.causeName);
@@ -1433,7 +1434,7 @@ function heaviestMeal(c: Context): Intake | null {
   return meals.length ? meals.reduce((best, next) => (dipOf(next) > dipOf(best) ? next : best)) : null;
 }
 
-const mealDrowsiness = (c: Context) => c.v("mealDip") * (1 - c.v("caffeineFelt") * FEEL.caffeineBluntsMealDip);
+const mealDrowsiness = (c: Context) => drowsyFromMeal(c.v("mealDip"), c.v("caffeineFelt"));
 
 // What is making you sleepy, biggest first. A new cause of drowsiness is a new row.
 const SLEEPY_CAUSES: { size: (c: Context) => number; text: (c: Context) => string }[] = [
@@ -1444,9 +1445,9 @@ const SLEEPY_CAUSES: { size: (c: Context) => number; text: (c: Context) => strin
       return meal ? `You ate ${Math.round(sittingKcal(c, meal))} kcal at ${clock(meal.at)}` : "You ate recently";
     },
   },
-  { size: (c) => c.v("sleepPressure") * FEEL.sleepPressureDrowsyShare, text: (c) => `You have been awake ${hoursWord(hoursAwake(c))}` },
+  { size: (c) => drowsyFromSleepPressure(c.v("sleepPressure")), text: (c) => `You have been awake ${hoursWord(hoursAwake(c))}` },
   { size: (c) => c.tr.channels.drowsiness[nearestMinute(c)], text: (c) => `From ${causeOf(c, "drowsiness", 0) ?? ""}` },
-  { size: (c) => c.v("drowsy") - mealDrowsiness(c) - c.v("sleepPressure") * FEEL.sleepPressureDrowsyShare - c.tr.channels.drowsiness[nearestMinute(c)], text: () => "Your body clock dips in the afternoon" },
+  { size: (c) => c.v("drowsy") - mealDrowsiness(c) - drowsyFromSleepPressure(c.v("sleepPressure")) - c.tr.channels.drowsiness[nearestMinute(c)], text: () => "Your body clock dips in the afternoon" },
 ];
 
 const minutesUntilSleep = (c: Context) => firstWhen(c, (m) => POSTURES[Math.round(c.tr.series.posture[m])] === "sleeping") ?? DAY.minutes;

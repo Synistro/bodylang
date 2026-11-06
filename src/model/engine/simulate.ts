@@ -30,7 +30,6 @@ function recordSeries(series: Record<SeriesName, Float32Array>, pools: Pools, re
   const hours = t / 60;
   series.glucose[i] = pools.glucose;
   series.insulin[i] = pools.insulin;
-  series.insulinAction[i] = pools.insulinAction;
   series.tg[i] = pools.tg;
   series.caffeine[i] = caffeine.mgL;
   series.occupancy[i] = caffeine.occupancy;
@@ -39,7 +38,6 @@ function recordSeries(series: Record<SeriesName, Float32Array>, pools: Pools, re
   series.breaths[i] = HEART.breathsByActivity[posture] + pools.digest * HEART.breathsPerDigestion + channels.breathing[i];
   series.cardiacOutput[i] = circulation.cardiacOutput;
   series.flowBrain[i] = BLOOD_FLOW.rest.brain / circulation.flowTotal;
-  series.flowHeart[i] = BLOOD_FLOW.rest.heart / circulation.flowTotal;
   series.flowKidneys[i] = circulation.flowKidneys / circulation.flowTotal;
   series.flowGut[i] = circulation.flowGut / circulation.flowTotal;
   series.flowMuscle[i] = circulation.flowMuscle / circulation.flowTotal;

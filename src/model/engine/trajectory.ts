@@ -7,7 +7,6 @@ import { alcoholVolumeL, type Anthropometrics } from "./anthropometrics";
 export const SERIES = [
   "glucose",
   "insulin",
-  "insulinAction",
   "tg",
   "caffeine",
   "occupancy",
@@ -16,7 +15,6 @@ export const SERIES = [
   "breaths",
   "cardiacOutput",
   "flowBrain",
-  "flowHeart",
   "flowKidneys",
   "flowGut",
   "flowMuscle",

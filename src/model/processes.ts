@@ -3,7 +3,7 @@ import type { BodyView } from "./extensions/api";
 import { EXTENSIONS } from "./extensions";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
-import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
+import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, PROCESS, REFERENCE, STOMACH } from "./params";
 import { alcoholLedgerAt, caffeineLedgerAt, intakeFlowsAt, Ledger, ledgerAt, SeriesName, substanceLedgerAt, Trajectory, value } from "./engine/trajectory";
 import { alcoholVolumeL } from "./engine/anthropometrics";
 import { CustomSubstance, foodKcalOf, SubstanceRoute, Intake, POSTURES } from "./scenario";
@@ -706,13 +706,15 @@ function insulinProcess(tr: Trajectory, t: number): Process {
   const posture = postureAt(tr, t);
   const rising = value(tr, "glucose", t + REFERENCE.trendWindowMin) - value(tr, "glucose", t - REFERENCE.trendWindowMin) > 1;
   const toMuscle = v("muscleUptakeGMin");
-  const fromInsulin = Math.max(0, toMuscle - MUSCLE.uptakeGPerMinByActivity[posture]);
-  const toFat = (fromInsulin / GLUCOSE.muscleShare) * GLUCOSE.fatShare;
+  const fromInsulin = v("insulinUptakeGMin") * GLUCOSE.muscleShare;
+  const pulledByWork = toMuscle - fromInsulin;
+  const toFat = v("insulinUptakeGMin") * GLUCOSE.fatShare;
   const toLiver = v("liverUptakeGMin");
   const leaving = toMuscle + toFat + toLiver;
   const movedByInsulin = fromInsulin + toFat + toLiver;
   const moving = posture === "walking" || posture === "running";
   const peak = peakAfter(tr, "glucose", t);
+  const notableWork = pulledByWork * 60 >= PROCESS.sugarLeavingAboveGPerH;
   const gPerHour = (x: number) => `${Math.round(x * 60)} g/h`;
   const full = PROCESS.fullFlow.sugarGPerMin;
   const notable = (x: number) => x * 60 >= PROCESS.sugarLeavingAboveGPerH;
@@ -758,7 +760,7 @@ function insulinProcess(tr: Trajectory, t: number): Process {
       reading: gPerHour(toMuscle),
       share: shareOf(toMuscle, leaving),
       flow: flowRate(toMuscle, full),
-      say: moving ? `Moving muscles pull sugar in with little insulin, ${gPerHour(toMuscle)} right now.` : notable(toMuscle) ? `Insulin opens your muscles to sugar. They take ${gPerHour(toMuscle)}${posture === "sitting" ? " while you sit, far more if you walk" : ""}.` : "Your muscles are taking almost no sugar. Insulin or movement would open them.",
+      say: moving || notableWork ? `Moving muscles pull sugar in with little insulin, ${gPerHour(toMuscle)} right now.` : notable(toMuscle) ? `Insulin opens your muscles to sugar. They take ${gPerHour(toMuscle)}${posture === "sitting" ? " while you sit, far more if you walk" : ""}.` : "Your muscles are taking almost no sugar. Insulin or movement would open them.",
       from: "liver",
       routes: ["liver_out", "arch", "descending", "leg_L"],
     },
@@ -781,7 +783,7 @@ function insulinProcess(tr: Trajectory, t: number): Process {
     ? "Insulin is at rest. Your liver keeps your blood sugar steady"
     : rising
       ? `Insulin is ${fold.toFixed(1)}× rest and climbing, following your blood sugar`
-      : `Insulin at ${fold.toFixed(1)}× is bringing sugar down, ${Math.round(toMuscle * 60)} g/h into muscle, ${Math.round(toLiver * 60)} into liver`;
+      : `Insulin at ${fold.toFixed(1)}× is bringing sugar down, ${Math.round(fromInsulin * 60)} g/h into muscle, ${Math.round(toLiver * 60)} into liver`;
   return { id: "insulin", title: "Insulin", system: "energy", substance: "insulin", active, headline, stops: numbered(stops, here, "ahead", true) };
 }
 
