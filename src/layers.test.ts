@@ -10,10 +10,11 @@ const MAY_IMPORT: Record<string, readonly string[]> = {
   actions: ["closeup", "model"],
   wall: [],
   scene: ["look", "model", "wall"],
-  store: ["actions", "look", "model"],
-  ui: ["actions", "closeup", "look", "model", "scene", "store", "wall"],
+  wire: [],
+  store: ["actions", "look", "model", "wire"],
+  ui: ["actions", "closeup", "look", "model", "scene", "store", "wall", "wire"],
   main: ["ui"],
-  server: ["actions", "closeup", "model"],
+  server: ["actions", "closeup", "model", "wire"],
 };
 
 const partOf = (path: string) => {

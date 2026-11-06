@@ -161,7 +161,7 @@ const jobs = PLANS.flatMap((plan) => SENTENCES.flatMap((sentence) => Array.from(
 console.log(`${jobs.length} runs to do, $${spent.toFixed(2)} spent so far, stopping at $${BUDGET}`);
 
 const vite = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
-const { runTell } = await vite.ssrLoadModule("/server/agent.ts");
+const { runTell } = await vite.ssrLoadModule("/server/tell.ts");
 
 async function runOne({ plan, sentence, repeat }) {
   const actions = [];

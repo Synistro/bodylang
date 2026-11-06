@@ -11,6 +11,7 @@ import { simulate } from "./model/engine/simulate";
 import { Scenario } from "./model/scenario";
 import { Trajectory } from "./model/engine/trajectory";
 import type { Theme } from "./look";
+import type { BuildStatus } from "./wire";
 
 export interface Exchange {
   id: number;
@@ -64,7 +65,7 @@ export interface Ui {
   date: string | null; // the day being saved; null when nothing is, as in the demo
   dayProblem: string | null; // why your day could not be read or saved
   fixing: Fixing | null;
-  build: Build | null;
+  build: BuildStatus | null; // a process a separate Claude session is adding, or has just finished with
   explaining: Explaining | null;
 }
 
@@ -76,14 +77,6 @@ export interface Explaining {
   top: number;
   bottom: number;
   center: number;
-}
-
-// A process a separate Claude session is adding, or has just finished with.
-export interface Build {
-  id: string;
-  title: string;
-  stage: "writing" | "testing" | "final" | "ready" | "failed" | "stopped";
-  message: string | null;
 }
 
 // The foods open for correcting, and where on the chart they were clicked.

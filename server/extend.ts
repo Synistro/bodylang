@@ -6,7 +6,9 @@ import { homedir } from "node:os";
 import { join, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 import { z } from "zod";
-import { cleanEnvironment } from "./claudeEnv";
+import { BuildStage, BuildStatus, extendActionSchema } from "../src/wire";
+import { claudeDefaults } from "./claude";
+import { readJson } from "./http";
 import { checkShape, checkSource, PROCESS_IMPORTS, testImports } from "./extendCheck";
 
 const run = promisify(execFile);
@@ -22,19 +24,11 @@ const CHECK_TIMEOUT_MS = 180_000;
 const SUITE_TIMEOUT_MS = 420_000;
 const OUTPUT_KEPT_CHARS = 6000;
 const READ_MOST_CHARS = 60_000;
+const ACTION_MOST_BYTES = 1000;
 const EXTENSIONS_FOLDER = "src/model/extensions";
 const RESERVED = new Set(["api", "index", "check", "contract"]);
 const ID = /^[a-z][a-z0-9_]{1,30}$/;
 const WORKTREE_NAME = /^[a-z][a-z0-9_]*-\d+-\d+$/;
-
-export type BuildStage = "writing" | "testing" | "final" | "ready" | "failed" | "stopped";
-
-export interface BuildStatus {
-  id: string;
-  title: string;
-  stage: BuildStage;
-  message: string | null;
-}
 
 export interface BuildRequest {
   id: string;
@@ -177,19 +171,15 @@ async function claudeSession(context: SessionContext) {
   const session = query({
     prompt: buildPrompt(context),
     options: {
+      ...claudeDefaults(),
       model: MODEL,
       effort: "medium",
       maxTurns: MOST_TURNS,
       maxBudgetUsd: MOST_DOLLARS,
       cwd: context.worktree,
       systemPrompt: "You add one process at a time to a physiology model. You can only use the tools you are given, and you work until run_checks passes.",
-      tools: [],
       allowedTools: ["mcp__build__*"],
       mcpServers: { build: createClaudeSession(context) },
-      settingSources: [],
-      persistSession: false,
-      permissionMode: "dontAsk",
-      env: cleanEnvironment(),
       abortController,
     },
   });
@@ -306,14 +296,6 @@ export async function removeProcess(id: string, repo = process.cwd()) {
   await git(repo, "commit", "-m", `Remove process: ${id}`, "--", ...paths);
 }
 
-const actionSchema = z.discriminatedUnion("action", [z.object({ action: z.literal("stop") }), z.object({ action: z.literal("dismiss") }), z.object({ action: z.literal("remove"), id: z.string() })]);
-
-async function readJson(req: IncomingMessage): Promise<unknown> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(chunk as Buffer);
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-}
-
 export async function handleExtend(req: IncomingMessage, res: ServerResponse) {
   if (req.method === "GET") {
     res.setHeader("content-type", "application/json");
@@ -321,12 +303,7 @@ export async function handleExtend(req: IncomingMessage, res: ServerResponse) {
     res.end(JSON.stringify(latest));
     return;
   }
-  if (req.method !== "POST" || !req.headers["content-type"]?.includes("application/json")) {
-    res.statusCode = 405;
-    res.end();
-    return;
-  }
-  const action = actionSchema.parse(await readJson(req));
+  const action = extendActionSchema.parse(await readJson(req, ACTION_MOST_BYTES));
   if (action.action === "stop") stopBuild();
   else if (action.action === "dismiss") dismissBuild();
   else await removeProcess(action.id);

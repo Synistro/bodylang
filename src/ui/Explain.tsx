@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { z } from "zod";
 import { Explaining, getState, setUi, useStore } from "../store";
 import { X } from "./icons";
+import { explainEventSchema, readEvents } from "../wire";
 
 const MOST_CHARS = 200;
 // Only sentences and diagrams explain themselves. Names of rows and buttons are for clicking.
@@ -11,8 +11,6 @@ const AROUND_MOST_CHARS = 1000;
 const HIGHLIGHT = "explain-term";
 const GAP_PX = 8;
 const EDGE_PX = 12;
-
-const eventSchema = z.discriminatedUnion("type", [z.object({ type: z.literal("text"), text: z.string() }), z.object({ type: z.literal("error"), message: z.string() }), z.object({ type: z.literal("done") })]);
 
 interface Turn {
   role: "you" | "claude";
@@ -48,23 +46,10 @@ async function streamAnswer(explaining: Explaining, turns: Turn[], signal: Abort
   const { term, around, page } = explaining;
   const day = { body: body.body, intakes: body.intakes, activities: body.activities, substances: body.substances, events: body.events, cycle: body.cycle, assumptions: body.assumptions };
   const response = await fetch("/api/explain", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ term, around, page, turns, now: Math.round(t), day }), signal });
-  if (!response.ok || !response.body) throw new Error(`The explanation failed with ${response.status}.`);
-  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-  let buffer = "";
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) return;
-    buffer += value;
-    let cut = buffer.indexOf("\n\n");
-    while (cut >= 0) {
-      const chunk = buffer.slice(0, cut);
-      buffer = buffer.slice(cut + 2);
-      cut = buffer.indexOf("\n\n");
-      if (!chunk.startsWith("data: ")) continue;
-      const event = eventSchema.parse(JSON.parse(chunk.slice(6)));
-      if (event.type === "text") onText(event.text);
-      if (event.type === "error") throw new Error(event.message);
-    }
+  if (!response.ok) throw new Error(`The explanation failed with ${response.status}.`);
+  for await (const event of readEvents(response, explainEventSchema)) {
+    if (event.type === "text") onText(event.text);
+    if (event.type === "error") throw new Error(event.message);
   }
 }
 

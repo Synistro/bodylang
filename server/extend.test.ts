@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 // Everything here is real except Claude and the two suites: real git, a real worktree and a real commit,
 // in a small repository of its own.
 
-import { BuildParts, BuildStatus, removeProcess, runBuild } from "./extend";
+import type { BuildStatus } from "../src/wire";
+import { BuildParts, removeProcess, runBuild } from "./extend";
 
 const git = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, encoding: "utf8" });
 const GOOD_PROCESS = 'import type { ProcessExtension } from "./api";\nexport const extension: ProcessExtension = {} as ProcessExtension;\n';

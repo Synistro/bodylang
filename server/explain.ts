@@ -5,7 +5,9 @@ import { dayContentSchema, DayContent } from "../src/model/day";
 import { readout } from "../src/model/readout";
 import { simulate } from "../src/model/engine/simulate";
 import { formatClock } from "../src/model/words";
-import { cleanEnvironment } from "./claudeEnv";
+import { nameRequestSchema } from "../src/wire";
+import { claudeDefaults } from "./claude";
+import { openEventStream, readJson } from "./http";
 
 const MODEL = process.env.BODYLANG_EXPLAIN_MODEL ?? "claude-haiku-5-5";
 const MAX_REQUEST_BYTES = 200_000;
@@ -36,22 +38,13 @@ export function cleanName(raw: string): string | null {
   return name && !name.includes("\n") && name.length <= NAME_MOST_CHARS ? name : null;
 }
 
-const nameRequestSchema = z.object({ text: z.string().min(1).max(4000) });
-
 // Runs beside the answer to an Ask, and has no tools, so all it can do is come up with a few words.
 export async function handleNameQuestion(req: IncomingMessage, res: ServerResponse) {
-  if (req.method !== "POST") {
-    res.statusCode = 405;
-    res.end();
-    return;
-  }
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(chunk as Buffer);
-  const { text } = nameRequestSchema.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+  const { text } = nameRequestSchema.parse(await readJson(req, MAX_REQUEST_BYTES));
   let answer = "";
   const run = query({
     prompt: `<question>\n${text}\n</question>`,
-    options: { model: MODEL, effort: "low", maxTurns: 1, systemPrompt: NAME_PROMPT, tools: [], settingSources: [], persistSession: false, permissionMode: "dontAsk", env: cleanEnvironment() },
+    options: { ...claudeDefaults(), model: MODEL, effort: "low", maxTurns: 1, systemPrompt: NAME_PROMPT },
   });
   for await (const message of run) {
     if (message.type === "result" && message.subtype === "success") answer = message.result;
@@ -89,49 +82,25 @@ ${said ? `\n${said}\n` : ""}
 ${turns.at(-1)?.role === "you" ? "Answer what they just asked." : "Explain what they selected."}`;
 }
 
-async function readRequest(req: IncomingMessage): Promise<ExplainRequest> {
-  let size = 0;
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    const buffer = chunk as Buffer;
-    size += buffer.length;
-    if (size > MAX_REQUEST_BYTES) throw new Error("Request too large");
-    chunks.push(buffer);
-  }
-  // Past their common fields, a day's events are taken as the app wrote them, as they are from a day file.
-  return requestSchema.parse(JSON.parse(Buffer.concat(chunks).toString("utf8"))) as unknown as ExplainRequest;
-}
+// Past their common fields, a day's events are taken as the app wrote them, as they are from a day file.
+const readRequest = async (req: IncomingMessage) => requestSchema.parse(await readJson(req, MAX_REQUEST_BYTES)) as unknown as ExplainRequest;
 
 export async function handleExplain(req: IncomingMessage, res: ServerResponse) {
-  if (req.method !== "POST") {
-    res.statusCode = 405;
-    res.end();
-    return;
-  }
   const request = await readRequest(req);
-  res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });
-  const send = (event: unknown) => res.write(`data: ${JSON.stringify(event)}\n\n`);
-  const abortController = new AbortController();
-  res.on("close", () => {
-    if (!res.writableEnded) abortController.abort();
-  });
+  const { send, stopped } = openEventStream(res);
   const started = performance.now();
   let firstMs: number | null = null;
   try {
     const run = query({
       prompt: renderExplainPrompt(request),
       options: {
+        ...claudeDefaults(),
         model: MODEL,
         effort: "low",
         maxTurns: 1,
         systemPrompt: SYSTEM_PROMPT,
-        tools: [],
         includePartialMessages: true,
-        settingSources: [],
-        persistSession: false,
-        permissionMode: "dontAsk",
-        env: cleanEnvironment(),
-        abortController,
+        abortController: stopped,
       },
     });
     for await (const message of run) {
@@ -145,7 +114,7 @@ export async function handleExplain(req: IncomingMessage, res: ServerResponse) {
       }
     }
   } catch (e: unknown) {
-    if (!abortController.signal.aborted) send({ type: "error", message: `Claude Code could not run: ${e instanceof Error ? e.message : String(e)}` });
+    if (!stopped.signal.aborted) send({ type: "error", message: `Claude Code could not run: ${e instanceof Error ? e.message : String(e)}` });
   }
   send({ type: "done" });
   res.end();

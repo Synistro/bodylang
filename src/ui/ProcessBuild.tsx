@@ -1,19 +1,17 @@
-import { z } from "zod";
-import { Build, setUi, useStore } from "../store";
+import { setUi, useStore } from "../store";
+import { BuildStage, buildStatusSchema, ExtendAction } from "../wire";
 import { showProcess } from "./navigation";
 import { parseProcessId, processIds } from "../model/ids";
 
-const buildSchema = z.object({ id: z.string(), title: z.string(), stage: z.enum(["writing", "testing", "final", "ready", "failed", "stopped"]), message: z.string().nullable() });
-
-const tellServer = (body: unknown) => fetch("/api/extend", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const tellServer = (body: ExtendAction) => fetch("/api/extend", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
 // A finished build reloads the page, so what happened is asked for again on the way back in.
 export function followBuilds() {
   void fetch("/api/extend", { cache: "no-store" })
     .then((response) => (response.ok ? response.json() : null))
-    .then((raw: unknown) => setUi({ build: raw === null ? null : buildSchema.parse(raw) }))
+    .then((raw: unknown) => setUi({ build: raw === null ? null : buildStatusSchema.parse(raw) }))
     .catch(() => undefined);
-  import.meta.hot?.on("bodylang:build", (raw: unknown) => setUi({ build: buildSchema.parse(raw) }));
+  import.meta.hot?.on("bodylang:build", (raw: unknown) => setUi({ build: buildStatusSchema.parse(raw) }));
 }
 
 export async function removeAddedProcess(processId: string) {
@@ -21,7 +19,7 @@ export async function removeAddedProcess(processId: string) {
   if (!response?.ok) setUi({ dayProblem: `That process could not be removed. ${(await response?.text()) ?? "Is the dev server running?"}` });
 }
 
-const WORKING: Partial<Record<Build["stage"], string>> = {
+const WORKING: Partial<Record<BuildStage, string>> = {
   writing: "A separate Claude session is writing it.",
   testing: "Running its tests.",
   final: "Running every test before it goes in.",
