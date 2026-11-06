@@ -107,6 +107,8 @@ export async function tell(text: string) {
     }
     if (!replied && !failed && stillAsking()) updateExchange(id, { status: "error", error: "Claude finished without an answer. Try saying it again." });
   } catch (e: unknown) {
+    // Past a failure this page stops following the stream, so the server shouldn't keep working or paying.
+    stop.abort();
     // Leaving stops the request on purpose, and there is nothing left to say about it.
     if (!stillAsking()) {
       updateExchange(id, { status: "done" });

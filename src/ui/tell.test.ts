@@ -25,6 +25,17 @@ describe("what a message ends as", () => {
     expect(latest().reply[0].text).toBe("Your heart is steady.");
   });
 
+  it("stops the server's work when a message can't be read", async () => {
+    let signal: AbortSignal | undefined;
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+      signal = init.signal ?? undefined;
+      return streamOf({ type: "action", name: "not_a_tool", args: {} });
+    });
+    await tell("hello");
+    expect(latest().status).toBe("error");
+    expect(signal?.aborted).toBe(true);
+  });
+
   it("says so when the stream ends with no answer", async () => {
     vi.stubGlobal("fetch", async () => streamOf({ type: "done" }));
     await tell("hello");
