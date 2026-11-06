@@ -1,15 +1,53 @@
 import { REFERENCE } from "../params";
 import { Trajectory } from "../engine/trajectory";
 import type { ReadingId } from "../ids";
-import { Context, POSTURE_WORD, ReadingSpec, ReasonRow, Said, Sample, always, contextAt, headingOf, trendOf } from "./context";
+import {
+  Context,
+  POSTURE_WORD,
+  ReadingSpec,
+  ReasonRow,
+  Said,
+  Sample,
+  always,
+  contextAt,
+  headingOf,
+  trendOf,
+} from "./context";
 import { feelingsOf } from "./feelings";
 import { byTone, headlineOf, standoutSentence } from "./headline";
 import { muscleReading, muscleSummaries } from "./muscles";
 import { alcoholSpec, alertnessSpec, caffeineSpec, receptorsSpec } from "./readings/brain";
-import { bloodPressureSpec, bloodShareSpec, breathingSpec, flowLitres, gutShareSpec, heartSpec, outputSpec } from "./readings/circulation";
+import {
+  bloodPressureSpec,
+  bloodShareSpec,
+  breathingSpec,
+  flowLitres,
+  gutShareSpec,
+  heartSpec,
+  outputSpec,
+} from "./readings/circulation";
 import { absorbingSpec, stomachSpec } from "./readings/digestion";
-import { burnSpec, fuelSpec, glucoseSpec, glycogenSpec, insulinSpec, muscleUptakeSpec, triglycerideSpec } from "./readings/energy";
-import { bladderSpec, cycleDaySpec, estradiolSpec, fluidSpec, immuneSpec, inflammationSpec, progesteroneSpec, rewardSpec, stressSpec, temperatureSpec } from "./readings/wholeBody";
+import {
+  burnSpec,
+  fuelSpec,
+  glucoseSpec,
+  glycogenSpec,
+  insulinSpec,
+  muscleUptakeSpec,
+  triglycerideSpec,
+} from "./readings/energy";
+import {
+  bladderSpec,
+  cycleDaySpec,
+  estradiolSpec,
+  fluidSpec,
+  immuneSpec,
+  inflammationSpec,
+  progesteroneSpec,
+  rewardSpec,
+  stressSpec,
+  temperatureSpec,
+} from "./readings/wholeBody";
 import { systemsOf } from "./systemStatus";
 import { Assessment, Reading, TableReadingId } from "./types";
 
@@ -28,8 +66,12 @@ const READINGS: Record<TableReadingId, ReadingSpec> = {
     [(c) => c.moving, (c) => `${POSTURE_WORD[c.posture]} sends more blood to your legs`],
     [always, () => "Resting muscle needs little blood"],
   ]),
-  flowBrain: bloodShareSpec("flowBrain", "Blood to brain", "brain", REFERENCE.bloodFlow.brain, [[always, (c, s) => `Your brain keeps a steady ${flowLitres(c, s)} L a minute`]]),
-  flowKidneys: bloodShareSpec("flowKidneys", "Blood to kidneys", "kidneys", REFERENCE.bloodFlow.kidneys, [[always, (c, s) => `Your kidneys receive ${flowLitres(c, s)} L a minute`]]),
+  flowBrain: bloodShareSpec("flowBrain", "Blood to brain", "brain", REFERENCE.bloodFlow.brain, [
+    [always, (c, s) => `Your brain keeps a steady ${flowLitres(c, s)} L a minute`],
+  ]),
+  flowKidneys: bloodShareSpec("flowKidneys", "Blood to kidneys", "kidneys", REFERENCE.bloodFlow.kidneys, [
+    [always, (c, s) => `Your kidneys receive ${flowLitres(c, s)} L a minute`],
+  ]),
   stomach: stomachSpec,
   absorbing: absorbingSpec,
   glycogen: glycogenSpec,
@@ -104,12 +146,17 @@ export function shortUnit(unit: string) {
 const isTableReading = (id: ReadingId): id is TableReadingId => id in READINGS;
 
 // One reading at any minute, in the units and words the screen uses for it.
-export function readingCurve(tr: Trajectory, id: ReadingId, now: number): { valueAt: (minute: number) => number; textAt: (minute: number) => string } | null {
+export function readingCurve(
+  tr: Trajectory,
+  id: ReadingId,
+  now: number,
+): { valueAt: (minute: number) => number; textAt: (minute: number) => string } | null {
   if (!isTableReading(id)) return null;
   const spec = READINGS[id];
   const c = contextAt(tr, now);
   const series = tr.series[spec.series];
-  const valueAt = (minute: number) => spec.toValue(series[Math.max(0, Math.min(series.length - 1, Math.round(minute)))], c);
+  const valueAt = (minute: number) =>
+    spec.toValue(series[Math.max(0, Math.min(series.length - 1, Math.round(minute)))], c);
   const unit = shortUnit(spec.unit);
   return {
     valueAt,

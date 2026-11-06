@@ -33,7 +33,12 @@ const finish = (res: ServerResponse, status: number, message = "") => {
   res.end(message);
 };
 
-export async function handleApi(req: IncomingMessage, res: ServerResponse, notify: Notify, routes: Record<string, Route> = ROUTES) {
+export async function handleApi(
+  req: IncomingMessage,
+  res: ServerResponse,
+  notify: Notify,
+  routes: Record<string, Route> = ROUTES,
+) {
   const path = (req.url ?? "/").split("?")[0];
   const problem = requestProblem(req.method, req.headers);
   if (problem) return finish(res, problem.status, problem.message);

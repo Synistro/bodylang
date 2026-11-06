@@ -94,14 +94,27 @@ export interface IntakeFlows {
   alcoholAbsorbed: number;
 }
 
-const FLOW_KEYS = ["stomachFat", "gutFat", "bloodFat", "fatCleared", "carbsAbsorbedPerMin", "fatAbsorbedPerMin", "stomachAlcohol", "gutAlcohol", "alcoholAbsorbed"] as const;
+const FLOW_KEYS = [
+  "stomachFat",
+  "gutFat",
+  "bloodFat",
+  "fatCleared",
+  "carbsAbsorbedPerMin",
+  "fatAbsorbedPerMin",
+  "stomachAlcohol",
+  "gutAlcohol",
+  "alcoholAbsorbed",
+] as const;
 export const FLOW_SIZE = FLOW_KEYS.length;
 
 export interface Trajectory {
   scenario: Scenario;
   anthro: Anthropometrics;
   series: Record<SeriesName, Float32Array>;
-  intakeLedgers: Map<string, { ledger: Float32Array; caffeineMg: number; caffeineLedger: Float32Array; flows: Float32Array; alcoholG: number }>;
+  intakeLedgers: Map<
+    string,
+    { ledger: Float32Array; caffeineMg: number; caffeineLedger: Float32Array; flows: Float32Array; alcoholG: number }
+  >;
   substances: Map<string, { series: Float32Array; ledger: Float32Array; substance: CustomSubstance }>;
   events: ResolvedEvent[];
   channels: Record<ChannelId, Float32Array>;
@@ -138,7 +151,13 @@ export function caffeineLedgerAt(tr: Trajectory, intakeId: string, minute: numbe
   const l = tr.intakeLedgers.get(intakeId);
   if (!l || l.caffeineMg <= 0) return null;
   const a = Math.max(0, Math.min(DAY.minutes, Math.floor(minute))) * 4;
-  return { stomach: l.caffeineLedger[a], intestine: l.caffeineLedger[a + 1], blood: l.caffeineLedger[a + 2], cleared: l.caffeineLedger[a + 3], dose: l.caffeineMg };
+  return {
+    stomach: l.caffeineLedger[a],
+    intestine: l.caffeineLedger[a + 1],
+    blood: l.caffeineLedger[a + 2],
+    cleared: l.caffeineLedger[a + 3],
+    dose: l.caffeineMg,
+  };
 }
 
 export function intakeFlowsAt(tr: Trajectory, intakeId: string, minute: number): IntakeFlows | null {
@@ -168,7 +187,13 @@ export function alcoholLedgerAt(tr: Trajectory, intakeId: string, minute: number
   for (const id of tr.intakeLedgers.keys()) absorbedByAll += intakeFlowsAt(tr, id, minute)?.alcoholAbsorbed ?? 0;
   const inBody = value(tr, "alcohol", Math.floor(minute)) * alcoholVolumeL(tr.scenario.body);
   const blood = absorbedByAll > 0 ? own.alcoholAbsorbed * Math.min(1, inBody / absorbedByAll) : 0;
-  return { stomach: own.stomachAlcohol, intestine: own.gutAlcohol, blood, cleared: own.alcoholAbsorbed - blood, dose: l.alcoholG };
+  return {
+    stomach: own.stomachAlcohol,
+    intestine: own.gutAlcohol,
+    blood,
+    cleared: own.alcoholAbsorbed - blood,
+    dose: l.alcoholG,
+  };
 }
 
 export function substanceLedgerAt(tr: Trajectory, substanceId: string, minute: number) {

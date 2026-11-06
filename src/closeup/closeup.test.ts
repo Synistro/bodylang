@@ -7,7 +7,18 @@ import { AS_THE_MODEL_SAYS, levelsAt, litLevels, panelsOf } from "./define";
 import { closeupGuidance, closeupOf } from "./list";
 import { muscleCloseup } from "./muscle";
 
-const session = { id: "squats", label: "Squats", preset: "training", from: 600, until: 660, intensity: 0.9, muscles: [{ group: "quads", load: 1 }], symptoms: [], source: "", custom: null } as unknown as BodyEvent;
+const session = {
+  id: "squats",
+  label: "Squats",
+  preset: "training",
+  from: 600,
+  until: 660,
+  intensity: 0.9,
+  muscles: [{ group: "quads", load: 1 }],
+  symptoms: [],
+  source: "",
+  custom: null,
+} as unknown as BodyEvent;
 const place = { trajectory: { muscleEvents: [session] } as unknown as Trajectory, muscle: "quads" as const };
 const { keys, fromModel } = muscleCloseup;
 const modelAt = (minute: number) => fromModel(place, minute);
@@ -41,7 +52,11 @@ describe("what a step can change", () => {
   });
 
   it("sets the levels it names, scales others, and stays between 0 and 1", () => {
-    const levels = levelsAt(keys, fromModel, place, minute, { light: null, set: { immune: 0.7 }, times: { pain: 0.5, immune: 3 } });
+    const levels = levelsAt(keys, fromModel, place, minute, {
+      light: null,
+      set: { immune: 0.7 },
+      times: { pain: 0.5, immune: 3 },
+    });
     expect(levels.immune).toBe(1);
     expect(levels.pain).toBeCloseTo(modelAt(minute).pain * 0.5);
     expect(levels.tears).toBe(modelAt(minute).tears);
@@ -56,15 +71,29 @@ describe("what a step can change", () => {
 
   it("draws one panel, or two to compare with only the lower one scaled", () => {
     expect(panelsOf<(typeof keys)[number]>(null)).toEqual([{ label: null, adjustment: AS_THE_MODEL_SAYS }]);
-    const [upper, lower] = panelsOf<(typeof keys)[number]>({ light: ["tears"], set: {}, compare: { this_label: "First", other_label: "Repeat", times: { tears: 0.4 } } });
+    const [upper, lower] = panelsOf<(typeof keys)[number]>({
+      light: ["tears"],
+      set: {},
+      compare: { this_label: "First", other_label: "Repeat", times: { tears: 0.4 } },
+    });
     expect(upper).toMatchObject({ label: "First", adjustment: { times: {} } });
     expect(lower).toMatchObject({ label: "Repeat", adjustment: { times: { tears: 0.4 } } });
   });
 });
 
 describe("what Claude can ask for", () => {
-  const step = (closeup: unknown, organ: string | null = "muscle") => ({ title: "Tiny tears", say: "Lowering the weight strains the fibres.", system: null, process: null, organ, muscle: "quads", at: -1770, closeup });
-  const parse = (closeup: unknown, organ?: string | null) => ACTION_SCHEMAS.guide.safeParse({ steps: [step(closeup, organ)] });
+  const step = (closeup: unknown, organ: string | null = "muscle") => ({
+    title: "Tiny tears",
+    say: "Lowering the weight strains the fibres.",
+    system: null,
+    process: null,
+    organ,
+    muscle: "quads",
+    at: -1770,
+    closeup,
+  });
+  const parse = (closeup: unknown, organ?: string | null) =>
+    ACTION_SCHEMAS.guide.safeParse({ steps: [step(closeup, organ)] });
   const directed = { organ: "muscle", light: ["tears"], set: {}, compare: null, basis: null };
 
   it("accepts a step that only points at something, days away from the chart", () => {
@@ -74,7 +103,9 @@ describe("what Claude can ask for", () => {
   it("wants a step on an organ with a close-up to point at something", () => {
     expect(parse(null).success).toBe(false);
     expect(parse(null, "kidneys").success).toBe(false);
-    expect(parse({ organ: "kidneys", light: ["urine"], set: {}, compare: null, basis: null }, "kidneys").success).toBe(true);
+    expect(parse({ organ: "kidneys", light: ["urine"], set: {}, compare: null, basis: null }, "kidneys").success).toBe(
+      true,
+    );
   });
 
   it("needs no close-up on a step with no organ", () => {
@@ -90,7 +121,13 @@ describe("what Claude can ask for", () => {
   });
 
   it("takes a composed drawing in place of a close-up, beside an organ", () => {
-    const composed = { caption: "Smoke in an air sac", layers: [{ id: "air", kind: "air", label: "Air sac", state: "healthy", amount: 0 }], actors: [], light: [], basis: "Benowitz 2009" };
+    const composed = {
+      caption: "Smoke in an air sac",
+      layers: [{ id: "air", kind: "air", label: "Air sac", state: "healthy", amount: 0 }],
+      actors: [],
+      light: [],
+      basis: "Benowitz 2009",
+    };
     const steps = (over: object) => ACTION_SCHEMAS.guide.safeParse({ steps: [{ ...step(null), ...over }] });
     expect(steps({ composed }).success).toBe(true);
     expect(steps({ composed, organ: null, muscle: null }).success).toBe(false);
@@ -98,8 +135,12 @@ describe("what Claude can ask for", () => {
 
   it("wants a basis for any number of its own", () => {
     expect(parse({ ...directed, set: { immune: 0.7 } }).success).toBe(false);
-    expect(parse({ ...directed, set: { immune: 0.7 }, basis: "Peake 2017 on inflammation after exercise" }).success).toBe(true);
-    expect(parse({ ...directed, compare: { this_label: "First", other_label: "Repeat", times: { tears: 0.4 } } }).success).toBe(false);
+    expect(
+      parse({ ...directed, set: { immune: 0.7 }, basis: "Peake 2017 on inflammation after exercise" }).success,
+    ).toBe(true);
+    expect(
+      parse({ ...directed, compare: { this_label: "First", other_label: "Repeat", times: { tears: 0.4 } } }).success,
+    ).toBe(false);
   });
 
   it("wants the close-up of the organ the step flies to", () => {

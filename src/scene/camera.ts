@@ -61,7 +61,15 @@ export class CameraRig {
   private source: FramingSource | null = null;
   private inFlight = false;
   private viewerMoved = false;
-  private readonly framing: Framing = { target: new THREE.Vector3(), height: 1, width: 1, azimuth: null, polar: null, head: { top: 0, chin: 0 }, headroom: null };
+  private readonly framing: Framing = {
+    target: new THREE.Vector3(),
+    height: 1,
+    width: 1,
+    azimuth: null,
+    polar: null,
+    head: { top: 0, chin: 0 },
+    headroom: null,
+  };
   private readonly x = new Damped();
   private readonly y = new Damped();
   private readonly z = new Damped();
@@ -175,17 +183,26 @@ export class CameraRig {
   // unless the viewer has since put the camera somewhere themselves.
   private followInsets(insets: Insets) {
     const goal = this.insetGoal;
-    if (goal.left === insets.left && goal.right === insets.right && goal.top === insets.top && goal.bottom === insets.bottom) return;
+    if (
+      goal.left === insets.left &&
+      goal.right === insets.right &&
+      goal.top === insets.top &&
+      goal.bottom === insets.bottom
+    )
+      return;
     this.insetGoal = insets;
     if (this.source && !this.viewerMoved) this.fly(this.source);
   }
 
   private distanceFor(framing: Framing) {
     const slope = 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    const freeHeight = Math.max(this.height - this.insetGoal.top - this.insetGoal.bottom, this.height * LEAST_FREE_SHARE);
+    const freeHeight = Math.max(
+      this.height - this.insetGoal.top - this.insetGoal.bottom,
+      this.height * LEAST_FREE_SHARE,
+    );
     const freeWidth = Math.max(this.width - this.insetGoal.left - this.insetGoal.right, this.width * LEAST_FREE_SHARE);
     const byHeight = ((framing.height / slope) * this.height) / freeHeight;
-    const byWidth = (((framing.width / slope) / this.camera.aspect) * this.width) / freeWidth;
+    const byWidth = ((framing.width / slope / this.camera.aspect) * this.width) / freeWidth;
     return THREE.MathUtils.clamp(Math.max(byHeight, byWidth), this.controls.minDistance, this.controls.maxDistance);
   }
 
@@ -194,7 +211,10 @@ export class CameraRig {
   private aimedY(framing: Framing, distance: number) {
     const slope = 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const metresPerPixel = (slope * distance) / this.height;
-    const freeHeight = Math.max(this.height - this.insetGoal.top - this.insetGoal.bottom, this.height * LEAST_FREE_SHARE);
+    const freeHeight = Math.max(
+      this.height - this.insetGoal.top - this.insetGoal.bottom,
+      this.height * LEAST_FREE_SHARE,
+    );
     const toTopEdge = (this.insetGoal.top + freeHeight / 2) * metresPerPixel;
     const { top, chin } = framing.head;
     if (framing.headroom !== null) return top + (framing.headroom - 0.5) * freeHeight * metresPerPixel;

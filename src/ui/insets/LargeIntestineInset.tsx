@@ -13,8 +13,20 @@ type Setting = (typeof largeIntestineCloseup.keys)[number];
 
 const POUCHES = [20, 68, 116, 164, 212];
 const TUBE = { y: 104, halfHeight: 26, bulge: 12 };
-const MIDDLE = curve([[-4, TUBE.y], [120, TUBE.y], [244, TUBE.y]]);
-const BLOOD = vessel({ id: "blood", radius: 4, points: [[-10, 24], [120, 24], [250, 24]] });
+const MIDDLE = curve([
+  [-4, TUBE.y],
+  [120, TUBE.y],
+  [244, TUBE.y],
+]);
+const BLOOD = vessel({
+  id: "blood",
+  radius: 4,
+  points: [
+    [-10, 24],
+    [120, 24],
+    [250, 24],
+  ],
+});
 const CONTENTS_PER_SECOND = { least: 0.06, most: 1.1 };
 const WATER_PER_SECOND = { least: 0.12, most: 1.8 };
 
@@ -22,7 +34,8 @@ const wall = (side: 1 | -1) => {
   const y = TUBE.y + side * TUBE.halfHeight;
   const out = y + side * TUBE.bulge;
   let d = `M-4 ${y}`;
-  for (const x of POUCHES) d += `C${x - 20} ${y} ${x - 14} ${out} ${x} ${out}C${x + 14} ${out} ${x + 20} ${y} ${x + 24} ${y}`;
+  for (const x of POUCHES)
+    d += `C${x - 20} ${y} ${x - 14} ${out} ${x} ${out}C${x + 14} ${out} ${x + 20} ${y} ${x + 24} ${y}`;
   return `${d}L244 ${y}`;
 };
 
@@ -60,12 +73,20 @@ const Drawing = memo(function Drawing() {
       <path className="line-soft" d={wall(-1)} />
       <path className="line-soft" d={wall(1)} />
       <g data-part="contents">
-        {Array.from({ length: 24 }, (_, k) => <circle key={k} data-part="content" className="flow-dot-food" r="2.4" />)}
-        <text x="232" y="164" textAnchor="end">Fibre feeds the bacteria here</text>
+        {Array.from({ length: 24 }, (_, k) => (
+          <circle key={k} data-part="content" className="flow-dot-food" r="2.4" />
+        ))}
+        <text x="232" y="164" textAnchor="end">
+          Fibre feeds the bacteria here
+        </text>
       </g>
       <g data-part="returning">
-        {Array.from({ length: 8 }, (_, k) => <circle key={k} data-part="water" className="flow-dot" r="1.3" />)}
-        <text x="232" y="36" textAnchor="end">Water goes back to your blood</text>
+        {Array.from({ length: 8 }, (_, k) => (
+          <circle key={k} data-part="water" className="flow-dot" r="1.3" />
+        ))}
+        <text x="232" y="36" textAnchor="end">
+          Water goes back to your blood
+        </text>
       </g>
     </>
   );
@@ -76,7 +97,14 @@ function useLargeIntestinePlate({ trajectory, t }: InsetProps, levels: Levels<Se
   const { contentsKcal } = LARGE_INTESTINE_FULL;
   const kcal = levels.contents < 1 ? levels.contents * contentsKcal : Math.max(contentsKcal, heldKcal(trajectory, t));
   const caption = kcal >= 5 ? `Holding ${Math.round(kcal)} kcal you didn't absorb` : "Nothing from today yet";
-  return { caption, describe: `The large intestine, drawing water back through its wall as what is left moves slowly along. ${caption}.` };
+  return {
+    caption,
+    describe: `The large intestine, drawing water back through its wall as what is left moves slowly along. ${caption}.`,
+  };
 }
 
-export const LargeIntestineInset = closeupInset(largeIntestineCloseup, { Drawing, paint: paintLargeIntestine, usePlate: useLargeIntestinePlate });
+export const LargeIntestineInset = closeupInset(largeIntestineCloseup, {
+  Drawing,
+  paint: paintLargeIntestine,
+  usePlate: useLargeIntestinePlate,
+});

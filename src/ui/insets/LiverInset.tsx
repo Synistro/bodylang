@@ -26,7 +26,9 @@ const GRANULES = ROWS.flatMap((count, row) => {
     return { x: CELL_CENTER.x + offset * STEP.x, y, row, offset };
   });
 });
-const FILL_ORDER = GRANULES.map((_, i) => i).sort((a, b) => GRANULES[b].row - GRANULES[a].row || Math.abs(GRANULES[a].offset) - Math.abs(GRANULES[b].offset));
+const FILL_ORDER = GRANULES.map((_, i) => i).sort(
+  (a, b) => GRANULES[b].row - GRANULES[a].row || Math.abs(GRANULES[a].offset) - Math.abs(GRANULES[b].offset),
+);
 
 const INFLOW = "M-4 124C30 124 30 72 62 72";
 const OUTFLOW = "M178 72C210 72 210 30 244 30";
@@ -35,7 +37,8 @@ const STREAM = { min: 0.8, max: 8.5 };
 const BEAD_SPEED = { min: 3, max: 16 }; // figure units a second
 const ACTIVE_ABOVE_G_PER_MIN = 0.015;
 
-const streamWeight = (gPerMin: number) => lerp(STREAM.min, STREAM.max, Math.sqrt(clamp01(gPerMin / FLOW_FULL_G_PER_MIN)));
+const streamWeight = (gPerMin: number) =>
+  lerp(STREAM.min, STREAM.max, Math.sqrt(clamp01(gPerMin / FLOW_FULL_G_PER_MIN)));
 
 const gramsPerHour = (gPerMin: number) => `${Math.round(gPerMin * 60)} g/h`;
 
@@ -90,7 +93,9 @@ const Drawing = memo(function Drawing() {
         <path className="pipe-bore" d={INFLOW} />
         <path data-part="taking-in-stream" className="stream-body" d={INFLOW} />
         <path data-part="taking-in-beads" className="stream-beads" d={INFLOW} />
-        <text x="0.4" y="74">From gut</text>
+        <text x="0.4" y="74">
+          From gut
+        </text>
         <text data-part="taking-in-rate" x="0.4" y="82" />
       </g>
       <g data-part="releasing">
@@ -98,7 +103,9 @@ const Drawing = memo(function Drawing() {
         <path className="pipe-bore" d={OUTFLOW} />
         <path data-part="releasing-stream" className="stream-body" d={OUTFLOW} />
         <path data-part="releasing-beads" className="stream-beads" d={OUTFLOW} />
-        <text x="239" y="68" textAnchor="end">To blood</text>
+        <text x="239" y="68" textAnchor="end">
+          To blood
+        </text>
         <text data-part="releasing-rate" x="239" y="76" textAnchor="end" />
       </g>
       <path className="fill-paper" d={CELL} />
@@ -116,7 +123,8 @@ function useLiverPlate({ trajectory, t }: InsetProps, levels: Levels<Setting>): 
   const caption = `Liver fuel: ${Math.round(levels.store * LIVER_FULL.glycogenG)} of ${LIVER.glycogenMaxG} g`;
   // The number is the caption, so its verdict has to live there too once the row is gone.
   const fuel = assessmentAt(trajectory, t).readings.find((r) => r.id === "glycogen");
-  const note = fuel && fuel.tone !== "calm" ? { text: `${fuel.verdictWord}. ${fuel.why}`, tone: "attention" as const } : undefined;
+  const note =
+    fuel && fuel.tone !== "calm" ? { text: `${fuel.verdictWord}. ${fuel.why}`, tone: "attention" as const } : undefined;
   return {
     caption,
     captionHint: "Glycogen, the sugar your liver keeps in store. One dot is one gram.",

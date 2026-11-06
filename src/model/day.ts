@@ -35,18 +35,42 @@ const intakeSchema = z.looseObject({
   caffeineMg: nutrientAmount,
   alcoholG: nutrientAmount,
 });
-const substanceSchema = z.looseObject({ id: z.string().min(1), label: z.string(), at: z.number().finite(), doseMg: z.number().positive(), tmaxMin: z.number().positive(), halfLifeH: z.number().positive(), volumeLPerKg: z.number().positive(), bioavailability: z.number(), targets: z.array(z.unknown()) });
-const eventSchema = z.looseObject({ id: z.string().min(1), label: z.string(), preset: z.string(), from: z.number().finite(), until: z.number().finite().nullable(), intensity: z.number(), muscles: z.array(z.unknown()), symptoms: z.array(z.unknown()) });
+const substanceSchema = z.looseObject({
+  id: z.string().min(1),
+  label: z.string(),
+  at: z.number().finite(),
+  doseMg: z.number().positive(),
+  tmaxMin: z.number().positive(),
+  halfLifeH: z.number().positive(),
+  volumeLPerKg: z.number().positive(),
+  bioavailability: z.number(),
+  targets: z.array(z.unknown()),
+});
+const eventSchema = z.looseObject({
+  id: z.string().min(1),
+  label: z.string(),
+  preset: z.string(),
+  from: z.number().finite(),
+  until: z.number().finite().nullable(),
+  intensity: z.number(),
+  muscles: z.array(z.unknown()),
+  symptoms: z.array(z.unknown()),
+});
 
 const dayDocSchema = z.object({
   version: z.literal(1),
   date: z.string().regex(DATE_PATTERN),
   body: z.object({ sex: z.enum(["male", "female"]), age: z.number(), heightCm: z.number(), weightKg: z.number() }),
   intakes: z.array(intakeSchema),
-  activities: z.array(z.object({ from: z.number().finite(), posture: z.enum(["sleeping", "sitting", "standing", "walking", "running"]) })),
+  activities: z.array(
+    z.object({ from: z.number().finite(), posture: z.enum(["sleeping", "sitting", "standing", "walking", "running"]) }),
+  ),
   substances: z.array(substanceSchema),
   events: z.array(eventSchema),
-  cycle: z.object({ start: z.number().finite(), lengthDays: z.number().positive(), periodDays: z.number().positive() }).nullable().default(null),
+  cycle: z
+    .object({ start: z.number().finite(), lengthDays: z.number().positive(), periodDays: z.number().positive() })
+    .nullable()
+    .default(null),
   assumptions: z.record(z.string(), z.string()),
 });
 
@@ -92,7 +116,17 @@ export const typicalDayFromYesterday = (): ActivitySpan[] => [
 ];
 
 export function firstDay(date: string, body: Body): DayDoc {
-  return { version: 1, date, body, intakes: [], activities: typicalDayFromYesterday(), substances: [], events: [], cycle: null, assumptions: {} };
+  return {
+    version: 1,
+    date,
+    body,
+    intakes: [],
+    activities: typicalDayFromYesterday(),
+    substances: [],
+    events: [],
+    cycle: null,
+    assumptions: {},
+  };
 }
 
 // What was logged keeps its name in the new day, while a new coffee can use the id "coffee" again.
@@ -104,7 +138,9 @@ function activitiesAfter(doc: DayDoc, days: number): ActivitySpan[] {
   if (days > 1) return typicalDayFromYesterday();
   const shift = days * 1440;
   const sorted = [...doc.activities].sort((a, b) => a.from - b.from);
-  const spans = sorted.some((span) => span.from >= DAY.sleepMin) ? sorted : [...sorted, { from: DAY.sleepMin, posture: "sleeping" as const }];
+  const spans = sorted.some((span) => span.from >= DAY.sleepMin)
+    ? sorted
+    : [...sorted, { from: DAY.sleepMin, posture: "sleeping" as const }];
   const shifted = spans.map((span) => ({ ...span, from: span.from - shift })).filter((span) => span.from >= -1440);
   return [...shifted, { from: DAY.wakeMin, posture: USUAL_POSTURE }];
 }
@@ -115,11 +151,14 @@ export function carryOver(doc: DayDoc, date: string): DayDoc {
   const days = daysBetween(doc.date, date);
   if (days <= 0) return doc;
   const shift = days * 1440;
-  const intakes = doc.intakes.filter((i) => i.at - shift >= -DAY.intakeCarryDays * 1440).map((i) => ({ ...i, id: carriedId(i.id, doc.date), at: i.at - shift }));
+  const intakes = doc.intakes
+    .filter((i) => i.at - shift >= -DAY.intakeCarryDays * 1440)
+    .map((i) => ({ ...i, id: carriedId(i.id, doc.date), at: i.at - shift }));
   const assumptions: Record<string, string> = {};
   for (const kept of doc.intakes) {
     const said = doc.assumptions[kept.id];
-    if (said !== undefined && kept.at - shift >= -DAY.intakeCarryDays * 1440) assumptions[carriedId(kept.id, doc.date)] = said;
+    if (said !== undefined && kept.at - shift >= -DAY.intakeCarryDays * 1440)
+      assumptions[carriedId(kept.id, doc.date)] = said;
   }
   return {
     version: 1,
@@ -129,18 +168,30 @@ export function carryOver(doc: DayDoc, date: string): DayDoc {
     assumptions,
     cycle: doc.cycle && { ...doc.cycle, start: doc.cycle.start - shift },
     activities: activitiesAfter(doc, days),
-    substances: doc.substances.filter((s) => s.at - shift >= -DAY.substanceCarryDays * 1440).map((s) => ({ ...s, id: carriedId(s.id, doc.date), at: s.at - shift })),
+    substances: doc.substances
+      .filter((s) => s.at - shift >= -DAY.substanceCarryDays * 1440)
+      .map((s) => ({ ...s, id: carriedId(s.id, doc.date), at: s.at - shift })),
     events: doc.events
       .filter((e) => e.until === null || e.from - shift >= -DAY.eventCarryDays * 1440)
-      .map((e) => (e.until === null ? { ...e, from: e.from - shift } : { ...e, id: carriedId(e.id, doc.date), from: e.from - shift, until: e.until - shift })),
+      .map((e) =>
+        e.until === null
+          ? { ...e, from: e.from - shift }
+          : { ...e, id: carriedId(e.id, doc.date), from: e.from - shift, until: e.until - shift },
+      ),
   };
 }
 
 // Someone talking to you is awake, whatever the usual night says. Past bedtime they never went to
 // bed, and are taken to stay up a little longer. Before the usual wake-up they are simply up early.
-export function stayAwake(activities: ActivitySpan[], now: number): { posture: Posture; from: number; until: number } | null {
+export function stayAwake(
+  activities: ActivitySpan[],
+  now: number,
+): { posture: Posture; from: number; until: number } | null {
   if (postureAt(activities, now) !== "sleeping") return null;
-  if (now < DAY.sleepMin) return now < DAY.wakeMin ? { posture: "sitting", from: now, until: DAY.wakeMin } : { posture: "sitting", from: now, until: now + DAY.stillUpMin };
+  if (now < DAY.sleepMin)
+    return now < DAY.wakeMin
+      ? { posture: "sitting", from: now, until: DAY.wakeMin }
+      : { posture: "sitting", from: now, until: now + DAY.stillUpMin };
   const latest = Math.max(DAY.sleepMin, ...activities.filter((span) => span.from <= now).map((span) => span.from));
   return { posture: "sitting", from: latest, until: Math.min(DAY.minutes - 1, now + DAY.stillUpMin) };
 }

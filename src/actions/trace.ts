@@ -23,9 +23,13 @@ export function traceLine(action: Action): string {
     case "set_sleep":
       return `set_sleep ${clock(action.args.bed)} to ${clock(action.args.wake)}`;
     case "set_cycle":
-      return action.args.last_start === null ? "set_cycle none" : `set_cycle period began ${clock(action.args.last_start)}, ${action.args.length_days ?? CYCLE.lengthDays} days`;
+      return action.args.last_start === null
+        ? "set_cycle none"
+        : `set_cycle period began ${clock(action.args.last_start)}, ${action.args.length_days ?? CYCLE.lengthDays} days`;
     case "set_body":
-      return `set_body ${Object.entries(action.args).map(([k, v]) => `${k} ${v}`).join(", ")}`;
+      return `set_body ${Object.entries(action.args)
+        .map(([k, v]) => `${k} ${v}`)
+        .join(", ")}`;
     case "set_now":
       return `set_now ${clock(action.args.at)}`;
     case "define_substance":

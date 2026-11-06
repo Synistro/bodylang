@@ -8,7 +8,11 @@ const read = async (body: string) => {
 };
 
 describe("the event stream", () => {
-  const events: TellEvent[] = [{ type: "action", name: "show_system", args: { system: "brain" } }, { type: "reply", lines: [{ text: "Your heart is steady.", unverified: ["7.9"] }] }, { type: "done" }];
+  const events: TellEvent[] = [
+    { type: "action", name: "show_system", args: { system: "brain" } },
+    { type: "reply", lines: [{ text: "Your heart is steady.", unverified: ["7.9"] }] },
+    { type: "done" },
+  ];
 
   it("reads back what was sent", async () => {
     expect(await read(events.map(encodeEvent).join(""))).toEqual(events);

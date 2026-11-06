@@ -30,13 +30,20 @@ interface Drawn<K extends string> {
 }
 
 const sourcesOf = (about: string | undefined, basis: string | null | undefined) => {
-  if (basis) return sourced({ kind: "claude-input", detail: `${about ? `${about} ` : ""}Some levels here are Claude's illustration. Its basis: ${basis}` });
+  if (basis)
+    return sourced({
+      kind: "claude-input",
+      detail: `${about ? `${about} ` : ""}Some levels here are Claude's illustration. Its basis: ${basis}`,
+    });
   return about ? sourced({ kind: "model", detail: about }) : {};
 };
 
 // Turns an organ's definition and drawing into its panel: the model sets the levels, a walkthrough step can
 // point at parts of them and adjust them, and two drawings stack when a step compares.
-export function closeupInset<K extends string>(closeup: Closeup<K>, { Drawing, paint, usePlate, captionFromModel }: Drawn<K>): ComponentType<InsetProps> {
+export function closeupInset<K extends string>(
+  closeup: Closeup<K>,
+  { Drawing, paint, usePlate, captionFromModel }: Drawn<K>,
+): ComponentType<InsetProps> {
   const { keys, fromModel } = closeup;
 
   // The levels are read fresh each frame and eased, so moving between steps or along the chart reads as the
@@ -46,7 +53,11 @@ export function closeupInset<K extends string>(closeup: Closeup<K>, { Drawing, p
     const levels = {} as Record<K, number>;
     const lit = {} as Record<K, number>;
     const ease = (eased: Record<K, number>, target: Levels<K>, frame: Frame) => {
-      for (const key of keys) eased[key] = frame.still || eased[key] === undefined ? target[key] : easeToward(eased[key], target[key], frame.dt, EASE_PER_SECOND);
+      for (const key of keys)
+        eased[key] =
+          frame.still || eased[key] === undefined
+            ? target[key]
+            : easeToward(eased[key], target[key], frame.dt, EASE_PER_SECOND);
     };
     return (frame, { trajectory, t, muscle, adjustment }) => {
       ease(levels, levelsAt(keys, fromModel, { trajectory, muscle }, t, adjustment), frame);
@@ -59,7 +70,11 @@ export function closeupInset<K extends string>(closeup: Closeup<K>, { Drawing, p
     const art = useInsetPainter(painter, { ...props, adjustment });
     const words = usePlate(props, levelsAt(keys, fromModel, props, props.t, adjustment));
     return (
-      <Plate {...words} caption={label ?? (captionFromModel && Object.keys(adjustment.set).length ? "" : words.caption)} artRef={art}>
+      <Plate
+        {...words}
+        caption={label ?? (captionFromModel && Object.keys(adjustment.set).length ? "" : words.caption)}
+        artRef={art}
+      >
         <Drawing />
       </Plate>
     );

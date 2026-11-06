@@ -8,7 +8,8 @@ import { clamp01 } from "../model/curve";
 export const KIDNEY_FULL = { bloodFold: 1.25, urineMlPerMin: 3 / 0.7 };
 
 // What reaches the bladder each minute, which is the model's urine. A void only drops the level, so it counts as none.
-export const urineMlPerMin = (tr: Trajectory, t: number) => Math.max(0, value(tr, "bladderMl", t + 1) - value(tr, "bladderMl", t));
+export const urineMlPerMin = (tr: Trajectory, t: number) =>
+  Math.max(0, value(tr, "bladderMl", t + 1) - value(tr, "bladderMl", t));
 
 export const kidneysCloseup = defineCloseup({
   organ: "kidneys",
@@ -27,5 +28,6 @@ export const kidneysCloseup = defineCloseup({
     // Urine has no kind of its own. Lymph's plain line is the one that doesn't read as blood or food.
     urine: { kind: "lymph", from: "here", through: [], to: "bladder" },
   },
-  about: "The model knows how much blood reaches the kidneys and how much urine they make. The water going back follows the blood.",
+  about:
+    "The model knows how much blood reaches the kidneys and how much urine they make. The water going back follows the blood.",
 });

@@ -13,7 +13,13 @@ export function muscleStateFromEvent(event: BodyEvent, end: number, load: number
   const session = Math.max(1, end - event.from);
   const during = Math.min(1, (Math.min(t, end) - event.from) / session);
   if (t <= end) {
-    return { work: clamp01(strain), fatigue: clamp01(strain * during), soreness: 0, repair: 0, glycogenUsed: clamp01(m.glycogenUsedAtFull * strain * during) };
+    return {
+      work: clamp01(strain),
+      fatigue: clamp01(strain * during),
+      soreness: 0,
+      repair: 0,
+      glycogenUsed: clamp01(m.glycogenUsedAtFull * strain * during),
+    };
   }
   const since = t - end;
   const sinceH = since / 60;
@@ -22,7 +28,11 @@ export function muscleStateFromEvent(event: BodyEvent, end: number, load: number
     work: clamp01(strain * decay(since, m.workFallHalfLifeMin)),
     fatigue: clamp01(strain * decay(since, hours(m.fatigueHalfLifeH))),
     soreness: clamp01(strain * phase ** m.sorenessShape * Math.exp(m.sorenessShape * (1 - phase))),
-    repair: clamp01(strain * Math.min(1, since / m.repairRiseMin) * decay(Math.max(0, since - m.repairRiseMin), hours(m.repairHalfLifeH))),
+    repair: clamp01(
+      strain *
+        Math.min(1, since / m.repairRiseMin) *
+        decay(Math.max(0, since - m.repairRiseMin), hours(m.repairHalfLifeH)),
+    ),
     glycogenUsed: clamp01(m.glycogenUsedAtFull * strain * decay(since, m.glycogenRefillHalfLifeMin)),
   };
 }
@@ -61,7 +71,13 @@ export function muscleStateAt(events: BodyEvent[], group: MuscleGroup, minute: n
     total.repair += one.repair;
     total.glycogenUsed += one.glycogenUsed;
   }
-  return { work: clamp01(total.work), fatigue: clamp01(total.fatigue), soreness: clamp01(total.soreness), repair: clamp01(total.repair), glycogenUsed: clamp01(total.glycogenUsed) };
+  return {
+    work: clamp01(total.work),
+    fatigue: clamp01(total.fatigue),
+    soreness: clamp01(total.soreness),
+    repair: clamp01(total.repair),
+    glycogenUsed: clamp01(total.glycogenUsed),
+  };
 }
 
 // A muscle's state told as what happens to its fibres: how hard they work, how much is torn and not yet

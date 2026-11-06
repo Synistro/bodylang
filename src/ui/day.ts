@@ -5,7 +5,10 @@ import { WALL } from "../wall";
 import { followBuilds } from "./ProcessBuild";
 import { playOpening } from "./demoOpening";
 
-const lookSchema = z.object({ theme: z.enum(["light", "dark"]), layers: z.object({ skin: z.boolean(), vessels: z.boolean() }) });
+const lookSchema = z.object({
+  theme: z.enum(["light", "dark"]),
+  layers: z.object({ skin: z.boolean(), vessels: z.boolean() }),
+});
 
 const TICK_MS = 5000;
 const SAVE_AFTER_MS = 300;
@@ -24,11 +27,24 @@ async function readNewest(): Promise<DayDoc | null> {
 let saved: DayDoc | null = null;
 let timer = 0;
 
-const sameDay = (a: DayDoc, b: DayDoc | null) => b !== null && a.date === b.date && a.body === b.body && a.intakes === b.intakes && a.activities === b.activities && a.substances === b.substances && a.events === b.events && a.cycle === b.cycle && a.assumptions === b.assumptions;
+const sameDay = (a: DayDoc, b: DayDoc | null) =>
+  b !== null &&
+  a.date === b.date &&
+  a.body === b.body &&
+  a.intakes === b.intakes &&
+  a.activities === b.activities &&
+  a.substances === b.substances &&
+  a.events === b.events &&
+  a.cycle === b.cycle &&
+  a.assumptions === b.assumptions;
 
 async function write(doc: DayDoc) {
   try {
-    const response = await fetch("/api/day", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ writer: WRITER, doc }) });
+    const response = await fetch("/api/day", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ writer: WRITER, doc }),
+    });
     if (!response.ok) throw new Error(await response.text());
     if (getState().dayProblem) setUi({ dayProblem: null });
   } catch {
@@ -88,7 +104,10 @@ function tick(wanted: { reload: boolean }) {
   if (!WALL) void write(next);
 }
 
-const problem = (e: unknown) => setUi({ dayProblem: `Your day could not be read, so nothing is being saved. ${e instanceof Error ? e.message : String(e)}` });
+const problem = (e: unknown) =>
+  setUi({
+    dayProblem: `Your day could not be read, so nothing is being saved. ${e instanceof Error ? e.message : String(e)}`,
+  });
 
 const LOOK_KEY = "bodylang.look";
 

@@ -26,7 +26,10 @@ export interface Nutrients {
 }
 
 // Where what is in a food comes from: a row of the USDA table, or Claude's own estimate of it.
-export type FoodSource = { kind: "table"; fdcId: number; name: string; dataset: string } | { kind: "estimate" } | { kind: "recipe"; ingredients: { fdcId: number; name: string; grams: number }[] };
+export type FoodSource =
+  | { kind: "table"; fdcId: number; name: string; dataset: string }
+  | { kind: "estimate" }
+  | { kind: "recipe"; ingredients: { fdcId: number; name: string; grams: number }[] };
 
 // What one serving is, so a portion can be corrected in the units it was eaten in.
 export interface Serving {
@@ -98,6 +101,7 @@ export function postureAt(activities: ActivitySpan[], minute: number): Posture {
 export const availableCarbsG = (n: Nutrients) => Math.max(0, n.carbsG - n.fiberG);
 
 // What a ledger tracks. Alcohol has a ledger of its own, in grams.
-export const foodKcalOf = (n: Nutrients) => availableCarbsG(n) * KCAL_PER_G.carb + n.proteinG * KCAL_PER_G.protein + n.fatG * KCAL_PER_G.fat;
+export const foodKcalOf = (n: Nutrients) =>
+  availableCarbsG(n) * KCAL_PER_G.carb + n.proteinG * KCAL_PER_G.protein + n.fatG * KCAL_PER_G.fat;
 
 export const kcalOf = (n: Nutrients) => foodKcalOf(n) + n.alcoholG * KCAL_PER_G.alcohol;

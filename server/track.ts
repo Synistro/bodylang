@@ -18,7 +18,14 @@ interface Atlas {
 }
 
 // Which way each side of the body faces, in the atlas: the person's left is +x, up is +y, and the front is +z.
-const SIDE: Record<TrackFrom, Point> = { front: [0, 0, 1], back: [0, 0, -1], left: [1, 0, 0], right: [-1, 0, 0], above: [0, 1, 0], below: [0, -1, 0] };
+const SIDE: Record<TrackFrom, Point> = {
+  front: [0, 0, 1],
+  back: [0, 0, -1],
+  left: [1, 0, 0],
+  right: [-1, 0, 0],
+  above: [0, 1, 0],
+  below: [0, -1, 0],
+};
 
 const MESHES: Record<string, { organ: OrganId | null; name: string }> = {
   brain: { organ: "brain", name: "brain" },
@@ -40,7 +47,11 @@ const MESHES: Record<string, { organ: OrganId | null; name: string }> = {
   ovary_R: { organ: "ovaries", name: "right ovary" },
   spinal_cord: { organ: null, name: "spinal cord" },
 };
-const AIM_MESHES: Partial<Record<OrganId, string[]>> = { lungs: ["lung_R", "lung_L"], kidneys: ["kidney_R", "kidney_L"], ovaries: ["ovary_R", "ovary_L"] };
+const AIM_MESHES: Partial<Record<OrganId, string[]>> = {
+  lungs: ["lung_R", "lung_L"],
+  kidneys: ["kidney_R", "kidney_L"],
+  ovaries: ["ovary_R", "ovary_L"],
+};
 const OUTSIDE_BODY = 0.7; // metres back from the organ's centre, well outside the skin
 const LINE_LENGTH = OUTSIDE_BODY * 2;
 const VESSEL_MARGIN = 0.004;
@@ -57,15 +68,26 @@ function load(sex: Sex) {
   if (known) return known;
   const path = (extension: string) => resolve(process.cwd(), `public/assets/organs-${sex}.${extension}`);
   const file = readFileSync(path("bin"));
-  const entry = { atlas: JSON.parse(readFileSync(path("json"), "utf8")) as Atlas, bin: file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) };
+  const entry = {
+    atlas: JSON.parse(readFileSync(path("json"), "utf8")) as Atlas,
+    bin: file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength),
+  };
   loaded.set(sex, entry);
   return entry;
 }
 
 const sub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const dot = (a: Point, b: Point) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a: Point, b: Point): Point => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const along = (origin: Point, direction: Point, distance: number): Point => [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance];
+const cross = (a: Point, b: Point): Point => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+const along = (origin: Point, direction: Point, distance: number): Point => [
+  origin[0] + direction[0] * distance,
+  origin[1] + direction[1] * distance,
+  origin[2] + direction[2] * distance,
+];
 
 // How far along the line it first meets a triangle (Moller and Trumbore), or null.
 function hitTriangle(origin: Point, direction: Point, a: Point, b: Point, c: Point): number | null {
@@ -84,12 +106,21 @@ function hitTriangle(origin: Point, direction: Point, a: Point, b: Point, c: Poi
   return distance >= 0 ? distance : null;
 }
 
-function firstHit({ atlas, bin }: { atlas: Atlas; bin: ArrayBuffer }, mesh: string, origin: Point, direction: Point): number | null {
+function firstHit(
+  { atlas, bin }: { atlas: Atlas; bin: ArrayBuffer },
+  mesh: string,
+  origin: Point,
+  direction: Point,
+): number | null {
   const meta = atlas.organs[mesh];
   if (!meta) return null;
   const positions = new Int16Array(bin, meta.pos, meta.vertexCount * 3);
   const indices = new Uint32Array(bin, meta.index, meta.indexCount);
-  const vertex = (i: number): Point => [positions[i * 3] / atlas.quant, positions[i * 3 + 1] / atlas.quant, positions[i * 3 + 2] / atlas.quant];
+  const vertex = (i: number): Point => [
+    positions[i * 3] / atlas.quant,
+    positions[i * 3 + 1] / atlas.quant,
+    positions[i * 3 + 2] / atlas.quant,
+  ];
   let best: number | null = null;
   for (let t = 0; t < indices.length; t += 3) {
     const distance = hitTriangle(origin, direction, vertex(indices[t]), vertex(indices[t + 1]), vertex(indices[t + 2]));
@@ -111,7 +142,12 @@ function nearestOnSegment(origin: Point, direction: Point, a: Point, b: Point) {
   return best;
 }
 
-const vesselName = (id: string) => id.replace(/_(a|b|sup|inf)$/, "").replace(/_L$/, " left").replace(/_R$/, " right").replaceAll("_", " ");
+const vesselName = (id: string) =>
+  id
+    .replace(/_(a|b|sup|inf)$/, "")
+    .replace(/_L$/, " left")
+    .replace(/_R$/, " right")
+    .replaceAll("_", " ");
 
 function aimCenter(atlas: Atlas, aim: OrganId): Point | null {
   if (aim === "stomach") {
@@ -139,7 +175,8 @@ export function traceTrack(aim: OrganId, from: TrackFrom, sex: Sex): CrossedPart
   const [a, b] = STOMACH.touches.map((name) => atlas.landmarks[name]);
   const stomach: Point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
   const closest = dot(sub(stomach, origin), direction);
-  if (Math.hypot(...sub(stomach, along(origin, direction, closest))) <= STOMACH.radius) crossed.push({ organ: "stomach", name: "stomach", distance: closest });
+  if (Math.hypot(...sub(stomach, along(origin, direction, closest))) <= STOMACH.radius)
+    crossed.push({ organ: "stomach", name: "stomach", distance: closest });
 
   const vessels = new Map<string, { radius: number; distance: number }>();
   for (const [id, radius] of Object.entries(atlas.vesselRadius)) {

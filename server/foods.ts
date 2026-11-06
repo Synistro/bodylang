@@ -12,11 +12,33 @@ export interface Food {
   fdcId: number;
   name: string;
   dataset: string;
-  per100g: { water: number; carbs: number; sugar: number; fat: number; protein: number; fiber: number; caffeine: number; alcohol: number };
+  per100g: {
+    water: number;
+    carbs: number;
+    sugar: number;
+    fat: number;
+    protein: number;
+    fiber: number;
+    caffeine: number;
+    alcohol: number;
+  };
   portions: { label: string; grams: number }[];
 }
 
-const rowSchema = z.tuple([z.number(), z.string(), z.string(), z.number(), z.number(), z.number(), z.number(), z.number(), z.number(), z.number(), z.number(), z.array(z.tuple([z.string(), z.number()]))]);
+const rowSchema = z.tuple([
+  z.number(),
+  z.string(),
+  z.string(),
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+  z.array(z.tuple([z.string(), z.number()])),
+]);
 
 // "Tomatoes," and "tomato" are the same word to someone looking for one.
 function words(text: string): string[] {
@@ -50,7 +72,13 @@ function foods(): Indexed[] {
     .map(([fdcId, name, dataset, water, carbs, sugar, fat, protein, fiber, caffeine, alcohol, portions]) => {
       const all = words(name);
       return {
-        food: { fdcId, name, dataset, per100g: { water, carbs, sugar, fat, protein, fiber, caffeine, alcohol }, portions: portions.map(([label, grams]) => ({ label, grams })) },
+        food: {
+          fdcId,
+          name,
+          dataset,
+          per100g: { water, carbs, sugar, fat, protein, fiber, caffeine, alcohol },
+          portions: portions.map(([label, grams]) => ({ label, grams })),
+        },
         all: new Set(all),
         first: new Set(all.slice(0, 1)),
         count: all.length,
@@ -74,7 +102,11 @@ function scoreOf(row: Indexed, query: string[]): number {
     }
   }
   if (!matched) return -Infinity;
-  return score + MATCH.perExtraWord * Math.max(0, row.count - query.length) + (row.food.dataset === "FNDDS" ? MATCH.asEaten : 0);
+  return (
+    score +
+    MATCH.perExtraWord * Math.max(0, row.count - query.length) +
+    (row.food.dataset === "FNDDS" ? MATCH.asEaten : 0)
+  );
 }
 
 export function searchFoods(query: string, limit = RESULTS_PER_QUERY): Food[] {
@@ -92,25 +124,61 @@ export const foodById = (fdcId: number): Food | undefined => foods().find((row) 
 export function nutrientsOf(food: Food, grams: number): Nutrients {
   const per = grams / 100;
   const { water, carbs, sugar, fat, protein, fiber, caffeine, alcohol } = food.per100g;
-  return { grams, waterMl: water * per, carbsG: carbs * per, sugarG: sugar * per, fatG: fat * per, proteinG: protein * per, fiberG: fiber * per, caffeineMg: caffeine * per, alcoholG: alcohol * per };
-}
-
-// A dish is the sum of what went into it.
-export function combineIngredients(parts: { food: Food; grams: number }[]): { nutrients: Nutrients; source: FoodSource } {
-  const each = parts.map(({ food, grams }) => nutrientsOf(food, grams));
-  const total = (key: keyof Nutrients) => each.reduce((sum, n) => sum + n[key], 0);
   return {
-    nutrients: { grams: total("grams"), waterMl: total("waterMl"), carbsG: total("carbsG"), sugarG: total("sugarG"), fatG: total("fatG"), proteinG: total("proteinG"), fiberG: total("fiberG"), caffeineMg: total("caffeineMg"), alcoholG: total("alcoholG") },
-    source: { kind: "recipe", ingredients: parts.map(({ food, grams }) => ({ fdcId: food.fdcId, name: food.name, grams })) },
+    grams,
+    waterMl: water * per,
+    carbsG: carbs * per,
+    sugarG: sugar * per,
+    fatG: fat * per,
+    proteinG: protein * per,
+    fiberG: fiber * per,
+    caffeineMg: caffeine * per,
+    alcoholG: alcohol * per,
   };
 }
 
-export const sourceOf = (food: Food): FoodSource => ({ kind: "table", fdcId: food.fdcId, name: food.name, dataset: food.dataset });
+// A dish is the sum of what went into it.
+export function combineIngredients(parts: { food: Food; grams: number }[]): {
+  nutrients: Nutrients;
+  source: FoodSource;
+} {
+  const each = parts.map(({ food, grams }) => nutrientsOf(food, grams));
+  const total = (key: keyof Nutrients) => each.reduce((sum, n) => sum + n[key], 0);
+  return {
+    nutrients: {
+      grams: total("grams"),
+      waterMl: total("waterMl"),
+      carbsG: total("carbsG"),
+      sugarG: total("sugarG"),
+      fatG: total("fatG"),
+      proteinG: total("proteinG"),
+      fiberG: total("fiberG"),
+      caffeineMg: total("caffeineMg"),
+      alcoholG: total("alcoholG"),
+    },
+    source: {
+      kind: "recipe",
+      ingredients: parts.map(({ food, grams }) => ({ fdcId: food.fdcId, name: food.name, grams })),
+    },
+  };
+}
+
+export const sourceOf = (food: Food): FoodSource => ({
+  kind: "table",
+  fdcId: food.fdcId,
+  name: food.name,
+  dataset: food.dataset,
+});
 
 // One line per food: the id to log it with, what it is, what 100 g holds, and the portions the table knows.
 export function foodLine(food: Food): string {
   const p = food.per100g;
-  const extras = [p.caffeine > 0 ? `caffeine ${p.caffeine} mg` : "", p.alcohol > 0 ? `alcohol ${p.alcohol} g` : ""].filter(Boolean).join(", ");
-  const portions = food.portions.slice(0, PORTIONS_SHOWN).map((portion) => `${portion.label} = ${portion.grams} g`).join("; ");
+  const extras = [p.caffeine > 0 ? `caffeine ${p.caffeine} mg` : "", p.alcohol > 0 ? `alcohol ${p.alcohol} g` : ""]
+    .filter(Boolean)
+    .join(", ");
+  const portions = food.portions
+    .slice(0, PORTIONS_SHOWN)
+    .map((portion) => `${portion.label} = ${portion.grams} g`)
+    .join("; ");
   return `${food.fdcId} | ${food.name} | per 100 g: carbs ${p.carbs} g (sugar ${p.sugar}, fiber ${p.fiber}), fat ${p.fat} g, protein ${p.protein} g, water ${p.water} g${extras ? `, ${extras}` : ""} | ${portions || "no portions listed"}`;
 }

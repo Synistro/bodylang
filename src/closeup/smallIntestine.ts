@@ -13,7 +13,10 @@ export const smallIntestineCloseup = defineCloseup({
   },
   fromModel: ({ trajectory }, minute) => ({
     food: clamp01(value(trajectory, "gutKcal", minute) / FULL.gutKcal),
-    sugar: clamp01(value(trajectory, "glucoseAbsorbMgMin", minute) / FULL.sugarMgMin + value(trajectory, "proteinAbsorbGMin", minute) / FULL.proteinGMin),
+    sugar: clamp01(
+      value(trajectory, "glucoseAbsorbMgMin", minute) / FULL.sugarMgMin +
+        value(trajectory, "proteinAbsorbGMin", minute) / FULL.proteinGMin,
+    ),
     fat: clamp01(value(trajectory, "fatAbsorbGMin", minute) / FULL.fatGMin),
   }),
   travels: {

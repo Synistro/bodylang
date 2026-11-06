@@ -10,13 +10,21 @@ import { BuildLine } from "./ProcessBuild";
 import { sourced } from "./sources";
 import { tell } from "./tell";
 
-const SAMPLE_REPLY: ReplyLine[] = [{ text: "Working out what happened and running it through the model." }, { text: "The answer appears here, in a line or two." }, { text: "And what you may feel." }];
+const SAMPLE_REPLY: ReplyLine[] = [
+  { text: "Working out what happened and running it through the model." },
+  { text: "The answer appears here, in a line or two." },
+  { text: "And what you may feel." },
+];
 const WHAT_IF_PEAK_WINDOW_MINUTES = 360;
 const WHAT_IF_MIN_PEAK_CHANGE = 0.05;
 const MG_DL_PER_MMOL = 18.016;
 
 const NUMBER_ORIGIN: Origin = { kind: "model", detail: "This number is one the model returned to Claude." };
-const ADDED_ORIGIN: Origin = { kind: "claude", detail: "A number with a dotted line in Claude's answer is one the model never returned. Claude worked it out or added it from its own knowledge." };
+const ADDED_ORIGIN: Origin = {
+  kind: "claude",
+  detail:
+    "A number with a dotted line in Claude's answer is one the model never returned. Claude worked it out or added it from its own knowledge.",
+};
 const SAID_NUMBER = /(?<![\w.:,])(\d{1,2}:\d{2}|\d+(?:\.\d+)?%?)(?![\w:]|\.\d)/g;
 
 // Claude's words, with each number marked by whether the model really returned it. Without a check,
@@ -28,7 +36,11 @@ export function CheckedWords({ text, unverified }: { text: string; unverified?: 
   for (const match of text.matchAll(SAID_NUMBER)) {
     pieces.push(text.slice(at, match.index));
     pieces.push(
-      <span key={match.index} className="said-number" {...sourced(unverified.includes(match[0]) ? ADDED_ORIGIN : NUMBER_ORIGIN)}>
+      <span
+        key={match.index}
+        className="said-number"
+        {...sourced(unverified.includes(match[0]) ? ADDED_ORIGIN : NUMBER_ORIGIN)}
+      >
         {match[0]}
       </span>,
     );
@@ -42,7 +54,14 @@ function Reply({ lines }: { lines: ReplyLine[] }) {
   return (
     <div className="reply">
       {lines.map((l) => (
-        <button type="button" key={l.text} className="reply-line" data-linked={l.organ ? true : undefined} onClick={() => l.organ && showOrgan(l.organ)} {...organHover(l.organ ?? null)}>
+        <button
+          type="button"
+          key={l.text}
+          className="reply-line"
+          data-linked={l.organ ? true : undefined}
+          onClick={() => l.organ && showOrgan(l.organ)}
+          {...organHover(l.organ ?? null)}
+        >
           <CheckedWords text={l.text} unverified={l.unverified} />
         </button>
       ))}
@@ -70,7 +89,12 @@ function ExchangeBlock({ exchange, onDismiss }: { exchange: Exchange; onDismiss:
         <WalkAgain />
         {exchange.trace.length ? (
           <div className="worked">
-            <button type="button" className="worked-toggle" aria-expanded={showTrace} onClick={() => setShowTrace(!showTrace)}>
+            <button
+              type="button"
+              className="worked-toggle"
+              aria-expanded={showTrace}
+              onClick={() => setShowTrace(!showTrace)}
+            >
               How I worked this out
             </button>
             {showTrace ? (
@@ -101,7 +125,10 @@ function WalkAgain() {
   );
 }
 
-const NUMBER_ORIGIN_WHAT_IF: Origin = { kind: "model", detail: "Claude suggested this alternative, and the model computed the difference." };
+const NUMBER_ORIGIN_WHAT_IF: Origin = {
+  kind: "model",
+  detail: "Claude suggested this alternative, and the model computed the difference.",
+};
 
 // An alternative Claude offered, in words, at the foot of what it said.
 function WhatIfOffer() {
@@ -117,7 +144,10 @@ function WhatIfOffer() {
     return best;
   };
   const drop = (peak(tr.series.glucose) - peak(whatIf.series.glucose)) / MG_DL_PER_MMOL;
-  const effect = Math.abs(drop) >= WHAT_IF_MIN_PEAK_CHANGE ? `, and your sugar peak is ${Math.abs(drop).toFixed(1)} ${drop > 0 ? "lower" : "higher"}.` : ".";
+  const effect =
+    Math.abs(drop) >= WHAT_IF_MIN_PEAK_CHANGE
+      ? `, and your sugar peak is ${Math.abs(drop).toFixed(1)} ${drop > 0 ? "lower" : "higher"}.`
+      : ".";
   return (
     <div className="what-if">
       <p {...sourced(NUMBER_ORIGIN_WHAT_IF)}>
@@ -142,7 +172,10 @@ export function Answer() {
   const session = useStore((s) => s.asking?.id ?? null);
   const last = exchanges[exchanges.length - 1];
   // What was asked ends with the session it was asked in.
-  const shown = last && !last.scripted && dismissed !== last.id && (last.session === null || last.session === session) ? last : null;
+  const shown =
+    last && !last.scripted && dismissed !== last.id && (last.session === null || last.session === session)
+      ? last
+      : null;
   return (
     <section className="answer" aria-label="Latest answer">
       {shown ? <ExchangeBlock key={shown.id} exchange={shown} onDismiss={() => setDismissed(shown.id)} /> : null}
@@ -162,7 +195,10 @@ const DEPTHS: { depth: Depth; label: string; hint: string }[] = [
   { depth: "deep", label: "Deep", hint: "Takes longer, and goes through it step by step, with comparisons." },
 ];
 
-const PLACEHOLDER: Record<Mode, string> = { tell: "Tell your body what happened", ask: "What if I ate this? How does insulin work?" };
+const PLACEHOLDER: Record<Mode, string> = {
+  tell: "Tell your body what happened",
+  ask: "What if I ate this? How does insulin work?",
+};
 
 export function Composer() {
   const working = useStore((s) => s.exchanges.some((e) => e.status === "working"));
@@ -220,7 +256,14 @@ export function Composer() {
       <div className="composer-foot">
         <div className="mode-switch" role="radiogroup" aria-label="What this message is">
           {MODES.map((m) => (
-            <button key={m.mode} type="button" role="radio" aria-checked={mode === m.mode} title={m.hint} onClick={() => setMode(m.mode)}>
+            <button
+              key={m.mode}
+              type="button"
+              role="radio"
+              aria-checked={mode === m.mode}
+              title={m.hint}
+              onClick={() => setMode(m.mode)}
+            >
               {m.label}
             </button>
           ))}
@@ -228,13 +271,27 @@ export function Composer() {
         {mode === "ask" ? (
           <div className="mode-switch depth-switch" role="radiogroup" aria-label="How far to go">
             {DEPTHS.map((d) => (
-              <button key={d.depth} type="button" role="radio" aria-checked={depth === d.depth} title={d.hint} onClick={() => setUi({ depth: d.depth })}>
+              <button
+                key={d.depth}
+                type="button"
+                role="radio"
+                aria-checked={depth === d.depth}
+                title={d.hint}
+                onClick={() => setUi({ depth: d.depth })}
+              >
                 {d.label}
               </button>
             ))}
           </div>
         ) : null}
-        <button type="submit" className="send" aria-label={working ? "Working" : "Send"} data-shown={working || text.trim() !== "" || undefined} data-working={working || undefined} disabled={working || !text.trim()}>
+        <button
+          type="submit"
+          className="send"
+          aria-label={working ? "Working" : "Send"}
+          data-shown={working || text.trim() !== "" || undefined}
+          data-working={working || undefined}
+          disabled={working || !text.trim()}
+        >
           <ArrowUp weight="bold" />
         </button>
       </div>

@@ -7,14 +7,90 @@ import { caffeineLedgerAt, ledgerAt, value } from "../engine/trajectory";
 import { CustomSubstance, Intake, Scenario } from "../scenario";
 import { hm, NO_NUTRIENTS } from "../testKit";
 
-
-const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
-const sugarBar: Intake = { ...NO_NUTRIENTS, id: "sugar_bar", label: "Sugar bar", at: hm(16, 45), grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
-const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
-const beer: Intake = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 1, alcoholG: 20, liquid: true };
-const vodka: Intake = { ...NO_NUTRIENTS, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true };
-const latte: Intake = { ...NO_NUTRIENTS, id: "latte", label: "Latte", at: hm(9), grams: 350, waterMl: 320, carbsG: 14, sugarG: 14, fatG: 9, proteinG: 9, caffeineMg: 80, liquid: true };
-const ibuprofen: CustomSubstance = { id: "ibuprofen", label: "Ibuprofen", at: hm(13), doseMg: 400, tmaxMin: 90, halfLifeH: 2, volumeLPerKg: 0.15, bioavailability: 0.9, targets: [{ organ: "brain", effect: "blocks the signal that makes pain" }], source: "test" };
+const coffee: Intake = {
+  ...NO_NUTRIENTS,
+  id: "coffee",
+  label: "Coffee",
+  at: hm(8, 30),
+  grams: 250,
+  waterMl: 250,
+  caffeineMg: 95,
+  liquid: true,
+};
+const sugarBar: Intake = {
+  ...NO_NUTRIENTS,
+  id: "sugar_bar",
+  label: "Sugar bar",
+  at: hm(16, 45),
+  grams: 50,
+  waterMl: 3,
+  carbsG: 31,
+  sugarG: 27,
+  fatG: 12,
+  proteinG: 4,
+  fiberG: 1,
+};
+const pizza: Intake = {
+  ...NO_NUTRIENTS,
+  id: "pizza",
+  label: "Pizza",
+  at: hm(16, 45),
+  grams: 240,
+  waterMl: 110,
+  carbsG: 72,
+  sugarG: 8,
+  fatG: 26,
+  proteinG: 28,
+  fiberG: 4,
+};
+const beer: Intake = {
+  ...NO_NUTRIENTS,
+  id: "beer",
+  label: "Beer",
+  at: hm(19),
+  grams: 500,
+  waterMl: 460,
+  carbsG: 18,
+  sugarG: 1,
+  alcoholG: 20,
+  liquid: true,
+};
+const vodka: Intake = {
+  ...NO_NUTRIENTS,
+  id: "vodka",
+  label: "Vodka",
+  at: hm(20),
+  grams: 60,
+  waterMl: 40,
+  alcoholG: 20,
+  liquid: true,
+};
+const latte: Intake = {
+  ...NO_NUTRIENTS,
+  id: "latte",
+  label: "Latte",
+  at: hm(9),
+  grams: 350,
+  waterMl: 320,
+  carbsG: 14,
+  sugarG: 14,
+  fatG: 9,
+  proteinG: 9,
+  caffeineMg: 80,
+  liquid: true,
+};
+const ibuprofen: CustomSubstance = {
+  id: "ibuprofen",
+  label: "Ibuprofen",
+  at: hm(13),
+  doseMg: 400,
+  tmaxMin: 90,
+  halfLifeH: 2,
+  volumeLPerKg: 0.15,
+  bioavailability: 0.9,
+  targets: [{ organ: "brain", effect: "blocks the signal that makes pain" }],
+  source: "test",
+};
 
 const day: Scenario = {
   body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
@@ -47,18 +123,32 @@ const LIVE_LINES = ["insulin", "circulation", "alertness", "clearing"];
 const SCENARIOS: Record<string, Scenario> = {
   "the test day": day,
   "nothing logged": { ...day, intakes: [] },
-  "water only": { ...day, intakes: [{ ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }] },
+  "water only": {
+    ...day,
+    intakes: [{ ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }],
+  },
   "pure spirit": { ...day, intakes: [vodka] },
   "two rounds": { ...day, intakes: [beer, { ...beer, id: "beer_2", at: hm(19, 30) }, pizza] },
   "a latte and a pill": { ...day, intakes: [latte], substances: [ibuprofen] },
-  "a walk": { ...day, activities: [{ from: hm(8), posture: "sitting" }, { from: hm(17), posture: "walking" }, { from: hm(18), posture: "sitting" }] },
+  "a walk": {
+    ...day,
+    activities: [
+      { from: hm(8), posture: "sitting" },
+      { from: hm(17), posture: "walking" },
+      { from: hm(18), posture: "sitting" },
+    ],
+  },
 };
 
 describe("the lines at 17:00", () => {
   it("lists one line per logged thing, plus how the body works", () => {
     // Processes Claude has added come on top, and are checked by their own contract.
-    const built = processesAt(tr, hm(17)).map((p) => p.id).filter((id) => !id.startsWith("ext:"));
-    expect(built.sort()).toEqual(["alertness", "circulation", "clearing", "fat-route", "insulin", "intake:coffee", "meal:sugar_bar"].sort());
+    const built = processesAt(tr, hm(17))
+      .map((p) => p.id)
+      .filter((id) => !id.startsWith("ext:"));
+    expect(built.sort()).toEqual(
+      ["alertness", "circulation", "clearing", "fat-route", "insulin", "intake:coffee", "meal:sugar_bar"].sort(),
+    );
   });
 
   it("files each line under its system", () => {
@@ -80,7 +170,9 @@ describe("the lines at 17:00", () => {
     expect(meal.title).toBe("Ate sugar bar and pizza");
     expect(meal.active).toBe(true);
     expect(stopOf(meal, "stomach").state).toBe("here");
-    expect(lineAt("meal:sugar_bar", hm(17, 30)).headline).toMatch(/^\d+% still in your stomach, only the first sugar has reached your blood$/);
+    expect(lineAt("meal:sugar_bar", hm(17, 30)).headline).toMatch(
+      /^\d+% still in your stomach, only the first sugar has reached your blood$/,
+    );
   });
 
   it("shows the coffee at work in your blood", () => {
@@ -100,7 +192,8 @@ describe("the lines at 17:00", () => {
     expect(stopOf(line, "caffeine").reading).toBe("");
     expect(stopOf(line, "receptors").reading).toBe("");
     expect(stopOf(lineAt("insulin", hm(12), quiet), "muscle").reading).toBe("");
-    for (const p of processesAt(tr, hm(17))) for (const s of p.stops) expect(s.reading, `${p.id} ${s.label}`).not.toMatch(/^0(\.0+)?( |%|$)/);
+    for (const p of processesAt(tr, hm(17)))
+      for (const s of p.stops) expect(s.reading, `${p.id} ${s.label}`).not.toMatch(/^0(\.0+)?( |%|$)/);
   });
 
   it("explains why sugar comes back down, with live numbers", () => {
@@ -128,7 +221,9 @@ describe("the lines at 17:00", () => {
     const line = lineAt("circulation", hm(17));
     expect(line.active).toBe(true);
     expect(line.headline).toMatch(/^3\d% of your blood is going to your gut, up from 25% at rest$/);
-    expect(lineAt("circulation", hm(18)).headline).toMatch(/^3\d% of your blood is going to your gut, up from 25% at rest$/);
+    expect(lineAt("circulation", hm(18)).headline).toMatch(
+      /^3\d% of your blood is going to your gut, up from 25% at rest$/,
+    );
     for (const id of ["gut", "muscle", "brain", "kidneys"]) expect(stopOf(line, id).from).toBe("heart");
     expect(stopOf(line, "gut").share).toBeCloseTo(value(tr, "flowGut", hm(17)), 5);
     expect(stopOf(line, "gut").state).toBe("here");
@@ -139,7 +234,12 @@ describe("the lines at 17:00", () => {
 
   it("links caffeine, receptors, alertness and sleep pressure", () => {
     const line = lineAt("alertness", hm(17));
-    expect(line.stops.map((s) => s.label)).toEqual(["Caffeine in blood", "Tired signal blocked", "Alertness", "Sleep pressure"]);
+    expect(line.stops.map((s) => s.label)).toEqual([
+      "Caffeine in blood",
+      "Tired signal blocked",
+      "Alertness",
+      "Sleep pressure",
+    ]);
     expect(stopOf(line, "receptors").reading).toBe("4%");
     expect(stopOf(line, "pressure").reading).toBe("9 hours awake");
     expect(stopOf(line, "alertness").say).toContain("the meal and time awake");
@@ -156,12 +256,20 @@ describe("the lines at 17:00", () => {
   it("gives Claude the ids, titles and headlines to pick from", () => {
     const listed = readout(tr, hm(17)).processes;
     expect(listed.map((p) => p.id)).toContain("meal:sugar_bar");
-    expect(listed.find((p) => p.id === "meal:sugar_bar")).toMatchObject({ title: "Ate sugar bar and pizza", system: "digestion", active: true });
+    expect(listed.find((p) => p.id === "meal:sugar_bar")).toMatchObject({
+      title: "Ate sugar bar and pizza",
+      system: "digestion",
+      active: true,
+    });
     expect(listed.find((p) => p.id === "meal:sugar_bar")?.headline).toContain("still in your stomach");
   });
 
   it("filters by system, showing everything on the overview", () => {
-    expect(processesFor(tr, hm(17), "brain").map((p) => p.id).sort()).toEqual(["alertness", "intake:coffee"]);
+    expect(
+      processesFor(tr, hm(17), "brain")
+        .map((p) => p.id)
+        .sort(),
+    ).toEqual(["alertness", "intake:coffee"]);
     expect(processesFor(tr, hm(17), "overview")).toHaveLength(processesAt(tr, hm(17)).length);
   });
 });
@@ -253,7 +361,14 @@ describe("where the action is", () => {
   });
 
   it("leaves insulin at rest when muscle is pulling sugar in by moving", () => {
-    const fasted = simulate({ ...day, intakes: [], activities: [{ from: hm(8), posture: "sitting" }, { from: hm(12), posture: "walking" }] });
+    const fasted = simulate({
+      ...day,
+      intakes: [],
+      activities: [
+        { from: hm(8), posture: "sitting" },
+        { from: hm(12), posture: "walking" },
+      ],
+    });
     const line = lineAt("insulin", hm(12, 20), fasted);
     expect(line.active).toBe(false);
     expect(stopOf(line, "muscle").say).toContain("Moving muscles");
@@ -277,7 +392,13 @@ describe("where the action is", () => {
 
 describe("special lines", () => {
   it("gives even a small snack a food line, and coffee with a splash of milk none", () => {
-    const small = simulate({ ...day, intakes: [{ ...NO_NUTRIENTS, id: "mint", label: "Mint", at: hm(9), grams: 5, carbsG: 4 }, { ...coffee, carbsG: 1, fatG: 1 }] });
+    const small = simulate({
+      ...day,
+      intakes: [
+        { ...NO_NUTRIENTS, id: "mint", label: "Mint", at: hm(9), grams: 5, carbsG: 4 },
+        { ...coffee, carbsG: 1, fatG: 1 },
+      ],
+    });
     const ids = processesAt(small, hm(9, 30)).map((p) => p.id);
     expect(ids).toContain("intake:mint");
     expect(lineAt("intake:coffee", hm(9, 30), small).system).toBe("brain");
@@ -366,8 +487,14 @@ describe("every minute of every kind of day", () => {
             expect(order, `${p.id} is live, so nothing is behind you`).not.toContain("passed");
           } else if (here.length) {
             const at = order.indexOf("here");
-            expect(order.slice(0, at).every((s) => s === "passed"), `${p.id}: ${order.join(",")}`).toBe(true);
-            expect(order.slice(at + 1).every((s) => s === "ahead"), `${p.id}: ${order.join(",")}`).toBe(true);
+            expect(
+              order.slice(0, at).every((s) => s === "passed"),
+              `${p.id}: ${order.join(",")}`,
+            ).toBe(true);
+            expect(
+              order.slice(at + 1).every((s) => s === "ahead"),
+              `${p.id}: ${order.join(",")}`,
+            ).toBe(true);
           }
           for (const s of p.stops) if (s.state === "passed") expect(s.reading, `${p.id} ${s.label}`).toBe("");
           p.stops.forEach((s, i) => {
@@ -405,9 +532,30 @@ it("handles a fractional minute and the ends of the day", () => {
 
 describe("the liver clearing alcohol", () => {
   it("draws a line as thick as the grams it clears", () => {
-    const beers = { ...NO_NUTRIENTS, id: "beers", label: "Three beers", at: hm(19), grams: 1500, waterMl: 1380, carbsG: 54, alcoholG: 60, liquid: true };
-    const tr = simulate({ body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [beers], activities: [{ from: 0, posture: "sleeping" }, { from: hm(7), posture: "sitting" }], substances: [], events: [] });
-    const liver = processesAt(tr, hm(21)).find((p) => p.id === "clearing")?.stops.find((stop) => stop.label === "Liver");
+    const beers = {
+      ...NO_NUTRIENTS,
+      id: "beers",
+      label: "Three beers",
+      at: hm(19),
+      grams: 1500,
+      waterMl: 1380,
+      carbsG: 54,
+      alcoholG: 60,
+      liquid: true,
+    };
+    const tr = simulate({
+      body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+      intakes: [beers],
+      activities: [
+        { from: 0, posture: "sleeping" },
+        { from: hm(7), posture: "sitting" },
+      ],
+      substances: [],
+      events: [],
+    });
+    const liver = processesAt(tr, hm(21))
+      .find((p) => p.id === "clearing")
+      ?.stops.find((stop) => stop.label === "Liver");
     expect(liver?.flow).toBeGreaterThan(0.2);
   });
 });

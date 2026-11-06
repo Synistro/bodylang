@@ -49,7 +49,8 @@ export interface OrganAsset {
 
 async function loadPair<T>(name: string): Promise<{ meta: T; bin: ArrayBuffer }> {
   const [metaResponse, binResponse] = await Promise.all([fetch(`assets/${name}.json`), fetch(`assets/${name}.bin`)]);
-  if (!metaResponse.ok || !binResponse.ok) throw new Error(`Could not load ${name}: ${metaResponse.status}/${binResponse.status}`);
+  if (!metaResponse.ok || !binResponse.ok)
+    throw new Error(`Could not load ${name}: ${metaResponse.status}/${binResponse.status}`);
   const [meta, bin] = await Promise.all([metaResponse.json() as Promise<T>, binResponse.arrayBuffer()]);
   return { meta, bin };
 }

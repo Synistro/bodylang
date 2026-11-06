@@ -116,7 +116,13 @@ export class DayChart {
   private pointedStop: number | null = null;
   private pressedMoment: { moment: Moment; x: number } | null = null;
   private theme: Theme = "dark";
-  private colors = { ink: "#d0cec6", ink2: "#a19e97", ink3: "#8a8782", line: "rgba(208,206,198,.09)", surface: "#1d1b1a" };
+  private colors = {
+    ink: "#d0cec6",
+    ink2: "#a19e97",
+    ink3: "#8a8782",
+    line: "rgba(208,206,198,.09)",
+    surface: "#1d1b1a",
+  };
   private colorsStale = true;
   private dirty = true;
   private settled = false;
@@ -193,7 +199,10 @@ export class DayChart {
     if (subject.kind === "recovery" || subject.kind === "story") return subject.span;
     if (subject.kind === "next") {
       const last = subject.items[subject.items.length - 1]?.at ?? now;
-      return { from: Math.max(LANES.from, now - LANES.fit.marginMin), to: Math.min(LANES.to, Math.max(last + LANES.fit.marginMin, now + LANES.fit.aheadMin)) };
+      return {
+        from: Math.max(LANES.from, now - LANES.fit.marginMin),
+        to: Math.min(LANES.to, Math.max(last + LANES.fit.marginMin, now + LANES.fit.aheadMin)),
+      };
     }
     const lanes = this.shown.map((s) => s.lane);
     const fit = fitWindow(lanes, now);
@@ -205,7 +214,8 @@ export class DayChart {
       // Only words at the end of a bar need room after them. Any others can sit before their point.
       if (!lane.mark?.over || lane.mark.at <= fit.from) continue;
       const room = c.measureText(lane.mark.text).width + 2 * TEXT_GAP_REM * this.rem + 4;
-      if (room < this.width) to = Math.max(to, fit.from + ((lane.mark.at - fit.from) * this.width) / (this.width - room));
+      if (room < this.width)
+        to = Math.max(to, fit.from + ((lane.mark.at - fit.from) * this.width) / (this.width - room));
     }
     return { from: fit.from, to: Math.min(LANES.to, to) };
   }
@@ -224,7 +234,8 @@ export class DayChart {
     const row = this.shown.find((s) => s.lane.id === id)?.row;
     if (!row) return;
     if (row.offsetTop < this.rows.scrollTop) this.rows.scrollTop = row.offsetTop;
-    else if (row.offsetTop + row.offsetHeight > this.rows.scrollTop + this.rows.clientHeight) this.rows.scrollTop = row.offsetTop + row.offsetHeight - this.rows.clientHeight;
+    else if (row.offsetTop + row.offsetHeight > this.rows.scrollTop + this.rows.clientHeight)
+      this.rows.scrollTop = row.offsetTop + row.offsetHeight - this.rows.clientHeight;
   }
 
   setWholeDay(whole: boolean) {
@@ -255,7 +266,13 @@ export class DayChart {
   private readColors() {
     const style = getComputedStyle(document.documentElement);
     const read = (name: string) => style.getPropertyValue(name).trim();
-    this.colors = { ink: read("--ink"), ink2: read("--ink-2"), ink3: read("--ink-3"), line: read("--line"), surface: read("--surface") };
+    this.colors = {
+      ink: read("--ink"),
+      ink2: read("--ink-2"),
+      ink3: read("--ink-3"),
+      line: read("--line"),
+      surface: read("--surface"),
+    };
     this.colorsStale = false;
   }
 
@@ -311,11 +328,13 @@ export class DayChart {
   private landing(x: number, y: number, free: boolean): { at: number; label: string | null } {
     const at = Math.max(this.span.from, Math.min(this.span.to, this.minuteAt(x)));
     if (free) return { at, label: null };
-    const reach = (y < this.topHeight() ? SNAP_PX.top : SNAP_PX.lanes) * ((this.view.to - this.view.from) / (this.width || 1));
+    const reach =
+      (y < this.topHeight() ? SNAP_PX.top : SNAP_PX.lanes) * ((this.view.to - this.view.from) / (this.width || 1));
     let best: Anchor | null = null;
     for (const anchor of this.anchors) {
       const off = Math.abs(anchor.at - at);
-      if (off <= reach && (!best || off < Math.abs(best.at - at) || (off === Math.abs(best.at - at) && anchor.label))) best = anchor;
+      if (off <= reach && (!best || off < Math.abs(best.at - at) || (off === Math.abs(best.at - at) && anchor.label)))
+        best = anchor;
     }
     return best ?? { at, label: null };
   }
@@ -382,7 +401,8 @@ export class DayChart {
     }
     const lane = this.laneAt(x, y);
     if ((lane?.id ?? null) !== this.pointedId) this.events.pointAtLane(lane);
-    this.canvas.style.cursor = y < this.topHeight() && (this.momentAt(x) || this.landing(x, y, e.shiftKey).label) ? "pointer" : "ew-resize";
+    this.canvas.style.cursor =
+      y < this.topHeight() && (this.momentAt(x) || this.landing(x, y, e.shiftKey).label) ? "pointer" : "ew-resize";
   };
 
   private readonly left = () => {
@@ -438,7 +458,10 @@ export class DayChart {
       const { x } = this.local(e);
       const pivot = this.minuteAt(x);
       const share = (pivot - this.view.from) / span;
-      const wanted = Math.max(LEAST_SPAN_MIN, Math.min(all.to - all.from, span * Math.exp(e.deltaY * WHEEL.zoomPerPixel)));
+      const wanted = Math.max(
+        LEAST_SPAN_MIN,
+        Math.min(all.to - all.from, span * Math.exp(e.deltaY * WHEEL.zoomPerPixel)),
+      );
       next = { from: pivot - share * wanted, to: pivot + (1 - share) * wanted };
     } else {
       const shift = (e.deltaX / (this.width || 1)) * span;
@@ -468,7 +491,13 @@ export class DayChart {
   }
 
   // Words on the chart. A line passing behind them is held off by a halo in the colour of the panel.
-  private tag(text: string, x: number, y: number, color: string, { side = "after", halo = false }: { side?: "after" | "before"; halo?: boolean } = {}) {
+  private tag(
+    text: string,
+    x: number,
+    y: number,
+    color: string,
+    { side = "after", halo = false }: { side?: "after" | "before"; halo?: boolean } = {},
+  ) {
     const c = this.ctx;
     const gap = TEXT_GAP_REM * this.rem;
     c.font = this.font();
@@ -499,7 +528,16 @@ export class DayChart {
   }
 
   // An amount: filled down to the floor of its row, and only drawn where there is something to draw.
-  private area(lane: Lane, from: number, to: number, floor: number, rise: number, fill: number, stroke: number, dashed: boolean) {
+  private area(
+    lane: Lane,
+    from: number,
+    to: number,
+    floor: number,
+    rise: number,
+    fill: number,
+    stroke: number,
+    dashed: boolean,
+  ) {
     if (to <= from) return;
     const c = this.ctx;
     const minutes = this.minutes(from, to);
@@ -524,7 +562,9 @@ export class DayChart {
     };
     minutes.forEach((m, i) => {
       const v = valueAt(lane.values, this.span, m);
-      const edge = valueAt(lane.values, this.span, minutes[i + 1] ?? m) > NOTHING || valueAt(lane.values, this.span, minutes[i - 1] ?? m) > NOTHING;
+      const edge =
+        valueAt(lane.values, this.span, minutes[i + 1] ?? m) > NOTHING ||
+        valueAt(lane.values, this.span, minutes[i - 1] ?? m) > NOTHING;
       if (v > NOTHING || edge) run.push({ x: this.x(m), y: floor - v * rise });
       else flush();
     });
@@ -545,7 +585,12 @@ export class DayChart {
 
   // The one drawn large: the curve you are pointing at, otherwise what a what-if adds, otherwise the first.
   private loudLane(): Shown | null {
-    return this.shown.find((s) => s.lane.id === this.pointedId) ?? this.shown.find((s) => s.lane.hypothetical) ?? this.shown[0] ?? null;
+    return (
+      this.shown.find((s) => s.lane.id === this.pointedId) ??
+      this.shown.find((s) => s.lane.hypothetical) ??
+      this.shown[0] ??
+      null
+    );
   }
 
   // Everything else stays in the chart as a thin line, so you still see what else is going on.
@@ -820,7 +865,15 @@ export class DayChart {
     if (hover) this.cursorLine(this.x(hover.at), top, this.colors.ink3);
     const scrubPill = this.pill(scrubX, this.timeWords(this.t), true);
     taken.push(scrubPill);
-    if (hover && Math.abs(hover.at - this.t) >= 1) taken.push(this.pill(this.x(hover.at), hover.label ? `${this.timeWords(hover.at)} ${hover.label}` : this.timeWords(hover.at), false, scrubPill));
+    if (hover && Math.abs(hover.at - this.t) >= 1)
+      taken.push(
+        this.pill(
+          this.x(hover.at),
+          hover.label ? `${this.timeWords(hover.at)} ${hover.label}` : this.timeWords(hover.at),
+          false,
+          scrubPill,
+        ),
+      );
 
     c.font = this.font();
     c.textBaseline = "middle";

@@ -4,7 +4,20 @@ import { STOMACH_FULL, stomachCloseup } from "../../closeup/stomach";
 import { REFERENCE, STOMACH, WAVE_SPEEDUP } from "../../model/params";
 import { value } from "../../model/engine/trajectory";
 import { closeupInset, Look } from "./closeupInset";
-import { bump, easeToward, lerp, part, parts, pointAlong, polyline, tenth, sampleTube, seededRandom, smoothstep, TubeSample } from "./draw";
+import {
+  bump,
+  easeToward,
+  lerp,
+  part,
+  parts,
+  pointAlong,
+  polyline,
+  tenth,
+  sampleTube,
+  seededRandom,
+  smoothstep,
+  TubeSample,
+} from "./draw";
 import type { Frame, InsetProps } from "./loop";
 import { setLit } from "./parts/part";
 import { ART_HEIGHT, ART_WIDTH, PlateWords } from "./Plate";
@@ -57,7 +70,11 @@ const FOOD_MIN_KCAL = 5;
 const WAVE_PERIOD_SECONDS = 60 / (STOMACH.slowWavesPerMin * WAVE_SPEEDUP);
 const LEAVING_ROUTE = polyline([...LUMEN.slice(Math.round(LUMEN_LAST * 0.87)), ...DUODENUM]);
 
-const PIECE_SHAPES = ["M-1 -.25L-.45 -.95L.55 -.85L1 .1L.5 .9L-.6 .8Z", "M-.9 -.6L.1 -1L1 -.4L.85 .6L-.1 1L-1 .4Z", "M-1 .05L-.55 -.8L.35 -.95L.95 -.2L.65 .75L-.35 .95Z"];
+const PIECE_SHAPES = [
+  "M-1 -.25L-.45 -.95L.55 -.85L1 .1L.5 .9L-.6 .8Z",
+  "M-.9 -.6L.1 -1L1 -.4L.85 .6L-.1 1L-1 .4Z",
+  "M-1 .05L-.55 -.8L.35 -.95L.95 -.2L.65 .75L-.35 .95Z",
+];
 
 interface Slot {
   u: number;
@@ -82,7 +99,15 @@ const SLOTS: Slot[] = (() => {
     if (accepted.some((a) => Math.hypot(a.x - x, a.y - y) < spacing)) continue;
     // Food is ground finer on its way to the outlet.
     const size = lerp(3.5, 1.7, smoothstep(0.55, 0.93, u)) * lerp(0.85, 1.1, random());
-    accepted.push({ u, v, size, shape: Math.floor(random() * PIECE_SHAPES.length), turn: Math.round(random() * 360), x, y });
+    accepted.push({
+      u,
+      v,
+      size,
+      shape: Math.floor(random() * PIECE_SHAPES.length),
+      turn: Math.round(random() * 360),
+      x,
+      y,
+    });
   }
   const priority = (s: { u: number; y: number }) => s.y + 46 * smoothstep(0.62, 0.84, s.u);
   return accepted.sort((a, b) => priority(b) - priority(a));
@@ -95,7 +120,8 @@ function hatchLines() {
 }
 
 function tubeWalls(tube: TubeSample[]) {
-  const side = (sign: number) => tube.map((p, i) => `${i ? "L" : "M"}${tenth(p.x + p.nx * p.r * sign)} ${tenth(p.y + p.ny * p.r * sign)}`).join("");
+  const side = (sign: number) =>
+    tube.map((p, i) => `${i ? "L" : "M"}${tenth(p.x + p.nx * p.r * sign)} ${tenth(p.y + p.ny * p.r * sign)}`).join("");
   return `${side(1)}${side(-1)}`;
 }
 
@@ -161,7 +187,10 @@ function paintStomach(art: SVGSVGElement) {
     let bottomY = 0;
     for (let j = 0; j <= LUMEN_LAST; j++) {
       const u = j / LUMEN_LAST;
-      const squeeze = (WAVE.amplitudeBody + (WAVE.amplitudeAntrum - WAVE.amplitudeBody) * smoothstep(0.3, 0.92, u)) * strength * bump(u, crest, WAVE.width);
+      const squeeze =
+        (WAVE.amplitudeBody + (WAVE.amplitudeAntrum - WAVE.amplitudeBody) * smoothstep(0.3, 0.92, u)) *
+        strength *
+        bump(u, crest, WAVE.width);
       const r = LUMEN[j].r * lerp(bagScale, 1, smoothstep(0.62, 0.88, u)) * (1 - squeeze);
       radii[j] = lerp(r, gap, smoothstep(0.9, 0.985, u));
       bottomY = Math.max(bottomY, LUMEN[j].y + Math.abs(LUMEN[j].ny) * radii[j]);
@@ -195,7 +224,8 @@ function paintStomach(art: SVGSVGElement) {
       farInner += `${command}${farInX} ${farInY}`;
       farOuterBack.push(`L${farOutX} ${farOutY}`);
       farInnerBack.push(`L${farInX} ${farInY}`);
-      if (j % 2 === 0) fibrePath += `M${nearOutX} ${nearOutY}L${nearInX} ${nearInY}M${farOutX} ${farOutY}L${farInX} ${farInY}`;
+      if (j % 2 === 0)
+        fibrePath += `M${nearOutX} ${nearOutY}L${nearInX} ${nearInY}M${farOutX} ${farOutY}L${farInX} ${farInY}`;
       // Folds of the lining run along the outer wall and stand out more when the bag is slack.
       if (j % 4 === 0 && u < 0.86) {
         const fold = 1 + 1.6 * (1 - fill);
@@ -244,13 +274,20 @@ function paintStomach(art: SVGSVGElement) {
       const target = k < wanted && y > levelY + 2 ? 1 : 0;
       pieceShown[k] = still ? target : easeToward(pieceShown[k], target, dt, 9);
       const scale = slot.size * pieceShown[k];
-      pieces[k].setAttribute("transform", `translate(${tenth(x)} ${tenth(y)}) rotate(${slot.turn}) scale(${Math.round(scale * 100) / 100})`);
+      pieces[k].setAttribute(
+        "transform",
+        `translate(${tenth(x)} ${tenth(y)}) rotate(${slot.turn}) scale(${Math.round(scale * 100) / 100})`,
+      );
       pieces[k].style.visibility = scale < 0.05 ? "hidden" : "visible";
     });
 
     const stillCount = Math.round(rate / STOMACH.slowWavesPerMin / KCAL_PER_LEAVING_PIECE);
     for (let k = 0; k < LEAVING_POOL; k++) {
-      const age = still ? (k < stillCount ? ((k + 0.5) / stillCount) * LEAVING_SECONDS : Infinity) : clock - leavingBorn[k];
+      const age = still
+        ? k < stillCount
+          ? ((k + 0.5) / stillCount) * LEAVING_SECONDS
+          : Infinity
+        : clock - leavingBorn[k];
       if (age < 0 || age > LEAVING_SECONDS) {
         leaving[k].style.visibility = "hidden";
         continue;
@@ -263,8 +300,14 @@ function paintStomach(art: SVGSVGElement) {
 
     const gateOffset = gap + 3;
     const angle = Math.round((Math.atan2(OUTLET.ny, OUTLET.nx) * 180) / Math.PI);
-    gateNear.setAttribute("transform", `translate(${tenth(OUTLET.x + OUTLET.nx * gateOffset)} ${tenth(OUTLET.y + OUTLET.ny * gateOffset)}) rotate(${angle})`);
-    gateFar.setAttribute("transform", `translate(${tenth(OUTLET.x - OUTLET.nx * gateOffset)} ${tenth(OUTLET.y - OUTLET.ny * gateOffset)}) rotate(${angle})`);
+    gateNear.setAttribute(
+      "transform",
+      `translate(${tenth(OUTLET.x + OUTLET.nx * gateOffset)} ${tenth(OUTLET.y + OUTLET.ny * gateOffset)}) rotate(${angle})`,
+    );
+    gateFar.setAttribute(
+      "transform",
+      `translate(${tenth(OUTLET.x - OUTLET.nx * gateOffset)} ${tenth(OUTLET.y - OUTLET.ny * gateOffset)}) rotate(${angle})`,
+    );
   };
 }
 
@@ -311,8 +354,12 @@ const Drawing = memo(function Drawing() {
       </g>
       <g data-part="outlet">
         <path className="leader" d={`M${OUTLET.x} 62V${OUTLET.y - 11}`} />
-        <text x={OUTLET.x} y="58" textAnchor="middle">Outlet</text>
-        <text x="29" y="150">To intestine</text>
+        <text x={OUTLET.x} y="58" textAnchor="middle">
+          Outlet
+        </text>
+        <text x="29" y="150">
+          To intestine
+        </text>
       </g>
     </>
   );
@@ -325,8 +372,21 @@ function leavingLabel(rate: number, kcal: number, ml: number) {
 }
 
 function useStomachPlate({ trajectory, t }: InsetProps, _levels: Levels<Setting>): PlateWords {
-  const caption = leavingLabel(value(trajectory, "emptyingKcalPerMin", t), value(trajectory, "stomachKcal", t), value(trajectory, "stomachMl", t));
-  return { caption, note: { text: `Shown ${WAVE_SPEEDUP}× faster` }, describe: `A cross-section of the lower stomach and its outlet. ${caption}.` };
+  const caption = leavingLabel(
+    value(trajectory, "emptyingKcalPerMin", t),
+    value(trajectory, "stomachKcal", t),
+    value(trajectory, "stomachMl", t),
+  );
+  return {
+    caption,
+    note: { text: `Shown ${WAVE_SPEEDUP}× faster` },
+    describe: `A cross-section of the lower stomach and its outlet. ${caption}.`,
+  };
 }
 
-export const StomachInset = closeupInset(stomachCloseup, { Drawing, paint: paintStomach, usePlate: useStomachPlate, captionFromModel: true });
+export const StomachInset = closeupInset(stomachCloseup, {
+  Drawing,
+  paint: paintStomach,
+  usePlate: useStomachPlate,
+  captionFromModel: true,
+});

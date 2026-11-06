@@ -14,7 +14,8 @@ function coughAt(tr: Trajectory, t: number) {
   let strongest = 0;
   for (const event of tr.events) {
     for (const feeling of event.feelings) {
-      if (feeling.id === COUGH_FEELING) strongest = Math.max(strongest, feeling.amount * curveStrength(feeling, event.from, event.ends, t));
+      if (feeling.id === COUGH_FEELING)
+        strongest = Math.max(strongest, feeling.amount * curveStrength(feeling, event.from, event.ends, t));
     }
   }
   return strongest;

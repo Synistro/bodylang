@@ -3,7 +3,21 @@ import { activityBouts, resolveEvent } from "../events/presets";
 import { ChannelId, ResolvedEvent } from "../events/types";
 import { channelSeries } from "../events/curves";
 import { muscleWorkSeries, maxHeartRate } from "../events/muscles";
-import { ALCOHOL, CAFFEINE, CYCLE, DAY, FASTING, FEEL, GLUCOSE, INSULIN, KIDNEY, LIPID, LIVER, MUSCLE, STOMACH } from "../params";
+import {
+  ALCOHOL,
+  CAFFEINE,
+  CYCLE,
+  DAY,
+  FASTING,
+  FEEL,
+  GLUCOSE,
+  INSULIN,
+  KIDNEY,
+  LIPID,
+  LIVER,
+  MUSCLE,
+  STOMACH,
+} from "../params";
 import { ActivitySpan, Body, Posture, postureAt, Scenario } from "../scenario";
 import { alcoholVolumeL, Anthropometrics, anthropometrics } from "./anthropometrics";
 import { heldInGutKcal, newIntakeTrack, newSubstanceTrack, IntakeTrack, SubstanceTrack } from "./tracks";
@@ -67,7 +81,8 @@ export interface Minute {
 }
 
 // A cycle only applies to a body with the anatomy for one.
-const cycleOf = (s: Pick<Scenario, "body" | "cycle">): Cycle | null => (s.body.sex === "female" ? s.cycle ?? null : null);
+const cycleOf = (s: Pick<Scenario, "body" | "cycle">): Cycle | null =>
+  s.body.sex === "female" ? (s.cycle ?? null) : null;
 
 // The small, steady changes of the luteal phase, added on top of whatever else is pushing these channels.
 function addCycleChannels(channels: Record<ChannelId, Float32Array>, cycle: Cycle, start: number) {
@@ -87,7 +102,12 @@ function addCycleChannels(channels: Record<ChannelId, Float32Array>, cycle: Cycl
 
 // How long before 00:00 today the run has to start, in whole days so the clock it starts on stays 00:00.
 function leadInMinutes({ intakes, substances, activities }: Scenario): number {
-  const earliest = Math.min(0, ...intakes.map((i) => i.at), ...substances.map((s) => s.at), ...activities.map((a) => a.from));
+  const earliest = Math.min(
+    0,
+    ...intakes.map((i) => i.at),
+    ...substances.map((s) => s.at),
+    ...activities.map((a) => a.from),
+  );
   return Math.min(DAY.carryDaysMost, Math.ceil(-earliest / 1440)) * 1440;
 }
 
@@ -98,7 +118,9 @@ export function bodyConstants(scenario: Scenario): BodyConstants {
   const minutes = leadIn + DAY.minutes + 1;
   const activities = [...scenario.activities].sort((a, b) => a.from - b.from);
   // Sorted so the same events give the same bits, whatever order they were told in.
-  const events = [...(scenario.events ?? [])].sort((a, b) => a.from - b.from || (a.id < b.id ? -1 : 1)).map((event) => resolveEvent(event, { body, anthro }));
+  const events = [...(scenario.events ?? [])]
+    .sort((a, b) => a.from - b.from || (a.id < b.id ? -1 : 1))
+    .map((event) => resolveEvent(event, { body, anthro }));
   const channels = channelSeries(events, minutes, activityBouts(activities, { body, anthro }), -leadIn);
   const cycle = cycleOf(scenario);
   if (cycle) addCycleChannels(channels, cycle, -leadIn);
@@ -157,7 +179,11 @@ export function startingPools(scenario: Scenario, constants: BodyConstants): Poo
     lastMealEnd: -Infinity,
     lastFed: FASTING.assumedLastMealMin - leadIn,
     hoursAwake,
-    sleepPressure: startsAwake ? hoursAwake * FEEL.sleepPressurePerHour : wakingHoursYesterday * FEEL.sleepPressurePerHour * Math.exp(-((1440 - DAY.sleepMin) / 60) / FEEL.sleepPressureDecayTauH),
+    sleepPressure: startsAwake
+      ? hoursAwake * FEEL.sleepPressurePerHour
+      : wakingHoursYesterday *
+        FEEL.sleepPressurePerHour *
+        Math.exp(-((1440 - DAY.sleepMin) / 60) / FEEL.sleepPressureDecayTauH),
     wokeAt: startsAwake ? -leadIn : -Infinity,
   };
 }
@@ -175,7 +201,11 @@ export function resetAtMidnight(pools: Pools, { anthro, activities }: BodyConsta
   if (postureAt(activities, 0) === "sleeping") pools.wokeAt = -Infinity;
 }
 
-export function startMinute(pools: Pools, { activities, channels, muscleWork, leadIn }: BodyConstants, i: number): Minute {
+export function startMinute(
+  pools: Pools,
+  { activities, channels, muscleWork, leadIn }: BodyConstants,
+  i: number,
+): Minute {
   const t = i - leadIn;
   const posture = postureAt(activities, t);
   const asleep = posture === "sleeping";

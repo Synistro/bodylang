@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import { compositionOf, ComposedSpec, composedSpec, layoutComposed } from "./composed";
 
 const healthy = { state: "healthy" as const, amount: 0 };
-const actor = (id: string, label: string, from: string, to: string, over: Partial<ComposedSpec["actors"][number]> = {}) => ({ id, label, look: "molecule" as const, tone: "drug" as const, from, to, amount: 0.7, settles: false, ...over });
+const actor = (
+  id: string,
+  label: string,
+  from: string,
+  to: string,
+  over: Partial<ComposedSpec["actors"][number]> = {},
+) => ({ id, label, look: "molecule" as const, tone: "drug" as const, from, to, amount: 0.7, settles: false, ...over });
 
 const airSac: ComposedSpec = {
   caption: "Smoke crossing an air sac",
@@ -11,7 +17,11 @@ const airSac: ComposedSpec = {
     { id: "wall", kind: "wall", label: "Thin wall", state: "inflamed", amount: 0.4 },
     { id: "blood", kind: "blood", label: "Blood vessel", ...healthy },
   ],
-  actors: [actor("nicotine", "Nicotine", "air", "blood"), actor("tar", "Tar", "air", "wall", { settles: true, look: "dot", tone: "gas" }), actor("co", "Carbon monoxide", "air", "blood", { tone: "gas" })],
+  actors: [
+    actor("nicotine", "Nicotine", "air", "blood"),
+    actor("tar", "Tar", "air", "wall", { settles: true, look: "dot", tone: "gas" }),
+    actor("co", "Carbon monoxide", "air", "blood", { tone: "gas" }),
+  ],
   light: ["nicotine"],
   basis: "Benowitz 2009 on nicotine absorption",
 };
@@ -24,7 +34,13 @@ const wound: ComposedSpec = {
     { id: "vessel", kind: "blood", label: "Portal vein branch", state: "torn", amount: 0.8 },
     { id: "space", kind: "space", label: "Belly cavity", ...healthy },
   ],
-  actors: [actor("blood", "Blood", "vessel", "space"), actor("clot", "Platelets", "vessel", "liver", { look: "dot", settles: true }), actor("cells", "Immune cells", "vessel", "liver", { look: "cell", tone: "immune", settles: true }), actor("pain", "Pain signal", "liver", "liver", { look: "pulse", tone: "nerve" }), actor("fluid", "Fluid", "vessel", "space", { look: "dot" })],
+  actors: [
+    actor("blood", "Blood", "vessel", "space"),
+    actor("clot", "Platelets", "vessel", "liver", { look: "dot", settles: true }),
+    actor("cells", "Immune cells", "vessel", "liver", { look: "cell", tone: "immune", settles: true }),
+    actor("pain", "Pain signal", "liver", "liver", { look: "pulse", tone: "nerve" }),
+    actor("fluid", "Fluid", "vessel", "space", { look: "dot" }),
+  ],
   light: [],
   basis: "Trauma surgery textbook understanding",
 };
@@ -49,13 +65,21 @@ describe("what Claude can compose", () => {
   });
 
   it("limits how much one drawing can hold", () => {
-    const layers = Array.from({ length: 6 }, (_, i) => ({ id: `l${i}`, kind: "wall" as const, label: "Wall", ...healthy }));
+    const layers = Array.from({ length: 6 }, (_, i) => ({
+      id: `l${i}`,
+      kind: "wall" as const,
+      label: "Wall",
+      ...healthy,
+    }));
     expect(composedSpec.safeParse({ ...airSac, layers, actors: [], light: [] }).success).toBe(false);
   });
 });
 
 describe("how code lays it out", () => {
-  for (const [name, spec] of [["an air sac", airSac], ["a wound", wound]] as const) {
+  for (const [name, spec] of [
+    ["an air sac", airSac],
+    ["a wound", wound],
+  ] as const) {
     it(`keeps every layer on the plate and in order for ${name}`, () => {
       const { layers } = layoutComposed(spec);
       layers.forEach((placed, i) => {
@@ -86,6 +110,8 @@ describe("how code lays it out", () => {
     const later = { ...airSac, actors: airSac.actors.map((a) => ({ ...a, amount: 0.1 })), caption: "Later" };
     expect(compositionOf(later)).toBe(compositionOf(airSac));
     expect(compositionOf({ ...airSac, actors: [] })).not.toBe(compositionOf(airSac));
-    expect(compositionOf({ ...airSac, layers: airSac.layers.map((layer) => ({ ...layer, label: "Renamed" })) })).not.toBe(compositionOf(airSac));
+    expect(
+      compositionOf({ ...airSac, layers: airSac.layers.map((layer) => ({ ...layer, label: "Renamed" })) }),
+    ).not.toBe(compositionOf(airSac));
   });
 });

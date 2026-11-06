@@ -17,7 +17,12 @@ export interface BodyView {
   // Any curve of the model at any minute of today. The names are in SERIES in ../engine/trajectory.ts.
   value(name: SeriesName, minute: number): number;
   // What the person logged, such as an illness or a workout. `until` is null while it is still going on.
-  readonly events: readonly { readonly label: string; readonly preset: string; readonly from: number; readonly until: number | null }[];
+  readonly events: readonly {
+    readonly label: string;
+    readonly preset: string;
+    readonly from: number;
+    readonly until: number | null;
+  }[];
 }
 
 // One numbered place along the line.

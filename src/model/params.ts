@@ -9,10 +9,12 @@ export type Evidence = "A" | "B" | "C";
 export const SOURCES = {
   caffeine: "EFSA Scientific Opinion on the safety of caffeine, 2015; half-life varies roughly 2 to 8 h between people",
   caffeineSleep: "Drake et al., J Clin Sleep Med 2013: 400 mg six hours before bed still cost about an hour of sleep",
-  adenosine: "Elmenhorst et al., J Nucl Med 2012: PET of the A1 receptor in living humans, half blocked at 67 µM caffeine in plasma, about 13 mg/L",
+  adenosine:
+    "Elmenhorst et al., J Nucl Med 2012: PET of the A1 receptor in living humans, half blocked at 67 µM caffeine in plasma, about 13 mg/L",
   emptying: "Hunt & Stubbs, J Physiol 1975: the stomach empties at a roughly constant energy rate near 2 to 3 kcal/min",
   minimalModel: "Bergman et al., Am J Physiol 1979: minimal model of glucose and insulin dynamics",
-  sitting: "Buffey et al., Sports Med 2022: light walking breaks lower the glucose rise after a meal more than standing",
+  sitting:
+    "Buffey et al., Sports Med 2022: light walking breaks lower the glucose rise after a meal more than standing",
   lipemia: "Lopez-Miranda et al., Atherosclerosis 2007: triglycerides peak 3 to 5 h after a fatty meal",
   bmr: "Mifflin et al., Am J Clin Nutr 1990: resting energy expenditure equation",
   leanMass: "Boer, Am J Physiol 1984: lean body mass from height and weight",
@@ -300,7 +302,11 @@ export const CYCLE = {
   lutealDays: 14,
   aroundOvulationDays: 1,
   hormones: {
-    estradiol: { base: 120, ovulatory: { amount: 900, atDay: -1, widthDays: 1.6 }, luteal: { amount: 350, atDay: 7, widthDays: 3.2 } }, // pmol/L
+    estradiol: {
+      base: 120,
+      ovulatory: { amount: 900, atDay: -1, widthDays: 1.6 },
+      luteal: { amount: 350, atDay: 7, widthDays: 3.2 },
+    }, // pmol/L
     progesterone: { base: 0.6, luteal: { amount: 42, atDay: 7, widthDays: 3 } }, // nmol/L
     lh: { base: 5, surge: { amount: 40, atDay: -0.5, widthDays: 0.7 } }, // IU/L
   },
@@ -312,7 +318,10 @@ export const CYCLE = {
   cramps: { amount: 0.5, fadeDays: 1.6 }, // my estimate of how it feels for many people, and it varies widely
   lining: { least: 0.2, atOvulation: 0.75 }, // of its full thickness; the shape is standard, the numbers my estimate
   namedFrom: { warmthC: 0.15, heartBpm: 1.5 },
-  scale: { estradiol: { min: 0, max: 1400, low: 100, high: 1300 }, progesterone: { min: 0, max: 60, low: 0.3, high: 50 } },
+  scale: {
+    estradiol: { min: 0, max: 1400, low: 100, high: 1300 },
+    progesterone: { min: 0, max: 60, low: 0.3, high: 50 },
+  },
   evidence: "B" as Evidence,
   source:
     "A typical cycle placed by the date you gave, so your real days may differ, and it can't be used for contraception. Hormones: Stricker et al., Clin Chem Lab Med 2006, daily medians from 20 women. Luteal changes: Yeung 2010 (BioCycle), Benton 2020",
@@ -334,7 +343,14 @@ export const REFERENCE = {
   // How a meal reads, by its energy.
   mealSize: { snackFromKcal: 25, mealFromKcal: 150, bigMealFromKcal: 450 },
   // How much each system's reading has to move before the rail calls it busy.
-  systemFullAt: { insulinFold: 5, muscleUptakeGPerMin: 0.7, heartBpm: 40, caffeineFelt: 3, bladderShare: 0.3, crampsShare: 0.5 },
+  systemFullAt: {
+    insulinFold: 5,
+    muscleUptakeGPerMin: 0.7,
+    heartBpm: 40,
+    caffeineFelt: 3,
+    bladderShare: 0.3,
+    crampsShare: 0.5,
+  },
   glucose: {
     nearBaselineMgDl: 3, // closer than this to your own baseline, sugar has nothing to explain
     fasting: { low: 3.9, high: 5.6, label: "3.9 to 5.6 mmol/L fasting" },
@@ -352,7 +368,8 @@ export const REFERENCE = {
     stillAbsorbingMgPerMin: 30,
     scale: { min: 3, max: 11 },
     evidence: "A",
-    source: "ADA Standards of Care: fasting under 5.6 mmol/L, under 7.8 two hours after 75 g glucose, under 3.9 is low. Shah et al., JCEM 2019: healthy people spend 96% of the day between 3.9 and 7.8. Wyatt et al., Nat Metab 2021: dips 2 to 3 h after food are common",
+    source:
+      "ADA Standards of Care: fasting under 5.6 mmol/L, under 7.8 two hours after 75 g glucose, under 3.9 is low. Shah et al., JCEM 2019: healthy people spend 96% of the day between 3.9 and 7.8. Wyatt et al., Nat Metab 2021: dips 2 to 3 h after food are common",
   },
   insulin: {
     fastingUUPerMl: { low: 2.1, high: 12.5 },
@@ -366,9 +383,11 @@ export const REFERENCE = {
     scale: { min: 0, max: 12 },
     afterFoodTypicalFold: { low: 1, high: 10 },
     fastingEvidence: "B",
-    fastingSource: "Tehran Lipid and Glucose Study, 5,786 adults: 95% of fasting values fell between 2.1 and 12.5 µU/mL. Assays differ between labs",
+    fastingSource:
+      "Tehran Lipid and Glucose Study, 5,786 adults: 95% of fasting values fell between 2.1 and 12.5 µU/mL. Assays differ between labs",
     afterFoodEvidence: "C",
-    afterFoodSource: "My estimate. No standard range exists after food; the fold is relative to the model's resting level",
+    afterFoodSource:
+      "My estimate. No standard range exists after food; the fold is relative to the model's resting level",
   },
   triglycerides: {
     fastingHigh: 150,
@@ -382,7 +401,8 @@ export const REFERENCE = {
     clearingAboveRestMgDl: 5,
     scale: { min: 0, max: 300 },
     evidence: "A",
-    source: "Nordestgaard et al. (EAS, EFLM), Eur Heart J 2016: flag at 175 mg/dL non-fasting, 150 fasting, retest fasting above 440. NCEP ATP III 2001: 200 fasting is high",
+    source:
+      "Nordestgaard et al. (EAS, EFLM), Eur Heart J 2016: flag at 175 mg/dL non-fasting, 150 fasting, retest fasting above 440. NCEP ATP III 2001: 200 fasting is high",
   },
   heart: {
     low: 60,
@@ -416,14 +436,16 @@ export const REFERENCE = {
     kidneys: { low: 18, high: 22, max: 30 },
     digestingAbovePercent: 28,
     evidence: "B",
-    source: "Vander, Human Physiology, via BioNumbers 109465: kidneys and muscle about 20% at rest. Physiology teaching figures: gut about 25%, brain 13 to 15%. Exact shares vary by study",
+    source:
+      "Vander, Human Physiology, via BioNumbers 109465: kidneys and muscle about 20% at rest. Physiology teaching figures: gut about 25%, brain 13 to 15%. Exact shares vary by study",
   },
   stomach: {
     fastingHighMlPerKg: 2.3,
     emptyAboveRestingMl: 15,
     veryFullMl: 800,
     evidence: "B",
-    source: "Perlas et al. 2024, patient-level meta-analysis: fasting volume median 0.6 ml/kg, 95th percentile 2.3 ml/kg. The 1 L upper end is my estimate",
+    source:
+      "Perlas et al. 2024, patient-level meta-analysis: fasting volume median 0.6 ml/kg, 95th percentile 2.3 ml/kg. The 1 L upper end is my estimate",
   },
   absorption: {
     high: 60,
@@ -440,7 +462,8 @@ export const REFERENCE = {
     lunchUntilMin: 15 * 60,
     lunchKcal: 100,
     evidence: "B",
-    source: "Taylor et al., J Clin Invest 1996: 207 mmol/L fasting, 316 after a meal. That is about 50 g and 77 g in a 1.5 L liver. The 40 g floor is my estimate",
+    source:
+      "Taylor et al., J Clin Invest 1996: 207 mmol/L fasting, 316 after a meal. That is about 50 g and 77 g in a 1.5 L liver. The 40 g floor is my estimate",
   },
   muscleUptake: {
     highAtRestGPerH: 20,
@@ -453,14 +476,16 @@ export const REFERENCE = {
     thermicNoticedKcal: 5,
     scale: { min: 0, max: 1000 },
     evidence: "B",
-    source: "Mifflin et al., Am J Clin Nutr 1990 for resting burn. Compendium of Physical Activities (Ainsworth et al.) for the cost of each posture",
+    source:
+      "Mifflin et al., Am J Clin Nutr 1990 for resting burn. Compendium of Physical Activities (Ainsworth et al.) for the cost of each posture",
   },
   fuel: {
     low: 33,
     high: 67,
     scale: { min: 0, max: 100 },
     evidence: "B",
-    source: "Miles-Chan et al., Int J Obes 2015: fasting respiratory quotient 0.80 to 0.90 depending on diet, which is about a third to two thirds of energy from carbs",
+    source:
+      "Miles-Chan et al., Int J Obes 2015: fasting respiratory quotient 0.80 to 0.90 depending on diet, which is about a third to two thirds of energy from carbs",
   },
   caffeine: {
     singleDoseMg: 200,
@@ -468,13 +493,15 @@ export const REFERENCE = {
     presentAboveMgL: 0.01,
     scaleMaxMgL: 10,
     evidence: "A",
-    source: "EFSA 2015: up to 200 mg at once and 400 mg a day raise no safety concern in healthy adults. Converted to blood level with this body's size",
+    source:
+      "EFSA 2015: up to 200 mg at once and 400 mg a day raise no safety concern in healthy adults. Converted to blood level with this body's size",
   },
   receptors: {
     high: 50,
     clearBelowPercent: 1,
     evidence: "B",
-    source: "Elmenhorst et al., J Nucl Med 2012: the A1 receptor measured by PET in 15 men, half blocked at about 13 mg/L, up to 50% with repeated cups",
+    source:
+      "Elmenhorst et al., J Nucl Med 2012: the A1 receptor measured by PET in 15 men, half blocked at about 13 mg/L, up to 50% with repeated cups",
   },
   alertness: {
     low: 30,
@@ -492,14 +519,16 @@ export const REFERENCE = {
     presentAboveGPerL: 0.005,
     scaleMaxGPerL: 1.5,
     evidence: "A",
-    source: "WHO: best-practice drink-driving limit 0.5 g/L, 0.2 g/L for new drivers, crash risk rises significantly from 0.4 g/L. Widmark 1932 for the clearing rate",
+    source:
+      "WHO: best-practice drink-driving limit 0.5 g/L, 0.2 g/L for new drivers, crash risk rises significantly from 0.4 g/L. Widmark 1932 for the clearing rate",
   },
   bladder: {
     firstDesireMl: 250,
     strongDesireMl: 400,
     capacityMl: 480,
     evidence: "B",
-    source: "International Consultation on Incontinence, as summarised in urodynamics references: first desire near 250 ml, strong desire near 400 ml, capacity near 480 ml. Small samples",
+    source:
+      "International Consultation on Incontinence, as summarised in urodynamics references: first desire near 250 ml, strong desire near 400 ml, capacity near 480 ml. Small samples",
   },
   temperature: {
     low: 36.1,
@@ -508,12 +537,14 @@ export const REFERENCE = {
     dangerC: 39.5,
     scale: { min: 35.5, max: 41 },
     evidence: "A",
-    source: "Obermeyer et al., BMJ 2017: mean 36.6 C in 35,488 people. MedlinePlus (NIH): a mouth reading above 37.2 to 37.5 C probably means fever. Mackowiak et al., JAMA 1992: daily swing about 0.5 C",
+    source:
+      "Obermeyer et al., BMJ 2017: mean 36.6 C in 35,488 people. MedlinePlus (NIH): a mouth reading above 37.2 to 37.5 C probably means fever. Mackowiak et al., JAMA 1992: daily swing about 0.5 C",
   },
   stressLevel: {
     high: 30,
     evidence: "C",
-    source: "My estimate of a scale from 0 to 100. Wiesli et al., Diabetes Care 2005 for what a stress test does to the heart",
+    source:
+      "My estimate of a scale from 0 to 100. Wiesli et al., Diabetes Care 2005 for what a stress test does to the heart",
   },
   inflammation: {
     high: 20,
@@ -534,7 +565,8 @@ export const REFERENCE = {
     noticeableShareOfWeight: 0.01,
     impairingShareOfWeight: 0.02,
     evidence: "B",
-    source: "Sawka et al., ACSM position stand 2007: a water deficit above 2% of body weight compromises performance. The 1% thirst point is my estimate",
+    source:
+      "Sawka et al., ACSM position stand 2007: a water deficit above 2% of body weight compromises performance. The 1% thirst point is my estimate",
   },
   bloodPressure: {
     typicalLow: 90,
@@ -543,7 +575,8 @@ export const REFERENCE = {
     danger: 180,
     scale: { min: 80, max: 200 },
     evidence: "C",
-    source: "AHA: under 120 mmHg systolic is normal. The model does not measure you, so your resting 118 is my estimate; only the rises come from studies",
+    source:
+      "AHA: under 120 mmHg systolic is normal. The model does not measure you, so your resting 118 is my estimate; only the rises come from studies",
   },
   muscleState: {
     workingFrom: 0.1,
@@ -553,7 +586,8 @@ export const REFERENCE = {
     verySoreFrom: 0.8,
     normalWithinDays: 14,
     evidence: "B",
-    source: "Cheung et al., Sports Med 2003 for soreness timing. Phillips et al. 1997 for repair. Moran-Navarro et al. 2017 for recovery",
+    source:
+      "Cheung et al., Sports Med 2003 for soreness timing. Phillips et al. 1997 for repair. Moran-Navarro et al. 2017 for recovery",
   },
 } as const;
 
@@ -704,7 +738,8 @@ export const TRAINING = {
   glycogenGPerMinFullBody: 1.8,
   tired: { atZero: 0.2, gain: 0.5, riseMin: 10, halfLifeMin: 240 },
   evidence: "B",
-  source: "Tanaka et al. 2001 for maximum heart rate. 2011 Compendium for METs. Cheung et al. 2003 for soreness. Phillips et al. 1997 for repair",
+  source:
+    "Tanaka et al. 2001 for maximum heart rate. 2011 Compendium for METs. Cheung et al. 2003 for soreness. Phillips et al. 1997 for repair",
 } as const;
 
 // Roughly where skeletal muscle sits in the body. My estimate, used to scale whole-body sugar use.
@@ -764,7 +799,8 @@ export const ILLNESS = {
   // Stops read in causal order, and the last one on the main line holds while the illness goes on.
   stopAfterMin: { airway: 0, immune: 60, brain: 180 },
   evidence: "B",
-  source: "Karjalainen and Viitasalo 1986: 8.5 bpm per degree. Yki-Jarvinen et al. 1989: insulin action 52% lower. MedlinePlus: a cold lasts a week or two and rarely brings fever",
+  source:
+    "Karjalainen and Viitasalo 1986: 8.5 bpm per degree. Yki-Jarvinen et al. 1989: insulin action 52% lower. MedlinePlus: a cold lasts a week or two and rarely brings fever",
 } as const;
 
 export const SEX = {
@@ -791,7 +827,8 @@ export const SEX = {
   drowsiness: { gain: 0.35, riseMin: 5, halfLifeMin: 45 },
   relaxed: { gain: 0.5, riseMin: 5, halfLifeMin: 60 },
   evidence: "B",
-  source: "Levine et al., AHA statement 2012 and Bohlen et al. 1984 for heart rate. Frappier et al. 2013 for energy. Kruger et al. 2002 for prolactin. Carmichael et al. 1987 for oxytocin",
+  source:
+    "Levine et al., AHA statement 2012 and Bohlen et al. 1984 for heart rate. Frappier et al. 2013 for energy. Kruger et al. 2002 for prolactin. Carmichael et al. 1987 for oxytocin",
 } as const;
 
 export const STRESS = {
@@ -812,7 +849,8 @@ export const STRESS = {
   tense: { gain: 0.7, riseMin: 8, halfLifeMin: 45 },
   stopAfterMin: { brain: 0, adrenals: 2, heart: 4, liver: 8, gut: 12 },
   evidence: "B",
-  source: "Wiesli et al., Diabetes Care 2005: heart rate 80 to 99, pressure 122 to 152 in a stress test. Kirschbaum et al. 1993 for cortisol",
+  source:
+    "Wiesli et al., Diabetes Care 2005: heart rate 80 to 99, pressure 122 to 152 in a stress test. Kirschbaum et al. 1993 for cortisol",
 } as const;
 
 export const POOR_SLEEP = {
@@ -827,7 +865,8 @@ export const POOR_SLEEP = {
   halfLifeMin: 240,
   tired: { gain: 0.55, riseMin: 1, halfLifeMin: 240 },
   evidence: "B",
-  source: "Donga et al., JCEM 2010: 25% less insulin action after 4 h of sleep. Spiegel et al., Ann Intern Med 2004: hunger up 24%",
+  source:
+    "Donga et al., JCEM 2010: 25% less insulin action after 4 h of sleep. Spiegel et al., Ann Intern Med 2004: hunger up 24%",
 } as const;
 
 // Walking and running act through the same channels as any event, so they ease off after stopping.

@@ -59,7 +59,7 @@ function sampleMinutes() {
 
 function readerDigest(tr: Trajectory) {
   const minutes = sampleMinutes();
-  const across = <T,>(read: (t: number) => T) => hashJson(minutes.map(read));
+  const across = <T>(read: (t: number) => T) => hashJson(minutes.map(read));
   return {
     assess: across((t) => assess(tr, t)),
     processes: across((t) => processesAt(tr, t)),
@@ -71,7 +71,11 @@ function readerDigest(tr: Trajectory) {
     acting: across((t) => ORGANS.map((organ) => actingAt(tr, t, organ))),
     origins: across((t) => {
       const { readings, feelings } = assess(tr, t);
-      return [readings.map((reading) => readingOrigin(reading, tr, t)), feelings.map(feelingOrigin), processesAt(tr, t).map((process) => processOrigin(tr, process))];
+      return [
+        readings.map((reading) => readingOrigin(reading, tr, t)),
+        feelings.map(feelingOrigin),
+        processesAt(tr, t).map((process) => processOrigin(tr, process)),
+      ];
     }),
   };
 }

@@ -3,7 +3,20 @@ import { Skeleton } from "skullet/react";
 import { SYSTEMS } from "../model/systems";
 import { Stage } from "../scene/stage";
 import { startBeacon, WALL } from "../wall";
-import { AppState, closeupOnScreen, composedOnScreen, dispatch, getState, leaveAsk, muscleMinute, selectedProcess, setBody, setUi, trackOnScreen, useStore } from "../store";
+import {
+  AppState,
+  closeupOnScreen,
+  composedOnScreen,
+  dispatch,
+  getState,
+  leaveAsk,
+  muscleMinute,
+  selectedProcess,
+  setBody,
+  setUi,
+  trackOnScreen,
+  useStore,
+} from "../store";
 import { viewSystemOf } from "../look";
 import { AskBar, Guide } from "./Ask";
 import { AtlasKeys } from "./AtlasKeys";
@@ -28,7 +41,8 @@ import { Tour } from "./Tour";
 const PLAY_MINUTES_PER_SECOND = 34;
 const WALL_IDLE_BEFORE_CYCLE_MS = 3 * 60 * 1000;
 const WALL_SYSTEM_DWELL_MS = 40 * 1000;
-const CREDITS = "Food composition: USDA FoodData Central, public domain. Organs and vessels: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Muscles and bones: BodyParts3D, © The Database Center for Life Science, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
+const CREDITS =
+  "Food composition: USDA FoodData Central, public domain. Organs and vessels: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Muscles and bones: BodyParts3D, © The Database Center for Life Science, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
 
 rememberLook();
 if (WALL) document.documentElement.dataset.wall = "";
@@ -140,7 +154,12 @@ function Foot() {
       {credits ? <p className="credits">{CREDITS}</p> : null}
       <p className="foot-line">
         Estimates, not medical advice.{" "}
-        <button type="button" className="link" aria-expanded={sources !== null} onClick={() => setSources(sources ? null : sourcesOnScreen())}>
+        <button
+          type="button"
+          className="link"
+          aria-expanded={sources !== null}
+          onClick={() => setSources(sources ? null : sourcesOnScreen())}
+        >
           Sources
         </button>{" "}
         <button type="button" className="link" aria-expanded={credits} onClick={() => setCredits(!credits)}>
@@ -158,7 +177,9 @@ export function App() {
   const [failed, setFailed] = useState<string | null>(null);
   const theme = useStore((s) => s.theme);
   const playing = useStore((s) => s.playing);
-  const view = useStore((s) => viewSystemOf({ system: s.view.system, process: selectedProcess(s), focus: s.view.focus }));
+  const view = useStore((s) =>
+    viewSystemOf({ system: s.view.system, process: selectedProcess(s), focus: s.view.focus }),
+  );
   const asking = useStore((s) => s.asking !== null);
   const directed = useStore((s) => closeupOnScreen(s) !== null || composedOnScreen(s) !== null);
   useFreeArea(sheet, asking);
@@ -181,7 +202,8 @@ export function App() {
         if (!alive) return;
         setStage(next);
         startBeacon();
-        if (import.meta.env.DEV) Object.assign(window, { stage: next, bodylang: { setUi, setBody, dispatch, getState } });
+        if (import.meta.env.DEV)
+          Object.assign(window, { stage: next, bodylang: { setUi, setBody, dispatch, getState } });
         startDay();
       })
       .catch((e: unknown) => setFailed(e instanceof Error ? e.message : String(e)));
@@ -266,7 +288,12 @@ export function App() {
   }, [stage]);
 
   return (
-    <div className="app" data-asking={asking || undefined} data-directed={directed || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
+    <div
+      className="app"
+      data-asking={asking || undefined}
+      data-directed={directed || undefined}
+      style={{ "--view-hue": `var(--hue-${view})` }}
+    >
       <div className="object">
         <canvas ref={canvas} aria-label="Three-dimensional model of the body. Drag to rotate, scroll to zoom." />
         {stage ? <AtlasKeys stage={stage} /> : null}

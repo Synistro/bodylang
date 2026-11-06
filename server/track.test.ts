@@ -11,7 +11,8 @@ describe("what a straight line through the body crosses", () => {
   });
 
   it("reaches things in order from the side it came in", () => {
-    const organs = (from: "front" | "back") => traceTrack("liver", from, "male").flatMap((part) => (part.organ ? [part.name] : []));
+    const organs = (from: "front" | "back") =>
+      traceTrack("liver", from, "male").flatMap((part) => (part.organ ? [part.name] : []));
     const fromFront = organs("front");
     expect(organs("back")).toEqual([...fromFront].reverse());
     expect(fromFront[0]).toBe("liver");

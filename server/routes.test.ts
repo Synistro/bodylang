@@ -75,7 +75,8 @@ describe("the API routes", () => {
 
   it("knows every route the page calls", async () => {
     const source = await import("node:fs").then((fs) => fs.readFileSync("server/routes.ts", "utf8"));
-    for (const path of ["/tell", "/day", "/extend", "/explain", "/name-question", "/beacon"]) expect(source).toContain(`"${path}"`);
+    for (const path of ["/tell", "/day", "/extend", "/explain", "/name-question", "/beacon"])
+      expect(source).toContain(`"${path}"`);
   });
 });
 

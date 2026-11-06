@@ -12,21 +12,30 @@ function meshFrom(meta: OrganMeta, bin: ArrayBuffer, name: string) {
   const organ = meta.organs[name];
   const quantised = new Int16Array(bin, organ.pos, organ.vertexCount * 3);
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(quantised, (q) => q / meta.quant), 3));
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(
+      Float32Array.from(quantised, (q) => q / meta.quant),
+      3,
+    ),
+  );
   geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(bin, organ.index, organ.indexCount), 1));
   return new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
 }
 
 // A point is inside a closed surface when a ray from it crosses that surface an odd number of times.
 function isInside(mesh: THREE.Mesh, point: THREE.Vector3) {
-  return new THREE.Raycaster(point, new THREE.Vector3(0.31, 0.77, 0.56).normalize()).intersectObject(mesh).length % 2 === 1;
+  return (
+    new THREE.Raycaster(point, new THREE.Vector3(0.31, 0.77, 0.56).normalize()).intersectObject(mesh).length % 2 === 1
+  );
 }
 
 function nearestVertex(mesh: THREE.Mesh, point: THREE.Vector3) {
   const positions = mesh.geometry.getAttribute("position");
   const vertex = new THREE.Vector3();
   let best = Infinity;
-  for (let i = 0; i < positions.count; i++) best = Math.min(best, vertex.fromBufferAttribute(positions, i).distanceTo(point));
+  for (let i = 0; i < positions.count; i++)
+    best = Math.min(best, vertex.fromBufferAttribute(positions, i).distanceTo(point));
   return best;
 }
 
@@ -41,7 +50,9 @@ describe.each<Sex>(["male", "female"])("food in the stomach of the %s body", (se
 
   it("keeps every piece and its outline inside the stomach as a meal empties", () => {
     const stomach = new Stomach(meta, PALETTES.light, new THREE.Vector2(1000, 800));
-    const outlines = stomach.group.children.find((child) => child instanceof THREE.InstancedMesh && child.material instanceof THREE.MeshBasicMaterial);
+    const outlines = stomach.group.children.find(
+      (child) => child instanceof THREE.InstancedMesh && child.material instanceof THREE.MeshBasicMaterial,
+    );
     if (!(outlines instanceof THREE.InstancedMesh)) throw new Error("The stomach has no piece outlines");
     const matrix = new THREE.Matrix4();
     const at = new THREE.Vector3();

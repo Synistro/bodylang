@@ -1,5 +1,13 @@
 import { KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Lane, muscleStateLanes, MuscleSubject, processLanes, readingLanes, systemLanes, workedMuscleLanes } from "../model/lanes";
+import {
+  Lane,
+  muscleStateLanes,
+  MuscleSubject,
+  processLanes,
+  readingLanes,
+  systemLanes,
+  workedMuscleLanes,
+} from "../model/lanes";
 import { LANES, REFERENCE } from "../model/params";
 import { assess } from "../model/assess/assess";
 import { foodOrigin, modelOrigin, Origin, processOrigin, readingOrigin, SENTENCE_ORIGIN } from "../model/origin";
@@ -8,7 +16,18 @@ import type { Trajectory } from "../model/engine/trajectory";
 import { formatClock } from "../model/words";
 import type { Stage } from "../scene/stage";
 import { systemById } from "../model/systems";
-import { AppState, getState, goToStep, muscleMinute, releaseMoment, selectedProcess, setUi, showMuscleMinute, useStore, yourDayWhileAsking } from "../store";
+import {
+  AppState,
+  getState,
+  goToStep,
+  muscleMinute,
+  releaseMoment,
+  selectedProcess,
+  setUi,
+  showMuscleMinute,
+  useStore,
+  yourDayWhileAsking,
+} from "../store";
 import { viewSystemOf } from "../look";
 import { DAY_HOURS_REM, DAY_ROW_REM, DAY_TOP_REM, dayRowsRem, DayChart } from "./dayChart";
 import { DayView, dayViewOf, lanesOf, runsOverDays, viewStops } from "./dayView";
@@ -33,7 +52,9 @@ function useDayView(): DayView {
   const processId = useStore((s) => s.view.process);
   const focus = useStore((s) => s.view.focus);
   const focusMuscle = useStore((s) => s.view.focusMuscle);
-  const real = useStore((s) => (s.asking && s.asking.realDerived.trajectory !== s.trajectory ? s.asking.realDerived.trajectory : null));
+  const real = useStore((s) =>
+    s.asking && s.asking.realDerived.trajectory !== s.trajectory ? s.asking.realDerived.trajectory : null,
+  );
   const yourDay = useStore(yourDayWhileAsking);
   const steps = useStore((s) => (s.asking?.guideOpen && !s.touring ? s.asking.guide : null));
   const index = useStore((s) => s.asking?.step ?? 0);
@@ -41,16 +62,30 @@ function useDayView(): DayView {
     const walkthrough = steps ? { steps, index } : null;
     const page = { tr, now, walkthrough, yourDay };
     if (focus === "muscle") {
-      const muscles: MuscleSubject = focusMuscle ? { kind: "one", group: focusMuscle } : { kind: "worked", groups: null };
-      return dayViewOf({ ...page, lanes: focusMuscle ? muscleStateLanes(tr, now, focusMuscle) : workedMuscleLanes(tr, now), muscles, readings: new Set() });
+      const muscles: MuscleSubject = focusMuscle
+        ? { kind: "one", group: focusMuscle }
+        : { kind: "worked", groups: null };
+      return dayViewOf({
+        ...page,
+        lanes: focusMuscle ? muscleStateLanes(tr, now, focusMuscle) : workedMuscleLanes(tr, now),
+        muscles,
+        readings: new Set(),
+      });
     }
     if (focus) {
       const hue = viewSystemOf({ system, process: selectedProcess(getState()), focus });
-      return dayViewOf({ ...page, lanes: readingLanes(tr, now, organStory(focus, tr, now).rows, hue, real), muscles: null, readings: new Set() });
+      return dayViewOf({
+        ...page,
+        lanes: readingLanes(tr, now, organStory(focus, tr, now).rows, hue, real),
+        muscles: null,
+        readings: new Set(),
+      });
     }
     if (processId) {
       const training = tr.events.find((e) => e.preset === "training" && processIds.event(e.id) === processId);
-      const muscles: MuscleSubject | null = training ? { kind: "worked", groups: training.muscles.map((m) => m.group) } : null;
+      const muscles: MuscleSubject | null = training
+        ? { kind: "worked", groups: training.muscles.map((m) => m.group) }
+        : null;
       return dayViewOf({ ...page, lanes: processLanes(tr, now, processId, real), muscles, readings: new Set() });
     }
     const { readings, more } = systemById(system);
@@ -66,7 +101,8 @@ function useDayView(): DayView {
 // Where a row of the chart comes from. A row is a thread, a reading, a stop on a line, or a muscle.
 function laneOrigin(tr: Trajectory, lane: Lane, minute: number, selected: string | null): Origin {
   const { target } = lane;
-  if (target?.kind === "muscle" || (!target && lane.system === "muscles")) return modelOrigin(REFERENCE.muscleState.evidence, REFERENCE.muscleState.source);
+  if (target?.kind === "muscle" || (!target && lane.system === "muscles"))
+    return modelOrigin(REFERENCE.muscleState.evidence, REFERENCE.muscleState.source);
   const processes = processesAt(tr, minute);
   const processId = target?.kind === "process" ? target.id : target?.kind === "stop" ? selected : null;
   const process = processId ? processes.find((p) => p.id === processId) : undefined;
@@ -97,7 +133,18 @@ function goToLane(lane: Lane) {
 // because it changes far more often than React should.
 function LaneRow({ lane, hot, origin }: { lane: Lane; hot: boolean; origin: Origin }) {
   return (
-    <button {...sourced(origin)} type="button" className="day-row" data-lane={lane.id} data-hot={hot || undefined} disabled={!lane.target} title={lane.label} onClick={() => goToLane(lane)} onPointerEnter={() => pointAtLane(lane)} onPointerLeave={() => pointAtLane(null)}>
+    <button
+      {...sourced(origin)}
+      type="button"
+      className="day-row"
+      data-lane={lane.id}
+      data-hot={hot || undefined}
+      disabled={!lane.target}
+      title={lane.label}
+      onClick={() => goToLane(lane)}
+      onPointerEnter={() => pointAtLane(lane)}
+      onPointerLeave={() => pointAtLane(null)}
+    >
       {lane.badge.kind === "number" ? <span className="day-number">{lane.badge.number}</span> : null}
       <span className="day-name">{lane.label}</span>
       <span className="day-value" />
@@ -128,7 +175,10 @@ export function DayPanel({ stage }: { stage: Stage | null }) {
   const overDays = runsOverDays(view);
   const cursorOf = (s: AppState) => (overDays ? muscleMinute(s) : s.t);
   const selected = useStore((s) => s.view.process);
-  const origins = useMemo(() => new Map(lanes.map((lane) => [lane.id, laneOrigin(tr, lane, Math.round(now), selected)])), [lanes, tr, now, selected]);
+  const origins = useMemo(
+    () => new Map(lanes.map((lane) => [lane.id, laneOrigin(tr, lane, Math.round(now), selected)])),
+    [lanes, tr, now, selected],
+  );
   const stops = useMemo(() => viewStops(view, now).map((stop) => stop.at), [view, now]);
   const away = useStore((s) => Math.abs(Math.round(cursorOf(s)) - Math.round(s.now)) >= 1);
   const previous = useStore((s) => stops.filter((at) => at < cursorOf(s) - 0.5).at(-1) ?? null);
@@ -232,20 +282,46 @@ export function DayPanel({ stage }: { stage: Stage | null }) {
       data-shape={view.kind}
       onPointerDownCapture={overDays ? undefined : releaseMoment}
       onKeyDownCapture={overDays ? undefined : releaseMoment}
-      style={{ "--day-top": `${DAY_TOP_REM}rem`, "--day-rows": `${dayRowsRem(view.kind)}rem`, "--day-hours": `${DAY_HOURS_REM}rem`, "--day-row": `${DAY_ROW_REM}rem` }}
+      style={{
+        "--day-top": `${DAY_TOP_REM}rem`,
+        "--day-rows": `${dayRowsRem(view.kind)}rem`,
+        "--day-hours": `${DAY_HOURS_REM}rem`,
+        "--day-row": `${DAY_ROW_REM}rem`,
+      }}
       aria-label="Today, and when each thing ends"
     >
       <div className="day-side">
         <div className="transport">
-          <button type="button" className="icon-button" aria-label="Previous moment" title="Previous moment" disabled={previous === null} onClick={() => goTo(previous)}>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Previous moment"
+            title="Previous moment"
+            disabled={previous === null}
+            onClick={() => goTo(previous)}
+          >
             <SkipBack weight="fill" />
           </button>
           {overDays ? null : (
-            <button type="button" className="icon-button" aria-label={playing ? "Pause" : "Play forward"} title={playing ? "Pause" : "Play forward"} aria-pressed={playing} onClick={togglePlay}>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={playing ? "Pause" : "Play forward"}
+              title={playing ? "Pause" : "Play forward"}
+              aria-pressed={playing}
+              onClick={togglePlay}
+            >
               {playing ? <Pause weight="fill" /> : <Play weight="fill" />}
             </button>
           )}
-          <button type="button" className="icon-button" aria-label="Next moment" title="Next moment" disabled={next === null} onClick={() => goTo(next)}>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Next moment"
+            title="Next moment"
+            disabled={next === null}
+            onClick={() => goTo(next)}
+          >
             <SkipForward weight="fill" />
           </button>
           {away ? (
@@ -258,21 +334,49 @@ export function DayPanel({ stage }: { stage: Stage | null }) {
         </div>
         <div ref={rows} className="day-rows">
           {lanes.map((lane) => (
-            <LaneRow key={lane.id} lane={lane} hot={lane.id === hoverLane} origin={origins.get(lane.id) ?? SENTENCE_ORIGIN} />
+            <LaneRow
+              key={lane.id}
+              lane={lane}
+              hot={lane.id === hoverLane}
+              origin={origins.get(lane.id) ?? SENTENCE_ORIGIN}
+            />
           ))}
         </div>
         {overDays ? null : (
           <div className="day-range" role="radiogroup" aria-label="How much of the day to show">
-            <button type="button" className="toggle" role="radio" aria-checked={!wholeDay} title="From where this began to where it ends" onClick={() => showRange(false)}>
+            <button
+              type="button"
+              className="toggle"
+              role="radio"
+              aria-checked={!wholeDay}
+              title="From where this began to where it ends"
+              onClick={() => showRange(false)}
+            >
               Focus
             </button>
-            <button type="button" className="toggle" role="radio" aria-checked={wholeDay} title={`${formatClock(DAY_FROM)} to ${formatClock(DAY_TO)}`} onClick={() => showRange(true)}>
+            <button
+              type="button"
+              className="toggle"
+              role="radio"
+              aria-checked={wholeDay}
+              title={`${formatClock(DAY_FROM)} to ${formatClock(DAY_TO)}`}
+              onClick={() => showRange(true)}
+            >
               Whole day
             </button>
           </div>
         )}
       </div>
-      <div ref={plot} className="day-plot" role="slider" tabIndex={0} aria-label="Time" aria-valuemin={view.span.from} aria-valuemax={view.span.to} onKeyDown={key}>
+      <div
+        ref={plot}
+        className="day-plot"
+        role="slider"
+        tabIndex={0}
+        aria-label="Time"
+        aria-valuemin={view.span.from}
+        aria-valuemax={view.span.to}
+        onKeyDown={key}
+      >
         <canvas ref={canvas} aria-hidden="true" />
       </div>
       {view.kind === "next" ? (

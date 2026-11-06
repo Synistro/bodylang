@@ -1,7 +1,14 @@
 import * as THREE from "three";
 import type { Process, ProcessStop, StopState } from "../model/processes/line";
 import { isLimbRoute, pointAlong, RouteNetwork, Strand, traceStrands } from "./routes";
-import { BeadUniforms, createBeadMaterial, createLineMaterial, LineUniforms, MAX_LINE_SEGMENTS, Palette } from "./materials";
+import {
+  BeadUniforms,
+  createBeadMaterial,
+  createLineMaterial,
+  LineUniforms,
+  MAX_LINE_SEGMENTS,
+  Palette,
+} from "./materials";
 
 const LINE = {
   weightPx: 1.5, // one weight everywhere: colour says where things are, and the panel says how much
@@ -66,7 +73,8 @@ function structureKey(process: Process) {
 
 // Muscle and fat have no vessel of their own in the anatomy, and the limbs have no real arteries, so a
 // line out to them would be a long straight stroke pretending to be one. It goes as a quiet bow instead.
-const isOffVessels = (stop: ProcessStop) => stop.muscle !== null || stop.organ === "muscle" || stop.organ === "fat" || stop.routes.some(isLimbRoute);
+const isOffVessels = (stop: ProcessStop) =>
+  stop.muscle !== null || stop.organ === "muscle" || stop.organ === "fat" || stop.routes.some(isLimbRoute);
 
 const weightOf = (jump: boolean) => (jump ? LINE.jumpWeightPx : LINE.weightPx);
 const alphaOf = (stop: ProcessStop, jump: boolean) => LINE.alpha[stop.state] * (jump ? LINE.jumpAlpha : 1);
@@ -93,14 +101,25 @@ export class ProcessLine {
   private capacity = 0;
   private readonly segmentUniforms = Array.from({ length: MAX_LINE_SEGMENTS }, () => new THREE.Vector3());
   private readonly accentUniforms = new Float32Array(MAX_LINE_SEGMENTS);
-  private readonly lineShared: LineUniforms = { segments: { value: this.segmentUniforms }, accents: { value: this.accentUniforms }, ink: { value: new THREE.Color() }, accent: { value: new THREE.Color() } };
+  private readonly lineShared: LineUniforms = {
+    segments: { value: this.segmentUniforms },
+    accents: { value: this.accentUniforms },
+    ink: { value: new THREE.Color() },
+    accent: { value: new THREE.Color() },
+  };
   private readonly beadShared: BeadUniforms;
   private readonly points = new THREE.BufferGeometry();
   private readonly pointPosition = new Float32Array((BEADS.most + MAX_LINE_SEGMENTS) * 3);
   private readonly pointSize = new Float32Array(BEADS.most + MAX_LINE_SEGMENTS);
   private readonly pointAlpha = new Float32Array(BEADS.most + MAX_LINE_SEGMENTS);
   private readonly pointAccent = new Float32Array(BEADS.most + MAX_LINE_SEGMENTS);
-  private readonly beads: Bead[] = Array.from({ length: BEADS.most }, () => ({ stretch: -1, strand: 0, u: 0, alpha: 0, leaving: false }));
+  private readonly beads: Bead[] = Array.from({ length: BEADS.most }, () => ({
+    stretch: -1,
+    strand: 0,
+    u: 0,
+    alpha: 0,
+    leaving: false,
+  }));
   private readonly tmp = new THREE.Vector3();
 
   constructor(
@@ -109,7 +128,12 @@ export class ProcessLine {
     resolution: THREE.Vector2,
     private readonly pixelRatio: number,
   ) {
-    this.beadShared = { ink: this.lineShared.ink, accent: this.lineShared.accent, ring: { value: new THREE.Color() }, pixelRatio: { value: pixelRatio } };
+    this.beadShared = {
+      ink: this.lineShared.ink,
+      accent: this.lineShared.accent,
+      ring: { value: new THREE.Color() },
+      pixelRatio: { value: pixelRatio },
+    };
     this.growRibbon(FIRST_CAPACITY);
     const addLine = (depthFunc: THREE.DepthModes, depthAlpha: number, renderOrder: number) => {
       const material = createLineMaterial(this.lineShared, resolution, depthFunc, depthAlpha);
@@ -229,7 +253,8 @@ export class ProcessLine {
       const anchor = this.locate(stop, process, new THREE.Vector3());
       const origin: THREE.Vector3 | null = (stop.from ? ends.get(stop.from) : undefined) ?? previous;
       const leaving = process.stops.find((s) => s.id === stop.from) ?? process.stops[index - 1];
-      const jump = aboutMuscles || !stop.routes.length || isOffVessels(stop) || (leaving !== undefined && isOffVessels(leaving));
+      const jump =
+        aboutMuscles || !stop.routes.length || isOffVessels(stop) || (leaving !== undefined && isOffVessels(leaving));
       const strands = traceStrands(this.network, jump ? [] : stop.routes, origin, anchor);
       ends.set(stop.id, anchor);
       previous = anchor;
@@ -309,7 +334,10 @@ export class ProcessLine {
   }
 
   private writeRibbon() {
-    const needed = this.stretches.reduce((sum, stretch) => sum + stretch.strands.reduce((points, strand) => points + strand.path.length, 0), 0);
+    const needed = this.stretches.reduce(
+      (sum, stretch) => sum + stretch.strands.reduce((points, strand) => points + strand.path.length, 0),
+      0,
+    );
     if (needed > this.capacity) this.growRibbon(Math.ceil(needed * 1.5));
     const { position, aPrev, aNext, aSide, aAlong, aSegment } = this.ribbon.attributes;
     const index = this.ribbon.getIndex();
@@ -410,7 +438,12 @@ export class ProcessLine {
       const revealed = this.segmentUniforms[i].z;
       const arrived = stretch.total < LINE.shortest ? 1 : THREE.MathUtils.smoothstep(revealed / stretch.total, 0.92, 1);
       const here = stop.state === "here" || stop.number === spotlight;
-      put(stretch.anchor, here ? STATION.sizePx.here : STATION.sizePx.other, Math.min(1, stretch.alpha * STATION.alphaGain) * arrived * this.master, here ? 1 : 0);
+      put(
+        stretch.anchor,
+        here ? STATION.sizePx.here : STATION.sizePx.other,
+        Math.min(1, stretch.alpha * STATION.alphaGain) * arrived * this.master,
+        here ? 1 : 0,
+      );
     });
 
     const fade = 1 - Math.exp(-dt * BEADS.fadeRate);
@@ -428,11 +461,19 @@ export class ProcessLine {
       }
       const strand = stretch.strands[bead.strand];
       if (strand.total < BEADS.leastSpacing) continue;
-      if (motion) bead.u = (bead.u + (dt * BEADS.metresPerSecond * (1 + BEADS.flowSpeedGain * stop.flow)) / strand.total) % 1;
+      if (motion)
+        bead.u = (bead.u + (dt * BEADS.metresPerSecond * (1 + BEADS.flowSpeedGain * stop.flow)) / strand.total) % 1;
       const along = bead.u * strand.total;
       const inView = strand.startsAt + along <= this.segmentUniforms[bead.stretch].z ? 1 : 0;
-      const ends = THREE.MathUtils.smoothstep(bead.u, 0, BEADS.endFade) * (1 - THREE.MathUtils.smoothstep(bead.u, 1 - BEADS.endFade, 1));
-      put(pointAlong(strand.path, strand.lengths, along, this.tmp), BEADS.sizePx, bead.alpha * ends * inView * this.master, 1);
+      const ends =
+        THREE.MathUtils.smoothstep(bead.u, 0, BEADS.endFade) *
+        (1 - THREE.MathUtils.smoothstep(bead.u, 1 - BEADS.endFade, 1));
+      put(
+        pointAlong(strand.path, strand.lengths, along, this.tmp),
+        BEADS.sizePx,
+        bead.alpha * ends * inView * this.master,
+        1,
+      );
     }
 
     this.points.setDrawRange(0, n);

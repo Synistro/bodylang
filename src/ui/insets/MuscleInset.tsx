@@ -43,10 +43,26 @@ const SITES = [
 const [FIRST_TEAR, TEAR_WITH_CELLS] = SITES;
 const FIRST_REBUILT = SITES[SITES.length - 1];
 
-const BLOOD = vessel({ id: "blood", radius: 6.5, points: [[-10, 36], [40, 33], [110, 37], [180, 32], [250, 35]] });
+const BLOOD = vessel({
+  id: "blood",
+  radius: 6.5,
+  points: [
+    [-10, 36],
+    [40, 33],
+    [110, 37],
+    [180, 32],
+    [250, 35],
+  ],
+});
 const PAIN = nerve({
   id: "pain",
-  points: [[-10, 161], [60, 158], [120, 164], [180, 159], [250, 161]],
+  points: [
+    [-10, 161],
+    [60, 158],
+    [120, 164],
+    [180, 159],
+    [250, 161],
+  ],
   endings: [
     { x: 60, tip: [40, 149] },
     { x: 130, tip: [112, 149] },
@@ -59,7 +75,8 @@ const spreadOf = (fibre: number) => (fibre - (FIBRE.count - 1) / 2) * SPREAD;
 
 const BANDS = (() => {
   let d = "";
-  for (let x = -FIBRE.margin; x <= ART_WIDTH + FIBRE.margin; x += FIBRE.band) d += `M${x} ${-FIBRE.half + 2}V${FIBRE.half - 2}`;
+  for (let x = -FIBRE.margin; x <= ART_WIDTH + FIBRE.margin; x += FIBRE.band)
+    d += `M${x} ${-FIBRE.half + 2}V${FIBRE.half - 2}`;
   return d;
 })();
 
@@ -67,7 +84,8 @@ const BANDS = (() => {
 function fibreShape(fibre: number) {
   const edge = (side: 1 | -1, phase: number) => {
     const points: string[] = [];
-    for (let x = -FIBRE.margin; x <= ART_WIDTH + FIBRE.margin; x += FIBRE.edgeStep) points.push(`${x} ${tenth(side * FIBRE.half + Math.sin(x / 26 + phase) * FIBRE.wave)}`);
+    for (let x = -FIBRE.margin; x <= ART_WIDTH + FIBRE.margin; x += FIBRE.edgeStep)
+      points.push(`${x} ${tenth(side * FIBRE.half + Math.sin(x / 26 + phase) * FIBRE.wave)}`);
     return points;
   };
   return `M${[...edge(-1, fibre * 1.7), ...edge(1, fibre * 2.3 + 1).reverse()].join("L")}Z`;
@@ -81,11 +99,22 @@ const FLUID_BOTTOM = fibreY(FIBRE.count - 1) + FIBRE.half - 2;
 const Drawing = memo(function Drawing() {
   return (
     <>
-      <rect data-part="fluid" className="fibre-fluid" x="-10" y={FLUID_TOP} width={ART_WIDTH + 20} height={FLUID_BOTTOM - FLUID_TOP} />
+      <rect
+        data-part="fluid"
+        className="fibre-fluid"
+        x="-10"
+        y={FLUID_TOP}
+        width={ART_WIDTH + 20}
+        height={FLUID_BOTTOM - FLUID_TOP}
+      />
       <PAIN.Art />
       <BLOOD.Art />
-      <Tag part="blood-tag" x={ART_WIDTH - 8} y={21} anchor="end">Blood vessel</Tag>
-      <Tag part="sugar-tag" x={ART_WIDTH - 8} y={21} anchor="end">Sugar from your blood</Tag>
+      <Tag part="blood-tag" x={ART_WIDTH - 8} y={21} anchor="end">
+        Blood vessel
+      </Tag>
+      <Tag part="sugar-tag" x={ART_WIDTH - 8} y={21} anchor="end">
+        Sugar from your blood
+      </Tag>
       {Array.from({ length: FIBRE.count }, (_, fibre) => (
         <g key={fibre} data-part="fibre" transform={`translate(0 ${fibreY(fibre)})`}>
           <g data-part="tissue">
@@ -95,18 +124,48 @@ const Drawing = memo(function Drawing() {
           {SITES.flatMap((site, i) =>
             site.fibre === fibre
               ? [
-                  <path key={`new${i}`} data-part="rebuilt" data-site={i} className="fibre-rebuilt" transform={`translate(${site.x} 0)`} d={BULGE} />,
-                  <path key={`tear${i}`} data-part="tear" data-site={i} className="fibre-tear" transform={`translate(${site.x} 0)`} d={TEAR} />,
+                  <path
+                    key={`new${i}`}
+                    data-part="rebuilt"
+                    data-site={i}
+                    className="fibre-rebuilt"
+                    transform={`translate(${site.x} 0)`}
+                    d={BULGE}
+                  />,
+                  <path
+                    key={`tear${i}`}
+                    data-part="tear"
+                    data-site={i}
+                    className="fibre-tear"
+                    transform={`translate(${site.x} 0)`}
+                    d={TEAR}
+                  />,
                 ]
               : [],
           )}
-          {fibre === FIRST_TEAR.fibre ? <Tag part="tear-tag" x={FIRST_TEAR.x + 12} y={0}>A tear</Tag> : null}
-          {fibre === TEAR_WITH_CELLS.fibre ? <Tag part="immune-tag" x={TEAR_WITH_CELLS.x + 12} y={0}>Immune cells</Tag> : null}
-          {fibre === FIRST_REBUILT.fibre ? <Tag part="rebuilt-tag" x={FIRST_REBUILT.x - 26} y={0} anchor="end">Rebuilt</Tag> : null}
+          {fibre === FIRST_TEAR.fibre ? (
+            <Tag part="tear-tag" x={FIRST_TEAR.x + 12} y={0}>
+              A tear
+            </Tag>
+          ) : null}
+          {fibre === TEAR_WITH_CELLS.fibre ? (
+            <Tag part="immune-tag" x={TEAR_WITH_CELLS.x + 12} y={0}>
+              Immune cells
+            </Tag>
+          ) : null}
+          {fibre === FIRST_REBUILT.fibre ? (
+            <Tag part="rebuilt-tag" x={FIRST_REBUILT.x - 26} y={0} anchor="end">
+              Rebuilt
+            </Tag>
+          ) : null}
         </g>
       ))}
-      <Tag part="pain-tag" x={ART_WIDTH - 8} y={172} anchor="end">Pain signal, to your brain ›</Tag>
-      {Array.from({ length: SUGAR.pool }, (_, k) => <circle key={k} data-part="sugar" className="fibre-sugar" r="1.4" />)}
+      <Tag part="pain-tag" x={ART_WIDTH - 8} y={172} anchor="end">
+        Pain signal, to your brain ›
+      </Tag>
+      {Array.from({ length: SUGAR.pool }, (_, k) => (
+        <circle key={k} data-part="sugar" className="fibre-sugar" r="1.4" />
+      ))}
       {Array.from({ length: IMMUNE.pool }, (_, k) => (
         <g key={k} data-part="immune">
           <circle className="immune-cell" r="4.4" />
@@ -127,7 +186,14 @@ function paintMuscle(art: SVGSVGElement) {
   const tears = parts<SVGPathElement>(art, "tear").sort((a, b) => Number(a.dataset.site) - Number(b.dataset.site));
   const rebuilt = parts<SVGPathElement>(art, "rebuilt").sort((a, b) => Number(a.dataset.site) - Number(b.dataset.site));
   const tag = (name: string) => part<SVGTextElement>(art, `${name}-tag`);
-  const tags = { blood: tag("blood"), sugar: tag("sugar"), tear: tag("tear"), immune: tag("immune"), rebuilt: tag("rebuilt"), pain: tag("pain") };
+  const tags = {
+    blood: tag("blood"),
+    sugar: tag("sugar"),
+    tear: tag("tear"),
+    immune: tag("immune"),
+    rebuilt: tag("rebuilt"),
+    pain: tag("pain"),
+  };
   const immune = parts<SVGGElement>(art, "immune");
   const journeys = new Float32Array(IMMUNE.pool); // 0 is still in the blood, 1 has settled at its tear
   const paintBlood = BLOOD.attach(art);
@@ -135,7 +201,10 @@ function paintMuscle(art: SVGSVGElement) {
   const sugar = createStream(parts(art, "sugar"), SUGAR.seconds, 31);
   let swelling = 0;
 
-  const onScreen = (site: (typeof SITES)[number]) => ({ x: site.x, y: fibreY(site.fibre) + spreadOf(site.fibre) * swelling });
+  const onScreen = (site: (typeof SITES)[number]) => ({
+    x: site.x,
+    y: fibreY(site.fibre) + spreadOf(site.fibre) * swelling,
+  });
   const toMuscle: Placer = (progress, seat) => {
     const x = lerp(20, 220, (seat * 7) % 1);
     const y = fibreY(Math.floor(seat * FIBRE.count)) + spreadOf(Math.floor(seat * FIBRE.count)) * swelling;
@@ -149,14 +218,24 @@ function paintMuscle(art: SVGSVGElement) {
       const tear = Math.floor(k / IMMUNE.perTear);
       const wanted = k < arrived * IMMUNE.pool && tear < open ? 1 : 0;
       const step = frame.dt / IMMUNE.journeySeconds;
-      journeys[k] = frame.still ? wanted : wanted > journeys[k] ? Math.min(wanted, journeys[k] + step) : Math.max(wanted, journeys[k] - step);
+      journeys[k] = frame.still
+        ? wanted
+        : wanted > journeys[k]
+          ? Math.min(wanted, journeys[k] + step)
+          : Math.max(wanted, journeys[k] - step);
       const journey = journeys[k];
       const to = onScreen(SITES[tear]);
       const x = to.x + (k % IMMUNE.perTear ? IMMUNE.besideTear : -IMMUNE.besideTear);
       const rolled = lerp(x - IMMUNE.rollsFrom, x, journey / IMMUNE.inBloodUntil);
-      const at = journey < IMMUNE.inBloodUntil ? { x: rolled, y: BLOOD.centerAt(rolled) } : { x, y: lerp(BLOOD.centerAt(x), to.y, smoothstep(IMMUNE.inBloodUntil, 1, journey)) };
+      const at =
+        journey < IMMUNE.inBloodUntil
+          ? { x: rolled, y: BLOOD.centerAt(rolled) }
+          : { x, y: lerp(BLOOD.centerAt(x), to.y, smoothstep(IMMUNE.inBloodUntil, 1, journey)) };
       const settled = journey === 1 && !frame.still ? 1 : 0;
-      cell.setAttribute("transform", `translate(${tenth(at.x + settled * Math.sin(frame.clock * 1.1 + k))} ${tenth(at.y + settled * Math.cos(frame.clock * 0.9 + k * 2))})`);
+      cell.setAttribute(
+        "transform",
+        `translate(${tenth(at.x + settled * Math.sin(frame.clock * 1.1 + k))} ${tenth(at.y + settled * Math.cos(frame.clock * 0.9 + k * 2))})`,
+      );
       setShown(cell, journey * 12, lit);
     });
   };
@@ -167,9 +246,18 @@ function paintMuscle(art: SVGSVGElement) {
     const beat = frame.still ? 0.5 : 0.5 + 0.5 * Math.sin((frame.clock * Math.PI * 2) / CONTRACTS.secondsPerRep);
     const working = levels.work * beat;
     const thicker = (1 + CONTRACTS.thicker * working).toFixed(3);
-    fibres.forEach((group, fibre) => group.setAttribute("transform", `translate(0 ${tenth(fibreY(fibre) + spreadOf(fibre) * swelling)}) scale(1 ${thicker})`));
+    fibres.forEach((group, fibre) =>
+      group.setAttribute(
+        "transform",
+        `translate(0 ${tenth(fibreY(fibre) + spreadOf(fibre) * swelling)}) scale(1 ${thicker})`,
+      ),
+    );
     const shorter = 1 - CONTRACTS.shorter * working;
-    for (const band of bands) band.setAttribute("transform", `translate(${tenth((ART_WIDTH / 2) * (1 - shorter))} 0) scale(${shorter.toFixed(3)} 1)`);
+    for (const band of bands)
+      band.setAttribute(
+        "transform",
+        `translate(${tenth((ART_WIDTH / 2) * (1 - shorter))} 0) scale(${shorter.toFixed(3)} 1)`,
+      );
     const tissueLit = Math.max(lit.work, lit.tears, lit.rebuilt, lit.swelling);
     for (const group of tissue) setLit(group, tissueLit);
     setShown(fluid, swelling, lit.swelling);
@@ -195,7 +283,8 @@ function paintMuscle(art: SVGSVGElement) {
 
 const RESTING: MuscleState = { work: 0, fatigue: 0, soreness: 0, repair: 0, glycogenUsed: 0 };
 
-const worked = (events: BodyEvent[], muscle: MuscleGroup | null, t: number) => events.some((event) => event.from <= t && event.muscles.some((m) => m.group === muscle));
+const worked = (events: BodyEvent[], muscle: MuscleGroup | null, t: number) =>
+  events.some((event) => event.from <= t && event.muscles.some((m) => m.group === muscle));
 
 // Says what the drawing shows from the model, so the caption and the fibres agree unless a step sets levels.
 function fibreWord(state: MuscleState, wasWorked: boolean) {
@@ -204,7 +293,8 @@ function fibreWord(state: MuscleState, wasWorked: boolean) {
   if (state.soreness >= r.soreFrom) return "sore";
   if (state.repair >= r.repairingFrom) return "repairing";
   if (state.fatigue >= r.tiredFrom) return "tired";
-  if (state.soreness >= MUSCLE_RECOVERY.activeAbove || state.repair >= MUSCLE_RECOVERY.activeAbove) return "nearly recovered";
+  if (state.soreness >= MUSCLE_RECOVERY.activeAbove || state.repair >= MUSCLE_RECOVERY.activeAbove)
+    return "nearly recovered";
   return wasWorked ? "recovered" : "rested";
 }
 
@@ -216,9 +306,21 @@ const awayWords = (hours: number) => {
 
 function useMusclePlate({ trajectory, t, muscle }: InsetProps): PlateWords {
   const away = useStore(chartOffsetHours);
-  const word = fibreWord(muscle ? muscleStateAt(trajectory.muscleEvents, muscle, t) : RESTING, worked(trajectory.muscleEvents, muscle, t));
+  const word = fibreWord(
+    muscle ? muscleStateAt(trajectory.muscleEvents, muscle, t) : RESTING,
+    worked(trajectory.muscleEvents, muscle, t),
+  );
   const caption = `Muscle fibres: ${word}`;
-  return { caption, note: away === null ? undefined : { text: awayWords(away) }, describe: `Muscle fibres with a blood vessel above them and a nerve below. ${caption}.` };
+  return {
+    caption,
+    note: away === null ? undefined : { text: awayWords(away) },
+    describe: `Muscle fibres with a blood vessel above them and a nerve below. ${caption}.`,
+  };
 }
 
-export const MuscleInset = closeupInset(muscleCloseup, { Drawing, paint: paintMuscle, usePlate: useMusclePlate, captionFromModel: true });
+export const MuscleInset = closeupInset(muscleCloseup, {
+  Drawing,
+  paint: paintMuscle,
+  usePlate: useMusclePlate,
+  captionFromModel: true,
+});

@@ -7,14 +7,33 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { handleDay } from "./days";
 import type { Notify } from "./http";
 
-const dayOn = (date: string) => ({ version: 1, date, body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [], activities: [{ from: 0, posture: "sleeping" }], substances: [], events: [], cycle: null, assumptions: {} });
+const dayOn = (date: string) => ({
+  version: 1,
+  date,
+  body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+  intakes: [],
+  activities: [{ from: 0, posture: "sleeping" }],
+  substances: [],
+  events: [],
+  cycle: null,
+  assumptions: {},
+});
 
 function request(method: string, body?: unknown) {
-  return Object.assign(Readable.from(body === undefined ? [] : [Buffer.from(JSON.stringify(body))]), { method, headers: {} }) as unknown as IncomingMessage;
+  return Object.assign(Readable.from(body === undefined ? [] : [Buffer.from(JSON.stringify(body))]), {
+    method,
+    headers: {},
+  }) as unknown as IncomingMessage;
 }
 
 function response() {
-  const res = { statusCode: 200, body: "", headers: {} as Record<string, string>, setHeader: (k: string, v: string) => void (res.headers[k] = v), end: (text = "") => void (res.body = text) };
+  const res = {
+    statusCode: 200,
+    body: "",
+    headers: {} as Record<string, string>,
+    setHeader: (k: string, v: string) => void (res.headers[k] = v),
+    end: (text = "") => void (res.body = text),
+  };
   return res as typeof res & ServerResponse;
 }
 

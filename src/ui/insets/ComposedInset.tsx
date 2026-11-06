@@ -28,7 +28,12 @@ const ACTOR = {
 } as const;
 const SETTLES_BY = 0.55;
 
-const wave = (y: number): [number, number][] => [[FROM_X, y], [70, y - 1.6], [150, y + 1.4], [TO_X, y - 0.8]];
+const wave = (y: number): [number, number][] => [
+  [FROM_X, y],
+  [70, y - 1.6],
+  [150, y + 1.4],
+  [TO_X, y - 0.8],
+];
 
 interface TubeInput {
   signal: number;
@@ -69,33 +74,79 @@ function LayerArt({ placed, Tube }: { placed: PlacedLayer; Tube: ComponentType |
         {layer.label}
       </text>
       <g data-part="layer" data-id={layer.id}>
-      {Tube ? <Tube /> : null}
-      {layer.kind === "air" ? <rect className="composed-air" x={FROM_X} y={tenth(top)} width={TO_X - FROM_X} height={tenth(height)} /> : null}
-      {layer.kind === "wall" ? <path className="composed-wall" d={`M${FROM_X} ${tenth(center - height / 2)}H${TO_X}M${FROM_X} ${tenth(center + height / 2)}H${TO_X}`} /> : null}
-      {layer.kind === "tissue"
-        ? Array.from({ length: CELLS_IN_A_ROW }, (_, i) => (
-            <g key={i}>
-              <rect className="composed-cell" x={tenth(i * cellWidth + 1)} y={tenth(top)} width={tenth(cellWidth - 2)} height={tenth(height)} rx="5" />
-              <circle className="composed-nucleus" cx={tenth((i + 0.5) * cellWidth)} cy={tenth(center)} r="2" />
+        {Tube ? <Tube /> : null}
+        {layer.kind === "air" ? (
+          <rect className="composed-air" x={FROM_X} y={tenth(top)} width={TO_X - FROM_X} height={tenth(height)} />
+        ) : null}
+        {layer.kind === "wall" ? (
+          <path
+            className="composed-wall"
+            d={`M${FROM_X} ${tenth(center - height / 2)}H${TO_X}M${FROM_X} ${tenth(center + height / 2)}H${TO_X}`}
+          />
+        ) : null}
+        {layer.kind === "tissue"
+          ? Array.from({ length: CELLS_IN_A_ROW }, (_, i) => (
+              <g key={i}>
+                <rect
+                  className="composed-cell"
+                  x={tenth(i * cellWidth + 1)}
+                  y={tenth(top)}
+                  width={tenth(cellWidth - 2)}
+                  height={tenth(height)}
+                  rx="5"
+                />
+                <circle className="composed-nucleus" cx={tenth((i + 0.5) * cellWidth)} cy={tenth(center)} r="2" />
+              </g>
+            ))
+          : null}
+        <rect
+          data-part="inflamed"
+          className="composed-inflamed"
+          x={FROM_X}
+          y={tenth(top)}
+          width={TO_X - FROM_X}
+          height={tenth(height)}
+        />
+        {(layer.kind === "tissue" ? TEARS : [MIDDLE_CELL]).map((cell) => (
+          <path
+            key={cell}
+            data-part="tear"
+            className="composed-gap"
+            transform={`translate(${tenth((cell + 0.5) * cellWidth + (layer.kind === "tissue" ? cellWidth * 0.28 : 0))} ${tenth(center)}) scale(${tenth(Math.max(0.8, (height + 3) / TEAR_HEIGHT))})`}
+            d={TEAR}
+          />
+        ))}
+        {layer.kind === "blood" ? (
+          <>
+            <g data-part="blocked">
+              <rect
+                className="composed-beyond"
+                x={MIDDLE}
+                y={tenth(top)}
+                width={TO_X - MIDDLE}
+                height={tenth(height)}
+              />
+              <rect
+                className="composed-plug"
+                x={MIDDLE - 8}
+                y={tenth(top - 0.5)}
+                width="16"
+                height={tenth(height + 1)}
+                rx="4"
+              />
             </g>
-          ))
-        : null}
-      <rect data-part="inflamed" className="composed-inflamed" x={FROM_X} y={tenth(top)} width={TO_X - FROM_X} height={tenth(height)} />
-      {(layer.kind === "tissue" ? TEARS : [MIDDLE_CELL]).map((cell) => (
-        <path key={cell} data-part="tear" className="composed-gap" transform={`translate(${tenth((cell + 0.5) * cellWidth + (layer.kind === "tissue" ? cellWidth * 0.28 : 0))} ${tenth(center)}) scale(${tenth(Math.max(0.8, (height + 3) / TEAR_HEIGHT))})`} d={TEAR} />
-      ))}
-      {layer.kind === "blood" ? (
-        <>
-          <g data-part="blocked">
-            <rect className="composed-beyond" x={MIDDLE} y={tenth(top)} width={TO_X - MIDDLE} height={tenth(height)} />
-            <rect className="composed-plug" x={MIDDLE - 8} y={tenth(top - 0.5)} width="16" height={tenth(height + 1)} rx="4" />
-          </g>
-          <g data-part="narrowed">
-            <path className="composed-plaque" d={`M${MIDDLE - 22} ${tenth(top)}Q${MIDDLE} ${tenth(top + height * 0.9)} ${MIDDLE + 22} ${tenth(top)}Z`} />
-            <path className="composed-plaque" d={`M${MIDDLE - 22} ${tenth(top + height)}Q${MIDDLE} ${tenth(top + height * 0.1)} ${MIDDLE + 22} ${tenth(top + height)}Z`} />
-          </g>
-        </>
-      ) : null}
+            <g data-part="narrowed">
+              <path
+                className="composed-plaque"
+                d={`M${MIDDLE - 22} ${tenth(top)}Q${MIDDLE} ${tenth(top + height * 0.9)} ${MIDDLE + 22} ${tenth(top)}Z`}
+              />
+              <path
+                className="composed-plaque"
+                d={`M${MIDDLE - 22} ${tenth(top + height)}Q${MIDDLE} ${tenth(top + height * 0.1)} ${MIDDLE + 22} ${tenth(top + height)}Z`}
+              />
+            </g>
+          </>
+        ) : null}
       </g>
     </>
   );
@@ -108,10 +159,24 @@ function ActorArt({ placed }: { placed: PlacedActor }) {
     <g data-part="actor" data-id={actor.id}>
       <g data-part="movers">
         {Array.from({ length: look.pool }, (_, k) => (
-          <circle key={k} data-part="mover" className="composed-actor" data-look={actor.look} data-tone={actor.tone} r={look.r} />
+          <circle
+            key={k}
+            data-part="mover"
+            className="composed-actor"
+            data-look={actor.look}
+            data-tone={actor.tone}
+            r={look.r}
+          />
         ))}
       </g>
-      <text data-part="actor-word" className="composed-actor-word" x={word.x} y={word.y} textAnchor={word.anchor} dominantBaseline="central">
+      <text
+        data-part="actor-word"
+        className="composed-actor-word"
+        x={word.x}
+        y={word.y}
+        textAnchor={word.anchor}
+        dominantBaseline="central"
+      >
         {actor.label}
       </text>
     </g>
@@ -120,12 +185,18 @@ function ActorArt({ placed }: { placed: PlacedActor }) {
 
 const placerFor = ({ actor, column, fromY, toY }: PlacedActor): Placer => {
   const { spread } = ACTOR[actor.look];
-  if (actor.from === actor.to) return (progress, seat) => ({ x: lerp(FROM_X, TO_X, progress), y: fromY + (seat - 0.5) * 5 });
+  if (actor.from === actor.to)
+    return (progress, seat) => ({ x: lerp(FROM_X, TO_X, progress), y: fromY + (seat - 0.5) * 5 });
   return (progress, seat) => {
     const x = column + (seat - 0.5) * spread;
-    if (!actor.settles) return { x, y: lerp(fromY, toY, smoothstep(0, 1, progress)), opacity: 1 - smoothstep(0.9, 1, progress) };
+    if (!actor.settles)
+      return { x, y: lerp(fromY, toY, smoothstep(0, 1, progress)), opacity: 1 - smoothstep(0.9, 1, progress) };
     if (progress < SETTLES_BY) return { x, y: lerp(fromY, toY, smoothstep(0, 1, progress / SETTLES_BY)) };
-    return { x: x + Math.sin(progress * 8 + seat * 20), y: toY + Math.cos(progress * 6 + seat * 30), opacity: 1 - smoothstep(0.93, 1, progress) };
+    return {
+      x: x + Math.sin(progress * 8 + seat * 20),
+      y: toY + Math.cos(progress * 6 + seat * 30),
+      opacity: 1 - smoothstep(0.93, 1, progress),
+    };
   };
 };
 
@@ -158,23 +229,35 @@ function createPainter(placedLayers: PlacedLayer[], placedActors: PlacedActor[],
     const actors = placedActors.map((placed) => {
       const group = actorGroups.get(placed.actor.id)!;
       const movers = parts<SVGCircleElement>(group, "mover");
-      return { placed, movers: part<SVGGElement>(group, "movers"), word: part<SVGTextElement>(group, "actor-word"), stream: createStream(movers, ACTOR[placed.actor.look].seconds, 7), place: placerFor(placed) };
+      return {
+        placed,
+        movers: part<SVGGElement>(group, "movers"),
+        word: part<SVGTextElement>(group, "actor-word"),
+        stream: createStream(movers, ACTOR[placed.actor.look].seconds, 7),
+        place: placerFor(placed),
+      };
     });
     return (frame, spec) => {
       const litOf = (id: string) => (!spec.light.length || spec.light.includes(id) ? 1 : 0);
       for (const painter of painters) {
         const layer = spec.layers.find((l) => l.id === painter.id);
         if (!layer) continue;
-        const amount = (state: string) => eased(amounts, `${painter.id}/${state}`, layer.state === state ? layer.amount : 0, frame);
+        const amount = (state: string) =>
+          eased(amounts, `${painter.id}/${state}`, layer.state === state ? layer.amount : 0, frame);
         const shining = eased(lit, painter.id, litOf(painter.id), frame);
         setLit(painter.group, shining);
         const torn = amount("torn");
-        painter.tears.forEach((tear, i) => setShown(tear, painter.tears.length === 1 ? torn * 3 : torn * painter.tears.length - i));
+        painter.tears.forEach((tear, i) =>
+          setShown(tear, painter.tears.length === 1 ? torn * 3 : torn * painter.tears.length - i),
+        );
         setShown(painter.inflamed, amount("inflamed") * 0.7);
         const blocked = amount("blocked");
         if (painter.blocked) setShown(painter.blocked, blocked * 3);
         if (painter.narrowed) setShown(painter.narrowed, amount("narrowed") * 2);
-        painter.tube?.(frame, { signal: eased(amounts, `${painter.id}/signal`, layer.kind === "nerve" ? layer.amount : 0, frame), until: lerp(1, FLOWING_UNTIL, Math.min(1, blocked * 3)) });
+        painter.tube?.(frame, {
+          signal: eased(amounts, `${painter.id}/signal`, layer.kind === "nerve" ? layer.amount : 0, frame),
+          until: lerp(1, FLOWING_UNTIL, Math.min(1, blocked * 3)),
+        });
       }
       for (const { placed, movers, word, stream, place } of actors) {
         const actor = spec.actors.find((a) => a.id === placed.actor.id);
@@ -193,10 +276,12 @@ function ComposedPlate({ spec }: { spec: ComposedSpec }) {
   // The parent keys this on the composition, so what is built here holds for as long as the picture does.
   const { create, Art } = useMemo(() => {
     const { layers, actors } = layoutComposed(spec);
-    const tubes = new Map(layers.flatMap((placed) => {
-      const tube = tubeFor(placed);
-      return tube ? [[placed.layer.id, tube] as const] : [];
-    }));
+    const tubes = new Map(
+      layers.flatMap((placed) => {
+        const tube = tubeFor(placed);
+        return tube ? [[placed.layer.id, tube] as const] : [];
+      }),
+    );
     return {
       create: createPainter(layers, actors, tubes),
       Art: memo(function Art() {
@@ -215,7 +300,11 @@ function ComposedPlate({ spec }: { spec: ComposedSpec }) {
   }, []);
   const art = useInsetPainter(create, spec);
   return (
-    <Plate caption={spec.caption} describe={`${spec.caption}. ${spec.layers.map((layer) => layer.label).join(", ")}.`} artRef={art}>
+    <Plate
+      caption={spec.caption}
+      describe={`${spec.caption}. ${spec.layers.map((layer) => layer.label).join(", ")}.`}
+      artRef={art}
+    >
       <Art />
     </Plate>
   );
@@ -224,7 +313,12 @@ function ComposedPlate({ spec }: { spec: ComposedSpec }) {
 // A drawing Claude composed for this step, in the place the organ's own drawing would be.
 export function ComposedInset({ spec }: { spec: ComposedSpec }) {
   return (
-    <div {...sourced({ kind: "claude-input", detail: `Claude composed this drawing and the app laid it out. It isn't to scale, and how much of each thing it shows is Claude's illustration. Its basis: ${spec.basis}` })}>
+    <div
+      {...sourced({
+        kind: "claude-input",
+        detail: `Claude composed this drawing and the app laid it out. It isn't to scale, and how much of each thing it shows is Claude's illustration. Its basis: ${spec.basis}`,
+      })}
+    >
       <ComposedPlate key={compositionOf(spec)} spec={spec} />
     </div>
   );

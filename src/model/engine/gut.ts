@@ -44,16 +44,27 @@ export function emptyStomach({ tracks }: Pools, { t, posture, stress }: Minute):
   const fatFraction = solidKcal > 0 ? fatKcal / solidKcal : 0;
   let energyRate = 0;
   if (solidKcal > 0.01 && t - latestSolidAt >= STOMACH.solidLagMin) {
-    energyRate = (STOMACH.energyRateKcalPerMin + STOMACH.energyRateSizeGain * solidKcal) * (1 - STOMACH.fatSlowdown * fatFraction);
+    energyRate =
+      (STOMACH.energyRateKcalPerMin + STOMACH.energyRateSizeGain * solidKcal) * (1 - STOMACH.fatSlowdown * fatFraction);
     energyRate *= 1 + (STOMACH.sugaryDrinkRateGain - 1) * (liquidKcal / solidKcal);
-    energyRate /= 1 + STOMACH.fibreSlowdownPerGPer1000Kcal * (tracks.reduce((sum, k) => sum + k.stomachFiber, 0) / solidKcal) * 1000;
+    energyRate /=
+      1 +
+      STOMACH.fibreSlowdownPerGPer1000Kcal * (tracks.reduce((sum, k) => sum + k.stomachFiber, 0) / solidKcal) * 1000;
     if (posture === "walking") energyRate *= 1 + STOMACH.walkSpeedup;
     if (posture === "running") energyRate *= 1 - STOMACH.hardRunSlowdown;
     energyRate *= 1 - COUPLING.stressSlowsEmptying * stress;
     energyRate = Math.min(energyRate, solidKcal);
   }
-  const liquidHalfLife = solidKcal - liquidKcal > STOMACH.solidsSlowLiquidsFromKcal ? STOMACH.liquidHalfLifeWithSolidsMin : STOMACH.liquidHalfLifeMin;
-  return { solidKcal, energyRate, emptiedShare: solidKcal > 0 ? energyRate / solidKcal : 0, liquidRate: Math.LN2 / liquidHalfLife };
+  const liquidHalfLife =
+    solidKcal - liquidKcal > STOMACH.solidsSlowLiquidsFromKcal
+      ? STOMACH.liquidHalfLifeWithSolidsMin
+      : STOMACH.liquidHalfLifeMin;
+  return {
+    solidKcal,
+    energyRate,
+    emptiedShare: solidKcal > 0 ? energyRate / solidKcal : 0,
+    liquidRate: Math.LN2 / liquidHalfLife,
+  };
 }
 
 export interface Absorbed {
@@ -67,8 +78,20 @@ export interface Absorbed {
 }
 
 // From stomach to intestine, and from intestine to blood.
-export function absorbGut({ tracks }: Pools, { emptiedShare, liquidRate }: Emptying, { caffeineClearancePerMin }: BodyConstants): Absorbed {
-  const absorbed: Absorbed = { glucoseSystemicMg: 0, carbsG: 0, fatG: 0, proteinG: 0, waterMl: 0, alcoholG: 0, liverDirectG: 0 };
+export function absorbGut(
+  { tracks }: Pools,
+  { emptiedShare, liquidRate }: Emptying,
+  { caffeineClearancePerMin }: BodyConstants,
+): Absorbed {
+  const absorbed: Absorbed = {
+    glucoseSystemicMg: 0,
+    carbsG: 0,
+    fatG: 0,
+    proteinG: 0,
+    waterMl: 0,
+    alcoholG: 0,
+    liverDirectG: 0,
+  };
   for (const k of tracks) {
     const carbOut = k.stomachCarb * emptiedShare;
     const fatOut = k.stomachFat * emptiedShare;
@@ -99,7 +122,10 @@ export function absorbGut({ tracks }: Pools, { emptiedShare, liquidRate }: Empty
     k.gutCarb -= carbAbs;
     k.gutFat -= fatAbs;
     k.gutProtein -= proteinAbs;
-    k.dest.colon += carbAbs * (1 - GUT.carbBioavailability) * CARB + fatAbs * (1 - GUT.fatBioavailability) * FAT + proteinAbs * (1 - GUT.proteinBioavailability) * PROTEIN_KCAL;
+    k.dest.colon +=
+      carbAbs * (1 - GUT.carbBioavailability) * CARB +
+      fatAbs * (1 - GUT.fatBioavailability) * FAT +
+      proteinAbs * (1 - GUT.proteinBioavailability) * PROTEIN_KCAL;
 
     const carbIn = carbAbs * GUT.carbBioavailability;
     const fatIn = fatAbs * GUT.fatBioavailability;
@@ -113,7 +139,8 @@ export function absorbGut({ tracks }: Pools, { emptiedShare, liquidRate }: Empty
     // Fructose and the first-pass share of glucose stop at the liver.
     const available = availableCarbsG(k.intake);
     const sugarShare = available > 0 ? Math.min(1, k.intake.sugarG / available) : 0;
-    const fructoseIn = carbIn * sugarShare * (k.intake.fructoseShare ?? GLUCOSE.fructoseShare) * GLUCOSE.fructoseToLiver;
+    const fructoseIn =
+      carbIn * sugarShare * (k.intake.fructoseShare ?? GLUCOSE.fructoseShare) * GLUCOSE.fructoseToLiver;
     const glucoseIn = carbIn - fructoseIn;
     const systemic = glucoseIn * GLUCOSE.systemicShare;
     const toLiver = carbIn - systemic;

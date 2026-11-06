@@ -51,8 +51,12 @@ function paintBrain(art: SVGSVGElement) {
     if (progress < FALLS_FOR) return { x, y: lerp(FALL_FROM_Y, IN_SEAT_Y, (progress / FALLS_FOR) ** 1.4) };
     const after = (progress - FALLS_FOR) / (1 - FALLS_FOR);
     if (RANK[seat] >= held) return { x, y: IN_SEAT_Y, opacity: 1 - smoothstep(0.4, 1, after) };
-    const away = spot * 7 % 1 < 0.5 ? -1 : 1;
-    return { x: x + away * BOUNCE.drift * after, y: IN_SEAT_Y - 7 - BOUNCE.height * Math.sin(after * Math.PI * 0.6), opacity: 1 - smoothstep(0.2, 1, after) };
+    const away = (spot * 7) % 1 < 0.5 ? -1 : 1;
+    return {
+      x: x + away * BOUNCE.drift * after,
+      y: IN_SEAT_Y - 7 - BOUNCE.height * Math.sin(after * Math.PI * 0.6),
+      opacity: 1 - smoothstep(0.2, 1, after),
+    };
   };
   return (frame: Frame, { levels, lit }: Look<Setting>) => {
     held = heldSeats(levels.caffeine);
@@ -77,18 +81,35 @@ const Drawing = memo(function Drawing() {
       ))}
       <g data-part="held">
         {Array.from({ length: SEATS }, (_, seat) => (
-          <path key={seat} data-part="caffeine" className="brain-caffeine" transform={`translate(${seatX(seat)} ${CELL_Y - 4})`} d={CAFFEINE_MARK} />
+          <path
+            key={seat}
+            data-part="caffeine"
+            className="brain-caffeine"
+            transform={`translate(${seatX(seat)} ${CELL_Y - 4})`}
+            d={CAFFEINE_MARK}
+          />
         ))}
       </g>
       <path className="line-ink" d={`M${FIRST_SEAT_X - 7} ${CELL_Y + 1.5}H${240 - FIRST_SEAT_X + 7}`} />
-      <text className="inset-quiet" x={240 - FIRST_SEAT_X + 7} y={CELL_Y + 11} textAnchor="end">Surface of a brain cell</text>
+      <text className="inset-quiet" x={240 - FIRST_SEAT_X + 7} y={CELL_Y + 11} textAnchor="end">
+        Surface of a brain cell
+      </text>
       <g data-part="tired">
         <circle className="brain-signal" cx={KEY.markX} cy={KEY.firstY - 2.4} r="2.6" />
-        <text x={KEY.wordX} y={KEY.firstY}>Tired signal: when it lands in a seat, you feel sleepier</text>
+        <text x={KEY.wordX} y={KEY.firstY}>
+          Tired signal: when it lands in a seat, you feel sleepier
+        </text>
       </g>
       <g data-part="held">
-        <path className="brain-caffeine" data-seated="" transform={`translate(${KEY.markX} ${KEY.firstY + KEY.step - 2.4})`} d={CAFFEINE_MARK} />
-        <text x={KEY.wordX} y={KEY.firstY + KEY.step}>Caffeine: holds the seat, so the signal bounces off</text>
+        <path
+          className="brain-caffeine"
+          data-seated=""
+          transform={`translate(${KEY.markX} ${KEY.firstY + KEY.step - 2.4})`}
+          d={CAFFEINE_MARK}
+        />
+        <text x={KEY.wordX} y={KEY.firstY + KEY.step}>
+          Caffeine: holds the seat, so the signal bounces off
+        </text>
       </g>
     </>
   );
@@ -97,7 +118,8 @@ const Drawing = memo(function Drawing() {
 function useBrainPlate(_props: InsetProps, levels: Levels<Setting>): PlateWords {
   const blocked = Math.round(levels.caffeine * 100);
   return {
-    caption: blocked >= 1 ? `Caffeine is blocking ${blocked}% of your tired signal` : "Nothing is blocking your tired signal",
+    caption:
+      blocked >= 1 ? `Caffeine is blocking ${blocked}% of your tired signal` : "Nothing is blocking your tired signal",
     describe: `Tired signals fall toward seats on a brain cell. Caffeine holds ${blocked}% of the seats, so signals bounce off those and land in the rest.`,
   };
 }

@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "server/**/*.ts",
+      "tools/**/*.mjs",
+      "vite.config.ts",
+      "!src/model/extensions/*",
+      "src/model/extensions/api.ts",
+      "src/model/extensions/check.ts",
+      "src/model/extensions/contract.test.ts",
+      "src/model/extensions/index.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": { "enabled": false },
+  "assist": { "enabled": false }
+}

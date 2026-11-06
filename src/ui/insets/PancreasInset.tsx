@@ -33,7 +33,16 @@ const hexagon = (x: number, y: number) =>
     return `${i ? "L" : "M"}${tenth(x + Math.cos(a) * CELL_RADIUS)} ${tenth(y + Math.sin(a) * CELL_RADIUS)}`;
   }).join("") + "Z";
 
-const BLOOD = vessel({ id: "blood", radius: 6, points: [[200, -10], [204, 50], [196, 120], [200, 190]] });
+const BLOOD = vessel({
+  id: "blood",
+  radius: 6,
+  points: [
+    [200, -10],
+    [204, 50],
+    [196, 120],
+    [200, 190],
+  ],
+});
 
 const INSULIN_DOTS = { pool: 26, seconds: 3.4, restingPerSecond: 0.28, mostPerSecond: 6.5, crossingShare: 0.46 };
 const SUGAR_DOTS = { pool: 14, seconds: 3, mostPerSecond: 4.5 };
@@ -52,7 +61,11 @@ function paintPancreas(art: SVGSVGElement) {
   const released: Placer = (progress, seat) => {
     const origin = CELLS[Math.floor(seat * CELLS.length) % CELLS.length];
     const entry = lerp(0.2, 0.75, (seat * 7) % 1);
-    if (progress >= INSULIN_DOTS.crossingShare) return pointAlong(BLOOD.route, lerp(entry, 1, (progress - INSULIN_DOTS.crossingShare) / (1 - INSULIN_DOTS.crossingShare)));
+    if (progress >= INSULIN_DOTS.crossingShare)
+      return pointAlong(
+        BLOOD.route,
+        lerp(entry, 1, (progress - INSULIN_DOTS.crossingShare) / (1 - INSULIN_DOTS.crossingShare)),
+      );
     const at = pointAlong(BLOOD.route, entry);
     const crossing = smoothstep(0, 1, progress / INSULIN_DOTS.crossingShare);
     return { x: lerp(origin.x, at.x, crossing), y: lerp(origin.y, at.y, crossing) };
@@ -64,7 +77,9 @@ function paintPancreas(art: SVGSVGElement) {
     sugar(frame, levels.sugar * SUGAR_DOTS.mostPerSecond, inTheBlood);
     // Cells working harder glow more, each on its own beat.
     const glowing = levels.insulin * GLOW.most;
-    glows.forEach((glow, i) => setShown(glow, glowing * (frame.still ? 0.5 : 0.5 + 0.5 * Math.sin(frame.clock * GLOW.speed + i * 2.4))));
+    glows.forEach((glow, i) =>
+      setShown(glow, glowing * (frame.still ? 0.5 : 0.5 + 0.5 * Math.sin(frame.clock * GLOW.speed + i * 2.4))),
+    );
     setLit(insulinParts, lit.insulin);
     setLit(sugarParts, lit.sugar);
     setWord(sugarTag, levels.sugar * 6, lit.sugar);
@@ -92,18 +107,30 @@ const Drawing = memo(function Drawing() {
         {Array.from({ length: INSULIN_DOTS.pool }, (_, k) => (
           <circle key={k} data-part="dot" className="insulin-dot" r="1.7" />
         ))}
-        <text x={CLUSTER.x} y={CLUSTER.y + 58} textAnchor="middle">Cells that make insulin</text>
-        <text x="188" y="172" textAnchor="end">Into your blood</text>
+        <text x={CLUSTER.x} y={CLUSTER.y + 58} textAnchor="middle">
+          Cells that make insulin
+        </text>
+        <text x="188" y="172" textAnchor="end">
+          Into your blood
+        </text>
       </g>
-      <Tag part="sugar-tag" x={188} y={24} anchor="end">Sugar in your blood</Tag>
+      <Tag part="sugar-tag" x={188} y={24} anchor="end">
+        Sugar in your blood
+      </Tag>
     </>
   );
 });
 
 function usePancreasPlate({ trajectory, t }: InsetProps, _levels: Levels<Setting>): PlateWords {
   const fold = value(trajectory, "insulin", t) / INSULIN.baselineUUPerMl;
-  const caption = fold < REFERENCE.insulin.atRestBelowFold ? "Insulin: at its resting level" : `Insulin: ${fold.toFixed(1)}× resting`;
+  const caption =
+    fold < REFERENCE.insulin.atRestBelowFold ? "Insulin: at its resting level" : `Insulin: ${fold.toFixed(1)}× resting`;
   return { caption, describe: `A cluster of islet cells releasing insulin into a blood vessel. ${caption}.` };
 }
 
-export const PancreasInset = closeupInset(pancreasCloseup, { Drawing, paint: paintPancreas, usePlate: usePancreasPlate, captionFromModel: true });
+export const PancreasInset = closeupInset(pancreasCloseup, {
+  Drawing,
+  paint: paintPancreas,
+  usePlate: usePancreasPlate,
+  captionFromModel: true,
+});

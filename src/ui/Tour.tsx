@@ -91,7 +91,14 @@ export function Tour() {
           Auto
         </button>
       </div>
-      {auto && !isLast ? <i key={current.number} className="tour-progress" style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }} aria-hidden="true" /> : null}
+      {auto && !isLast ? (
+        <i
+          key={current.number}
+          className="tour-progress"
+          style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }}
+          aria-hidden="true"
+        />
+      ) : null}
     </aside>
   );
 }

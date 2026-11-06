@@ -8,7 +8,21 @@ import { foodKcalOf, Intake, kcalOf } from "../scenario";
 import { OrganId } from "../ids";
 import { hoursWord, whenWords } from "../words";
 import { clamp01 } from "../curve";
-import { Context, causeOf, clock, firstWhen, fromMoving, hoursAwake, nearestMinute, peakAhead, tens, toMmol, groupsWhere, minutesUntilSleep, sorenessPeak } from "./context";
+import {
+  Context,
+  causeOf,
+  clock,
+  firstWhen,
+  fromMoving,
+  hoursAwake,
+  nearestMinute,
+  peakAhead,
+  tens,
+  toMmol,
+  groupsWhere,
+  minutesUntilSleep,
+  sorenessPeak,
+} from "./context";
 import { Feeling } from "./types";
 
 function intensityWord(now: number, later: number): string {
@@ -22,7 +36,9 @@ function intensityWord(now: number, later: number): string {
 
 // Food logged within a few minutes of another counts as one sitting.
 function sittingKcal(c: Context, meal: Intake): number {
-  return c.eaten.filter((i) => Math.abs(i.at - meal.at) <= PROCESS.sameSittingMin).reduce((sum, i) => sum + foodKcalOf(i), 0);
+  return c.eaten
+    .filter((i) => Math.abs(i.at - meal.at) <= PROCESS.sameSittingMin)
+    .reduce((sum, i) => sum + foodKcalOf(i), 0);
 }
 
 // The meal doing the most to make you drowsy now, which is often an earlier one than the last.
@@ -43,9 +59,19 @@ const SLEEPY_CAUSES: { size: (c: Context) => number; text: (c: Context) => strin
       return meal ? `You ate ${Math.round(sittingKcal(c, meal))} kcal at ${clock(meal.at)}` : "You ate recently";
     },
   },
-  { size: (c) => drowsyFromSleepPressure(c.v("sleepPressure")), text: (c) => `You have been awake ${hoursWord(hoursAwake(c))}` },
+  {
+    size: (c) => drowsyFromSleepPressure(c.v("sleepPressure")),
+    text: (c) => `You have been awake ${hoursWord(hoursAwake(c))}`,
+  },
   { size: (c) => c.tr.channels.drowsiness[nearestMinute(c)], text: (c) => `From ${causeOf(c, "drowsiness", 0) ?? ""}` },
-  { size: (c) => c.v("drowsy") - mealDrowsiness(c) - drowsyFromSleepPressure(c.v("sleepPressure")) - c.tr.channels.drowsiness[nearestMinute(c)], text: () => "Your body clock dips in the afternoon" },
+  {
+    size: (c) =>
+      c.v("drowsy") -
+      mealDrowsiness(c) -
+      drowsyFromSleepPressure(c.v("sleepPressure")) -
+      c.tr.channels.drowsiness[nearestMinute(c)],
+    text: () => "Your body clock dips in the afternoon",
+  },
 ];
 
 interface FeelingSpec {
@@ -64,9 +90,12 @@ const fadesBelowNegligible =
     return at === null ? null : `${word} near ${clock(at)}`;
   };
 
-const warmth = (share: number) => clamp01((share - FEELING_DISPLAY.warmFlowFrom) / (FEELING_DISPLAY.warmFlowFull - FEELING_DISPLAY.warmFlowFrom)) * FEELING_DISPLAY.warmMax;
+const warmth = (share: number) =>
+  clamp01((share - FEELING_DISPLAY.warmFlowFrom) / (FEELING_DISPLAY.warmFlowFull - FEELING_DISPLAY.warmFlowFrom)) *
+  FEELING_DISPLAY.warmMax;
 const alertAboveBaseline = (x: number) => clamp01((x - FEELING_DISPLAY.alertAbove) / (1 - FEELING_DISPLAY.alertAbove));
-const mostSore = (c: Context, at: number) => MUSCLE_GROUPS.reduce((most, group) => Math.max(most, muscleStateAt(c.tr.muscleEvents, group, at).soreness), 0);
+const mostSore = (c: Context, at: number) =>
+  MUSCLE_GROUPS.reduce((most, group) => Math.max(most, muscleStateAt(c.tr.muscleEvents, group, at).soreness), 0);
 
 // Feelings the model's own scales produce. Feelings an event brings are merged in by feelingsOf.
 const FEELINGS: FeelingSpec[] = [
@@ -118,7 +147,9 @@ const FEELINGS: FeelingSpec[] = [
     cause: (c) => [...SLEEPY_CAUSES].sort((a, b) => b.size(c) - a.size(c))[0].text(c),
     when: (c) => {
       const peak = peakAhead(c, "drowsy", 0.02, FEELING_DISPLAY.peakHorizonMin);
-      return peak && peak.at <= Math.min(c.t + FEELING_DISPLAY.peakHorizonMin, minutesUntilSleep(c)) ? `Peaks around ${clock(peak.at)}` : null;
+      return peak && peak.at <= Math.min(c.t + FEELING_DISPLAY.peakHorizonMin, minutesUntilSleep(c))
+        ? `Peaks around ${clock(peak.at)}`
+        : null;
     },
   },
   {
@@ -126,7 +157,12 @@ const FEELINGS: FeelingSpec[] = [
     label: "Alert",
     organ: "brain",
     level: (c, at) => alertAboveBaseline(c.v("alertness", at)),
-    cause: (c) => (c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt ? "Caffeine is masking your tiredness" : hoursAwake(c) < FEELING_DISPLAY.earlyInDayH ? "You are early in your day" : "Your body clock is at a high point"),
+    cause: (c) =>
+      c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt
+        ? "Caffeine is masking your tiredness"
+        : hoursAwake(c) < FEELING_DISPLAY.earlyInDayH
+          ? "You are early in your day"
+          : "Your body clock is at a high point",
     when: fadesBelowNegligible("Fades"),
   },
   {
@@ -142,7 +178,8 @@ const FEELINGS: FeelingSpec[] = [
     label: "Hungry",
     organ: "stomach",
     level: (c, at) => c.v("hunger", at),
-    cause: (c) => (c.lastFood ? `Your last food was ${hoursWord((c.t - c.lastFood.at) / 60)} ago` : "You have logged no food today"),
+    cause: (c) =>
+      c.lastFood ? `Your last food was ${hoursWord((c.t - c.lastFood.at) / 60)} ago` : "You have logged no food today",
     when: () => null,
   },
   {
@@ -168,7 +205,8 @@ const FEELINGS: FeelingSpec[] = [
     id: "thirsty",
     label: "Thirsty",
     organ: "kidneys",
-    level: (c, at) => clamp01(-c.v("fluidBalance", at) / (c.tr.scenario.body.weightKg * REFERENCE.fluid.impairingShareOfWeight * 1000)),
+    level: (c, at) =>
+      clamp01(-c.v("fluidBalance", at) / (c.tr.scenario.body.weightKg * REFERENCE.fluid.impairingShareOfWeight * 1000)),
     cause: (c) => `You have lost about ${(-c.v("fluidBalance") / 1000).toFixed(1)} L of fluid`,
     when: () => null,
   },
@@ -187,7 +225,16 @@ function eventFeelingsOf(c: Context): Feeling[] {
         const remaining = Math.max(0, Math.log2(now / d.negligibleBelow) * f.halfLifeMin);
         fades = Math.max(c.t, event.ends) + remaining;
       }
-      out.push({ byClaude: event.preset === "custom", id: f.id, label: f.label, intensity: now, word: intensityWord(now, at(c.t + d.changeWindowMin)), cause: f.cause, when: fades === null ? null : `Fades ${whenWords(fades, c.t)}`, organ: f.organ });
+      out.push({
+        byClaude: event.preset === "custom",
+        id: f.id,
+        label: f.label,
+        intensity: now,
+        word: intensityWord(now, at(c.t + d.changeWindowMin)),
+        cause: f.cause,
+        when: fades === null ? null : `Fades ${whenWords(fades, c.t)}`,
+        organ: f.organ,
+      });
     }
   }
   return out;
@@ -204,11 +251,21 @@ export function feelingsOf(c: Context): Feeling[] {
   for (const spec of FEELINGS) {
     const level = (at: number) => spec.level(c, at);
     const now = clamp01(level(c.t));
-    if (now >= d.negligibleBelow) offer({ id: spec.id, label: spec.label, intensity: now, word: intensityWord(now, level(c.t + d.changeWindowMin)), cause: spec.cause(c), when: spec.when(c, level), organ: spec.organ });
+    if (now >= d.negligibleBelow)
+      offer({
+        id: spec.id,
+        label: spec.label,
+        intensity: now,
+        word: intensityWord(now, level(c.t + d.changeWindowMin)),
+        cause: spec.cause(c),
+        when: spec.when(c, level),
+        organ: spec.organ,
+      });
   }
   const logged = eventFeelingsOf(c);
   for (const feeling of logged) offer(feeling);
   // What you told it about comes before what it worked out by itself, such as thirst.
-  const rank = (feeling: Feeling) => feeling.intensity + (logged.some((f) => f.id === feeling.id) ? d.loggedOutranksBy : 0);
+  const rank = (feeling: Feeling) =>
+    feeling.intensity + (logged.some((f) => f.id === feeling.id) ? d.loggedOutranksBy : 0);
   return [...strongest.values()].sort((a, b) => rank(b) - rank(a)).slice(0, d.mostShown);
 }

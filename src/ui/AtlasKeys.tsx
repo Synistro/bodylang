@@ -61,7 +61,13 @@ interface Handles {
 
 // The way an atlas keys a plate: names or numbers stand in the margins beside the figure, each on a
 // hairline to what it means. React decides which exist; each frame writes where they are to the DOM.
-function useMarginLayout<Id extends string>(stage: Stage, ids: Id[], locate: (id: Id, stage: Stage, out: THREE.Vector3) => THREE.Vector3, rowRem: number, offsetRem: number) {
+function useMarginLayout<Id extends string>(
+  stage: Stage,
+  ids: Id[],
+  locate: (id: Id, stage: Stage, out: THREE.Vector3) => THREE.Vector3,
+  rowRem: number,
+  offsetRem: number,
+) {
   const root = useRef<HTMLDivElement>(null);
   const sides = useRef(new Map<string, Side>());
   const shownY = useRef(new Map<string, number>());
@@ -98,18 +104,40 @@ function useMarginLayout<Id extends string>(stage: Stage, ids: Id[], locate: (id
       const p = s.project(locate(id, s, world));
       const known = sides.current.get(id);
       const sticky = SIDE_STICKINESS_REM * rem;
-      const side: Side = known === "left" ? (p.x > center + sticky ? "right" : "left") : known === "right" ? (p.x < center - sticky ? "left" : "right") : p.x < center ? "left" : "right";
+      const side: Side =
+        known === "left"
+          ? p.x > center + sticky
+            ? "right"
+            : "left"
+          : known === "right"
+            ? p.x < center - sticky
+              ? "left"
+              : "right"
+            : p.x < center
+              ? "left"
+              : "right";
       sides.current.set(id, side);
       return { id, anchorX: p.x, anchorY: p.y, behind: p.behind, side, y: 0 };
     });
     const row = rowRem * rem;
-    stackColumn(places.filter((p) => p.side === "left"), row, top, bottom);
-    stackColumn(places.filter((p) => p.side === "right"), row, top, bottom);
+    stackColumn(
+      places.filter((p) => p.side === "left"),
+      row,
+      top,
+      bottom,
+    );
+    stackColumn(
+      places.filter((p) => p.side === "right"),
+      row,
+      top,
+      bottom,
+    );
 
     // Each column is as wide as its longest key, and its leaders all start from one line beside it.
     const handlesOf = new Map(places.map((place) => [place.id, readHandles(host, place.id)]));
     const widest = { left: 0, right: 0 };
-    for (const place of places) widest[place.side] = Math.max(widest[place.side], handlesOf.get(place.id)?.key.offsetWidth ?? 0);
+    for (const place of places)
+      widest[place.side] = Math.max(widest[place.side], handlesOf.get(place.id)?.key.offsetWidth ?? 0);
     const offset = offsetRem * rem;
     const gap = LEADER_GAP_REM * rem;
     const object = host.closest<HTMLElement>(".object");
@@ -129,7 +157,8 @@ function useMarginLayout<Id extends string>(stage: Stage, ids: Id[], locate: (id
       handles.key.style.transform = `translate3d(${x.toFixed(1)}px, ${(y - handles.key.offsetHeight / 2).toFixed(1)}px, 0)`;
       if (handles.key.dataset.side !== place.side) handles.key.dataset.side = place.side;
       // A leader only runs across the space the figure has, never toward a panel or off the page.
-      const reachable = !place.behind && place.anchorX > left && place.anchorX < right && place.anchorY > 0 && place.anchorY < bottom;
+      const reachable =
+        !place.behind && place.anchorX > left && place.anchorX < right && place.anchorY > 0 && place.anchorY < bottom;
       const visibility = reachable ? "visible" : "hidden";
       if (handles.leader) {
         handles.leader.style.visibility = visibility;
@@ -156,7 +185,11 @@ function useMarginLayout<Id extends string>(stage: Stage, ids: Id[], locate: (id
 function readHandles(host: HTMLElement, id: string): Handles | null {
   const key = host.querySelector<HTMLElement>(`[data-key="${id}"]`);
   if (!key) return null;
-  return { key, leader: host.querySelector<SVGLineElement>(`line[data-for="${id}"]`), dot: host.querySelector<SVGCircleElement>(`circle[data-for="${id}"]`) };
+  return {
+    key,
+    leader: host.querySelector<SVGLineElement>(`line[data-for="${id}"]`),
+    dot: host.querySelector<SVGCircleElement>(`circle[data-for="${id}"]`),
+  };
 }
 
 function Leaders({ ids, active }: { ids: string[]; active?: string | null }) {
@@ -262,7 +295,11 @@ function HoverName({ stage }: { stage: Stage }) {
   const focus = useStore((s) => s.view.focus);
   const el = useRef<HTMLDivElement>(null);
   const organ: OrganId | null = isOrganId(hover) ? hover : null;
-  const pointed = hoverMuscle ? { id: `muscle:${hoverMuscle}` as const, name: MUSCLE_LABEL[hoverMuscle] } : organ ? { id: organ, name: ORGAN_NAME[organ] } : null;
+  const pointed = hoverMuscle
+    ? { id: `muscle:${hoverMuscle}` as const, name: MUSCLE_LABEL[hoverMuscle] }
+    : organ
+      ? { id: organ, name: ORGAN_NAME[organ] }
+      : null;
   // Stays on the last thing through the fade out, so the label never blanks while it leaves.
   const last = useRef(pointed);
   if (pointed) last.current = pointed;
@@ -275,7 +312,8 @@ function HoverName({ stage }: { stage: Stage }) {
     const p = s.project(s.anchorOf(target.id, world));
     const parent = label.parentElement;
     label.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
-    label.dataset.flip = parent && p.x > parent.clientWidth - freeArea().right - NAME_FLIP_REM * rootRem() ? "true" : "false";
+    label.dataset.flip =
+      parent && p.x > parent.clientWidth - freeArea().right - NAME_FLIP_REM * rootRem() ? "true" : "false";
   });
 
   return (

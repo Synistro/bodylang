@@ -10,10 +10,14 @@ export const quiet = (word: string): Judgement => ({ ...NORMAL, word });
 // Off the person's own baseline yet inside the healthy range, so it gets a word and no colour.
 export const unpainted = (j: Judgement): Judgement => ({ ...j, tone: "calm" });
 
-export function glucoseVerdict(mmol: number, context: { fasting: boolean; withinPeak: boolean; withinMeal: boolean; afterCarbs: boolean }): Judgement {
+export function glucoseVerdict(
+  mmol: number,
+  context: { fasting: boolean; withinPeak: boolean; withinMeal: boolean; afterCarbs: boolean },
+): Judgement {
   const g = REFERENCE.glucose;
   if (mmol < g.veryLowMmol) return { verdict: "low", word: "Very low", tone: "concern" };
-  if (mmol < g.fasting.low) return context.afterCarbs && mmol >= g.dip.floorMmol ? { verdict: "expected", word: "A dip", tone: "calm" } : LOW;
+  if (mmol < g.fasting.low)
+    return context.afterCarbs && mmol >= g.dip.floorMmol ? { verdict: "expected", word: "A dip", tone: "calm" } : LOW;
   if (context.fasting) {
     if (mmol >= g.fastingHighMmol) return HIGH;
     return mmol > g.fasting.high ? SLIGHTLY_RAISED : NORMAL;
@@ -55,12 +59,16 @@ export function triglycerideVerdict(mgDl: number, context: { afterFattyMeal: boo
 
 // A heart rate means something different depending on what is happening: 150 during training is
 // expected, the same number at rest with nothing to explain it is high.
-export function heartVerdict(bpm: number, context: { exerting: boolean; asleep: boolean; ownRestBpm: number; explainedBpm: number; maxBpm: number }): Judgement {
+export function heartVerdict(
+  bpm: number,
+  context: { exerting: boolean; asleep: boolean; ownRestBpm: number; explainedBpm: number; maxBpm: number },
+): Judgement {
   const r = REFERENCE.heart;
   if (bpm >= context.maxBpm * r.nearMaximumShare) return { verdict: "raised", word: "Near your maximum", tone: "note" };
   if (context.exerting) return EXPECTED;
   const excess = bpm - context.ownRestBpm;
-  if (bpm > r.high) return context.explainedBpm >= excess / 2 ? { verdict: "raised", word: "Raised", tone: "note" } : HIGH;
+  if (bpm > r.high)
+    return context.explainedBpm >= excess / 2 ? { verdict: "raised", word: "Raised", tone: "note" } : HIGH;
   if (bpm < r.low && !context.asleep) return unpainted(LOW);
   if (excess < r.raisedAboveOwnRestBpm) return NORMAL;
   return context.explainedBpm >= excess / 2 ? EXPECTED : unpainted(SLIGHTLY_RAISED);

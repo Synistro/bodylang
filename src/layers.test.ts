@@ -44,7 +44,8 @@ function wrongImports() {
       const target = relative(root, resolve(dirname(file), spec));
       if (!target.startsWith("src/") && !target.startsWith("server/")) continue;
       const to = partOf(target);
-      if (to !== from && !(MAY_IMPORT[from] ?? []).includes(to)) wrong.push(`${file} imports ${spec}: ${from} may not import ${to}`);
+      if (to !== from && !(MAY_IMPORT[from] ?? []).includes(to))
+        wrong.push(`${file} imports ${spec}: ${from} may not import ${to}`);
     }
   }
   return wrong;

@@ -9,7 +9,8 @@ export interface SourceEntry {
   detail: string;
 }
 
-const isKind = (kind: string | undefined): kind is OriginKind => kind !== undefined && Object.hasOwn(ORIGIN_HEADING, kind);
+const isKind = (kind: string | undefined): kind is OriginKind =>
+  kind !== undefined && Object.hasOwn(ORIGIN_HEADING, kind);
 
 // Where what you can see right now came from, each source once. Anything folded away behind the current
 // view doesn't count, and neither do your own measurements in the header.

@@ -22,39 +22,67 @@ export const composedSpec = z
       .array(
         z.object({
           id: partId,
-          kind: z.enum(LAYER_KINDS).describe("blood: a vessel carrying red cells. lymph: a pale vessel. air: an open airway or air sac. tissue: a sheet of cells. wall: a thin membrane. nerve: a nerve carrying signals. space: an empty gap, such as between two nerve cells"),
+          kind: z
+            .enum(LAYER_KINDS)
+            .describe(
+              "blood: a vessel carrying red cells. lymph: a pale vessel. air: an open airway or air sac. tissue: a sheet of cells. wall: a thin membrane. nerve: a nerve carrying signals. space: an empty gap, such as between two nerve cells",
+            ),
           label: shortText(4).describe("What it is, such as Air sac or Liver cells"),
-          state: z.enum(LAYER_STATES).describe("torn works on anything. blocked and narrowed work on blood. inflamed works on tissue and wall. healthy shows nothing wrong"),
+          state: z
+            .enum(LAYER_STATES)
+            .describe(
+              "torn works on anything. blocked and narrowed work on blood. inflamed works on tissue and wall. healthy shows nothing wrong",
+            ),
           amount: amount.describe("How far gone the state is, or how strong a nerve's signal is. 0 to 1"),
         }),
       )
       .min(1)
       .max(MOST_LAYERS)
-      .describe("From the top of the drawing to the bottom. Keep ids the same from step to step, so the picture changes and doesn't jump"),
+      .describe(
+        "From the top of the drawing to the bottom. Keep ids the same from step to step, so the picture changes and doesn't jump",
+      ),
     actors: z
       .array(
         z.object({
           id: partId,
           label: shortText(3).describe("What it is, such as Nicotine or Immune cell"),
-          look: z.enum(ACTOR_LOOKS).describe("cell: large, with a body. molecule: a small ring. dot: a fine speck. pulse: a travelling signal"),
+          look: z
+            .enum(ACTOR_LOOKS)
+            .describe(
+              "cell: large, with a body. molecule: a small ring. dot: a fine speck. pulse: a travelling signal",
+            ),
           tone: z.enum(ACTOR_TONES),
           from: partId.describe("The id of the layer it comes from"),
           to: partId.describe("The id of the layer it goes to. The same layer means it travels along that layer"),
           amount: amount.describe("How many are moving, 0 to 1"),
-          settles: z.boolean().describe("True if it stays where it arrives, such as tar on a wall or a cell at a wound"),
+          settles: z
+            .boolean()
+            .describe("True if it stays where it arrives, such as tar on a wall or a cell at a wound"),
         }),
       )
       .max(MOST_ACTORS),
-    light: z.array(partId).max(3).describe("The ids this step is about: they stand out and the rest dims. Empty lights everything"),
-    basis: z.string().min(1).describe("Where this picture of what happens comes from: name the study or textbook idea, or say it is your own understanding"),
+    light: z
+      .array(partId)
+      .max(3)
+      .describe("The ids this step is about: they stand out and the rest dims. Empty lights everything"),
+    basis: z
+      .string()
+      .min(1)
+      .describe(
+        "Where this picture of what happens comes from: name the study or textbook idea, or say it is your own understanding",
+      ),
   })
   .superRefine((spec, ctx) => {
     const layers = spec.layers.map((layer) => layer.id);
     const actors = spec.actors.map((actor) => actor.id);
     const issue = (message: string) => ctx.addIssue({ code: "custom", message });
-    if (new Set([...layers, ...actors]).size !== layers.length + actors.length) issue("Every layer and actor needs its own id");
-    for (const actor of spec.actors) for (const end of [actor.from, actor.to]) if (!layers.includes(end)) issue(`${actor.id} names a layer that isn't there: ${end}`);
-    for (const id of spec.light) if (!layers.includes(id) && !actors.includes(id)) issue(`light names something that isn't there: ${id}`);
+    if (new Set([...layers, ...actors]).size !== layers.length + actors.length)
+      issue("Every layer and actor needs its own id");
+    for (const actor of spec.actors)
+      for (const end of [actor.from, actor.to])
+        if (!layers.includes(end)) issue(`${actor.id} names a layer that isn't there: ${end}`);
+    for (const id of spec.light)
+      if (!layers.includes(id) && !actors.includes(id)) issue(`light names something that isn't there: ${id}`);
   });
 
 export type ComposedSpec = z.infer<typeof composedSpec>;
@@ -62,7 +90,11 @@ export type ComposedLayer = ComposedSpec["layers"][number];
 export type ComposedActor = ComposedSpec["actors"][number];
 
 // Two steps with the same parts are one picture changing. Anything else is a new picture.
-export const compositionOf = ({ layers, actors }: ComposedSpec) => JSON.stringify([layers.map((l) => [l.id, l.kind, l.label]), actors.map((a) => [a.id, a.label, a.look, a.tone, a.from, a.to, a.settles])]);
+export const compositionOf = ({ layers, actors }: ComposedSpec) =>
+  JSON.stringify([
+    layers.map((l) => [l.id, l.kind, l.label]),
+    actors.map((a) => [a.id, a.label, a.look, a.tone, a.from, a.to, a.settles]),
+  ]);
 
 export interface Box {
   x: number;
@@ -93,7 +125,15 @@ export interface ComposedLayout {
   words: Box[];
 }
 
-const BAND_HEIGHT: Record<ComposedLayer["kind"], number> = { blood: 14, lymph: 9, air: 30, tissue: 30, wall: 5, nerve: 6, space: 14 };
+const BAND_HEIGHT: Record<ComposedLayer["kind"], number> = {
+  blood: 14,
+  lymph: 9,
+  air: 30,
+  tissue: 30,
+  wall: 5,
+  nerve: 6,
+  space: 14,
+};
 const WORD_ROW = 9; // the layer's name sits on its own row just above it
 const AREA = { top: 25, bottom: 176, left: 6, right: 234 };
 const COLUMNS = { from: 92, to: 218 };
@@ -105,9 +145,14 @@ const wordBox = (x: number, y: number, anchor: "start" | "end", text: string): B
   return { x: anchor === "start" ? x : x - width, y: y - WORD.height / 2, width, height: WORD.height };
 };
 
-const overlap = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+const overlap = (a: Box, b: Box) =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
-const fits = (box: Box) => box.x >= AREA.left && box.x + box.width <= AREA.right && box.y >= AREA.top - 2 && box.y + box.height <= AREA.bottom + 2;
+const fits = (box: Box) =>
+  box.x >= AREA.left &&
+  box.x + box.width <= AREA.right &&
+  box.y >= AREA.top - 2 &&
+  box.y + box.height <= AREA.bottom + 2;
 
 // Layers share the height, with what is left over in the gaps, because that is where things travel. A word
 // goes on the first free place near the middle of its path, so no two words ever land on each other.

@@ -108,7 +108,8 @@ export function mealGroups(intakes: Intake[]): Intake[][] {
   return groups;
 }
 
-export const mealProcessId = (group: Intake[]) => (group.length > 1 ? processIds.meal(group[0].id) : processIds.intake(group[0].id));
+export const mealProcessId = (group: Intake[]) =>
+  group.length > 1 ? processIds.meal(group[0].id) : processIds.intake(group[0].id);
 
 export function mealTitle(group: Intake[]): string {
   const names = joinAnd(group.map((intake) => inSentence(intake.label)));

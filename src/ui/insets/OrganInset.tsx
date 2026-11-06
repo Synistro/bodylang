@@ -56,5 +56,9 @@ class DrawingBoundary extends Component<{ children: ReactNode }, { failed: strin
 export function OrganInset({ organ, trajectory, t, muscle }: InsetProps & { organ: OrganId }) {
   const composed = useStore(composedOnScreen);
   const Figure = FIGURES[organ];
-  return <DrawingBoundary key={organ}>{composed ? <ComposedInset spec={composed} /> : <Figure trajectory={trajectory} t={t} muscle={muscle} />}</DrawingBoundary>;
+  return (
+    <DrawingBoundary key={organ}>
+      {composed ? <ComposedInset spec={composed} /> : <Figure trajectory={trajectory} t={t} muscle={muscle} />}
+    </DrawingBoundary>
+  );
 }

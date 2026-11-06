@@ -34,7 +34,10 @@ For example, "Can you explain how muscle sorrow works? I know that sportsmen don
 
 // What comes back as a name, or null if it isn't one, in which case the question itself stays on screen.
 export function cleanName(raw: string): string | null {
-  const name = raw.trim().replace(/^["'“”]+|["'“”.?!]+$/g, "").trim();
+  const name = raw
+    .trim()
+    .replace(/^["'“”]+|["'“”.?!]+$/g, "")
+    .trim();
   return name && !name.includes("\n") && name.length <= NAME_MOST_CHARS ? name : null;
 }
 
@@ -83,7 +86,8 @@ ${turns.at(-1)?.role === "you" ? "Answer what they just asked." : "Explain what 
 }
 
 // Past their common fields, a day's events are taken as the app wrote them, as they are from a day file.
-const readRequest = async (req: IncomingMessage) => requestSchema.parse(await readJson(req, MAX_REQUEST_BYTES)) as unknown as ExplainRequest;
+const readRequest = async (req: IncomingMessage) =>
+  requestSchema.parse(await readJson(req, MAX_REQUEST_BYTES)) as unknown as ExplainRequest;
 
 export async function handleExplain(req: IncomingMessage, res: ServerResponse) {
   const request = await readRequest(req);
@@ -104,17 +108,25 @@ export async function handleExplain(req: IncomingMessage, res: ServerResponse) {
       },
     });
     for await (const message of run) {
-      if (message.type === "stream_event" && message.event.type === "content_block_delta" && message.event.delta.type === "text_delta") {
+      if (
+        message.type === "stream_event" &&
+        message.event.type === "content_block_delta" &&
+        message.event.delta.type === "text_delta"
+      ) {
         firstMs ??= Math.round(performance.now() - started);
         send({ type: "text", text: message.event.delta.text });
       }
       if (message.type === "result") {
-        console.log(`[bodylang] explained "${request.term}": first words at ${firstMs ?? "-"} ms, done at ${Math.round(performance.now() - started)} ms, $${message.total_cost_usd.toFixed(4)}`);
-        if (message.subtype !== "success") send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
+        console.log(
+          `[bodylang] explained "${request.term}": first words at ${firstMs ?? "-"} ms, done at ${Math.round(performance.now() - started)} ms, $${message.total_cost_usd.toFixed(4)}`,
+        );
+        if (message.subtype !== "success")
+          send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
       }
     }
   } catch (e: unknown) {
-    if (!stopped.signal.aborted) send({ type: "error", message: `Claude Code could not run: ${e instanceof Error ? e.message : String(e)}` });
+    if (!stopped.signal.aborted)
+      send({ type: "error", message: `Claude Code could not run: ${e instanceof Error ? e.message : String(e)}` });
   }
   send({ type: "done" });
   res.end();

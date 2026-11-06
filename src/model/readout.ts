@@ -25,7 +25,9 @@ export function openingReply(tr: Trajectory, now: number): ReplyLine[] {
   const parts: string[] = [];
   if (inStomach) parts.push("the meal is mostly still in your stomach");
   if (coffee) parts.push(`your ${inSentence(coffee.label)} is fading`);
-  const first = parts.length ? `${parts[0][0].toUpperCase()}${parts[0].slice(1)}${parts[1] ? ` and ${parts[1]}` : ""}.` : "Nothing much is going on.";
+  const first = parts.length
+    ? `${parts[0][0].toUpperCase()}${parts[0].slice(1)}${parts[1] ? ` and ${parts[1]}` : ""}.`
+    : "Nothing much is going on.";
   const second = f.sleepiest ? ` You may feel sleepy near ${formatClock(f.sleepiest.at)}.` : "";
   return [{ text: `${first}${second}`, organ: inStomach ? "stomach" : undefined }];
 }
@@ -38,7 +40,12 @@ export function readout(tr: Trajectory, now: number) {
   const v = (n: Parameters<typeof value>[1]) => value(tr, n, now);
   return {
     now: formatClock(now),
-    body: { ...tr.scenario.body, bmi: round(tr.anthro.bmi), lean_kg: round(tr.anthro.leanKg), blood_l: round(tr.anthro.bloodVolumeL) },
+    body: {
+      ...tr.scenario.body,
+      bmi: round(tr.anthro.bmi),
+      lean_kg: round(tr.anthro.leanKg),
+      blood_l: round(tr.anthro.bloodVolumeL),
+    },
     blood: {
       glucose_mmol_l: round(v("glucose") / 18.016),
       insulin_times_rest: round(v("insulin") / 8),
@@ -78,7 +85,9 @@ export function readout(tr: Trajectory, now: number) {
       low_sugar: level(v("crash")),
     },
     forecast: {
-      glucose_peak: f.glucosePeak ? { at: formatClock(f.glucosePeak.at), mmol_l: round(f.glucosePeak.value / 18.016) } : null,
+      glucose_peak: f.glucosePeak
+        ? { at: formatClock(f.glucosePeak.at), mmol_l: round(f.glucosePeak.value / 18.016) }
+        : null,
       glucose_settles_at: f.glucoseSettles ? formatClock(f.glucoseSettles) : null,
       sleepiest_at: f.sleepiest ? formatClock(f.sleepiest.at) : null,
       stomach_half_empty_at: f.stomachHalf ? formatClock(f.stomachHalf) : null,
@@ -90,19 +99,55 @@ export function readout(tr: Trajectory, now: number) {
     other_substances: [...tr.substances.values()].map(({ substance, series }) => {
       const peakAt = peakIndex(series, 0);
       const minute = Math.max(0, Math.min(series.length - 1, Math.floor(now)));
-      return { id: substance.id, label: substance.label, blood_mg_l: round(series[minute], 2), peak_at: formatClock(peakAt), peak_mg_l: round(series[peakAt], 2) };
+      return {
+        id: substance.id,
+        label: substance.label,
+        blood_mg_l: round(series[minute], 2),
+        peak_at: formatClock(peakAt),
+        peak_mg_l: round(series[peakAt], 2),
+      };
     }),
     muscles: Object.fromEntries(
       MUSCLE_GROUPS.map((group) => {
         const s = muscleStateAt(tr.muscleEvents, group, now);
-        return [group, { work: level(s.work), fatigue: level(s.fatigue), soreness: level(s.soreness), repair: level(s.repair), active: s.work + s.fatigue + s.soreness + s.repair > 0 }] as const;
+        return [
+          group,
+          {
+            work: level(s.work),
+            fatigue: level(s.fatigue),
+            soreness: level(s.soreness),
+            repair: level(s.repair),
+            active: s.work + s.fatigue + s.soreness + s.repair > 0,
+          },
+        ] as const;
       }).filter(([, s]) => s.active),
     ),
-    events: tr.events.map((e) => ({ id: e.id, label: e.label, preset: e.preset, from: formatClock(e.from), until: e.until === null ? "still going on" : formatClock(e.until), intensity: e.intensity, evidence: e.evidence, source: e.source })),
+    events: tr.events.map((e) => ({
+      id: e.id,
+      label: e.label,
+      preset: e.preset,
+      from: formatClock(e.from),
+      until: e.until === null ? "still going on" : formatClock(e.until),
+      intensity: e.intensity,
+      evidence: e.evidence,
+      source: e.source,
+    })),
     // What the person sees on the top level, one line per thing they told the body about.
-    threads: threadsAt(tr, now).map((t) => ({ id: t.id, title: t.title, since: t.since, status: t.status, active: t.active, process_id: t.processId })),
+    threads: threadsAt(tr, now).map((t) => ({
+      id: t.id,
+      title: t.title,
+      since: t.since,
+      status: t.status,
+      active: t.active,
+      process_id: t.processId,
+    })),
     // Ids Claude can pass to show_process, with what each one says right now.
-    processes: processesAt(tr, now).map((p) => ({ id: p.id, title: p.title, system: p.system, active: p.active, headline: p.headline })),
+    processes: processesAt(tr, now).map((p) => ({
+      id: p.id,
+      title: p.title,
+      system: p.system,
+      active: p.active,
+      headline: p.headline,
+    })),
   };
 }
-

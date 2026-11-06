@@ -5,7 +5,10 @@ const STILL_CLOCK = 11;
 
 // A smooth line through some points: how to draw it, and how to travel along it.
 export function curve(points: [number, number][], samples = 48): { d: string; route: Polyline } {
-  const tube = sampleTube(points.map(([x, y]) => ({ x, y, r: 0 })), samples);
+  const tube = sampleTube(
+    points.map(([x, y]) => ({ x, y, r: 0 })),
+    samples,
+  );
   return { d: tube.map((p, i) => `${i ? "L" : "M"}${tenth(p.x)} ${tenth(p.y)}`).join(""), route: polyline(tube) };
 }
 

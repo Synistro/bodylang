@@ -126,7 +126,10 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
   const story = organStory(organ, trajectory, minute);
   const assessment = assessmentAt(trajectory, minute);
   const isNews = useIsNews(minute);
-  const worked = organ === "muscle" ? assessment.muscles.filter((m) => m.level >= WORKED_FROM).sort((a, b) => b.level - a.level) : [];
+  const worked =
+    organ === "muscle"
+      ? assessment.muscles.filter((m) => m.level >= WORKED_FROM).sort((a, b) => b.level - a.level)
+      : [];
   const readings = (worked.length ? [] : story.rows)
     .flatMap((id) => assessment.readings.find((r) => r.id === id) ?? [])
     .filter((reading) => hasSomethingToSay(reading) && isNews(reading))
@@ -173,6 +176,7 @@ export function OrganPage() {
       </aside>
     );
   }
-  if (focus === "muscle" && group) return <MusclePlate key={group} group={group} trajectory={trajectory} minute={minute} />;
+  if (focus === "muscle" && group)
+    return <MusclePlate key={group} group={group} trajectory={trajectory} minute={minute} />;
   return <OrganPlate key={focus} organ={focus} trajectory={trajectory} minute={minute} />;
 }

@@ -85,7 +85,12 @@ function smoothLine(line: Line, passes: number): Line {
   const scratch = even.map((p) => p.clone());
   for (let pass = 0; pass < passes; pass++) {
     for (let i = 1; i < even.length - 1; i++) {
-      scratch[i].copy(even[i]).multiplyScalar(2).add(even[i - 1]).add(even[i + 1]).multiplyScalar(0.25);
+      scratch[i]
+        .copy(even[i])
+        .multiplyScalar(2)
+        .add(even[i - 1])
+        .add(even[i + 1])
+        .multiplyScalar(0.25);
     }
     for (let i = 1; i < even.length - 1; i++) even[i].copy(scratch[i]);
   }
@@ -147,7 +152,8 @@ function walker(meta: OrganMeta, tidy: boolean) {
       if (!raw) continue;
       const line = tidy ? unfold(toLine(raw)) : toLine(raw);
       const from = out[out.length - 1];
-      const facing = from.distanceToSquared(line[0]) > from.distanceToSquared(line[line.length - 1]) ? [...line].reverse() : line;
+      const facing =
+        from.distanceToSquared(line[0]) > from.distanceToSquared(line[line.length - 1]) ? [...line].reverse() : line;
       out.push(...(tidy ? trimCurl(facing) : facing));
     }
     return out;
@@ -191,7 +197,11 @@ function extreme(raw: number[][], pick: "lowest" | "highest"): THREE.Vector3 {
   return line.reduce((best, p) => ((pick === "lowest" ? p.y < best.y : p.y > best.y) ? p : best));
 }
 
-function buildRoutes(meta: OrganMeta, stomachPath: THREE.Curve<THREE.Vector3>, esophagusPath: THREE.Curve<THREE.Vector3>): Record<RouteId, Route> {
+function buildRoutes(
+  meta: OrganMeta,
+  stomachPath: THREE.Curve<THREE.Vector3>,
+  esophagusPath: THREE.Curve<THREE.Vector3>,
+): Record<RouteId, Route> {
   const lm = (name: string) => new THREE.Vector3().fromArray(meta.landmarks[name]);
   const center = (name: string) => new THREE.Vector3().fromArray(meta.organs[name].center);
   const vessel = walker(meta, true);
@@ -212,12 +222,25 @@ function buildRoutes(meta: OrganMeta, stomachPath: THREE.Curve<THREE.Vector3>, e
   const pancreas = lm("body_of_pancreas");
   const ileocecal = lm("ileocecal_valve");
 
-  const route = (id: RouteId, points: Line, passes: number, trunk = false): Route => ({ id, points: smoothLine(points, passes), trunk, feeders: [] });
-  const asVessel = (id: RouteId, points: Line, shape: { trunk?: boolean; feeders?: RouteId[] } = {}): Route => ({ ...route(id, points, SMOOTHING.vesselPasses), trunk: shape.trunk ?? false, feeders: shape.feeders ?? [] });
+  const route = (id: RouteId, points: Line, passes: number, trunk = false): Route => ({
+    id,
+    points: smoothLine(points, passes),
+    trunk,
+    feeders: [],
+  });
+  const asVessel = (id: RouteId, points: Line, shape: { trunk?: boolean; feeders?: RouteId[] } = {}): Route => ({
+    ...route(id, points, SMOOTHING.vesselPasses),
+    trunk: shape.trunk ?? false,
+    feeders: shape.feeders ?? [],
+  });
   const offAorta: RouteId[] = ["arch", "descending"];
 
   // Blood returns.
-  const ivc = vessel(extreme(meta.centerlines.inferior_vena_cava_b, "lowest"), ["inferior_vena_cava_b", "inferior_vena_cava_a", rightAtrium]);
+  const ivc = vessel(extreme(meta.centerlines.inferior_vena_cava_b, "lowest"), [
+    "inferior_vena_cava_b",
+    "inferior_vena_cava_a",
+    rightAtrium,
+  ]);
   const svc = vessel(extreme(meta.centerlines.superior_vena_cava, "highest"), ["superior_vena_cava", rightAtrium]);
   const portalVein = meta.centerlines.portal_vein ? "portal_vein" : "hepatic_portal_vein";
 
@@ -261,7 +284,10 @@ function buildRoutes(meta: OrganMeta, stomachPath: THREE.Curve<THREE.Vector3>, e
   const duct = [...aorta].reverse().map((p) => p.clone().add(ductOffset));
 
   const jugular = new THREE.Vector3(svcTop.x - 0.015, (brain.y + svcTop.y) / 2, svcTop.z + 0.01);
-  const carotidRoot = rootOn(arch, meta.centerlines.left_common_carotid_artery_a ?? meta.centerlines.left_common_carotid_artery_b);
+  const carotidRoot = rootOn(
+    arch,
+    meta.centerlines.left_common_carotid_artery_a ?? meta.centerlines.left_common_carotid_artery_b,
+  );
 
   // Limb vessels come from the skeleton through setLimbs, since they follow height and posture.
   const bifurcation = aorta[aorta.length - 1];
@@ -271,35 +297,95 @@ function buildRoutes(meta: OrganMeta, stomachPath: THREE.Curve<THREE.Vector3>, e
   const ileum = gut(jejunum[jejunum.length - 1], ["ileum", ileocecal]);
 
   return {
-    esophagus: route("esophagus", Array.from({ length: 40 }, (_, i) => esophagusPath.getPointAt(i / 39)), 0),
+    esophagus: route(
+      "esophagus",
+      Array.from({ length: 40 }, (_, i) => esophagusPath.getPointAt(i / 39)),
+      0,
+    ),
     stomach_out: route("stomach_out", stomachOut, 0),
     duodenum: route("duodenum", duodenum, SMOOTHING.vesselPasses),
     jejunum: route("jejunum", jejunum, SMOOTHING.bowelPasses),
     ileum: route("ileum", ileum, SMOOTHING.bowelPasses),
     // The colon's skeletons fold over themselves, so its route follows the part centres, which frame the belly cleanly.
-    colon: route("colon", [ileocecal, lm("ascending_colon"), lm("hepatic_flexure_of_colon"), lm("transverse_colon"), lm("splenic_flexure_of_colon"), lm("descending_colon"), lm("sigmoid_colon"), lm("rectum")], SMOOTHING.gutPasses, true),
+    colon: route(
+      "colon",
+      [
+        ileocecal,
+        lm("ascending_colon"),
+        lm("hepatic_flexure_of_colon"),
+        lm("transverse_colon"),
+        lm("splenic_flexure_of_colon"),
+        lm("descending_colon"),
+        lm("sigmoid_colon"),
+        lm("rectum"),
+      ],
+      SMOOTHING.gutPasses,
+      true,
+    ),
 
-    portal_liver: asVessel("portal_liver", vessel(extreme(meta.centerlines.superior_mesenteric_vein, "lowest"), ["superior_mesenteric_vein", portalVein, portaHepatis, liver]), { trunk: true }),
-    liver_out: asVessel("liver_out", [liver, ...ivc.slice(nearestIndex(ivc, endpointNearest(meta.centerlines.middle_hepatic_vein, rightAtrium)))]),
+    portal_liver: asVessel(
+      "portal_liver",
+      vessel(extreme(meta.centerlines.superior_mesenteric_vein, "lowest"), [
+        "superior_mesenteric_vein",
+        portalVein,
+        portaHepatis,
+        liver,
+      ]),
+      { trunk: true },
+    ),
+    liver_out: asVessel("liver_out", [
+      liver,
+      ...ivc.slice(nearestIndex(ivc, endpointNearest(meta.centerlines.middle_hepatic_vein, rightAtrium))),
+    ]),
     ivc: asVessel("ivc", ivc, { trunk: true }),
     svc: asVessel("svc", svc, { trunk: true }),
 
-    to_lung_L: asVessel("to_lung_L", vessel(rightAtrium, [rightVentricle, "pulmonary_trunk", "pulmonary_artery_L", lungL])),
-    to_lung_R: asVessel("to_lung_R", vessel(rightAtrium, [rightVentricle, "pulmonary_trunk", "pulmonary_artery_R", lungR])),
+    to_lung_L: asVessel(
+      "to_lung_L",
+      vessel(rightAtrium, [rightVentricle, "pulmonary_trunk", "pulmonary_artery_L", lungL]),
+    ),
+    to_lung_R: asVessel(
+      "to_lung_R",
+      vessel(rightAtrium, [rightVentricle, "pulmonary_trunk", "pulmonary_artery_R", lungR]),
+    ),
     from_lung_L: asVessel("from_lung_L", vessel(lungL, ["pulmonary_vein_L_sup", leftAtrium, leftVentricle])),
     from_lung_R: asVessel("from_lung_R", vessel(lungR, ["pulmonary_vein_R_sup", leftAtrium, leftVentricle])),
 
     arch: asVessel("arch", arch, { trunk: true }),
-    carotid: asVessel("carotid", vessel(carotidRoot, ["left_common_carotid_artery_a", "left_common_carotid_artery_b", brain]), { feeders: ["arch"] }),
-    to_neck: asVessel("to_neck", vessel(carotidRoot, ["left_common_carotid_artery_a", lm("thyroid_cartilage")]), { feeders: ["arch"] }),
+    carotid: asVessel(
+      "carotid",
+      vessel(carotidRoot, ["left_common_carotid_artery_a", "left_common_carotid_artery_b", brain]),
+      { feeders: ["arch"] },
+    ),
+    to_neck: asVessel("to_neck", vessel(carotidRoot, ["left_common_carotid_artery_a", lm("thyroid_cartilage")]), {
+      feeders: ["arch"],
+    }),
     descending: asVessel("descending", aorta, { trunk: true, feeders: ["arch"] }),
-    to_gut: asVessel("to_gut", vessel(rootOn(aorta, meta.centerlines.superior_mesenteric_artery), ["superior_mesenteric_artery"]), { feeders: offAorta }),
-    to_kidney_L: asVessel("to_kidney_L", vessel(arteryL.root, [arteryL.name, lm("hilum_of_kidney_L"), kidneyL]), { feeders: offAorta }),
-    to_kidney_R: asVessel("to_kidney_R", vessel(arteryR.root, [arteryR.name, lm("hilum_of_kidney_R"), kidneyR]), { feeders: offAorta }),
+    to_gut: asVessel(
+      "to_gut",
+      vessel(rootOn(aorta, meta.centerlines.superior_mesenteric_artery), ["superior_mesenteric_artery"]),
+      { feeders: offAorta },
+    ),
+    to_kidney_L: asVessel("to_kidney_L", vessel(arteryL.root, [arteryL.name, lm("hilum_of_kidney_L"), kidneyL]), {
+      feeders: offAorta,
+    }),
+    to_kidney_R: asVessel("to_kidney_R", vessel(arteryR.root, [arteryR.name, lm("hilum_of_kidney_R"), kidneyR]), {
+      feeders: offAorta,
+    }),
     from_kidney_L: asVessel("from_kidney_L", fromKidney(kidneyL, lm("hilum_of_kidney_L"))),
     from_kidney_R: asVessel("from_kidney_R", fromKidney(kidneyR, lm("hilum_of_kidney_R"))),
     from_brain: asVessel("from_brain", vessel(brain, [jugular, "brachiocephalic_vein_R", svc])),
-    to_liver_art: asVessel("to_liver_art", vessel(rootOn(aorta, meta.centerlines.celiac_trunk), ["celiac_trunk", "common_hepatic_artery", "proper_hepatic_artery", portaHepatis, liver]), { feeders: offAorta }),
+    to_liver_art: asVessel(
+      "to_liver_art",
+      vessel(rootOn(aorta, meta.centerlines.celiac_trunk), [
+        "celiac_trunk",
+        "common_hepatic_artery",
+        "proper_hepatic_artery",
+        portaHepatis,
+        liver,
+      ]),
+      { feeders: offAorta },
+    ),
 
     // Insulin leaves the pancreas into the portal vein, so the liver sees it first.
     pancreas_portal: asVessel("pancreas_portal", vessel(pancreas, [portalVein, portaHepatis, liver])),
@@ -367,9 +453,18 @@ function sidesOf(routes: RouteId[]): RouteId[][] {
 // The path for one run of a process: from where the line stands, along its routes, to where it
 // ends. A route that isn't reached exactly gets a short connector, and a trunk is only ridden from
 // where the line joins it to where the next step leaves it.
-export function tracePath(network: RouteNetwork, routes: RouteId[], from: THREE.Vector3 | null, to: THREE.Vector3 | null): Line {
+export function tracePath(
+  network: RouteNetwork,
+  routes: RouteId[],
+  from: THREE.Vector3 | null,
+  to: THREE.Vector3 | null,
+): Line {
   const first = routes.length ? network.route(routes[0]) : null;
-  const arrivesFromAway = from !== null && first !== null && first.feeders.length > 0 && first.points[nearestIndex(first.points, from)].distanceTo(from) > FEEDER_REACH;
+  const arrivesFromAway =
+    from !== null &&
+    first !== null &&
+    first.feeders.length > 0 &&
+    first.points[nearestIndex(first.points, from)].distanceTo(from) > FEEDER_REACH;
   const riding = arrivesFromAway && first ? [...first.feeders, ...routes] : routes;
   const out: Line = from ? [from] : [];
   let cursor = from;
@@ -409,7 +504,12 @@ function strandFrom(path: Line, startsAt: number): Strand {
 
 // Everything drawn for one stop. The first strand ends at the stop's anchor; a second, if the routes
 // fork, runs only from where it parts from the first.
-export function traceStrands(network: RouteNetwork, routes: RouteId[], from: THREE.Vector3 | null, to: THREE.Vector3 | null): Strand[] {
+export function traceStrands(
+  network: RouteNetwork,
+  routes: RouteId[],
+  from: THREE.Vector3 | null,
+  to: THREE.Vector3 | null,
+): Strand[] {
   if (!routes.length && from && to && from.distanceTo(to) > ARC_FROM) return [strandFrom(arcBetween(from, to), 0)];
   const sides = sidesOf(routes);
   if (sides.length === 1) return [strandFrom(tracePath(network, routes, from, to), 0)];
@@ -418,18 +518,26 @@ export function traceStrands(network: RouteNetwork, routes: RouteId[], from: THR
     const points = network.route(side[side.length - 1]).points;
     return points[points.length - 1];
   };
-  const nearer = (point: THREE.Vector3, ends: (side: RouteId[]) => THREE.Vector3) => (ends(sides[1]).distanceToSquared(point) < ends(sides[0]).distanceToSquared(point) ? 1 : 0);
+  const nearer = (point: THREE.Vector3, ends: (side: RouteId[]) => THREE.Vector3) =>
+    ends(sides[1]).distanceToSquared(point) < ends(sides[0]).distanceToSquared(point) ? 1 : 0;
   const reaches = to ? nearer(to, lastOf) : 0;
   const leaves = from ? nearer(from, firstOf) : 0;
   const sharedStart = sides[0][0] === sides[1][0];
   // A trunk with no stop on it would run its whole length, so the far side of a limb stops level with the near side.
   const mirrored = to ? to.clone().setX(-to.x) : null;
-  const endOf = (side: RouteId[], i: number) => (i === reaches ? to : network.route(side[side.length - 1]).trunk ? mirrored : null);
-  const lines = sides.map((side, i) => tracePath(network, side, sharedStart || i === leaves ? from : null, endOf(side, i)));
+  const endOf = (side: RouteId[], i: number) =>
+    i === reaches ? to : network.route(side[side.length - 1]).trunk ? mirrored : null;
+  const lines = sides.map((side, i) =>
+    tracePath(network, side, sharedStart || i === leaves ? from : null, endOf(side, i)),
+  );
   const main = strandFrom(lines[reaches], 0);
   const other = lines[1 - reaches];
   let parted = 0;
-  while (parted < other.length && main.path[nearestIndex(main.path, other[parted])].distanceTo(other[parted]) < SHARED_WITHIN) parted++;
+  while (
+    parted < other.length &&
+    main.path[nearestIndex(main.path, other[parted])].distanceTo(other[parted]) < SHARED_WITHIN
+  )
+    parted++;
   const start = Math.max(0, parted - 1);
   const rest = other.slice(start);
   if (rest.length < 2) return [main];

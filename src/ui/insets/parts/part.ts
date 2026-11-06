@@ -22,7 +22,9 @@ const brightness = (lit: number) => lerp(QUIET, 1, clamp01(lit));
 export const setLit = (element: SVGElement, lit: number) => setOpacity(element, brightness(lit));
 
 // Something that appears when there is some of it, and dims when the step is about something else.
-export const setShown = (element: SVGElement, shown: number, lit = 1) => setOpacity(element, clamp01(shown) * brightness(lit));
+export const setShown = (element: SVGElement, shown: number, lit = 1) =>
+  setOpacity(element, clamp01(shown) * brightness(lit));
 
 // A word goes completely, so a step only ever names what it is showing.
-export const setWord = (element: SVGElement, shown: number, lit = 1) => setOpacity(element, clamp01(shown) * clamp01(lit));
+export const setWord = (element: SVGElement, shown: number, lit = 1) =>
+  setOpacity(element, clamp01(shown) * clamp01(lit));

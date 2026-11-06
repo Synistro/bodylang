@@ -9,7 +9,6 @@ export interface StomachItem {
   count: number;
 }
 
-
 // Visible Human has no stomach mesh, and a stomach has to change shape with what's in it anyway, so
 // it is lofted here. Each section runs from the lesser curvature, the short inner bend that stays
 // put, to the greater curvature, the long outer bend that stretches as the stomach fills. Positions
@@ -94,7 +93,12 @@ function waveSqueeze(u: number, crest: number, strength: number) {
   return 1 - amplitude * strength * bump(u, crest, WAVE.width);
 }
 
-const inPlane = (a: number, b: number, lift: number) => PLANE.origin.clone().addScaledVector(PLANE.across, a).addScaledVector(PLANE.down, b).addScaledVector(PLANE.lift, lift);
+const inPlane = (a: number, b: number, lift: number) =>
+  PLANE.origin
+    .clone()
+    .addScaledVector(PLANE.across, a)
+    .addScaledVector(PLANE.down, b)
+    .addScaledVector(PLANE.lift, lift);
 
 function anchorTransform(meta: OrganMeta) {
   const names = Object.keys(STOMACH_REFERENCE_ANCHORS) as (keyof typeof STOMACH_REFERENCE_ANCHORS)[];
@@ -103,7 +107,11 @@ function anchorTransform(meta: OrganMeta) {
   const basis = (p: THREE.Vector3[]) => {
     const a = p[1].clone().sub(p[0]);
     const b = p[2].clone().sub(p[0]);
-    const c = a.clone().cross(b).normalize().multiplyScalar((a.length() + b.length()) / 2);
+    const c = a
+      .clone()
+      .cross(b)
+      .normalize()
+      .multiplyScalar((a.length() + b.length()) / 2);
     return new THREE.Matrix4().makeBasis(a, b, c);
   };
   const m = basis(dst).multiply(basis(src).invert());
@@ -112,7 +120,9 @@ function anchorTransform(meta: OrganMeta) {
   // The landmarks decide where the two fixed ends go. Between them a full affine fit would shear the
   // organ out of shape on a body whose landmarks sit differently, so the shape only turns, stretches
   // along the line from end to end, and takes its girth from how far apart the liver and spleen sit.
-  const ends = [SECTIONS[0], SECTIONS[SECTIONS.length - 1]].map((s) => inPlane((s.inner[0] + s.outer[0]) / 2, (s.inner[1] + s.outer[1]) / 2, s.lift));
+  const ends = [SECTIONS[0], SECTIONS[SECTIONS.length - 1]].map((s) =>
+    inPlane((s.inner[0] + s.outer[0]) / 2, (s.inner[1] + s.outer[1]) / 2, s.lift),
+  );
   const [from, to] = [place(ends[0]), place(ends[1])];
   const axis = ends[1].clone().sub(ends[0]);
   const stretch = to.distanceTo(from) / axis.length();
@@ -123,7 +133,10 @@ function anchorTransform(meta: OrganMeta) {
     const offset = v.clone().sub(ends[0]);
     const along = offset.dot(axis);
     const across = offset.addScaledVector(axis, -along).multiplyScalar(girth);
-    return across.addScaledVector(axis, along * stretch).applyQuaternion(turn).add(from);
+    return across
+      .addScaledVector(axis, along * stretch)
+      .applyQuaternion(turn)
+      .add(from);
   };
 }
 
@@ -138,7 +151,11 @@ function chewedPiece() {
   let largest = 0;
   for (let i = 0; i < positions.count; i++) {
     vertex.fromBufferAttribute(positions, i);
-    const swell = 1 + 0.16 * Math.sin(2.3 * vertex.x + 0.7) * Math.cos(1.9 * vertex.y - 0.4) + 0.11 * Math.sin(3.1 * vertex.z + 1.9) + 0.07 * Math.cos(4.3 * vertex.y + 2.3 * vertex.x);
+    const swell =
+      1 +
+      0.16 * Math.sin(2.3 * vertex.x + 0.7) * Math.cos(1.9 * vertex.y - 0.4) +
+      0.11 * Math.sin(3.1 * vertex.z + 1.9) +
+      0.07 * Math.cos(4.3 * vertex.y + 2.3 * vertex.x);
     vertex.multiplyScalar(swell);
     positions.setXYZ(i, vertex.x, vertex.y, vertex.z);
     largest = Math.max(largest, vertex.length());
@@ -180,7 +197,7 @@ class RingSurface {
     for (let j = 0; j < RINGS; j++) {
       for (let i = 0; i < RADIAL; i++) {
         const a = j * RADIAL + i;
-        const b = j * RADIAL + (i + 1) % RADIAL;
+        const b = j * RADIAL + ((i + 1) % RADIAL);
         const c = a + RADIAL;
         const d = b + RADIAL;
         index.push(a, b, c, c, b, d);
@@ -190,7 +207,7 @@ class RingSurface {
     const capEnd = capStart + 1;
     for (let i = 0; i < RADIAL; i++) {
       index.push(capStart, (i + 1) % RADIAL, i);
-      index.push(capEnd, RINGS * RADIAL + i, RINGS * RADIAL + (i + 1) % RADIAL);
+      index.push(capEnd, RINGS * RADIAL + i, RINGS * RADIAL + ((i + 1) % RADIAL));
     }
     this.geometry.setIndex(index);
   }
@@ -277,7 +294,10 @@ class RingSurface {
     const probe = Math.floor(RINGS / 2) * RADIAL * 6;
     const [a, b, c] = [index.getX(probe), index.getX(probe + 1), index.getX(probe + 2)];
     const v = (i: number) => new THREE.Vector3().fromArray(this.positions, i * 3);
-    const facing = v(b).sub(v(a)).cross(v(c).sub(v(a))).dot(new THREE.Vector3().fromArray(this.normals, a * 3));
+    const facing = v(b)
+      .sub(v(a))
+      .cross(v(c).sub(v(a)))
+      .dot(new THREE.Vector3().fromArray(this.normals, a * 3));
     if (facing >= 0) return;
     const flipped = Array.from(index.array);
     for (let i = 0; i < flipped.length; i += 3) [flipped[i + 1], flipped[i + 2]] = [flipped[i + 2], flipped[i + 1]];
@@ -402,7 +422,10 @@ export class Stomach {
       a.toArray(this.ringInner, j * 3);
       b.toArray(this.ringSpan, j * 3);
     }
-    this.depthAxis.copy(fit(PLANE.origin.clone().add(PLANE.lift))).sub(fit(PLANE.origin)).normalize();
+    this.depthAxis
+      .copy(fit(PLANE.origin.clone().add(PLANE.lift)))
+      .sub(fit(PLANE.origin))
+      .normalize();
     this.fullVolumeMl = this.volumeAtFullStretch();
 
     // The route food takes through the middle of a part-filled stomach.
@@ -439,7 +462,13 @@ export class Stomach {
     this.pieces.renderOrder = 2;
     this.pieces.count = 0;
     this.pieces.setColorAt(0, new THREE.Color("#ffffff"));
-    this.pieceOutlineMaterial = new THREE.MeshBasicMaterial({ color: palette.contour, side: THREE.BackSide, transparent: true, opacity: PIECE_OUTLINE_OPACITY, depthWrite: false });
+    this.pieceOutlineMaterial = new THREE.MeshBasicMaterial({
+      color: palette.contour,
+      side: THREE.BackSide,
+      transparent: true,
+      opacity: PIECE_OUTLINE_OPACITY,
+      depthWrite: false,
+    });
     this.pieceOutlines = new THREE.InstancedMesh(pieceGeometry, this.pieceOutlineMaterial, capacity);
     this.pieceOutlines.frustumCulled = false;
     this.pieceOutlines.renderOrder = 2;
@@ -474,10 +503,22 @@ export class Stomach {
     this.esophagusMaterial = createOrganMaterial(palette);
     this.esophagusMaterial.uniforms.uGhost.value = 1;
     this.esophagusMaterial.depthWrite = false;
-    const esophagus = new THREE.Mesh(new THREE.TubeGeometry(this.esophagusPath, 60, 0.0078, 10, false), this.esophagusMaterial);
+    const esophagus = new THREE.Mesh(
+      new THREE.TubeGeometry(this.esophagusPath, 60, 0.0078, 10, false),
+      this.esophagusMaterial,
+    );
     esophagus.renderOrder = 6;
 
-    this.group.add(contentsOutline, this.pieceOutlines, this.pieces, this.contents, esophagus, this.wall, this.fibres.object, this.bands.object);
+    this.group.add(
+      contentsOutline,
+      this.pieceOutlines,
+      this.pieces,
+      this.contents,
+      esophagus,
+      this.wall,
+      this.fibres.object,
+      this.bands.object,
+    );
     this.scale = this.scaleFor(this.volume);
     this.shape(this.scale, 0, 0, 0);
     this.writeWall();
@@ -514,7 +555,10 @@ export class Stomach {
   }
 
   private levelFor(volumeMl: number) {
-    const fill = Math.max(0, Math.min(1, (volumeMl - STOMACH.restingVolumeMl) / (STOMACH.fullnessMl - STOMACH.restingVolumeMl)));
+    const fill = Math.max(
+      0,
+      Math.min(1, (volumeMl - STOMACH.restingVolumeMl) / (STOMACH.fullnessMl - STOMACH.restingVolumeMl)),
+    );
     let bottom = Infinity;
     for (let j = 0; j <= RINGS; j++) {
       const o = j * 3;
@@ -596,7 +640,11 @@ export class Stomach {
     for (let j = fromRing + 1; j <= toRing; j++) {
       const a = (j - 1) * 3;
       const b = j * 3;
-      total += Math.hypot(this.ringCenter[b] - this.ringCenter[a], this.ringCenter[b + 1] - this.ringCenter[a + 1], this.ringCenter[b + 2] - this.ringCenter[a + 2]);
+      total += Math.hypot(
+        this.ringCenter[b] - this.ringCenter[a],
+        this.ringCenter[b + 1] - this.ringCenter[a + 1],
+        this.ringCenter[b + 2] - this.ringCenter[a + 2],
+      );
     }
     return total;
   }
@@ -662,7 +710,14 @@ export class Stomach {
   }
 
   // Volume drives shape directly: cut the stomach open at 17:00 and what you see is the model's millilitres.
-  update(dt: number, volumeMl: number, tint: THREE.Color, slowWavesPerMin: number, items: StomachItem[], emptyingKcalPerMin: number) {
+  update(
+    dt: number,
+    volumeMl: number,
+    tint: THREE.Color,
+    slowWavesPerMin: number,
+    items: StomachItem[],
+    emptyingKcalPerMin: number,
+  ) {
     const still = this.motion.matches;
     this.volume += (volumeMl - this.volume) * (1 - Math.exp(-dt * SMOOTH_RATE));
     this.tint.lerp(tint, 1 - Math.exp(-dt * SMOOTH_RATE));
@@ -674,7 +729,8 @@ export class Stomach {
 
     const food = smoothstep(this.volume, 60, 200);
     const strength = THREE.MathUtils.lerp(0.35, 1, food);
-    const open = smoothstep(wavePhase, GATE.opensAt, GATE.wideAt) * (1 - smoothstep(wavePhase, GATE.narrowsAt, GATE.closedAt));
+    const open =
+      smoothstep(wavePhase, GATE.opensAt, GATE.wideAt) * (1 - smoothstep(wavePhase, GATE.narrowsAt, GATE.closedAt));
     const drive = Math.max(smoothstep(emptyingKcalPerMin, 0, 3), 0.5 * food);
 
     this.shape(this.scale, crest, strength, open * drive);
@@ -690,7 +746,8 @@ export class Stomach {
     this.contentsMaterial.uniforms.uGhost.value = 1;
     this.contentsMaterial.uniforms.uFill.value = 0.5;
     this.contents.visible = smoothstep(this.volume, 60, 130) > 0.02;
-    this.contentsOutlineMaterial.uniforms.uOpacity.value = 0.32 * this.contentsMaterial.uniforms.uOpacity.value * (this.contents.visible ? 1 : 0);
+    this.contentsOutlineMaterial.uniforms.uOpacity.value =
+      0.32 * this.contentsMaterial.uniforms.uOpacity.value * (this.contents.visible ? 1 : 0);
   }
 
   private writeWall() {
@@ -714,9 +771,16 @@ export class Stomach {
     for (let j = 0; j <= RINGS; j++) {
       const o = j * 3;
       for (let i = 0; i < RADIAL; i++) {
-        p[w++] = this.ringCenter[o] + this.ringHalf[o] * COS[i] * CONTENTS_INSET + this.ringDepth[o] * SIN[i] * CONTENTS_INSET;
-        p[w++] = this.ringCenter[o + 1] + this.ringHalf[o + 1] * COS[i] * CONTENTS_INSET + this.ringDepth[o + 1] * SIN[i] * CONTENTS_INSET;
-        p[w++] = this.ringCenter[o + 2] + this.ringHalf[o + 2] * COS[i] * CONTENTS_INSET + this.ringDepth[o + 2] * SIN[i] * CONTENTS_INSET;
+        p[w++] =
+          this.ringCenter[o] + this.ringHalf[o] * COS[i] * CONTENTS_INSET + this.ringDepth[o] * SIN[i] * CONTENTS_INSET;
+        p[w++] =
+          this.ringCenter[o + 1] +
+          this.ringHalf[o + 1] * COS[i] * CONTENTS_INSET +
+          this.ringDepth[o + 1] * SIN[i] * CONTENTS_INSET;
+        p[w++] =
+          this.ringCenter[o + 2] +
+          this.ringHalf[o + 2] * COS[i] * CONTENTS_INSET +
+          this.ringDepth[o + 2] * SIN[i] * CONTENTS_INSET;
       }
     }
     let firstWet = -1;
@@ -806,7 +870,11 @@ export class Stomach {
     this.matrix.compose(position, spin, this.scaleVector.set(radius, radius * 0.82, radius * 0.72));
     this.pieces.setMatrixAt(n, this.matrix);
     this.pieces.setColorAt(n, color);
-    this.matrix.compose(position, spin, this.scaleVector.set(radius * PIECE_OUTLINE, radius * 0.82 * PIECE_OUTLINE, radius * 0.72 * PIECE_OUTLINE));
+    this.matrix.compose(
+      position,
+      spin,
+      this.scaleVector.set(radius * PIECE_OUTLINE, radius * 0.82 * PIECE_OUTLINE, radius * 0.72 * PIECE_OUTLINE),
+    );
     this.pieceOutlines.setMatrixAt(n, this.matrix);
   }
 

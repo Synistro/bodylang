@@ -29,7 +29,12 @@ export interface BuildParts {
 const git = (cwd: string, ...args: string[]) => run("git", args, { cwd }).then((result) => result.stdout);
 
 function defaultParts(): BuildParts {
-  return { repo: process.cwd(), buildsFolder: join(process.env.BODYLANG_DATA ?? join(homedir(), ".bodylang"), "builds"), session: async (context) => (await import("./extendSession")).claudeSession(context), suite: fullSuite };
+  return {
+    repo: process.cwd(),
+    buildsFolder: join(process.env.BODYLANG_DATA ?? join(homedir(), ".bodylang"), "builds"),
+    session: async (context) => (await import("./extendSession")).claudeSession(context),
+    suite: fullSuite,
+  };
 }
 
 let building: { status: BuildStatus; abort: AbortController } | null = null;
@@ -45,12 +50,16 @@ function dismissBuild() {
 
 // A dev server that restarts mid-build leaves its copy behind. A running build of this server is left alone.
 async function removeLeftovers({ repo, buildsFolder }: BuildParts) {
-  const left = readdirSync(buildsFolder).filter((name) => WORKTREE_NAME.test(name) && !name.includes(`-${process.pid}-`));
+  const left = readdirSync(buildsFolder).filter(
+    (name) => WORKTREE_NAME.test(name) && !name.includes(`-${process.pid}-`),
+  );
   for (const name of left) await removeWorktree(repo, join(buildsFolder, name));
 }
 
 async function removeWorktree(repo: string, worktree: string) {
-  await git(repo, "worktree", "remove", "--force", worktree).catch(() => rmSync(worktree, { recursive: true, force: true }));
+  await git(repo, "worktree", "remove", "--force", worktree).catch(() =>
+    rmSync(worktree, { recursive: true, force: true }),
+  );
   await git(repo, "worktree", "prune").catch(() => undefined);
 }
 
@@ -69,7 +78,12 @@ async function landFiles(repo: string, worktree: string, paths: string[], messag
 
 // Everything between the request and the commit. Whatever happens, the copy is removed, and the only
 // thing that ever reaches the real repository is the two files of a build that passed.
-export async function runBuild(request: BuildRequest, parts: BuildParts, notify: (status: BuildStatus) => void, signal: AbortSignal): Promise<BuildStatus> {
+export async function runBuild(
+  request: BuildRequest,
+  parts: BuildParts,
+  notify: (status: BuildStatus) => void,
+  signal: AbortSignal,
+): Promise<BuildStatus> {
   const { id, title } = request;
   const say = (stage: BuildStage, message: string | null = null): BuildStatus => {
     const status = { id, title, stage, message };
@@ -89,7 +103,10 @@ export async function runBuild(request: BuildRequest, parts: BuildParts, notify:
     if (signal.aborted) return say("stopped");
 
     say("final");
-    const changed = (await git(worktree, "status", "--porcelain", "--untracked-files=all")).split("\n").filter(Boolean).map((line) => line.slice(3));
+    const changed = (await git(worktree, "status", "--porcelain", "--untracked-files=all"))
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => line.slice(3));
     const expected = [processPath(id), testPath(id)];
     const extra = changed.filter((path) => !expected.includes(path));
     if (extra.length) return say("failed", `It changed files it shouldn't have: ${extra.join(", ")}.`);
@@ -115,10 +132,23 @@ const firstLine = (text: string) => text.split("\n").find((line) => line.trim())
 export type StartResult = { started: true } | { started: false; reason: string };
 
 // One at a time. The answer goes back to the chat, which only tells the person.
-export function startBuild(request: BuildRequest, notify: (status: BuildStatus) => void, parts: BuildParts = defaultParts()): StartResult {
-  if (building) return { started: false, reason: `${building.status.title} is still being added. Only one can be built at a time.` };
-  if (!ID.test(request.id) || RESERVED.has(request.id)) return { started: false, reason: `The id "${request.id}" must be lowercase letters and underscores, and not one of ${[...RESERVED].join(", ")}.` };
-  if (existsSync(join(parts.repo, processPath(request.id)))) return { started: false, reason: `${request.title} already exists, as ext:${request.id}.` };
+export function startBuild(
+  request: BuildRequest,
+  notify: (status: BuildStatus) => void,
+  parts: BuildParts = defaultParts(),
+): StartResult {
+  if (building)
+    return {
+      started: false,
+      reason: `${building.status.title} is still being added. Only one can be built at a time.`,
+    };
+  if (!ID.test(request.id) || RESERVED.has(request.id))
+    return {
+      started: false,
+      reason: `The id "${request.id}" must be lowercase letters and underscores, and not one of ${[...RESERVED].join(", ")}.`,
+    };
+  if (existsSync(join(parts.repo, processPath(request.id))))
+    return { started: false, reason: `${request.title} already exists, as ext:${request.id}.` };
   const abort = new AbortController();
   building = { status: { id: request.id, title: request.title, stage: "writing", message: null }, abort };
   void runBuild(request, parts, notify, abort.signal).finally(() => {

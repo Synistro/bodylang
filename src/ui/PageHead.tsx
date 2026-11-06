@@ -29,15 +29,25 @@ export function PageHead() {
     const assessment = assessmentAt(day, minute);
     if (focus === "muscle" && focusMuscle) {
       const story = muscleStory(focusMuscle, day, muscleAt);
-      return { title: MUSCLE_LABEL[focusMuscle], sentence: story.doing, origin: modelOrigin(story.evidence, story.source) };
+      return {
+        title: MUSCLE_LABEL[focusMuscle],
+        sentence: story.doing,
+        origin: modelOrigin(story.evidence, story.source),
+      };
     }
-    if (focus === "brain") return { title: systemById("brain").title, sentence: assessment.systems.brain.sentence, origin: SENTENCE_ORIGIN };
+    if (focus === "brain")
+      return { title: systemById("brain").title, sentence: assessment.systems.brain.sentence, origin: SENTENCE_ORIGIN };
     if (focus) {
       const story = organStory(focus, day, minute);
       return { title: ORGAN_NAME[focus], sentence: story.doing, origin: modelOrigin(story.evidence, story.source) };
     }
     if (process) return { title: process.title, sentence: process.headline, origin: processOrigin(day, process) };
-    if (system !== "overview") return { title: systemById(system).title, sentence: assessment.systems[system].sentence, origin: SENTENCE_ORIGIN };
+    if (system !== "overview")
+      return {
+        title: systemById(system).title,
+        sentence: assessment.systems[system].sentence,
+        origin: SENTENCE_ORIGIN,
+      };
     return { title: null, sentence: assessment.headline, origin: SENTENCE_ORIGIN };
   };
   const { title, sentence, origin } = headIn(tr);

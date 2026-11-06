@@ -13,9 +13,24 @@ import { createStream, Placer } from "./stream";
 type Setting = (typeof fatCloseup.keys)[number];
 
 const CELLS = [
-  { x: 54, y: 62, r: 25 }, { x: 108, y: 54, r: 24 }, { x: 36, y: 116, r: 24 }, { x: 88, y: 110, r: 27 }, { x: 142, y: 102, r: 24 }, { x: 62, y: 158, r: 22 }, { x: 118, y: 156, r: 24 },
+  { x: 54, y: 62, r: 25 },
+  { x: 108, y: 54, r: 24 },
+  { x: 36, y: 116, r: 24 },
+  { x: 88, y: 110, r: 27 },
+  { x: 142, y: 102, r: 24 },
+  { x: 62, y: 158, r: 22 },
+  { x: 118, y: 156, r: 24 },
 ];
-const BLOOD = vessel({ id: "blood", radius: 5, points: [[188, -4], [194, 60], [186, 120], [192, 184]] });
+const BLOOD = vessel({
+  id: "blood",
+  radius: 5,
+  points: [
+    [188, -4],
+    [194, 60],
+    [186, 120],
+    [192, 184],
+  ],
+});
 const RELEASING_MOST_PER_SECOND = 1.2;
 
 // Between the vessel and one cell, in whichever direction fat is going.
@@ -61,19 +76,39 @@ const Drawing = memo(function Drawing() {
           </g>
         </g>
       ))}
-      <g data-part="taking-in">{Array.from({ length: 16 }, (_, k) => <circle key={k} data-part="fat-in" className="flow-dot" r="1.5" />)}</g>
-      <g data-part="releasing">{Array.from({ length: 6 }, (_, k) => <circle key={k} data-part="fat-out" className="flow-dot" r="1.5" />)}</g>
-      <text x="232" y="172" textAnchor="end">Your blood</text>
+      <g data-part="taking-in">
+        {Array.from({ length: 16 }, (_, k) => (
+          <circle key={k} data-part="fat-in" className="flow-dot" r="1.5" />
+        ))}
+      </g>
+      <g data-part="releasing">
+        {Array.from({ length: 6 }, (_, k) => (
+          <circle key={k} data-part="fat-out" className="flow-dot" r="1.5" />
+        ))}
+      </g>
+      <text x="232" y="172" textAnchor="end">
+        Your blood
+      </text>
     </>
   );
 });
 
 function useFatPlate({ trajectory: tr, t }: InsetProps, levels: Levels<Setting>): PlateWords {
   // The droplets stop at their fullest, and blood fat can go past that after a very fatty meal.
-  const over = levels.taking_in < 1 ? levels.taking_in * FAT_OVER.full : Math.max(FAT_OVER.full, value(tr, "tg", t) - tr.anthro.baselineTg);
+  const over =
+    levels.taking_in < 1
+      ? levels.taking_in * FAT_OVER.full
+      : Math.max(FAT_OVER.full, value(tr, "tg", t) - tr.anthro.baselineTg);
   const stored = value(tr, "fatStoredG", t);
-  const caption = over > FAT_OVER.storingFrom ? `Taking in fat: blood fat ${Math.round(over)} mg/dL over rest` : "Releasing a little fat for fuel";
-  return { caption, note: stored >= 1 ? { text: `Stored today: ${Math.round(stored)} g` } : undefined, describe: `Fat cells beside a blood vessel, taking in meal fat or releasing it as fuel. ${caption}.` };
+  const caption =
+    over > FAT_OVER.storingFrom
+      ? `Taking in fat: blood fat ${Math.round(over)} mg/dL over rest`
+      : "Releasing a little fat for fuel";
+  return {
+    caption,
+    note: stored >= 1 ? { text: `Stored today: ${Math.round(stored)} g` } : undefined,
+    describe: `Fat cells beside a blood vessel, taking in meal fat or releasing it as fuel. ${caption}.`,
+  };
 }
 
 export const FatInset = closeupInset(fatCloseup, { Drawing, paint: paintFat, usePlate: useFatPlate });

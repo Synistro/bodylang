@@ -14,7 +14,8 @@ export const uterusCloseup = defineCloseup({
     hormones: "How much estrogen and progesterone is arriving at the lining in the blood",
   },
   fromModel: ({ trajectory: { cycle } }, minute) => {
-    if (!cycle) return { lining: CYCLE.lining.least, shedding: 0, hormones: HORMONES_WITH_NO_CYCLE / UTERUS_HORMONES_FULL };
+    if (!cycle)
+      return { lining: CYCLE.lining.least, shedding: 0, hormones: HORMONES_WITH_NO_CYCLE / UTERUS_HORMONES_FULL };
     const { estradiol, progesterone } = hormonesAt(cycle, minute);
     return {
       lining: liningShare(cycle, minute),

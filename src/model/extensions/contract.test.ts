@@ -21,15 +21,40 @@ const sample: ProcessExtension = {
       headline: level > 0.5 ? "High this morning." : "Low for now.",
       here: level > 0.1 ? "target" : null,
       stops: [
-        { id: "source", organ: "brain", label: "Source", reading: `${Math.round(level * 100)}%`, share: level, flow: level, say: "It starts here.", routes: [] },
-        { id: "target", organ: "liver", label: "Target", reading: `${Math.round(view.value("glucose", minute))} mg/dL`, share: level / 2, flow: level, say: "It ends here.", routes: ["carotid"] },
+        {
+          id: "source",
+          organ: "brain",
+          label: "Source",
+          reading: `${Math.round(level * 100)}%`,
+          share: level,
+          flow: level,
+          say: "It starts here.",
+          routes: [],
+        },
+        {
+          id: "target",
+          organ: "liver",
+          label: "Target",
+          reading: `${Math.round(view.value("glucose", minute))} mg/dL`,
+          share: level / 2,
+          flow: level,
+          say: "It ends here.",
+          routes: ["carotid"],
+        },
       ],
     };
   },
 };
 
-const withAt = (at: (minute: number) => ExtensionState): ProcessExtension => ({ ...sample, at: (_, minute) => at(minute) });
-const good = (minute: number) => sample.at({ value: () => 90, body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, restingBpm: 65, events: [] }, minute);
+const withAt = (at: (minute: number) => ExtensionState): ProcessExtension => ({
+  ...sample,
+  at: (_, minute) => at(minute),
+});
+const good = (minute: number) =>
+  sample.at(
+    { value: () => 90, body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, restingBpm: 65, events: [] },
+    minute,
+  );
 
 describe("the contract for a new process", () => {
   it("passes a good one", () => {
@@ -47,7 +72,12 @@ describe("the contract for a new process", () => {
 
   it("rejects something that never changes", () => {
     const still = good(480);
-    expect(checkExtension(withAt(() => still), "sample").join()).toMatch(/Nothing changes across the day/);
+    expect(
+      checkExtension(
+        withAt(() => still),
+        "sample",
+      ).join(),
+    ).toMatch(/Nothing changes across the day/);
   });
 
   it("rejects one that throws, and says when", () => {
@@ -59,35 +89,58 @@ describe("the contract for a new process", () => {
   });
 
   it("rejects numbers outside the scale", () => {
-    const wild = withAt((minute) => ({ ...good(minute), stops: good(minute).stops.map((stop) => ({ ...stop, share: 2 })) }));
+    const wild = withAt((minute) => ({
+      ...good(minute),
+      stops: good(minute).stops.map((stop) => ({ ...stop, share: 2 })),
+    }));
     expect(checkExtension(wild, "sample").join()).toMatch(/share is 2/);
   });
 
   it("rejects a broken number in its words", () => {
-    const nan = withAt((minute) => ({ ...good(minute), stops: good(minute).stops.map((stop) => ({ ...stop, reading: `${NaN} ng/dL` })) }));
+    const nan = withAt((minute) => ({
+      ...good(minute),
+      stops: good(minute).stops.map((stop) => ({ ...stop, reading: `${NaN} ng/dL` })),
+    }));
     expect(checkExtension(nan, "sample").join()).toMatch(/broken number/);
   });
 
   it("rejects a route or organ that doesn't exist", () => {
-    const lost = withAt((minute) => ({ ...good(minute), stops: good(minute).stops.map((stop) => ({ ...stop, routes: ["nowhere" as never] })) }));
+    const lost = withAt((minute) => ({
+      ...good(minute),
+      stops: good(minute).stops.map((stop) => ({ ...stop, routes: ["nowhere" as never] })),
+    }));
     expect(checkExtension(lost, "sample").join()).toMatch(/no route "nowhere"/);
   });
 
   it("wants a path through the vessels", () => {
-    const off = withAt((minute) => ({ ...good(minute), stops: good(minute).stops.map((stop) => ({ ...stop, routes: [] })) }));
+    const off = withAt((minute) => ({
+      ...good(minute),
+      stops: good(minute).stops.map((stop) => ({ ...stop, routes: [] })),
+    }));
     expect(checkExtension(off, "sample").join()).toMatch(/needs a path/);
   });
 
   it("won't let it diagnose, or tell someone what to take", () => {
-    const says = (say: string) => withAt((minute) => ({ ...good(minute), stops: good(minute).stops.map((stop) => ({ ...stop, say })) }));
+    const says = (say: string) =>
+      withAt((minute) => ({ ...good(minute), stops: good(minute).stops.map((stop) => ({ ...stop, say })) }));
     expect(checkExtension(says("You have thyroid disease."), "sample").join()).toMatch(/can't say this/);
     expect(checkExtension(says("You should feel better."), "sample").join()).toMatch(/can't say this/);
     expect(checkExtension(says("Take 2 tablets."), "sample").join()).toMatch(/can't say this/);
   });
 
   it("wants to know where the action is, whenever there is any", () => {
-    expect(checkExtension(withAt((minute) => ({ ...good(minute), active: true, here: null })), "sample").join()).toMatch(/here must name/);
-    expect(checkExtension(withAt((minute) => ({ ...good(minute), active: false, here: "target" })), "sample").join()).toMatch(/here must be null/);
+    expect(
+      checkExtension(
+        withAt((minute) => ({ ...good(minute), active: true, here: null })),
+        "sample",
+      ).join(),
+    ).toMatch(/here must name/);
+    expect(
+      checkExtension(
+        withAt((minute) => ({ ...good(minute), active: false, here: "target" })),
+        "sample",
+      ).join(),
+    ).toMatch(/here must be null/);
   });
 
   it("rejects one that isn't pure", () => {
@@ -102,14 +155,25 @@ describe("what has been added", () => {
     expect(new Set(EXTENSIONS.map((extension) => extension.id)).size).toBe(EXTENSIONS.length);
   });
 
-  it.each(EXTENSIONS.map((extension) => [extension.id, extension] as const))("%s keeps to the contract", (id, extension) => {
-    expect(checkExtension(extension, id)).toEqual([]);
-  });
+  it.each(EXTENSIONS.map((extension) => [extension.id, extension] as const))(
+    "%s keeps to the contract",
+    (id, extension) => {
+      expect(checkExtension(extension, id)).toEqual([]);
+    },
+  );
 
-  it.each(EXTENSIONS.map((extension) => [extension.id, extension] as const))("%s appears as a process, marked as Claude's", (id) => {
-    const tr = simulate({ body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [], activities: [{ from: 0, posture: "sleeping" }], substances: [] });
-    const line = processesAt(tr, 720).find((p) => p.id === `ext:${id}`);
-    expect(line).toBeDefined();
-    if (line) expect(processOrigin(tr, line).kind).toBe("claude");
-  });
+  it.each(EXTENSIONS.map((extension) => [extension.id, extension] as const))(
+    "%s appears as a process, marked as Claude's",
+    (id) => {
+      const tr = simulate({
+        body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+        intakes: [],
+        activities: [{ from: 0, posture: "sleeping" }],
+        substances: [],
+      });
+      const line = processesAt(tr, 720).find((p) => p.id === `ext:${id}`);
+      expect(line).toBeDefined();
+      if (line) expect(processOrigin(tr, line).kind).toBe("claude");
+    },
+  );
 });

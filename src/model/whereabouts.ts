@@ -28,7 +28,11 @@ const PLACE_LABEL: Record<string, { label: string; organ: OrganId | null }> = {
 function stillMoving(tr: Trajectory, intake: Intake, t: number): boolean {
   const food = ledgerAt(tr, intake.id, t);
   const caffeine = caffeineLedgerAt(tr, intake.id, t);
-  return (food ? food.stomach + food.intestine + food.blood : 0) > foodKcalOf(intake) * PROCESS.heldInStomachShare || (caffeine ? caffeine.stomach + caffeine.intestine + caffeine.blood : 0) > intake.caffeineMg * PROCESS.heldInStomachShare;
+  return (
+    (food ? food.stomach + food.intestine + food.blood : 0) > foodKcalOf(intake) * PROCESS.heldInStomachShare ||
+    (caffeine ? caffeine.stomach + caffeine.intestine + caffeine.blood : 0) >
+      intake.caffeineMg * PROCESS.heldInStomachShare
+  );
 }
 
 // "Where is my pizza right now?" — reads straight from the model's conserved ledgers.
@@ -40,19 +44,31 @@ export function whereabouts(tr: Trajectory, t: number): Whereabouts[] {
     const kcal = foodKcalOf(intake);
     const caffeine = caffeineLedgerAt(tr, intake.id, t);
     if (caffeine && kcal < 30) {
-      const places = (["stomach", "intestine", "blood", "cleared"] as const).map((key) => ({ key, amount: caffeine[key] }));
+      const places = (["stomach", "intestine", "blood", "cleared"] as const).map((key) => ({
+        key,
+        amount: caffeine[key],
+      }));
       out.push(entry(intake.id, intake.label, intake.at, "mg", caffeine.dose, places));
       continue;
     }
     const l = ledgerAt(tr, intake.id, t);
     if (!l) continue;
-    const places = (["stomach", "intestine", "blood", "liver", "muscle", "fat", "burned", "colon"] as const).map((key) => ({ key, amount: l[key] }));
+    const places = (["stomach", "intestine", "blood", "liver", "muscle", "fat", "burned", "colon"] as const).map(
+      (key) => ({ key, amount: l[key] }),
+    );
     out.push(entry(intake.id, intake.label, intake.at, "kcal", kcal, places));
   }
   return out;
 }
 
-function entry(id: string, label: string, at: number, unit: "kcal" | "mg", total: number, places: { key: string; amount: number }[]): Whereabouts {
+function entry(
+  id: string,
+  label: string,
+  at: number,
+  unit: "kcal" | "mg",
+  total: number,
+  places: { key: string; amount: number }[],
+): Whereabouts {
   return {
     id,
     label,
@@ -83,7 +99,11 @@ export function arrivingFoods(tr: Trajectory, t: number, nutrient: "carbs" | "fa
     if (!flows) return 0;
     return nutrient === "carbs" ? flows.carbsAbsorbedPerMin : flows.fatAbsorbedPerMin;
   };
-  return contributors(tr.scenario.intakes.filter((i) => i.at <= t), rateOf, PROCESS.arrivingAboveGPerMin);
+  return contributors(
+    tr.scenario.intakes.filter((i) => i.at <= t),
+    rateOf,
+    PROCESS.arrivingAboveGPerMin,
+  );
 }
 
 export function foodsInStomach(tr: Trajectory, t: number): string[] {
@@ -91,5 +111,9 @@ export function foodsInStomach(tr: Trajectory, t: number): string[] {
     const held = ledgerAt(tr, intake.id, t)?.stomach ?? 0;
     return held > foodKcalOf(intake) * PROCESS.heldInStomachShare ? held : 0;
   };
-  return contributors(tr.scenario.intakes.filter((i) => i.at <= t), rateOf, 1);
+  return contributors(
+    tr.scenario.intakes.filter((i) => i.at <= t),
+    rateOf,
+    1,
+  );
 }

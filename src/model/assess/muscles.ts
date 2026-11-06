@@ -55,7 +55,9 @@ export function muscleSummaries(c: Context): MuscleSummary[] {
 
 export function muscleReading(summary: MuscleSummary, c: Context): Reading {
   const r = REFERENCE.muscleState;
-  const change = muscleLevel(muscleStateAt(c.tr.muscleEvents, summary.group, c.t + 30)) - muscleLevel(muscleStateAt(c.tr.muscleEvents, summary.group, c.t - 30));
+  const change =
+    muscleLevel(muscleStateAt(c.tr.muscleEvents, summary.group, c.t + 30)) -
+    muscleLevel(muscleStateAt(c.tr.muscleEvents, summary.group, c.t - 30));
   const worked = startedMuscleEvents(c).filter((e) => e.muscles.some((m) => m.group === summary.group));
   const last = worked.length ? worked[worked.length - 1] : null;
   const rested = summary.status === RESTED;
@@ -77,7 +79,8 @@ export function muscleReading(summary: MuscleSummary, c: Context): Reading {
     unit: "",
     trend: change > 0.01 ? "rising" : change < -0.01 ? "falling" : "steady",
     scale: { min: 0, max: 100, typicalLow: 0, typicalHigh: 100, typicalLabel: "Fully rested at the left" },
-    heading: peakAt !== null && peakAt > c.t ? muscleStateAt(c.tr.muscleEvents, summary.group, peakAt).soreness * 100 : null,
+    heading:
+      peakAt !== null && peakAt > c.t ? muscleStateAt(c.tr.muscleEvents, summary.group, peakAt).soreness * 100 : null,
     verdict: rested ? "normal" : "expected",
     verdictWord: summary.status,
     tone,

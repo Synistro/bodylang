@@ -9,7 +9,8 @@ export function smoothstep(from: number, to: number, x: number) {
 export const bump = (x: number, center: number, width: number) => Math.exp(-(((x - center) / width) ** 2));
 
 // Frame-rate independent easing, so a jump on the timeline reads as the organ responding.
-export const easeToward = (current: number, target: number, dt: number, rate: number) => current + (target - current) * (1 - Math.exp(-dt * rate));
+export const easeToward = (current: number, target: number, dt: number, rate: number) =>
+  current + (target - current) * (1 - Math.exp(-dt * rate));
 
 // One decimal is finer than a pixel at this size and keeps path strings short.
 export const tenth = (x: number) => String(Math.round(x * 10) / 10);
@@ -48,7 +49,13 @@ export function sampleTube(control: TubePoint[], samples: number): TubeSample[] 
     const i = Math.min(control.length - 2, Math.floor(position));
     const k = position - i;
     const [a, b, c, d] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
-    points.push({ x: catmullRom(a.x, b.x, c.x, d.x, k), y: catmullRom(a.y, b.y, c.y, d.y, k), r: Math.max(0, catmullRom(a.r, b.r, c.r, d.r, k)), nx: 0, ny: 0 });
+    points.push({
+      x: catmullRom(a.x, b.x, c.x, d.x, k),
+      y: catmullRom(a.y, b.y, c.y, d.y, k),
+      r: Math.max(0, catmullRom(a.r, b.r, c.r, d.r, k)),
+      nx: 0,
+      ny: 0,
+    });
   }
   points.forEach((p, j) => {
     const before = points[Math.max(0, j - 1)];
@@ -70,7 +77,8 @@ export interface Polyline {
 
 export function polyline(points: { x: number; y: number }[]): Polyline {
   const lengths = [0];
-  for (let i = 1; i < points.length; i++) lengths.push(lengths[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
+  for (let i = 1; i < points.length; i++)
+    lengths.push(lengths[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
   return { points, lengths, total: lengths[lengths.length - 1] };
 }
 
@@ -89,4 +97,5 @@ export function part<T extends Element>(root: Element, name: string): T {
   return found;
 }
 
-export const parts = <T extends Element>(root: Element, name: string): T[] => Array.from(root.querySelectorAll<T>(`[data-part="${name}"]`));
+export const parts = <T extends Element>(root: Element, name: string): T[] =>
+  Array.from(root.querySelectorAll<T>(`[data-part="${name}"]`));

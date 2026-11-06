@@ -41,7 +41,8 @@ export interface MuscleAsset {
 
 export async function loadMuscles(): Promise<MuscleAsset> {
   const [metaResponse, binResponse] = await Promise.all([fetch("assets/muscles.json"), fetch("assets/muscles.bin")]);
-  if (!metaResponse.ok || !binResponse.ok) throw new Error(`Could not load muscles: ${metaResponse.status}/${binResponse.status}`);
+  if (!metaResponse.ok || !binResponse.ok)
+    throw new Error(`Could not load muscles: ${metaResponse.status}/${binResponse.status}`);
   const [meta, bin]: [MuscleMeta, ArrayBuffer] = await Promise.all([metaResponse.json(), binResponse.arrayBuffer()]);
   return { meta, bin };
 }
@@ -415,7 +416,10 @@ function buildSection(bin: ArrayBuffer, section: MeshSectionMeta, quant: number)
   const skinWeight = new Uint8Array(bin, section.skinWeight, section.vertexCount * 4);
   geometry.setAttribute("skinIndex", new THREE.Uint8BufferAttribute(skinIndex, 4));
   geometry.setAttribute("skinWeight", new THREE.Uint8BufferAttribute(skinWeight, 4, true));
-  geometry.setAttribute("aShade", new THREE.Uint8BufferAttribute(new Uint8Array(bin, section.shade, section.vertexCount), 1, true));
+  geometry.setAttribute(
+    "aShade",
+    new THREE.Uint8BufferAttribute(new Uint8Array(bin, section.shade, section.vertexCount), 1, true),
+  );
   geometry.setIndex(new THREE.BufferAttribute(index, 1));
   return { geometry, male, female, skinIndex, skinWeight };
 }
@@ -498,12 +502,18 @@ export class Muscles {
       return bone;
     });
     const toVectors = (rows: number[][]) => rows.map((r) => new THREE.Vector3().fromArray(r));
-    this.referenceJoints = { male: toVectors(meta.referenceJoints.male), female: toVectors(meta.referenceJoints.female) };
+    this.referenceJoints = {
+      male: toVectors(meta.referenceJoints.male),
+      female: toVectors(meta.referenceJoints.female),
+    };
     this.childOf = meta.joints.map((name) => {
       const child = BONE_CHILD[name];
       return child === undefined ? -1 : meta.joints.indexOf(child);
     });
-    this.skeleton = new THREE.Skeleton(this.bones, this.bones.map(() => new THREE.Matrix4()));
+    this.skeleton = new THREE.Skeleton(
+      this.bones,
+      this.bones.map(() => new THREE.Matrix4()),
+    );
     this.offsets = this.bones.map(() => new THREE.Matrix4());
 
     const groupCount = meta.groups.length;
@@ -527,8 +537,14 @@ export class Muscles {
     this.muscleSection = buildSection(bin, meta.muscles, meta.quant);
     const muscleGeometry = this.muscleSection.geometry;
     const count = meta.muscles.vertexCount;
-    muscleGeometry.setAttribute("aGroup", new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.muscles.group, count), 1));
-    muscleGeometry.setAttribute("aTendon", new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.muscles.tendon, count), 1, true));
+    muscleGeometry.setAttribute(
+      "aGroup",
+      new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.muscles.group, count), 1),
+    );
+    muscleGeometry.setAttribute(
+      "aTendon",
+      new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.muscles.tendon, count), 1, true),
+    );
     const fibreQuantized = new Int16Array(bin, meta.muscles.fibre, count);
     const fibre = new Float32Array(count);
     for (let i = 0; i < count; i++) fibre[i] = fibreQuantized[i] / meta.muscles.fibreQuant;
@@ -538,7 +554,8 @@ export class Muscles {
     const vertexGroup = new Uint8Array(bin, meta.muscles.group, count);
     const allTriangles = new Uint16Array(bin, meta.muscles.index, meta.muscles.indexCount);
     const byGroup: number[][] = meta.groups.map(() => []);
-    for (let t = 0; t < allTriangles.length; t += 3) byGroup[vertexGroup[allTriangles[t]]].push(allTriangles[t], allTriangles[t + 1], allTriangles[t + 2]);
+    for (let t = 0; t < allTriangles.length; t += 3)
+      byGroup[vertexGroup[allTriangles[t]]].push(allTriangles[t], allTriangles[t + 1], allTriangles[t + 2]);
     this.groupTriangles = byGroup.map((triangles) => Uint16Array.from(triangles));
     this.drawnIndex = new Uint16Array(allTriangles.length);
     muscleGeometry.setIndex(new THREE.BufferAttribute(this.drawnIndex, 1).setUsage(THREE.DynamicDrawUsage));
@@ -586,7 +603,11 @@ export class Muscles {
       },
     });
     this.muscleDepthMaterial = this.depthMaterial(shared);
-    this.muscleMeshes = this.addMeshes(muscleGeometry, [this.muscleDepthMaterial, this.muscleMaterial, this.muscleOutlineMaterial]);
+    this.muscleMeshes = this.addMeshes(muscleGeometry, [
+      this.muscleDepthMaterial,
+      this.muscleMaterial,
+      this.muscleOutlineMaterial,
+    ]);
     this.setDrawOrder(this.muscleMeshes, ORDER.muscles);
 
     // Bones.
@@ -627,7 +648,11 @@ export class Muscles {
       },
     });
     this.boneDepthMaterial = this.depthMaterial(shared);
-    this.boneMeshes = this.addMeshes(boneSection.geometry, [this.boneDepthMaterial, this.boneMaterial, this.boneOutlineMaterial]);
+    this.boneMeshes = this.addMeshes(boneSection.geometry, [
+      this.boneDepthMaterial,
+      this.boneMaterial,
+      this.boneOutlineMaterial,
+    ]);
 
     this.applyPalette(palette);
 
@@ -717,10 +742,18 @@ export class Muscles {
 
     const focusNamed = input.focus !== null;
     this.groupNames.forEach((name, i) => {
-      const shown = name === null ? 0 : input.shown[name] ?? 0;
+      const shown = name === null ? 0 : (input.shown[name] ?? 0);
       const hovered = name !== null && name === input.hover;
-      this.opacities[i] = this.approach(this.opacities[i], Math.max(input.visible, shown, hovered ? LOOK.hoverShown : 0), k);
-      this.fills[i] = this.approach(this.fills[i], name !== null && !hovered && input.outlined.includes(name) ? 0 : 1, k);
+      this.opacities[i] = this.approach(
+        this.opacities[i],
+        Math.max(input.visible, shown, hovered ? LOOK.hoverShown : 0),
+        k,
+      );
+      this.fills[i] = this.approach(
+        this.fills[i],
+        name !== null && !hovered && input.outlined.includes(name) ? 0 : 1,
+        k,
+      );
       const level = name === null ? undefined : input.levels[name];
       this.amounts[i] += ((level ? level.amount : 0) - this.amounts[i]) * k;
       if (level) this.tints[i].lerp(level.color, k);
@@ -768,14 +801,16 @@ export class Muscles {
   // World position of a group under the current pose. Paired groups sit on one side.
   anchorOf(group: MuscleGroup, out: THREE.Vector3, side: BodySide = "left"): THREE.Vector3 {
     const anchor = this.asset.meta.anchors[group];
-    for (let j = 0; j < this.bones.length; j++) this.offsets[j].multiplyMatrices(this.bones[j].matrixWorld, this.skeleton.boneInverses[j]);
+    for (let j = 0; j < this.bones.length; j++)
+      this.offsets[j].multiplyMatrices(this.bones[j].matrixWorld, this.skeleton.boneInverses[j]);
     return this.posedVertex(side === "left" ? anchor.left : anchor.right, out);
   }
 
   // What a ray meets first among the groups on screen, tested against a posed scatter of points near the skin.
   pick(raycaster: THREE.Raycaster): MusclePick | null {
     if (!this.opacities.some((opacity) => opacity >= LOOK.pickableFrom)) return null;
-    for (let j = 0; j < this.bones.length; j++) this.offsets[j].multiplyMatrices(this.bones[j].matrixWorld, this.skeleton.boneInverses[j]);
+    for (let j = 0; j < this.bones.length; j++)
+      this.offsets[j].multiplyMatrices(this.bones[j].matrixWorld, this.skeleton.boneInverses[j]);
     const { origin, direction } = raycaster.ray;
     const scale = this.height / this.mixedHeight();
     const radius = this.asset.meta.pick.radius * scale;
@@ -798,12 +833,19 @@ export class Muscles {
     const { male, female, skinIndex, skinWeight } = this.muscleSection;
     const i = vertex * 3;
     const m = this.sexMix;
-    scratch.rest.set(male[i] * (1 - m) + female[i] * m, male[i + 1] * (1 - m) + female[i + 1] * m, male[i + 2] * (1 - m) + female[i + 2] * m);
+    scratch.rest.set(
+      male[i] * (1 - m) + female[i] * m,
+      male[i + 1] * (1 - m) + female[i + 1] * m,
+      male[i + 2] * (1 - m) + female[i + 2] * m,
+    );
     out.set(0, 0, 0);
     for (let k = 0; k < 4; k++) {
       const weight = skinWeight[vertex * 4 + k];
       if (weight === 0) break; // weights are stored heaviest first
-      out.addScaledVector(scratch.a.copy(scratch.rest).applyMatrix4(this.offsets[skinIndex[vertex * 4 + k]]), weight / 255);
+      out.addScaledVector(
+        scratch.a.copy(scratch.rest).applyMatrix4(this.offsets[skinIndex[vertex * 4 + k]]),
+        weight / 255,
+      );
     }
     return out;
   }
@@ -821,7 +863,8 @@ export class Muscles {
     const m = this.sexMix;
     const across = this.acrossScale();
     const current = this.figure.restJoints;
-    const reference = (joint: number, out: THREE.Vector3) => out.copy(this.referenceJoints.male[joint]).lerp(this.referenceJoints.female[joint], m);
+    const reference = (joint: number, out: THREE.Vector3) =>
+      out.copy(this.referenceJoints.male[joint]).lerp(this.referenceJoints.female[joint], m);
     for (let i = 0; i < this.bones.length; i++) {
       const J = reference(i, scratch.a);
       const inverse = this.skeleton.boneInverses[i];
@@ -844,10 +887,22 @@ export class Muscles {
         const e12 = d * y * z;
         const e22 = across + d * z * z;
         inverse.set(
-          e00, e01, e02, -(e00 * J.x + e01 * J.y + e02 * J.z),
-          e01, e11, e12, -(e01 * J.x + e11 * J.y + e12 * J.z),
-          e02, e12, e22, -(e02 * J.x + e12 * J.y + e22 * J.z),
-          0, 0, 0, 1,
+          e00,
+          e01,
+          e02,
+          -(e00 * J.x + e01 * J.y + e02 * J.z),
+          e01,
+          e11,
+          e12,
+          -(e01 * J.x + e11 * J.y + e12 * J.z),
+          e02,
+          e12,
+          e22,
+          -(e02 * J.x + e12 * J.y + e22 * J.z),
+          0,
+          0,
+          0,
+          1,
         );
       } else {
         const s = this.height / this.mixedHeight();

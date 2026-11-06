@@ -14,16 +14,60 @@ const DAYTIME = [
   { from: 450, posture: "sitting" },
 ] as Scenario["activities"];
 
-const food = (id: string, at: number, parts: Partial<Intake> = {}): Intake => ({ id, label: id, at, grams: 100, waterMl: 50, carbsG: 30, sugarG: 5, fatG: 10, proteinG: 10, fiberG: 2, caffeineMg: 0, alcoholG: 0, liquid: false, ...parts });
-const day = (parts: Partial<Scenario>): Scenario => ({ body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], ...parts });
-const training = (id: string, from: number, until: number | null, group: "chest" | "back" | "quads") => ({ id, label: id, preset: "training" as const, from, until, intensity: 0.8, muscles: [{ group, load: 1 }], symptoms: [], custom: null, source: "" });
+const food = (id: string, at: number, parts: Partial<Intake> = {}): Intake => ({
+  id,
+  label: id,
+  at,
+  grams: 100,
+  waterMl: 50,
+  carbsG: 30,
+  sugarG: 5,
+  fatG: 10,
+  proteinG: 10,
+  fiberG: 2,
+  caffeineMg: 0,
+  alcoholG: 0,
+  liquid: false,
+  ...parts,
+});
+const day = (parts: Partial<Scenario>): Scenario => ({
+  body: BODY,
+  intakes: [],
+  activities: DAYTIME,
+  substances: [],
+  events: [],
+  ...parts,
+});
+const training = (id: string, from: number, until: number | null, group: "chest" | "back" | "quads") => ({
+  id,
+  label: id,
+  preset: "training" as const,
+  from,
+  until,
+  intensity: 0.8,
+  muscles: [{ group, load: 1 }],
+  symptoms: [],
+  custom: null,
+  source: "",
+});
 
-const start: BodyState = { day: { body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], cycle: null, assumptions: {} }, now: 1020, view: { system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null } };
+const start: BodyState = {
+  day: { body: BODY, intakes: [], activities: DAYTIME, substances: [], events: [], cycle: null, assumptions: {} },
+  now: 1020,
+  view: { system: "overview", process: null, focus: null, focusMuscle: null, whatIf: null },
+};
 const apply = (state: BodyState, action: Action) => reduce(state, action);
 
 describe("a meal with a drink in it", () => {
   it("keeps the food's thread when the meal includes alcohol", () => {
-    const tr = simulate(day({ intakes: [food("pizza", 1000), food("beer", 1002, { liquid: true, carbsG: 13, sugarG: 0, fatG: 0, proteinG: 2, fiberG: 0, alcoholG: 14 })] }));
+    const tr = simulate(
+      day({
+        intakes: [
+          food("pizza", 1000),
+          food("beer", 1002, { liquid: true, carbsG: 13, sugarG: 0, fatG: 0, proteinG: 2, fiberG: 0, alcoholG: 14 }),
+        ],
+      }),
+    );
     const titles = threadsAt(tr, 1020).map((t) => t.title);
     expect(titles.some((t) => t.includes("pizza"))).toBe(true);
     expect(titles.some((t) => t.includes("beer"))).toBe(true);
@@ -47,7 +91,15 @@ describe("a selected process whose id goes away", () => {
   });
 
   it("never loses a process just because the time changed", () => {
-    const tr = simulate(day({ intakes: [food("pizza", 1000), food("coffee", 510, { liquid: true, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 95 })], events: [training("legs", 540, 600, "quads")] }));
+    const tr = simulate(
+      day({
+        intakes: [
+          food("pizza", 1000),
+          food("coffee", 510, { liquid: true, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 95 }),
+        ],
+        events: [training("legs", 540, 600, "quads")],
+      }),
+    );
     const ids = processesAt(tr, 1020).map((p) => p.id);
     for (let t = 0; t <= 1799; t += 30) expect(processesAt(tr, t).map((p) => p.id)).toEqual(ids);
   });
@@ -57,11 +109,21 @@ describe("what the muscle sentences name", () => {
   const sentence = (scenario: Scenario, t: number) => assess(simulate(scenario), t).systems.muscles.sentence;
 
   it("names only what is working now", () => {
-    expect(sentence(day({ events: [training("legs", -1440, -1380, "quads"), training("chest", 1000, 1060, "chest")] }), 1030)).toBe("Your chest is working.");
+    expect(
+      sentence(
+        day({ events: [training("legs", -1440, -1380, "quads"), training("chest", 1000, 1060, "chest")] }),
+        1030,
+      ),
+    ).toBe("Your chest is working.");
   });
 
   it("leaves out a session that faded long ago", () => {
-    expect(sentence(day({ events: [training("back", -20160, -20100, "back"), training("chest", 1000, 1060, "chest")] }), 1030)).toBe("Your chest is working.");
+    expect(
+      sentence(
+        day({ events: [training("back", -20160, -20100, "back"), training("chest", 1000, 1060, "chest")] }),
+        1030,
+      ),
+    ).toBe("Your chest is working.");
   });
 
   it("names a group once across two sessions", () => {
@@ -78,7 +140,21 @@ describe("what the muscle sentences name", () => {
 
 describe("an event's end", () => {
   it("refuses a time before the event started", () => {
-    const logged = apply(start, { name: "log_event", args: { id: "cold", label: "Cold", preset: "illness", from: 600, until: null, intensity: 0.5, muscles: [], symptoms: ["fever"], custom: null, source: "" } });
+    const logged = apply(start, {
+      name: "log_event",
+      args: {
+        id: "cold",
+        label: "Cold",
+        preset: "illness",
+        from: 600,
+        until: null,
+        intensity: 0.5,
+        muscles: [],
+        symptoms: ["fever"],
+        custom: null,
+        source: "",
+      },
+    });
     expect(() => apply(logged, { name: "end_event", args: { id: "cold", at: 300 } })).toThrow(/can't end/);
     expect(apply(logged, { name: "end_event", args: { id: "cold", at: 700 } }).day.events[0].until).toBe(700);
   });
@@ -98,7 +174,18 @@ describe("a span that ends after bedtime", () => {
 });
 
 describe("extreme inputs", () => {
-  const dose = (tmaxMin: number, halfLifeH: number) => ({ id: "x", label: "X", at: 600, doseMg: 100, tmaxMin, halfLifeH, volumeLPerKg: 1, bioavailability: 1, targets: [], source: "" });
+  const dose = (tmaxMin: number, halfLifeH: number) => ({
+    id: "x",
+    label: "X",
+    at: 600,
+    doseMg: 100,
+    tmaxMin,
+    halfLifeH,
+    volumeLPerKg: 1,
+    bioavailability: 1,
+    targets: [],
+    source: "",
+  });
 
   it.each([
     [1, 2],

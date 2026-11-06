@@ -24,30 +24,118 @@ import { stomachCloseup } from "./stomach";
 import { uterusCloseup } from "./uterus";
 
 const nothing = { waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const meal: Intake = { ...nothing, id: "lunch", label: "Lunch", at: 13 * 60, grams: 400, waterMl: 200, carbsG: 90, sugarG: 15, fatG: 25, proteinG: 30, fiberG: 6 };
-const coffee: Intake = { ...nothing, id: "coffee", label: "Coffee", at: 9 * 60, grams: 240, waterMl: 240, caffeineMg: 150 };
+const meal: Intake = {
+  ...nothing,
+  id: "lunch",
+  label: "Lunch",
+  at: 13 * 60,
+  grams: 400,
+  waterMl: 200,
+  carbsG: 90,
+  sugarG: 15,
+  fatG: 25,
+  proteinG: 30,
+  fiberG: 6,
+};
+const coffee: Intake = {
+  ...nothing,
+  id: "coffee",
+  label: "Coffee",
+  at: 9 * 60,
+  grams: 240,
+  waterMl: 240,
+  caffeineMg: 150,
+};
 const bigDrink: Intake = { ...nothing, id: "water", label: "Water", at: 10 * 60, grams: 1000, waterMl: 1000 };
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
 const woman = { sex: "female", age: 30, heightCm: 165, weightKg: 60 } as const;
-const awake = [{ from: -1440, posture: "sleeping" as const }, { from: 8 * 60, posture: "sitting" as const }];
+const awake = [
+  { from: -1440, posture: "sleeping" as const },
+  { from: 8 * 60, posture: "sitting" as const },
+];
 const day: Scenario = { body, activities: awake, substances: [], intakes: [coffee, meal], events: [] };
 const place: { trajectory: Trajectory; muscle: null } = { trajectory: simulate(day), muscle: null };
-const running = simulate({ ...day, activities: [...awake, { from: 17 * 60, posture: "running" }, { from: 18 * 60, posture: "sitting" }] });
+const running = simulate({
+  ...day,
+  activities: [...awake, { from: 17 * 60, posture: "running" }, { from: 18 * 60, posture: "sitting" }],
+});
 
-const event = (over: Partial<BodyEvent> & Pick<BodyEvent, "preset" | "from">): BodyEvent => ({ id: over.preset, label: over.preset, until: null, intensity: 0.8, muscles: [], symptoms: [], custom: null, source: "", ...over });
-const coughingFlu = simulate({ ...day, intakes: [], events: [event({ preset: "illness", from: 6 * 60, symptoms: ["fever", "cough"] })] });
-const flu = simulate({ ...day, intakes: [], events: [event({ preset: "illness", from: 6 * 60, symptoms: ["fever"] })] });
+const event = (over: Partial<BodyEvent> & Pick<BodyEvent, "preset" | "from">): BodyEvent => ({
+  id: over.preset,
+  label: over.preset,
+  until: null,
+  intensity: 0.8,
+  muscles: [],
+  symptoms: [],
+  custom: null,
+  source: "",
+  ...over,
+});
+const coughingFlu = simulate({
+  ...day,
+  intakes: [],
+  events: [event({ preset: "illness", from: 6 * 60, symptoms: ["fever", "cough"] })],
+});
+const flu = simulate({
+  ...day,
+  intakes: [],
+  events: [event({ preset: "illness", from: 6 * 60, symptoms: ["fever"] })],
+});
 const drinking = simulate({ ...day, intakes: [bigDrink] });
-const afterSex = simulate({ ...day, intakes: [], events: [event({ preset: "sex", from: 21 * 60, until: 21 * 60 + 25 })] });
-const cycling = simulate({ body: woman, activities: awake, substances: [], intakes: [], events: [], cycle: { start: 0, lengthDays: 28, periodDays: 5 } });
+const afterSex = simulate({
+  ...day,
+  intakes: [],
+  events: [event({ preset: "sex", from: 21 * 60, until: 21 * 60 + 25 })],
+});
+const cycling = simulate({
+  body: woman,
+  activities: awake,
+  substances: [],
+  intakes: [],
+  events: [],
+  cycle: { start: 0, lengthDays: 28, periodDays: 5 },
+});
 const inCycle = (days: number) => days * 1440;
 
 const on = (trajectory: Trajectory) => ({ trajectory, muscle: null });
 
-const FROM_THE_DAY = [brainCloseup, stomachCloseup, smallIntestineCloseup, pancreasCloseup, heartCloseup, liverCloseup, lungsCloseup, kidneysCloseup, bladderCloseup, largeIntestineCloseup, fatCloseup, spleenCloseup, uterusCloseup, ovariesCloseup, prostateCloseup];
+const FROM_THE_DAY = [
+  brainCloseup,
+  stomachCloseup,
+  smallIntestineCloseup,
+  pancreasCloseup,
+  heartCloseup,
+  liverCloseup,
+  lungsCloseup,
+  kidneysCloseup,
+  bladderCloseup,
+  largeIntestineCloseup,
+  fatCloseup,
+  spleenCloseup,
+  uterusCloseup,
+  ovariesCloseup,
+  prostateCloseup,
+];
 
 // Kept as an object so a new organ doesn't compile until it is added here.
-const EVERY_ORGAN = Object.keys({ brain: 1, heart: 1, lungs: 1, liver: 1, stomach: 1, pancreas: 1, spleen: 1, small_intestine: 1, large_intestine: 1, kidneys: 1, bladder: 1, muscle: 1, fat: 1, uterus: 1, ovaries: 1, prostate: 1 } satisfies Record<OrganId, number>) as OrganId[];
+const EVERY_ORGAN = Object.keys({
+  brain: 1,
+  heart: 1,
+  lungs: 1,
+  liver: 1,
+  stomach: 1,
+  pancreas: 1,
+  spleen: 1,
+  small_intestine: 1,
+  large_intestine: 1,
+  kidneys: 1,
+  bladder: 1,
+  muscle: 1,
+  fat: 1,
+  uterus: 1,
+  ovaries: 1,
+  prostate: 1,
+} satisfies Record<OrganId, number>) as OrganId[];
 
 describe("what each close-up reads from the model", () => {
   it("keeps every level between 0 and 1 all day, whatever the day holds", () => {
@@ -108,7 +196,10 @@ describe("what each close-up reads from the model", () => {
     expect(at(14 * 60).releasing).toBeLessThan(at(12 * 60).releasing);
     expect(liverCloseup.fromModel(on(running), 17 * 60 + 30).releasing).toBeGreaterThan(at(17 * 60 + 30).releasing * 2);
     expect(at(12 * 60).store * LIVER_FULL.glycogenG).toBeCloseTo(place.trajectory.series.liverGlycogen[12 * 60], 3);
-    expect(at(12 * 60).releasing * LIVER_FULL.sugarGPerMin).toBeCloseTo(place.trajectory.series.hepaticOutputGMin[12 * 60], 5);
+    expect(at(12 * 60).releasing * LIVER_FULL.sugarGPerMin).toBeCloseTo(
+      place.trajectory.series.hepaticOutputGMin[12 * 60],
+      5,
+    );
   });
 
   it("liver: the fastest flows in any of these days stay on the scale, so the words beside them stay true", () => {
@@ -139,7 +230,10 @@ describe("what each close-up reads from the model", () => {
     expect(at(drinking, 11 * 60).urine).toBeGreaterThan(at(place.trajectory, 11 * 60).urine * 2);
     expect(at(running, 17 * 60 + 30).blood).toBeLessThan(at(place.trajectory, 17 * 60 + 30).blood / 2);
     const { bladderMl } = place.trajectory.series;
-    expect(at(place.trajectory, 11 * 60).urine * KIDNEY_FULL.urineMlPerMin).toBeCloseTo(bladderMl[11 * 60 + 1] - bladderMl[11 * 60], 3);
+    expect(at(place.trajectory, 11 * 60).urine * KIDNEY_FULL.urineMlPerMin).toBeCloseTo(
+      bladderMl[11 * 60 + 1] - bladderMl[11 * 60],
+      3,
+    );
   });
 
   it("bladder: fills through the morning and empties when you go, and more urine arrives after a big drink", () => {
@@ -224,7 +318,11 @@ describe("what each close-up reads from the model", () => {
 });
 
 describe("what travels on the body", () => {
-  const joints = (JSON.parse(readFileSync(new URL("../../public/assets/body.json", import.meta.url), "utf8")) as { joints: { name: string }[] }).joints.map((joint) => joint.name);
+  const joints = (
+    JSON.parse(readFileSync(new URL("../../public/assets/body.json", import.meta.url), "utf8")) as {
+      joints: { name: string }[];
+    }
+  ).joints.map((joint) => joint.name);
 
   it("names only levels, organs and joints that exist", () => {
     for (const organ of EVERY_ORGAN) {
@@ -239,7 +337,8 @@ describe("what travels on the body", () => {
 
   it("always starts or ends at the place the close-up shows", () => {
     for (const organ of EVERY_ORGAN) {
-      for (const travel of Object.values(closeupOf(organ)?.travels ?? {})) expect([travel?.from, travel?.to]).toContain("here");
+      for (const travel of Object.values(closeupOf(organ)?.travels ?? {}))
+        expect([travel?.from, travel?.to]).toContain("here");
     }
   });
 

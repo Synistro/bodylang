@@ -23,5 +23,6 @@ export const muscleCloseup = defineCloseup({
     pain: { kind: "nerve", from: "here", through: ["hips", "chest", "neck"], to: "brain" },
     immune: { kind: "blood", from: "heart", through: ["hips"], to: "here" },
   },
-  about: "The model has one curve for soreness, so the immune cells, fluid and nerve signals drawn here all follow it. The drawing isn't to scale.",
+  about:
+    "The model has one curve for soreness, so the immune cells, fluid and nerve signals drawn here all follow it. The drawing isn't to scale.",
 });

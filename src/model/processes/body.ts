@@ -15,7 +15,8 @@ export function insulinProcess(tr: Trajectory, t: number): Process {
   const mgDl = v("glucose");
   const mmol = (x: number) => (x / REFERENCE.mgDlPerMmolGlucose).toFixed(1);
   const posture = postureAt(tr, t);
-  const rising = value(tr, "glucose", t + REFERENCE.trendWindowMin) - value(tr, "glucose", t - REFERENCE.trendWindowMin) > 1;
+  const rising =
+    value(tr, "glucose", t + REFERENCE.trendWindowMin) - value(tr, "glucose", t - REFERENCE.trendWindowMin) > 1;
   const toMuscle = v("muscleUptakeGMin");
   const fromInsulin = v("insulinUptakeGMin") * GLUCOSE.muscleShare;
   const pulledByWork = toMuscle - fromInsulin;
@@ -41,7 +42,10 @@ export function insulinProcess(tr: Trajectory, t: number): Process {
       reading: `${mmol(mgDl)} mmol/L`,
       share: clamp01((mgDl - tr.anthro.baselineGlucose) / PROCESS.sugarExcessFullMgDl),
       flow: flowRate(v("glucoseAbsorbMgMin") / 1000, full),
-      say: active && peak.ahead && peak.value - mgDl >= 2 ? `Blood sugar is ${mmol(mgDl)} mmol/L, heading for ${mmol(peak.value)} near ${clock(peak.at)}. This rise starts the loop.` : `Blood sugar is ${mmol(mgDl)} mmol/L. Your body holds it near ${mmol(tr.anthro.baselineGlucose)}.`,
+      say:
+        active && peak.ahead && peak.value - mgDl >= 2
+          ? `Blood sugar is ${mmol(mgDl)} mmol/L, heading for ${mmol(peak.value)} near ${clock(peak.at)}. This rise starts the loop.`
+          : `Blood sugar is ${mmol(mgDl)} mmol/L. Your body holds it near ${mmol(tr.anthro.baselineGlucose)}.`,
       routes: [],
     },
     {
@@ -51,7 +55,9 @@ export function insulinProcess(tr: Trajectory, t: number): Process {
       reading: `${fold.toFixed(1)}×`,
       share: clamp01((fold - 1) / (REFERENCE.insulin.afterFoodTypicalFold.high - 1)),
       flow: flowRate(v("insulinSecretion"), PROCESS.fullFlow.insulinSecretion),
-      say: insulinUp ? `Your pancreas senses the sugar and releases insulin, now ${fold.toFixed(1)} times its resting level.` : "Your pancreas keeps a trickle of insulin going, waiting for sugar to rise.",
+      say: insulinUp
+        ? `Your pancreas senses the sugar and releases insulin, now ${fold.toFixed(1)} times its resting level.`
+        : "Your pancreas keeps a trickle of insulin going, waiting for sugar to rise.",
       routes: ["arch", "descending", "to_gut"],
     },
     {
@@ -61,7 +67,9 @@ export function insulinProcess(tr: Trajectory, t: number): Process {
       reading: gPerHour(toLiver),
       share: shareOf(toLiver, leaving),
       flow: flowRate(toLiver, full),
-      say: notable(toLiver) ? `Insulin reaches your liver first. It stores ${gPerHour(toLiver)} of sugar and cuts its own release to ${gPerHour(v("hepaticOutputGMin"))}.` : `Your liver is releasing sugar, ${gPerHour(v("hepaticOutputGMin"))}, from ${Math.round(v("liverGlycogen"))} g of glycogen.`,
+      say: notable(toLiver)
+        ? `Insulin reaches your liver first. It stores ${gPerHour(toLiver)} of sugar and cuts its own release to ${gPerHour(v("hepaticOutputGMin"))}.`
+        : `Your liver is releasing sugar, ${gPerHour(v("hepaticOutputGMin"))}, from ${Math.round(v("liverGlycogen"))} g of glycogen.`,
       routes: ["pancreas_portal"],
     },
     {
@@ -71,7 +79,12 @@ export function insulinProcess(tr: Trajectory, t: number): Process {
       reading: gPerHour(toMuscle),
       share: shareOf(toMuscle, leaving),
       flow: flowRate(toMuscle, full),
-      say: moving || notableWork ? `Moving muscles pull sugar in with little insulin, ${gPerHour(toMuscle)} right now.` : notable(toMuscle) ? `Insulin opens your muscles to sugar. They take ${gPerHour(toMuscle)}${posture === "sitting" ? " while you sit, far more if you walk" : ""}.` : "Your muscles are taking almost no sugar. Insulin or movement would open them.",
+      say:
+        moving || notableWork
+          ? `Moving muscles pull sugar in with little insulin, ${gPerHour(toMuscle)} right now.`
+          : notable(toMuscle)
+            ? `Insulin opens your muscles to sugar. They take ${gPerHour(toMuscle)}${posture === "sitting" ? " while you sit, far more if you walk" : ""}.`
+            : "Your muscles are taking almost no sugar. Insulin or movement would open them.",
       from: "liver",
       routes: ["liver_out", "arch", "descending", "leg_L"],
     },
@@ -82,20 +95,31 @@ export function insulinProcess(tr: Trajectory, t: number): Process {
       reading: gPerHour(toFat),
       share: shareOf(toFat, leaving),
       flow: flowRate(toFat, full),
-      say: insulinUp ? `Fat tissue takes a small share, ${gPerHour(toFat)}. Insulin also tells it to hold its fat.` : "With insulin at rest, your fat tissue releases a little fat for fuel.",
+      say: insulinUp
+        ? `Fat tissue takes a small share, ${gPerHour(toFat)}. Insulin also tells it to hold its fat.`
+        : "With insulin at rest, your fat tissue releases a little fat for fuel.",
       from: "liver",
       routes: ["liver_out", "arch", "descending"],
     },
   ];
 
   let here: string | null = null;
-  if (active) here = rising && fold < PROCESS.insulinStartingFold ? "pancreas" : toLiver >= toMuscle ? "liver" : "muscle";
+  if (active)
+    here = rising && fold < PROCESS.insulinStartingFold ? "pancreas" : toLiver >= toMuscle ? "liver" : "muscle";
   const headline = !active
     ? "Insulin is at rest. Your liver keeps your blood sugar steady"
     : rising
       ? `Insulin is ${fold.toFixed(1)}× rest and climbing, following your blood sugar`
       : `Insulin at ${fold.toFixed(1)}× is bringing sugar down, ${Math.round(fromInsulin * 60)} g/h into muscle, ${Math.round(toLiver * 60)} into liver`;
-  return { id: "insulin", title: "Insulin", system: "energy", substance: "insulin", active, headline, stops: numbered(stops, here, "ahead", true) };
+  return {
+    id: "insulin",
+    title: "Insulin",
+    system: "energy",
+    substance: "insulin",
+    active,
+    headline,
+    stops: numbered(stops, here, "ahead", true),
+  };
 }
 
 function fatTotals(tr: Trajectory, t: number) {
@@ -116,12 +140,17 @@ function fatTotals(tr: Trajectory, t: number) {
 
 export function fatRouteProcess(tr: Trajectory, t: number): Process {
   const fat = fatTotals(tr, t);
-  const clearingPerMin = Math.max(0, (fatTotals(tr, t + PROCESS.flowWindowMin).cleared - fatTotals(tr, t - PROCESS.flowWindowMin).cleared) / (PROCESS.flowWindowMin * 2));
+  const clearingPerMin = Math.max(
+    0,
+    (fatTotals(tr, t + PROCESS.flowWindowMin).cleared - fatTotals(tr, t - PROCESS.flowWindowMin).cleared) /
+      (PROCESS.flowWindowMin * 2),
+  );
   const full = PROCESS.fullFlow.fatGPerMin;
   const tg = value(tr, "tg", t);
   const peak = peakAfter(tr, "tg", t, DAY.minutes);
   const grams = (x: number) => `${x >= 10 ? Math.round(x) : x.toFixed(1)} g`;
-  const peaking = peak.ahead && peak.value - tg >= 3 ? `, heading for ${Math.round(peak.value)} near ${clock(peak.at)}` : "";
+  const peaking =
+    peak.ahead && peak.value - tg >= 3 ? `, heading for ${Math.round(peak.value)} near ${clock(peak.at)}` : "";
   const gPerHour = fat.absorbingPerMin * 60;
 
   const stops: Draft[] = [
@@ -132,7 +161,10 @@ export function fatRouteProcess(tr: Trajectory, t: number): Process {
       reading: grams(fat.gut),
       share: shareOf(fat.gut, fat.eaten),
       flow: flowRate(fat.absorbingPerMin, full),
-      say: fat.eaten > 0 ? `Fat needs bile and enzymes to cross the gut wall, so it moves slowly. ${grams(fat.gut)} here, ${grams(fat.stomach)} waiting in your stomach.` : "Fat needs bile and enzymes to cross the gut wall, so it moves slowly.",
+      say:
+        fat.eaten > 0
+          ? `Fat needs bile and enzymes to cross the gut wall, so it moves slowly. ${grams(fat.gut)} here, ${grams(fat.stomach)} waiting in your stomach.`
+          : "Fat needs bile and enzymes to cross the gut wall, so it moves slowly.",
       routes: ["stomach_out", "duodenum", "jejunum"],
     },
     {
@@ -163,7 +195,10 @@ export function fatRouteProcess(tr: Trajectory, t: number): Process {
       reading: grams(fat.cleared),
       share: shareOf(fat.cleared, fat.eaten),
       flow: flowRate(clearingPerMin, full),
-      say: fat.cleared >= 0.5 ? `Your fat tissue pulls it out of your blood. ${grams(fat.cleared)} so far, mostly stored, a little burned.` : "Your fat tissue pulls meal fat out of your blood and stores most of it.",
+      say:
+        fat.cleared >= 0.5
+          ? `Your fat tissue pulls it out of your blood. ${grams(fat.cleared)} so far, mostly stored, a little burned.`
+          : "Your fat tissue pulls meal fat out of your blood and stores most of it.",
       routes: ["arch", "descending"],
     },
   ];
@@ -183,7 +218,15 @@ export function fatRouteProcess(tr: Trajectory, t: number): Process {
         : fat.stomach >= fat.eaten * 0.5
           ? `${grams(fat.stomach)} of ${grams(fat.eaten)} still in your stomach, reaching your blood hours after the sugar`
           : `${grams(fat.blood)} in your blood${peaking}`;
-  return { id: "fat-route", title: "Fat route", system: "energy", substance: "fat", active, headline, stops: numbered(stops, here, fat.eaten > 0 ? "passed" : "ahead") };
+  return {
+    id: "fat-route",
+    title: "Fat route",
+    system: "energy",
+    substance: "fat",
+    active,
+    headline,
+    stops: numbered(stops, here, fat.eaten > 0 ? "passed" : "ahead"),
+  };
 }
 
 interface BloodBranch {
@@ -196,10 +239,43 @@ interface BloodBranch {
 }
 
 const BLOOD_BRANCHES: BloodBranch[] = [
-  { id: "gut", organ: "small_intestine", label: "Gut", series: "flowGut", routes: ["arch", "descending", "to_gut"], note: ({ moving, digesting }) => (moving ? `Down from ${percent(BLOOD_FLOW.rest.gut)} at rest, because working muscle takes the blood.` : digesting ? `Up from ${percent(BLOOD_FLOW.rest.gut)} at rest, to carry away what you absorb.` : "Its usual share at rest.") },
-  { id: "muscle", organ: "muscle", label: "Muscle", series: "flowMuscle", routes: ["arch", "descending", "leg_L", "leg_R"], note: ({ moving }) => (moving ? "Working muscles open their vessels wide." : "Resting muscle needs little.") },
-  { id: "brain", organ: "brain", label: "Brain", series: "flowBrain", routes: ["arch", "carotid"], note: () => "Your brain's supply barely changes." },
-  { id: "kidneys", organ: "kidneys", label: "Kidneys", series: "flowKidneys", routes: ["arch", "descending", "to_kidney_L", "to_kidney_R"], note: () => "They filter it and send waste to your bladder." },
+  {
+    id: "gut",
+    organ: "small_intestine",
+    label: "Gut",
+    series: "flowGut",
+    routes: ["arch", "descending", "to_gut"],
+    note: ({ moving, digesting }) =>
+      moving
+        ? `Down from ${percent(BLOOD_FLOW.rest.gut)} at rest, because working muscle takes the blood.`
+        : digesting
+          ? `Up from ${percent(BLOOD_FLOW.rest.gut)} at rest, to carry away what you absorb.`
+          : "Its usual share at rest.",
+  },
+  {
+    id: "muscle",
+    organ: "muscle",
+    label: "Muscle",
+    series: "flowMuscle",
+    routes: ["arch", "descending", "leg_L", "leg_R"],
+    note: ({ moving }) => (moving ? "Working muscles open their vessels wide." : "Resting muscle needs little."),
+  },
+  {
+    id: "brain",
+    organ: "brain",
+    label: "Brain",
+    series: "flowBrain",
+    routes: ["arch", "carotid"],
+    note: () => "Your brain's supply barely changes.",
+  },
+  {
+    id: "kidneys",
+    organ: "kidneys",
+    label: "Kidneys",
+    series: "flowKidneys",
+    routes: ["arch", "descending", "to_kidney_L", "to_kidney_R"],
+    note: () => "They filter it and send waste to your bladder.",
+  },
 ];
 
 export function circulationProcess(tr: Trajectory, t: number): Process {
@@ -233,8 +309,20 @@ export function circulationProcess(tr: Trajectory, t: number): Process {
     })),
   ];
   const here = moving ? "muscle" : digesting ? "gut" : "heart";
-  const headline = moving ? `${percent(v("flowMuscle"))} of your blood is going to your muscles` : digesting ? `${percent(v("flowGut"))} of your blood is going to your gut, up from ${percent(BLOOD_FLOW.rest.gut)} at rest` : `Your heart moves ${output.toFixed(1)} L a minute, shared out the usual way`;
-  return { id: "circulation", title: "Blood flow", system: "circulation", substance: "other", active: true, headline, stops: numbered(stops, here, "ahead", true) };
+  const headline = moving
+    ? `${percent(v("flowMuscle"))} of your blood is going to your muscles`
+    : digesting
+      ? `${percent(v("flowGut"))} of your blood is going to your gut, up from ${percent(BLOOD_FLOW.rest.gut)} at rest`
+      : `Your heart moves ${output.toFixed(1)} L a minute, shared out the usual way`;
+  return {
+    id: "circulation",
+    title: "Blood flow",
+    system: "circulation",
+    substance: "other",
+    active: true,
+    headline,
+    stops: numbered(stops, here, "ahead", true),
+  };
 }
 
 export function alertnessProcess(tr: Trajectory, t: number): Process {
@@ -251,7 +339,10 @@ export function alertnessProcess(tr: Trajectory, t: number): Process {
   const felt = v("caffeineFelt");
   const working = felt >= PROCESS.caffeineWorkingAboveFelt;
   const blocked = Math.round(occupancy * 100);
-  const drains = v("mealDip") >= PROCESS.mealPullsAlertnessAbove ? "the meal and time awake pull it down" : "time awake pulls it down";
+  const drains =
+    v("mealDip") >= PROCESS.mealPullsAlertnessAbove
+      ? "the meal and time awake pull it down"
+      : "time awake pulls it down";
 
   const stops: Draft[] = [
     {
@@ -261,7 +352,10 @@ export function alertnessProcess(tr: Trajectory, t: number): Process {
       reading: `${mgL.toFixed(2)} mg/L`,
       share: shareOf(totals.blood, totals.dose),
       flow: flowRate(absorbingPerMin, PROCESS.fullFlow.caffeineMgPerMin),
-      say: totals.dose > 0 ? `${mg(totals.blood)} of ${mg(totals.dose)} is still in your blood. Caffeine passes easily into your brain.` : "No caffeine logged.",
+      say:
+        totals.dose > 0
+          ? `${mg(totals.blood)} of ${mg(totals.dose)} is still in your blood. Caffeine passes easily into your brain.`
+          : "No caffeine logged.",
       routes: ["liver_out", "arch"],
     },
     {
@@ -271,7 +365,9 @@ export function alertnessProcess(tr: Trajectory, t: number): Process {
       reading: `${blocked}%`,
       share: occupancy,
       flow: felt,
-      say: working ? `Caffeine sits where the tired signal would land, stopping ${blocked} of every 100. That hides some of your tiredness.` : "Almost none of the tired signal is blocked, so it lands freely.",
+      say: working
+        ? `Caffeine sits where the tired signal would land, stopping ${blocked} of every 100. That hides some of your tiredness.`
+        : "Almost none of the tired signal is blocked, so it lands freely.",
       routes: ["carotid"],
     },
     {
@@ -281,7 +377,9 @@ export function alertnessProcess(tr: Trajectory, t: number): Process {
       reading: levelWord(v("alertness")),
       share: v("alertness"),
       flow: 0,
-      say: asleep ? "You are asleep." : `Your alertness is ${alertWord}. ${working ? `Caffeine holds it up, ${drains}.` : `${startCase(drains)}.`}`,
+      say: asleep
+        ? "You are asleep."
+        : `Your alertness is ${alertWord}. ${working ? `Caffeine holds it up, ${drains}.` : `${startCase(drains)}.`}`,
       routes: [],
     },
     {
@@ -291,12 +389,28 @@ export function alertnessProcess(tr: Trajectory, t: number): Process {
       reading: asleep ? "" : `${awake} awake`,
       share: clamp01(v("sleepPressure") / (PROCESS.sleepPressureFullH * FEEL.sleepPressurePerHour)),
       flow: 0,
-      say: asleep ? "Sleep clears the adenosine you built up during the day." : working ? `Adenosine has built for ${awake}. Caffeine hides it, so you feel it all when caffeine wears off.` : `Adenosine has built for ${awake}. You feel it as tiredness.`,
+      say: asleep
+        ? "Sleep clears the adenosine you built up during the day."
+        : working
+          ? `Adenosine has built for ${awake}. Caffeine hides it, so you feel it all when caffeine wears off.`
+          : `Adenosine has built for ${awake}. You feel it as tiredness.`,
       routes: [],
     },
   ];
-  const headline = asleep ? "Asleep, and clearing the day's tiredness" : working ? `Caffeine hides some of your tiredness after ${awake} awake` : `No caffeine at work, tiredness building after ${awake} awake`;
-  return { id: "alertness", title: "Alertness", system: "brain", substance: "caffeine", active: working, headline, stops: numbered(stops, working ? "caffeine" : null, "ahead", true) };
+  const headline = asleep
+    ? "Asleep, and clearing the day's tiredness"
+    : working
+      ? `Caffeine hides some of your tiredness after ${awake} awake`
+      : `No caffeine at work, tiredness building after ${awake} awake`;
+  return {
+    id: "alertness",
+    title: "Alertness",
+    system: "brain",
+    substance: "caffeine",
+    active: working,
+    headline,
+    stops: numbered(stops, working ? "caffeine" : null, "ahead", true),
+  };
 }
 
 export function clearingProcess(tr: Trajectory, t: number): Process {
@@ -311,7 +425,9 @@ export function clearingProcess(tr: Trajectory, t: number): Process {
   const hasAlcohol = alcohol >= PROCESS.clearingActiveAboveGPerL;
   const hasCaffeine = caffeine >= PROCESS.clearingActiveAboveMgL;
   const minute = Math.max(0, Math.min(DAY.minutes, Math.floor(t)));
-  const substances = [...tr.substances.values()].filter(({ substance, series }) => hasStarted(substance.at, t) && series[minute] >= PROCESS.clearingActiveAboveMgL);
+  const substances = [...tr.substances.values()].filter(
+    ({ substance, series }) => hasStarted(substance.at, t) && series[minute] >= PROCESS.clearingActiveAboveMgL,
+  );
   const full = PROCESS.fullFlow;
   const ml = `${Math.round(bladder / 10) * 10} ml`;
   const urine = `${Math.round(urinePerMin * 60)} ml`;
@@ -323,8 +439,14 @@ export function clearingProcess(tr: Trajectory, t: number): Process {
       label: "Liver",
       reading: hasAlcohol ? `${alcohol.toFixed(2)} g/L` : hasCaffeine ? `${caffeinePerHour.toFixed(1)} mg/h` : "Quiet",
       share: shareOf(totals.cleared, totals.dose),
-      flow: hasAlcohol ? flowRate((ALCOHOL.eliminationGPerLPerH * alcoholVolumeL(tr.scenario.body)) / 60, full.alcoholGPerMin) : flowRate(caffeinePerHour / 60, full.clearedMgPerMin),
-      say: hasAlcohol ? `Your liver is clearing alcohol first, ${alcohol.toFixed(2)} g/L left.` : hasCaffeine ? `Your liver clears about ${caffeinePerHour.toFixed(1)} mg of caffeine an hour, ${caffeine.toFixed(2)} mg/L left.` : "Your liver has little to clear right now.",
+      flow: hasAlcohol
+        ? flowRate((ALCOHOL.eliminationGPerLPerH * alcoholVolumeL(tr.scenario.body)) / 60, full.alcoholGPerMin)
+        : flowRate(caffeinePerHour / 60, full.clearedMgPerMin),
+      say: hasAlcohol
+        ? `Your liver is clearing alcohol first, ${alcohol.toFixed(2)} g/L left.`
+        : hasCaffeine
+          ? `Your liver clears about ${caffeinePerHour.toFixed(1)} mg of caffeine an hour, ${caffeine.toFixed(2)} mg/L left.`
+          : "Your liver has little to clear right now.",
       routes: ["to_liver_art"],
     },
     {
@@ -359,7 +481,15 @@ export function clearingProcess(tr: Trajectory, t: number): Process {
       : substances.length
         ? `Your body is clearing ${inSentence(substances[0].substance.label)}. Your bladder holds ${ml}`
         : `Nothing much to clear. Your bladder holds ${ml}`;
-  return { id: "clearing", title: "Liver and kidneys", system: "clearing", substance: "other", active, headline, stops: numbered(stops, here, "ahead", true) };
+  return {
+    id: "clearing",
+    title: "Liver and kidneys",
+    system: "clearing",
+    substance: "other",
+    active,
+    headline,
+    stops: numbered(stops, here, "ahead", true),
+  };
 }
 
 // ---- Anything else that happened, told through its own stops.
@@ -380,17 +510,26 @@ export function cycleProcess(tr: Trajectory, t: number): Process[] {
       reading: `${Math.round(v("lh"))} IU/L LH`,
       share: Math.min(1, v("lh") / (CYCLE.hormones.lh.base + CYCLE.hormones.lh.surge.amount)),
       flow: phase === "ovulation" ? 1 : QUIET_FLOW,
-      say: phase === "ovulation" ? "A surge of LH from the base of the brain tells the ripest follicle to release its egg." : "The base of the brain keeps releasing a little LH and FSH, which tell the ovaries what to do.",
+      say:
+        phase === "ovulation"
+          ? "A surge of LH from the base of the brain tells the ripest follicle to release its egg."
+          : "The base of the brain keeps releasing a little LH and FSH, which tell the ovaries what to do.",
       routes: [],
     },
     {
       id: "ovaries",
       organ: "ovaries",
       label: "Ovaries",
-      reading: phase === "luteal" ? `${v("progesterone").toFixed(1)} nmol/L progesterone` : `${Math.round(v("estradiol"))} pmol/L estrogen`,
+      reading:
+        phase === "luteal"
+          ? `${v("progesterone").toFixed(1)} nmol/L progesterone`
+          : `${Math.round(v("estradiol"))} pmol/L estrogen`,
       share: lutealShare(cycle, t),
       flow: phase === "period" ? QUIET_FLOW : 0.6,
-      say: phase === "luteal" ? "The follicle that released the egg now makes progesterone, which warms the body a little." : "A growing follicle makes estrogen, which rebuilds the lining of the uterus.",
+      say:
+        phase === "luteal"
+          ? "The follicle that released the egg now makes progesterone, which warms the body a little."
+          : "A growing follicle makes estrogen, which rebuilds the lining of the uterus.",
       routes: ["from_brain", "descending"],
     },
     {
@@ -400,11 +539,26 @@ export function cycleProcess(tr: Trajectory, t: number): Process[] {
       reading: `Day ${cycleDay(cycle, t)}`,
       share: liningShare(cycle, t),
       flow: phase === "period" ? 0.8 : 0.4,
-      say: phase === "period" ? "With progesterone gone, the lining sheds. That is the period." : phase === "luteal" ? "Progesterone keeps the lining ready. If no pregnancy starts, it falls and the lining sheds." : "Estrogen is thickening the lining again.",
+      say:
+        phase === "period"
+          ? "With progesterone gone, the lining sheds. That is the period."
+          : phase === "luteal"
+            ? "Progesterone keeps the lining ready. If no pregnancy starts, it falls and the lining sheds."
+            : "Estrogen is thickening the lining again.",
       routes: [],
     },
   ];
   const here = phase === "period" ? "uterus" : phase === "ovulation" ? "pituitary" : "ovaries";
   const headline = `Day ${cycleDay(cycle, t)} of ${cycle.lengthDays}: ${{ period: "your period", follicular: "the follicular phase", ovulation: "around ovulation", luteal: "the luteal phase" }[phase]}`;
-  return [{ id: "cycle", title: "Menstrual cycle", system: "reproductive", substance: "other", active: true, headline, stops: numbered(stops, here, "ahead", true) }];
+  return [
+    {
+      id: "cycle",
+      title: "Menstrual cycle",
+      system: "reproductive",
+      substance: "other",
+      active: true,
+      headline,
+      stops: numbered(stops, here, "ahead", true),
+    },
+  ];
 }

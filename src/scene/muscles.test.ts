@@ -21,7 +21,15 @@ function muscleAsset(): MuscleAsset {
   return { meta, bin: buffer("public/assets/muscles.bin") };
 }
 
-const QUIET: MuscleInput = { visible: 0, shown: {}, outlined: [], levels: {}, palette: PALETTES.light, hover: null, focus: null };
+const QUIET: MuscleInput = {
+  visible: 0,
+  shown: {},
+  outlined: [],
+  levels: {},
+  palette: PALETTES.light,
+  hover: null,
+  focus: null,
+};
 
 describe("the muscle figure", () => {
   let muscles: Muscles;

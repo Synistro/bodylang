@@ -8,7 +8,9 @@ describe("the food table", () => {
     expect(first("beer")).toMatch(/^Beer/);
     expect(first("coffee brewed")).toMatch(/^Coffee, brewed/);
     expect(first("apple raw")).toMatch(/^Apple/);
-    expect(searchFoods("pizza cheese thin crust").some((food) => /^Pizza, cheese.*thin crust/.test(food.name))).toBe(true);
+    expect(searchFoods("pizza cheese thin crust").some((food) => /^Pizza, cheese.*thin crust/.test(food.name))).toBe(
+      true,
+    );
     expect(first("espresso")).toMatch(/espresso/i);
     expect(first("banana")).toMatch(/^Banana/);
     expect(first("white rice cooked")).toMatch(/rice/i);
@@ -38,10 +40,19 @@ describe("the food table", () => {
   it("adds up a dish from its ingredients", () => {
     const cheese = searchFoods("cottage cheese")[0];
     const flour = searchFoods("wheat flour white")[0];
-    const { nutrients, source } = combineIngredients([{ food: cheese, grams: 120 }, { food: flour, grams: 30 }]);
+    const { nutrients, source } = combineIngredients([
+      { food: cheese, grams: 120 },
+      { food: flour, grams: 30 },
+    ]);
     expect(nutrients.grams).toBe(150);
     expect(nutrients.carbsG).toBeCloseTo(nutrientsOf(cheese, 120).carbsG + nutrientsOf(flour, 30).carbsG);
-    expect(source).toMatchObject({ kind: "recipe", ingredients: [{ fdcId: cheese.fdcId, grams: 120 }, { fdcId: flour.fdcId, grams: 30 }] });
+    expect(source).toMatchObject({
+      kind: "recipe",
+      ingredients: [
+        { fdcId: cheese.fdcId, grams: 120 },
+        { fdcId: flour.fdcId, grams: 30 },
+      ],
+    });
   });
 
   it("describes a food in one line with its id", () => {

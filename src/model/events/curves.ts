@@ -12,7 +12,6 @@ export function illnessSites(events: ResolvedEvent[], t: number, from: number): 
   });
 }
 
-
 // How far along a curve is at minute t, 0 to 1.
 export function curveStrength(curve: Curve, from: number, end: number | null, t: number): number {
   if (curve.after) {
@@ -34,11 +33,20 @@ export function curveStrength(curve: Curve, from: number, end: number | null, t:
 }
 
 // A channel's value from one event at one minute.
-export const effectAt = (event: ResolvedEvent, channel: ChannelId, t: number) => event.effects.reduce((sum, e) => (e.channel === channel ? sum + e.amount * curveStrength(e, event.from, event.ends, t) : sum), 0);
+export const effectAt = (event: ResolvedEvent, channel: ChannelId, t: number) =>
+  event.effects.reduce(
+    (sum, e) => (e.channel === channel ? sum + e.amount * curveStrength(e, event.from, event.ends, t) : sum),
+    0,
+  );
 
 // Channels nothing pushes on share this one array, so a recompute stays cheap with no events.
 // Index 0 is minute `start`, which is before 00:00 today when yesterday is being run first.
-export function channelSeries(events: ResolvedEvent[], minutes: number, bouts: ActivityBout[] = [], start = 0): Record<ChannelId, Float32Array> {
+export function channelSeries(
+  events: ResolvedEvent[],
+  minutes: number,
+  bouts: ActivityBout[] = [],
+  start = 0,
+): Record<ChannelId, Float32Array> {
   const zero = new Float32Array(minutes);
   const series: Record<ChannelId, Float32Array> = {
     heartRate: zero,
@@ -57,17 +65,20 @@ export function channelSeries(events: ResolvedEvent[], minutes: number, bouts: A
     fluidLoss: zero,
     muscleFlow: zero,
   };
-  const sources: { from: number; end: number | null; effects: Effect[] }[] = [...events.map((e) => ({ from: e.from, end: e.ends, effects: e.effects })), ...bouts];
+  const sources: { from: number; end: number | null; effects: Effect[] }[] = [
+    ...events.map((e) => ({ from: e.from, end: e.ends, effects: e.effects })),
+    ...bouts,
+  ];
   for (const source of sources) {
     for (const effect of source.effects) {
       if (series[effect.channel] === zero) series[effect.channel] = new Float32Array(minutes);
       const out = series[effect.channel];
-      for (let i = 0; i < minutes; i++) out[i] += effect.amount * curveStrength(effect, source.from, source.end, i + start);
+      for (let i = 0; i < minutes; i++)
+        out[i] += effect.amount * curveStrength(effect, source.from, source.end, i + start);
     }
   }
   return series;
 }
-
 
 // How much is still going on from this event, 0 to 1. Below the active floor it counts as over.
 export function eventLevelAt(event: ResolvedEvent, t: number): number {
@@ -98,4 +109,5 @@ export function currentStopIndex(event: ResolvedEvent, t: number): number {
 
 const MUSCLE_STATES: readonly (keyof MuscleState)[] = ["work", "fatigue", "soreness", "repair", "glycogenUsed"];
 
-export const isMuscleState = (shows: StopShows): shows is keyof MuscleState => MUSCLE_STATES.some((state) => state === shows);
+export const isMuscleState = (shows: StopShows): shows is keyof MuscleState =>
+  MUSCLE_STATES.some((state) => state === shows);

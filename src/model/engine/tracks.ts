@@ -83,8 +83,11 @@ export const newSubstanceTrack = (substance: CustomSubstance, minutes: number): 
 
 const { carb: CARB, protein: PROTEIN_KCAL, fat: FAT } = KCAL_PER_G;
 
-export const stomachKcalOf = (k: IntakeTrack) => k.stomachCarb * CARB + k.stomachFat * FAT + k.stomachProtein * PROTEIN_KCAL;
+export const stomachKcalOf = (k: IntakeTrack) =>
+  k.stomachCarb * CARB + k.stomachFat * FAT + k.stomachProtein * PROTEIN_KCAL;
 export const gutKcalOf = (k: IntakeTrack) => k.gutCarb * CARB + k.gutFat * FAT + k.gutProtein * PROTEIN_KCAL;
-export const bloodKcalOf = (k: IntakeTrack) => k.bloodGlucoseG * CARB + k.bloodFatG * FAT + k.bloodAminoG * PROTEIN_KCAL;
+export const bloodKcalOf = (k: IntakeTrack) =>
+  k.bloodGlucoseG * CARB + k.bloodFatG * FAT + k.bloodAminoG * PROTEIN_KCAL;
 
-export const heldInGutKcal = (tracks: IntakeTrack[]) => tracks.reduce((sum, k) => sum + stomachKcalOf(k) + gutKcalOf(k), 0);
+export const heldInGutKcal = (tracks: IntakeTrack[]) =>
+  tracks.reduce((sum, k) => sum + stomachKcalOf(k) + gutKcalOf(k), 0);

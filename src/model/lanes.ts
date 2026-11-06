@@ -38,7 +38,12 @@ export interface Lane {
   read: (minute: number) => string; // what is there at that minute, with its unit or in words
   mark: { at: number; text: string; over: boolean } | null; // over: the thing has ended here, so nothing is drawn after it
   beyond: string | null; // said at the right edge when the end falls past the drawn day
-  target: { kind: "process"; id: string } | { kind: "organ"; organ: OrganId } | { kind: "muscle"; group: MuscleGroup } | { kind: "stop"; number: number } | null;
+  target:
+    | { kind: "process"; id: string }
+    | { kind: "organ"; organ: OrganId }
+    | { kind: "muscle"; group: MuscleGroup }
+    | { kind: "stop"; number: number }
+    | null;
   organ: OrganId | null; // lit on the body while you point at the lane
 }
 
@@ -65,7 +70,8 @@ const SAMPLES = samplesOf(DAY_SPAN);
 const NOTHING = 0.005;
 const ended = (text: string, at: number) => ({ at, text: `${text} ${formatClock(at)}`, over: true });
 const percent = (share: number) => `${Math.round(share * 100)}%`;
-const seriesAt = (series: Float32Array, minute: number) => series[Math.max(0, Math.min(series.length - 1, Math.round(minute)))];
+const seriesAt = (series: Float32Array, minute: number) =>
+  series[Math.max(0, Math.min(series.length - 1, Math.round(minute)))];
 
 const laneMinute = (index: number) => LANES.from + index * LANES.stepMin;
 
@@ -90,7 +96,8 @@ export function fromSeverity(level: (minute: number) => number, span: Span = DAY
 
 // The first drawn moment after `after` that a level has dropped below `floor`, searched in the chart's own steps.
 function firstBelow(level: (minute: number) => number, after: number, floor: number): number | null {
-  for (let m = Math.ceil(after / LANES.stepMin) * LANES.stepMin; m <= LANES.to; m += LANES.stepMin) if (level(m) < floor) return m;
+  for (let m = Math.ceil(after / LANES.stepMin) * LANES.stepMin; m <= LANES.to; m += LANES.stepMin)
+    if (level(m) < floor) return m;
   return null;
 }
 
@@ -130,7 +137,11 @@ function eventShape(event: ResolvedEvent, now: number): ThreadShape {
   const level = (minute: number) => eventLevelAt(event, minute);
   const horizon = now + LANES.eventLookaheadDays * 1440;
   let ends: number | null = null;
-  for (let m = Math.max(now, event.from) + LANES.eventLookaheadStepMin; m <= horizon && ends === null; m += LANES.eventLookaheadStepMin) {
+  for (
+    let m = Math.max(now, event.from) + LANES.eventLookaheadStepMin;
+    m <= horizon && ends === null;
+    m += LANES.eventLookaheadStepMin
+  ) {
     if (level(m) < MUSCLE_RECOVERY.activeAbove) ends = m;
   }
   const open = event.ends === null;
@@ -155,7 +166,12 @@ function threadShape(tr: Trajectory, thread: Thread, now: number): ThreadShape {
     const ends = firstBelow(level, group[0].at + LANES.stepMin, LANES.foodDigestedBelowShare);
     return {
       values: fromLevels(level),
-      read: (minute) => (minute < group[0].at ? "" : level(minute) < LANES.foodDigestedBelowShare ? "digested" : `${percent(level(minute))} left`),
+      read: (minute) =>
+        minute < group[0].at
+          ? ""
+          : level(minute) < LANES.foodDigestedBelowShare
+            ? "digested"
+            : `${percent(level(minute))} left`,
       mark: ends === null ? null : ended("Digested", ends),
       beyond: ends === null ? "Digested tomorrow" : null,
     };
@@ -166,7 +182,11 @@ function threadShape(tr: Trajectory, thread: Thread, now: number): ThreadShape {
   if (drink && drink.alcoholG > 0) {
     const level = (minute: number) => alcoholLedgerAt(tr, drink.id, minute)?.blood ?? 0;
     const peak = peakOf(level);
-    const ends = firstBelow((minute) => tr.series.alcohol[minute], peakMinute(level), REFERENCE.alcohol.presentAboveGPerL);
+    const ends = firstBelow(
+      (minute) => tr.series.alcohol[minute],
+      peakMinute(level),
+      REFERENCE.alcohol.presentAboveGPerL,
+    );
     return {
       values: fromLevels(level),
       read: (minute) => (minute < drink.at ? "" : `${seriesAt(tr.series.alcohol, minute).toFixed(2)} g/L`),
@@ -185,7 +205,10 @@ function threadShape(tr: Trajectory, thread: Thread, now: number): ThreadShape {
     return {
       values: fromLevels(share),
       read: (minute) => (minute < drink.at ? "" : `${percent(share(minute))} left`),
-      mark: now < DAY.sleepMin && left > 0 ? { at: DAY.sleepMin, text: `${percent(left)} left at ${formatClock(DAY.sleepMin)}`, over: false } : null,
+      mark:
+        now < DAY.sleepMin && left > 0
+          ? { at: DAY.sleepMin, text: `${percent(left)} left at ${formatClock(DAY.sleepMin)}`, over: false }
+          : null,
       beyond: null,
     };
   }
@@ -272,11 +295,19 @@ function readingLane(tr: Trajectory, reading: Reading, now: number, system: Syst
       values[i] = y(curve.valueAt(laneMinute(i)));
       if (ghost && realCurve) ghost[i] = y(realCurve.valueAt(laneMinute(i)));
     }
-    band = { low: y(reading.scale.typicalLow), high: y(reading.scale.typicalHigh), label: `Typical ${reading.scale.typicalLabel}` };
+    band = {
+      low: y(reading.scale.typicalLow),
+      high: y(reading.scale.typicalHigh),
+      label: `Typical ${reading.scale.typicalLabel}`,
+    };
   }
   // A forecast that lands on empty is where the thing ends.
   const forecastAt = reading.forecastAt;
-  const emptyThere = forecastAt !== null && empties && values[Math.max(0, Math.min(SAMPLES - 1, Math.round((forecastAt - LANES.from) / LANES.stepMin)))] <= LANES.fit.overBelowShare;
+  const emptyThere =
+    forecastAt !== null &&
+    empties &&
+    values[Math.max(0, Math.min(SAMPLES - 1, Math.round((forecastAt - LANES.from) / LANES.stepMin)))] <=
+      LANES.fit.overBelowShare;
   return [
     {
       id: reading.id,
@@ -290,7 +321,10 @@ function readingLane(tr: Trajectory, reading: Reading, now: number, system: Syst
       sameAsYourDay: realCurve !== null && !differs,
       hypothetical: false,
       read: curve.textAt,
-      mark: reading.forecastShort && forecastAt !== null ? { at: forecastAt, text: reading.forecastShort, over: emptyThere } : null,
+      mark:
+        reading.forecastShort && forecastAt !== null
+          ? { at: forecastAt, text: reading.forecastShort, over: emptyThere }
+          : null,
       beyond: reading.forecastAt === null ? reading.forecast : null,
       target: reading.organ ? { kind: "organ", organ: reading.organ } : null,
       organ: reading.organ,
@@ -299,7 +333,13 @@ function readingLane(tr: Trajectory, reading: Reading, now: number, system: Syst
 }
 
 // Level 1 and most of level 3: the readings on screen, each with what the model says comes next.
-export function readingLanes(tr: Trajectory, now: number, ids: readonly ReadingId[], system: SystemId, real: Trajectory | null = null): Lane[] {
+export function readingLanes(
+  tr: Trajectory,
+  now: number,
+  ids: readonly ReadingId[],
+  system: SystemId,
+  real: Trajectory | null = null,
+): Lane[] {
   const assessment = assess(tr, now);
   return ids
     .flatMap((id) => assessment.readings.find((r) => r.id === id) ?? [])
@@ -309,7 +349,13 @@ export function readingLanes(tr: Trajectory, now: number, ids: readonly ReadingI
 
 // A process is about what happens over time, so a reading that is at zero this minute still has its
 // story to tell. Only what stays at nothing all day drops out.
-function storyLanes(tr: Trajectory, now: number, ids: readonly ReadingId[], system: SystemId, real: Trajectory | null): Lane[] {
+function storyLanes(
+  tr: Trajectory,
+  now: number,
+  ids: readonly ReadingId[],
+  system: SystemId,
+  real: Trajectory | null,
+): Lane[] {
   const assessment = assess(tr, now);
   return ids
     .flatMap((id) => assessment.readings.find((r) => r.id === id) ?? [])
@@ -354,11 +400,30 @@ export function workedMuscleLanes(tr: Trajectory, now: number, span: Span = DAY_
 // One muscle in close-up: the phases it goes through after work, each on its own lane.
 export function muscleStateLanes(tr: Trajectory, now: number, group: MuscleGroup, span: Span = DAY_SPAN): Lane[] {
   const summary = assess(tr, now).muscles.find((m) => m.group === group);
-  const said: Partial<Record<keyof MuscleState, string | null>> = { soreness: summary?.sorenessLine ?? null, repair: summary?.normalLine ?? null };
+  const said: Partial<Record<keyof MuscleState, string | null>> = {
+    soreness: summary?.sorenessLine ?? null,
+    repair: summary?.normalLine ?? null,
+  };
   return STATE_LANES.flatMap(({ key, label }) => {
     const level = (minute: number) => muscleStateAt(tr.muscleEvents, group, minute)[key];
     if (peakOf(level, span) < MUSCLE_RECOVERY.activeAbove) return [];
-    return [{ id: key, label, system: "muscles" as const, badge: { kind: "plain" as const }, shape: "amount" as const, values: fromSeverity(level, span), band: null, ...NOT_COMPARED, read: (minute: number) => levelWord(level(minute)), mark: null, beyond: said[key] ?? null, target: null, organ: null }];
+    return [
+      {
+        id: key,
+        label,
+        system: "muscles" as const,
+        badge: { kind: "plain" as const },
+        shape: "amount" as const,
+        values: fromSeverity(level, span),
+        band: null,
+        ...NOT_COMPARED,
+        read: (minute: number) => levelWord(level(minute)),
+        mark: null,
+        beyond: said[key] ?? null,
+        target: null,
+        organ: null,
+      },
+    ];
   });
 }
 
@@ -374,10 +439,13 @@ export function processLanes(tr: Trajectory, now: number, processId: string, rea
   if (line) return storyLanes(tr, now, line.readings, process.system, real);
   const event = tr.events.find((e) => processIds.event(e.id) === processId);
   if (event) {
-    if (event.preset === "training") return workedMuscleLanes(tr, now).filter((lane) => event.muscles.some((m) => m.group === lane.id));
+    if (event.preset === "training")
+      return workedMuscleLanes(tr, now).filter((lane) => event.muscles.some((m) => m.group === lane.id));
     const ids = PRESET_FACTS[event.preset].chartReadings;
     if (ids) return storyLanes(tr, now, ids, process.system, real);
-    return threadLanes(tr, now).filter((lane) => lane.id === processId).map((lane) => ({ ...lane, system: process.system }));
+    return threadLanes(tr, now)
+      .filter((lane) => lane.id === processId)
+      .map((lane) => ({ ...lane, system: process.system }));
   }
   const shares = process.stops.map(() => new Float32Array(SAMPLES));
   for (let i = 0; i < SAMPLES; i++) {
@@ -388,16 +456,13 @@ export function processLanes(tr: Trajectory, now: number, processId: string, rea
     });
   }
   const peaks = shares.map((share) => share.reduce((most, v) => Math.max(most, v), 0));
-  const kept = new Set(
-    process.stops
-      .map((_, s) => s)
-      .filter((s) => peaks[s] >= LANES.stopWorthALaneFrom),
-  );
+  const kept = new Set(process.stops.map((_, s) => s).filter((s) => peaks[s] >= LANES.stopWorthALaneFrom));
   return process.stops.flatMap((stop, s) => {
     if (!kept.has(s)) return [];
     const peak = peaks[s];
     const share = shares[s];
-    const at = (minute: number) => share[Math.max(0, Math.min(SAMPLES - 1, Math.round((minute - LANES.from) / LANES.stepMin)))];
+    const at = (minute: number) =>
+      share[Math.max(0, Math.min(SAMPLES - 1, Math.round((minute - LANES.from) / LANES.stepMin)))];
     const clears = firstBelow(at, peakMinute(at), peak * LANES.stopClearBelowShareOfPeak);
     return [
       {
@@ -442,7 +507,11 @@ export function dayMoments(tr: Trajectory, now: number): Moment[] {
 
 // Everything worth stopping at on the chart, in order: what you logged, each named moment, and now.
 export function dayStops(lanes: Lane[], moments: Moment[], now: number): { at: number; label: string | null }[] {
-  const stops = [{ at: now, label: null as string | null }, ...moments, ...lanes.flatMap((lane) => (lane.mark ? [{ at: lane.mark.at, label: null }] : []))];
+  const stops = [
+    { at: now, label: null as string | null },
+    ...moments,
+    ...lanes.flatMap((lane) => (lane.mark ? [{ at: lane.mark.at, label: null }] : [])),
+  ];
   return stops.sort((a, b) => a.at - b.at);
 }
 
@@ -476,7 +545,9 @@ export function fitWindow(lanes: Lane[], now: number): { from: number; to: numbe
   return { from, to };
 }
 
-export type MuscleSubject = { kind: "one"; group: MuscleGroup } | { kind: "worked"; groups: readonly MuscleGroup[] | null };
+export type MuscleSubject =
+  | { kind: "one"; group: MuscleGroup }
+  | { kind: "worked"; groups: readonly MuscleGroup[] | null };
 
 export interface Recovery {
   span: Span;
@@ -489,7 +560,12 @@ const snapToStep = (minute: number, stepMin: number) => Math.round(minute / step
 // A muscle recovers over days, so a chart of today only shows a flat stretch of it. This is the whole of it:
 // from the session to feeling normal again, while there is something to recover from.
 export function recoveryOf(tr: Trajectory, now: number, subject: MuscleSubject): Recovery | null {
-  const groups = subject.kind === "one" ? [subject.group] : assess(tr, now).muscles.filter((m) => m.level >= MUSCLE_RECOVERY.activeAbove && (subject.groups?.includes(m.group) ?? true)).map((m) => m.group);
+  const groups =
+    subject.kind === "one"
+      ? [subject.group]
+      : assess(tr, now)
+          .muscles.filter((m) => m.level >= MUSCLE_RECOVERY.activeAbove && (subject.groups?.includes(m.group) ?? true))
+          .map((m) => m.group);
   const level = (minute: number) =>
     groups.reduce((most, group) => {
       const s = muscleStateAt(tr.muscleEvents, group, minute);
@@ -498,11 +574,16 @@ export function recoveryOf(tr: Trajectory, now: number, subject: MuscleSubject):
   if (level(now) < MUSCLE_RECOVERY.activeAbove) return null;
   const reach = LANES.eventLookaheadDays * 1440;
   let start = now;
-  while (start > now - reach && level(start - LANES.eventLookaheadStepMin) >= MUSCLE_RECOVERY.activeAbove) start -= LANES.eventLookaheadStepMin;
+  while (start > now - reach && level(start - LANES.eventLookaheadStepMin) >= MUSCLE_RECOVERY.activeAbove)
+    start -= LANES.eventLookaheadStepMin;
   const normal = new Map(groups.map((group) => [group, normalAgainAt(tr, group, now)]));
   const latestNormal = Math.max(now, ...[...normal.values()].flatMap((at) => at ?? []));
   const length = latestNormal - start;
-  const span: Span = { from: snapToStep(start - length * LANES.days.marginShare, LANES.days.stepMin), to: snapToStep(latestNormal + length * LANES.days.tailShare, LANES.days.stepMin), stepMin: LANES.days.stepMin };
+  const span: Span = {
+    from: snapToStep(start - length * LANES.days.marginShare, LANES.days.stepMin),
+    to: snapToStep(latestNormal + length * LANES.days.tailShare, LANES.days.stepMin),
+    stepMin: LANES.days.stepMin,
+  };
   const normalMark = (at: number) => ({ at, text: `Normal ${whenWords(at, now)}`, over: false });
   const lanes =
     subject.kind === "one"
@@ -517,7 +598,10 @@ export function recoveryOf(tr: Trajectory, now: number, subject: MuscleSubject):
             return { ...lane, mark: at === null ? null : normalMark(at), beyond: null };
           });
   const moments = tr.muscleEvents
-    .filter((event) => event.from >= span.from && event.from <= span.to && event.muscles.some((m) => groups.includes(m.group)))
+    .filter(
+      (event) =>
+        event.from >= span.from && event.from <= span.to && event.muscles.some((m) => groups.includes(m.group)),
+    )
     .map((event) => ({ at: event.from, label: event.label, intakes: [] }))
     .sort((a, b) => a.at - b.at);
   return { span, lanes, moments };

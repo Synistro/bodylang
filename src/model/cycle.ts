@@ -15,7 +15,7 @@ const MINUTES_A_DAY = 1440;
 // Days since this cycle began, with a fraction, however many cycles ago the given date was.
 export function daysIntoCycle(cycle: Cycle, t: number): number {
   const length = cycle.lengthDays * MINUTES_A_DAY;
-  return (((t - cycle.start) % length) + length) % length / MINUTES_A_DAY;
+  return ((((t - cycle.start) % length) + length) % length) / MINUTES_A_DAY;
 }
 
 export const cycleDay = (cycle: Cycle, t: number) => Math.floor(daysIntoCycle(cycle, t)) + 1;
@@ -44,7 +44,8 @@ interface Bump {
 // One rise and fall, in days from ovulation, wrapped so the end of a cycle runs into the next.
 function bump({ amount, atDay, widthDays }: Bump, fromOvulation: number, length: number): number {
   let sum = 0;
-  for (const wrap of [-length, 0, length]) sum += Math.exp(-((fromOvulation - atDay + wrap) ** 2) / (2 * widthDays ** 2));
+  for (const wrap of [-length, 0, length])
+    sum += Math.exp(-((fromOvulation - atDay + wrap) ** 2) / (2 * widthDays ** 2));
   return amount * sum;
 }
 
@@ -58,7 +59,10 @@ export function hormonesAt(cycle: Cycle, t: number): Hormones {
   const fromOvulation = daysIntoCycle(cycle, t) - ovulationDay(cycle);
   const { estradiol, progesterone, lh } = CYCLE.hormones;
   return {
-    estradiol: estradiol.base + bump(estradiol.ovulatory, fromOvulation, cycle.lengthDays) + bump(estradiol.luteal, fromOvulation, cycle.lengthDays),
+    estradiol:
+      estradiol.base +
+      bump(estradiol.ovulatory, fromOvulation, cycle.lengthDays) +
+      bump(estradiol.luteal, fromOvulation, cycle.lengthDays),
     progesterone: progesterone.base + bump(progesterone.luteal, fromOvulation, cycle.lengthDays),
     lh: lh.base + bump(lh.surge, fromOvulation, cycle.lengthDays),
   };
@@ -83,6 +87,7 @@ export function liningShare(cycle: Cycle, t: number): number {
   const { least, atOvulation } = CYCLE.lining;
   if (day < cycle.periodDays) return 1 - (1 - least) * (day / cycle.periodDays);
   const ovulation = ovulationDay(cycle);
-  if (day < ovulation) return least + (atOvulation - least) * ((day - cycle.periodDays) / Math.max(1, ovulation - cycle.periodDays));
+  if (day < ovulation)
+    return least + (atOvulation - least) * ((day - cycle.periodDays) / Math.max(1, ovulation - cycle.periodDays));
   return atOvulation + (1 - atOvulation) * Math.min(1, (day - ovulation) / CYCLE.lutealDays);
 }

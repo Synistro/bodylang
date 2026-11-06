@@ -34,7 +34,11 @@ function TravelLine({ stage, travel, here, amount }: { stage: Stage; travel: Tra
       const { x, y } = s.project(at);
       return [x, y];
     };
-    const points = [place(s.anchorOf(anchor(travel.from), world)), ...travel.through.map((joint) => place(s.jointAt(joint, world))), place(s.anchorOf(anchor(travel.to), world))];
+    const points = [
+      place(s.anchorOf(anchor(travel.from), world)),
+      ...travel.through.map((joint) => place(s.jointAt(joint, world))),
+      place(s.anchorOf(anchor(travel.to), world)),
+    ];
     const { d, route } = curve(points, CURVE_SAMPLES);
     line.current.setAttribute("d", d);
     // With a far end off screen, a full-strength stroke would read as a stray line across the body.
@@ -72,7 +76,10 @@ function PanelLink({ stage, here }: { stage: Stage; here: AnchorId }) {
     const x = panel.left - PANEL_GAP_PX;
     const y = panel.top + panel.height / 2;
     const middle = (spot.x + x) / 2;
-    line.current.setAttribute("d", `M${spot.x.toFixed(1)} ${spot.y.toFixed(1)}C${middle.toFixed(1)} ${spot.y.toFixed(1)} ${middle.toFixed(1)} ${y.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`);
+    line.current.setAttribute(
+      "d",
+      `M${spot.x.toFixed(1)} ${spot.y.toFixed(1)}C${middle.toFixed(1)} ${spot.y.toFixed(1)} ${middle.toFixed(1)} ${y.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`,
+    );
     dot.current.setAttribute("cx", spot.x.toFixed(1));
     dot.current.setAttribute("cy", spot.y.toFixed(1));
   });
@@ -86,8 +93,18 @@ function PanelLink({ stage, here }: { stage: Stage; here: AnchorId }) {
 }
 
 const TRACK = {
-  reach: { front: 0.14, back: 0.14, left: 0.24, right: 0.24, above: 0.3, below: 0.3 } satisfies Record<TrackFrom, number>,
-  heading: { front: [0, 0, -1], back: [0, 0, 1], left: [-1, 0, 0], right: [1, 0, 0], above: [0, -1, 0], below: [0, 1, 0] } satisfies Record<TrackFrom, number[]>,
+  reach: { front: 0.14, back: 0.14, left: 0.24, right: 0.24, above: 0.3, below: 0.3 } satisfies Record<
+    TrackFrom,
+    number
+  >,
+  heading: {
+    front: [0, 0, -1],
+    back: [0, 0, 1],
+    left: [-1, 0, 0],
+    right: [1, 0, 0],
+    above: [0, -1, 0],
+    below: [0, 1, 0],
+  } satisfies Record<TrackFrom, number[]>,
   wordOffPx: 9,
 };
 
@@ -96,7 +113,16 @@ function TrackLine({ stage, track }: { stage: Stage; track: EventTrack }) {
   const line = useRef<SVGPathElement>(null);
   const marks = useRef<SVGGElement>(null);
   const crossed = useMemo(() => (track.crossed ?? []).filter((part) => part.organ !== null), [track]);
-  const world = useMemo(() => ({ center: new THREE.Vector3(), start: new THREE.Vector3(), end: new THREE.Vector3(), organ: new THREE.Vector3(), direction: new THREE.Vector3(...TRACK.heading[track.from]) }), [track.from]);
+  const world = useMemo(
+    () => ({
+      center: new THREE.Vector3(),
+      start: new THREE.Vector3(),
+      end: new THREE.Vector3(),
+      organ: new THREE.Vector3(),
+      direction: new THREE.Vector3(...TRACK.heading[track.from]),
+    }),
+    [track.from],
+  );
 
   useFrame(stage, (s) => {
     if (!line.current || !marks.current) return;
@@ -104,7 +130,10 @@ function TrackLine({ stage, track }: { stage: Stage; track: EventTrack }) {
     const reach = TRACK.reach[track.from];
     const start = s.project(world.start.copy(world.center).addScaledVector(world.direction, -reach));
     const end = s.project(world.end.copy(world.center).addScaledVector(world.direction, reach));
-    line.current.setAttribute("d", `M${start.x.toFixed(1)} ${start.y.toFixed(1)}L${end.x.toFixed(1)} ${end.y.toFixed(1)}`);
+    line.current.setAttribute(
+      "d",
+      `M${start.x.toFixed(1)} ${start.y.toFixed(1)}L${end.x.toFixed(1)} ${end.y.toFixed(1)}`,
+    );
     crossed.forEach((part, i) => {
       const mark = marks.current?.children[i];
       if (!mark || !part.organ) return;
@@ -148,13 +177,27 @@ export function BodyTrace({ stage }: { stage: Stage }) {
     if (!step || !organ) return null;
     if (step.process) {
       const about = actingAt(trajectory, minute, organ).find((acting) => acting.process.id === step.process);
-      if (about?.from) return { key: step.process, travel: { kind: about.process.substance === "chyme" ? "food" : "blood", from: about.from, through: [], to: "here" }, amount: about.strength };
+      if (about?.from)
+        return {
+          key: step.process,
+          travel: {
+            kind: about.process.substance === "chyme" ? "food" : "blood",
+            from: about.from,
+            through: [],
+            to: "here",
+          },
+          amount: about.strength,
+        };
     }
     const directed = step.closeup;
     if (!directed || !closeup) return null;
     const key = directed.light.find((level) => closeup.travels[level]);
     if (!key) return null;
-    const levels: Levels = levelsAt(closeup.keys, closeup.fromModel, { trajectory, muscle }, minute, { light: directed.light, set: directed.set, times: {} });
+    const levels: Levels = levelsAt(closeup.keys, closeup.fromModel, { trajectory, muscle }, minute, {
+      light: directed.light,
+      set: directed.set,
+      times: {},
+    });
     return { key, travel: closeup.travels[key]!, amount: levels[key] };
   }, [step, organ, closeup, trajectory, muscle, minute]);
 
@@ -164,7 +207,9 @@ export function BodyTrace({ stage }: { stage: Stage }) {
     <svg className="body-trace" aria-hidden="true">
       {track ? <TrackLine stage={stage} track={track} /> : null}
       {pointsAtPanel ? <PanelLink stage={stage} here={here} /> : null}
-      {travel && here ? <TravelLine key={travel.key} stage={stage} travel={travel.travel} here={here} amount={travel.amount} /> : null}
+      {travel && here ? (
+        <TravelLine key={travel.key} stage={stage} travel={travel.travel} here={here} amount={travel.amount} />
+      ) : null}
     </svg>
   );
 }

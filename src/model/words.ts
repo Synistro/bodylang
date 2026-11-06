@@ -6,12 +6,15 @@ export const formatClock = (minute: number) => {
 };
 
 // A logged label as it reads inside a sentence: "Sugar bar" becomes "sugar bar", "IPA" stays.
-export const inSentence = (label: string) => (/^[A-Z][a-z]/.test(label) ? label[0].toLowerCase() + label.slice(1) : label);
+export const inSentence = (label: string) =>
+  /^[A-Z][a-z]/.test(label) ? label[0].toLowerCase() + label.slice(1) : label;
 
-export const joinAnd = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`);
+export const joinAnd = (items: string[]) =>
+  items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 
 // Two names read well in a short reason; beyond that the food is simply the meal.
-export const theFoods = (labels: string[]) => (labels.length > 2 || labels.length === 0 ? "the meal" : `the ${joinAnd(labels.map(inSentence))}`);
+export const theFoods = (labels: string[]) =>
+  labels.length > 2 || labels.length === 0 ? "the meal" : `the ${joinAnd(labels.map(inSentence))}`;
 
 export const startCase = (text: string) => (text ? text[0].toUpperCase() + text.slice(1) : text);
 

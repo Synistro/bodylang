@@ -28,14 +28,30 @@ const CAVITIES: Cavity[] = [
   {
     points: [
       atrium(46, 44),
-      atrium(56, 38), atrium(66, 44), atrium(68, 56),
-      atrium(69, 66), atrium(65, 76), valve(59, 85),
-      ventricle(64, 94), ventricle(70, 112), ventricle(75, 128),
-      ventricle(78, 136), ventricle(71, 138), ventricle(66, 134),
-      ventricle(54, 126), ventricle(42, 112), ventricle(39, 102),
-      ventricle(37, 96), ventricle(42, 90), valve(49, 87),
-      atrium(41, 84), atrium(35, 76), atrium(35, 66),
-      atrium(35, 56), atrium(39, 48), atrium(46, 44),
+      atrium(56, 38),
+      atrium(66, 44),
+      atrium(68, 56),
+      atrium(69, 66),
+      atrium(65, 76),
+      valve(59, 85),
+      ventricle(64, 94),
+      ventricle(70, 112),
+      ventricle(75, 128),
+      ventricle(78, 136),
+      ventricle(71, 138),
+      ventricle(66, 134),
+      ventricle(54, 126),
+      ventricle(42, 112),
+      ventricle(39, 102),
+      ventricle(37, 96),
+      ventricle(42, 90),
+      valve(49, 87),
+      atrium(41, 84),
+      atrium(35, 76),
+      atrium(35, 66),
+      atrium(35, 56),
+      atrium(39, 48),
+      atrium(46, 44),
     ],
     atrium: { x: 52, y: 62, squeeze: 0.12 },
     ventricle: { x: 58, y: 110, squeeze: 0.14 },
@@ -43,14 +59,30 @@ const CAVITIES: Cavity[] = [
   {
     points: [
       atrium(84, 47),
-      atrium(92, 42), atrium(105, 44), atrium(110, 53),
-      atrium(113, 60), atrium(108, 66), valve(99, 70),
-      ventricle(108, 82), ventricle(112, 108), ventricle(106, 134),
-      ventricle(104, 144), ventricle(100, 152), ventricle(96, 151),
-      ventricle(91, 150), ventricle(88, 138), ventricle(85, 126),
-      ventricle(82, 112), ventricle(81, 90), valve(87, 73),
-      atrium(81, 71), atrium(78, 64), atrium(78, 57),
-      atrium(78, 52), atrium(80, 49), atrium(84, 47),
+      atrium(92, 42),
+      atrium(105, 44),
+      atrium(110, 53),
+      atrium(113, 60),
+      atrium(108, 66),
+      valve(99, 70),
+      ventricle(108, 82),
+      ventricle(112, 108),
+      ventricle(106, 134),
+      ventricle(104, 144),
+      ventricle(100, 152),
+      ventricle(96, 151),
+      ventricle(91, 150),
+      ventricle(88, 138),
+      ventricle(85, 126),
+      ventricle(82, 112),
+      ventricle(81, 90),
+      valve(87, 73),
+      atrium(81, 71),
+      atrium(78, 64),
+      atrium(78, 57),
+      atrium(78, 52),
+      atrium(80, 49),
+      atrium(84, 47),
     ],
     atrium: { x: 94, y: 56, squeeze: 0.12 },
     ventricle: { x: 96, y: 108, squeeze: 0.26 },
@@ -69,7 +101,8 @@ function cavityPath(cavity: Cavity, atriumContraction: number, ventricleContract
   return `${d}Z`;
 }
 
-const HEART_OUTLINE = "M31 62C32 50 44 33 62 32C76 31 96 33 110 44C124 55 128 96 122 124C118 144 111 158 105 166C103 169 100 169.5 97 168C78 157 46 130 33 102C28 90 30 74 31 62Z";
+const HEART_OUTLINE =
+  "M31 62C32 50 44 33 62 32C76 31 96 33 110 44C124 55 128 96 122 124C118 144 111 158 105 166C103 169 100 169.5 97 168C78 157 46 130 33 102C28 90 30 74 31 62Z";
 const HEART_CENTER = { x: 76, y: 100 };
 const WHOLE_HEART_SQUEEZE = 0.035;
 const AORTA = "M84 40C82 24 90 14 106 13C114 12 121 14 126 19";
@@ -105,7 +138,10 @@ function paintHeart(art: SVGSVGElement) {
     const top = bump(phase, 0.08, 0.07);
     const bottom = bump(phase, 0.28, 0.12);
     const wholeScale = Math.round((1 - WHOLE_HEART_SQUEEZE * bottom) * 1000) / 1000;
-    whole.setAttribute("transform", `translate(${HEART_CENTER.x} ${HEART_CENTER.y}) scale(${wholeScale}) translate(${-HEART_CENTER.x} ${-HEART_CENTER.y})`);
+    whole.setAttribute(
+      "transform",
+      `translate(${HEART_CENTER.x} ${HEART_CENTER.y}) scale(${wholeScale}) translate(${-HEART_CENTER.x} ${-HEART_CENTER.y})`,
+    );
     setLit(whole, lit.rate);
     CAVITIES.forEach((cavity, i) => cavities[i].setAttribute("d", cavityPath(cavity, top, bottom)));
     // The streams leave the aorta side by side, so the split reads by weight like a river dividing.
@@ -163,7 +199,10 @@ const Drawing = memo(function Drawing() {
 
 function useHeartPlate(_props: InsetProps, levels: Levels<Setting>): PlateWords {
   const caption = `${Math.round(beatsPerMinute(levels.rate))} beats a minute`;
-  return { caption, describe: `A section through a beating heart. ${caption}. Line weight shows the share of blood going to the brain, gut, kidneys and muscle.` };
+  return {
+    caption,
+    describe: `A section through a beating heart. ${caption}. Line weight shows the share of blood going to the brain, gut, kidneys and muscle.`,
+  };
 }
 
 export const HeartInset = closeupInset(heartCloseup, { Drawing, paint: paintHeart, usePlate: useHeartPlate });

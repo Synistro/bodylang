@@ -16,12 +16,19 @@ export const ovariesCloseup = defineCloseup({
   organ: "ovaries",
   settings: {
     follicle: "How big the follicle holding this month's egg has grown",
-    empty_follicle: "How far the follicle has turned, after letting go of the egg, into the small body that makes progesterone",
+    empty_follicle:
+      "How far the follicle has turned, after letting go of the egg, into the small body that makes progesterone",
     egg: "How far the released egg has got along the tube, from 0 before it leaves to 1 once it has gone",
     hormones: "How much estrogen and progesterone the ovary is sending into the blood",
   },
   fromModel: ({ trajectory: { cycle } }, minute) => {
-    if (!cycle) return { follicle: FOLLICLE_AT_REST, empty_follicle: 0, egg: 0, hormones: HORMONES_WITH_NO_CYCLE / OVARY_HORMONES_FULL };
+    if (!cycle)
+      return {
+        follicle: FOLLICLE_AT_REST,
+        empty_follicle: 0,
+        egg: 0,
+        hormones: HORMONES_WITH_NO_CYCLE / OVARY_HORMONES_FULL,
+      };
     const day = daysIntoCycle(cycle, minute);
     const ovulation = cycle.lengthDays - CYCLE.lutealDays;
     const emptied = clamp01((day - ovulation) / EMPTYING_DAYS);

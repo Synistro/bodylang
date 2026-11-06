@@ -51,7 +51,11 @@ export interface Said {
   short: string; // the same thing where room is tight: "Peaks at 6.9 17:53"
   at: number | null;
 }
-export const near = (text: string, at: number): Said => ({ text: `${text} near ${clock(at)}`, short: `${text} ${clock(at)}`, at });
+export const near = (text: string, at: number): Said => ({
+  text: `${text} near ${clock(at)}`,
+  short: `${text} ${clock(at)}`,
+  at,
+});
 
 interface ReadingRange extends ReadingScale {
   evidence: Evidence;
@@ -107,19 +111,31 @@ export function contextAt(tr: Trajectory, t: number): Context {
     events,
     exerting: events.some((e) => (e.preset === "training" || e.preset === "sex") && drivingHeart(e)),
     training: events.find((e) => e.preset === "training" && e.ends !== null && t <= e.ends) ?? null,
-    phase: digesting || sinceFood <= REFERENCE.fedAfterFoodMin ? "fed" : sinceFood < REFERENCE.fastingAfterMin ? "settling" : "fasting",
+    phase:
+      digesting || sinceFood <= REFERENCE.fedAfterFoodMin
+        ? "fed"
+        : sinceFood < REFERENCE.fastingAfterMin
+          ? "settling"
+          : "fasting",
     eaten,
     lastFood,
     carbsPeaking: sinceCarbs <= REFERENCE.glucose.peakWindowMin,
     afterCarbs: sinceCarbs <= REFERENCE.glucose.dip.windowMin,
-    carbsActive: sinceCarbs <= REFERENCE.glucose.mealWindowMin || v("glucoseAbsorbMgMin") > REFERENCE.glucose.stillAbsorbingMgPerMin,
+    carbsActive:
+      sinceCarbs <= REFERENCE.glucose.mealWindowMin ||
+      v("glucoseAbsorbMgMin") > REFERENCE.glucose.stillAbsorbingMgPerMin,
     afterFattyMeal: sinceFat <= REFERENCE.triglycerides.fatWindowMin,
   };
 }
 
 const firstMinute = (c: Context) => Math.max(0, Math.min(DAY.minutes, Math.ceil(c.t)));
 
-export function extremeAhead(c: Context, name: SeriesName, kind: "max" | "min", horizon: number = REFERENCE.headingHorizonMin) {
+export function extremeAhead(
+  c: Context,
+  name: SeriesName,
+  kind: "max" | "min",
+  horizon: number = REFERENCE.headingHorizonMin,
+) {
   const series = c.tr.series[name];
   const direction = kind === "max" ? 1 : -1;
   const end = Math.min(DAY.minutes, firstMinute(c) + horizon);
@@ -168,7 +184,11 @@ export const peaksAt =
 
 // The first minute the curve passes a test, once the guard says it is worth saying.
 export const reaches =
-  (guard: (c: Context, s: Sample) => boolean, test: (raw: number, c: Context) => boolean, text: (raw: number) => string): ForecastRule =>
+  (
+    guard: (c: Context, s: Sample) => boolean,
+    test: (raw: number, c: Context) => boolean,
+    text: (raw: number) => string,
+  ): ForecastRule =>
   (c, s, series) => {
     if (!guard(c, s)) return null;
     const at = firstWhen(c, (m) => test(c.tr.series[series][m], c));
@@ -190,16 +210,26 @@ export function caffeineLeft(c: Context) {
   return { dose, left };
 }
 
-export const caffeinePresent = (c: Context) => c.v("caffeine") >= REFERENCE.caffeine.presentAboveMgL || caffeineLeft(c).left >= 1;
-export const costsSleep = (c: Context) => caffeinePresent(c) && c.t < DAY.sleepMin && c.v("caffeine", DAY.sleepMin) >= CAFFEINE.sleepConcernMgL;
-export const caffeineDoseMgL = (c: Context, doseMg: number) => doseMg / (CAFFEINE.volumeLPerKg * c.tr.scenario.body.weightKg);
+export const caffeinePresent = (c: Context) =>
+  c.v("caffeine") >= REFERENCE.caffeine.presentAboveMgL || caffeineLeft(c).left >= 1;
+export const costsSleep = (c: Context) =>
+  caffeinePresent(c) && c.t < DAY.sleepMin && c.v("caffeine", DAY.sleepMin) >= CAFFEINE.sleepConcernMgL;
+export const caffeineDoseMgL = (c: Context, doseMg: number) =>
+  doseMg / (CAFFEINE.volumeLPerKg * c.tr.scenario.body.weightKg);
 export const nearestMinute = (c: Context) => Math.max(0, Math.min(DAY.minutes, Math.round(c.t)));
-export const ownRestBpm = (c: Context, posture: Posture = c.posture) => c.tr.anthro.restingBpm + HEART.byActivity[posture];
+export const ownRestBpm = (c: Context, posture: Posture = c.posture) =>
+  c.tr.anthro.restingBpm + HEART.byActivity[posture];
 export const digesting = (c: Context) => c.v("digestion") > REFERENCE.digestion.underWayAbove;
 
 export const hoursAwake = (c: Context) => c.v("hoursAwake");
 
-export const POSTURE_WORD: Record<Posture, string> = { sleeping: "Sleep", sitting: "Sitting", standing: "Standing", walking: "Walking", running: "Running" };
+export const POSTURE_WORD: Record<Posture, string> = {
+  sleeping: "Sleep",
+  sitting: "Sitting",
+  standing: "Standing",
+  walking: "Walking",
+  running: "Running",
+};
 
 // The event pushing a channel the most right now, for a reason to name.
 export function topCause(c: Context, channel: ChannelId, atLeast: number): ResolvedEvent | null {
@@ -215,11 +245,17 @@ export function topCause(c: Context, channel: ChannelId, atLeast: number): Resol
   return best;
 }
 
-export const causeOf = (c: Context, channel: ChannelId, atLeast: number) => topCause(c, channel, atLeast)?.causeName ?? null;
-export const startedBy = (channel: ChannelId, atLeast: number) => (c: Context) => topCause(c, channel, atLeast) !== null;
+export const causeOf = (c: Context, channel: ChannelId, atLeast: number) =>
+  topCause(c, channel, atLeast)?.causeName ?? null;
+export const startedBy = (channel: ChannelId, atLeast: number) => (c: Context) =>
+  topCause(c, channel, atLeast) !== null;
 
 // A reason row naming whichever event is pushing this channel.
-export const causedBy = (channel: ChannelId, atLeast: number, text: (cause: string, amount: number) => string): ReasonRow => [
+export const causedBy = (
+  channel: ChannelId,
+  atLeast: number,
+  text: (cause: string, amount: number) => string,
+): ReasonRow => [
   startedBy(channel, atLeast),
   (c) => {
     const event = topCause(c, channel, atLeast);
@@ -232,19 +268,27 @@ export const raises = (cause: string) => `Raised by ${cause}`;
 // What the luteal phase is adding to a channel. Only heart rate and temperature ever get named.
 export function fromCycle(c: Context, channel: ChannelId, at = c.t): number {
   if (!c.tr.cycle) return 0;
-  const size = channel === "heartRate" ? CYCLE.luteal.heartBpm : channel === "temperature" ? CYCLE.luteal.temperatureC : 0;
+  const size =
+    channel === "heartRate" ? CYCLE.luteal.heartBpm : channel === "temperature" ? CYCLE.luteal.temperatureC : 0;
   return size * lutealShare(c.tr.cycle, at);
 }
 
 // What a walk or run is adding to a channel, including what lingers after you stop.
 export function fromMoving(c: Context, channel: ChannelId, at = c.t): number {
   const fromEvents = c.events.reduce((sum, e) => sum + effectAt(e, channel, at), 0);
-  return Math.max(0, c.tr.channels[channel][Math.max(0, Math.min(DAY.minutes - 1, Math.round(at)))] - fromEvents - fromCycle(c, channel, at));
+  return Math.max(
+    0,
+    c.tr.channels[channel][Math.max(0, Math.min(DAY.minutes - 1, Math.round(at)))] -
+      fromEvents -
+      fromCycle(c, channel, at),
+  );
 }
 
 // "running" or "walking": whichever you did last, for naming what still lingers.
 export function movedWord(c: Context): string {
-  const moved = [...c.tr.scenario.activities].sort((a, b) => a.from - b.from).filter((span) => span.from <= c.t && (span.posture === "walking" || span.posture === "running"));
+  const moved = [...c.tr.scenario.activities]
+    .sort((a, b) => a.from - b.from)
+    .filter((span) => span.from <= c.t && (span.posture === "walking" || span.posture === "running"));
   const last = moved[moved.length - 1];
   return last ? POSTURE_WORD[last.posture].toLowerCase() : "moving";
 }
@@ -257,7 +301,8 @@ export function heartCauses(c: Context): { name: string; bpm: number }[] {
     { name: "caffeine", bpm: heartFromCaffeine(c.v("caffeine")) },
     { name: "your cycle", bpm: fromCycle(c, "heartRate") },
   ];
-  const named = (e: ResolvedEvent) => (e.preset === "illness" && effectAt(e, "temperature", c.t) >= PROCESS.feverNamedFromC ? "the fever" : e.causeName);
+  const named = (e: ResolvedEvent) =>
+    e.preset === "illness" && effectAt(e, "temperature", c.t) >= PROCESS.feverNamedFromC ? "the fever" : e.causeName;
   const rows = c.events.map((e) => ({ name: named(e), bpm: effectAt(e, "heartRate", c.t) }));
   return [...fixedRows, ...rows].filter((row) => row.bpm >= 1).sort((a, b) => b.bpm - a.bpm);
 }
@@ -277,7 +322,10 @@ export function eventHeartBpm(c: Context) {
 
 // What is pulling alertness down. Ordered as it reads in a sentence.
 const ALERTNESS_DRAINS: { active: (c: Context) => boolean; words: (c: Context) => string }[] = [
-  { active: startedBy("drowsiness", PROCESS.eventDrowsinessNamedFrom), words: (c) => causeOf(c, "drowsiness", PROCESS.eventDrowsinessNamedFrom) ?? "" },
+  {
+    active: startedBy("drowsiness", PROCESS.eventDrowsinessNamedFrom),
+    words: (c) => causeOf(c, "drowsiness", PROCESS.eventDrowsinessNamedFrom) ?? "",
+  },
   { active: (c) => c.v("mealDip") >= PROCESS.mealPullsAlertnessAbove, words: () => "the meal" },
   { active: (c) => hoursAwake(c) >= 1, words: (c) => `${hoursWord(hoursAwake(c))} awake` },
 ];
@@ -289,10 +337,16 @@ export function alertnessDrains(c: Context): string | null {
 
 export function glycogenShortfall(c: Context): string {
   const r = REFERENCE.liverGlycogen;
-  const eatenEarlier = c.eaten.filter((i) => foodKcalOf(i) >= REFERENCE.stillDigestingKcal && i.at < c.t - STOMACH.solidLagMin);
-  const hadLunch = c.eaten.some((i) => i.at >= r.lunchFromMin && i.at < r.lunchUntilMin && foodKcalOf(i) >= r.lunchKcal);
+  const eatenEarlier = c.eaten.filter(
+    (i) => foodKcalOf(i) >= REFERENCE.stillDigestingKcal && i.at < c.t - STOMACH.solidLagMin,
+  );
+  const hadLunch = c.eaten.some(
+    (i) => i.at >= r.lunchFromMin && i.at < r.lunchUntilMin && foodKcalOf(i) >= r.lunchKcal,
+  );
   if (c.t >= r.lunchUntilMin && c.t < 1440 && !hadLunch) return "You logged no lunch";
-  return eatenEarlier.length ? `Your last food was at ${clock(eatenEarlier[eatenEarlier.length - 1].at)}` : "You have logged no food today";
+  return eatenEarlier.length
+    ? `Your last food was at ${clock(eatenEarlier[eatenEarlier.length - 1].at)}`
+    : "You have logged no food today";
 }
 
 export function nextVoid(c: Context): number | null {
@@ -301,7 +355,8 @@ export function nextVoid(c: Context): number | null {
   return firstWhen(c, (m) => m < DAY.minutes && series[m + 1] < series[m] - KIDNEY.urineMlPerMin * 10);
 }
 
-export const minutesUntilSleep = (c: Context) => firstWhen(c, (m) => POSTURES[Math.round(c.tr.series.posture[m])] === "sleeping") ?? DAY.minutes;
+export const minutesUntilSleep = (c: Context) =>
+  firstWhen(c, (m) => POSTURES[Math.round(c.tr.series.posture[m])] === "sleeping") ?? DAY.minutes;
 export const startedMuscleEvents = (c: Context) => c.tr.muscleEvents.filter((e) => e.from <= c.t);
 export const sessionEnd = (e: BodyEvent) => endOf(e) ?? e.from;
 
@@ -319,4 +374,5 @@ export const groupsWhere = (c: Context, test: (s: MuscleState) => boolean): Musc
     return test(state) ? [{ group, load: muscleLevel(state) }] : [];
   });
 
-export const anyMuscle = (c: Context, test: (s: MuscleState) => boolean) => MUSCLE_GROUPS.some((group) => test(muscleStateAt(c.tr.muscleEvents, group, c.t)));
+export const anyMuscle = (c: Context, test: (s: MuscleState) => boolean) =>
+  MUSCLE_GROUPS.some((group) => test(muscleStateAt(c.tr.muscleEvents, group, c.t)));

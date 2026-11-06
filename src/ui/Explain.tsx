@@ -5,7 +5,8 @@ import { explainEventSchema, readEvents } from "../wire";
 
 const MOST_CHARS = 200;
 // Only sentences and diagrams explain themselves. Names of rows and buttons are for clicking.
-const DESCRIPTIONS = ".tour-say, .page-sentence, .page-headline, .reading-why, .reading-more, .feel-cause, .stop-say, .reply-line, .organ-lines, .acting-words, .item-note, .fix-note, .sources, .hint, .inset-art text";
+const DESCRIPTIONS =
+  ".tour-say, .page-sentence, .page-headline, .reading-why, .reading-more, .feel-cause, .stop-say, .reply-line, .organ-lines, .acting-words, .item-note, .fix-note, .sources, .hint, .inset-art text";
 const AROUND = "p, li, h1, .reading, .stop, .tour, figure, .tree-leaf, .day-row, .reply";
 const AROUND_MOST_CHARS = 1000;
 const HIGHLIGHT = "explain-term";
@@ -28,7 +29,10 @@ function selectedWords(): { explaining: Explaining; range: Range } | null {
   const element = node instanceof Element ? node : node.parentElement;
   if (!element?.closest(".sheet") || !element.closest(DESCRIPTIONS)) return null;
   const { top, bottom, left, width } = range.getBoundingClientRect();
-  const around = (element.closest(AROUND)?.textContent ?? element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, AROUND_MOST_CHARS);
+  const around = (element.closest(AROUND)?.textContent ?? element.textContent ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, AROUND_MOST_CHARS);
   const page = document.querySelector(".page-name")?.textContent?.trim() ?? "";
   return { explaining: { term, around, page, top, bottom, center: left + width / 2 }, range };
 }
@@ -40,11 +44,21 @@ function markTerm(range: Range | null) {
   else CSS.highlights.delete(HIGHLIGHT);
 }
 
-async function streamAnswer(explaining: Explaining, turns: Turn[], signal: AbortSignal, onText: (text: string) => void) {
+async function streamAnswer(
+  explaining: Explaining,
+  turns: Turn[],
+  signal: AbortSignal,
+  onText: (text: string) => void,
+) {
   // The numbers are for the moment on screen, which may be somewhere you scrubbed to.
   const { day, t } = getState();
   const { term, around, page } = explaining;
-  const response = await fetch("/api/explain", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ term, around, page, turns, now: Math.round(t), day }), signal });
+  const response = await fetch("/api/explain", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ term, around, page, turns, now: Math.round(t), day }),
+    signal,
+  });
   if (!response.ok) throw new Error(`The explanation failed with ${response.status}.`);
   for await (const event of readEvents(response, explainEventSchema)) {
     if (event.type === "text") onText(event.text);
@@ -179,7 +193,12 @@ export function Explain() {
         {problem ? <p className="explain-problem">{problem}</p> : null}
       </div>
       <form onSubmit={send}>
-        <input value={draft} placeholder={`Ask Claude about ${explaining.term}`} aria-label={`Ask Claude about ${explaining.term}`} onChange={(e) => setDraft(e.target.value)} />
+        <input
+          value={draft}
+          placeholder={`Ask Claude about ${explaining.term}`}
+          aria-label={`Ask Claude about ${explaining.term}`}
+          onChange={(e) => setDraft(e.target.value)}
+        />
       </form>
     </div>
   );

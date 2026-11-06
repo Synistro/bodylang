@@ -22,7 +22,12 @@ export function forecast(tr: Trajectory, now: number): Forecast {
   const gp = peak(tr.series.glucose, start + 300);
   const glucosePeak = tr.series.glucose[gp] > base + 4 ? { at: gp, value: tr.series.glucose[gp] } : null;
   let glucoseSettles: number | null = null;
-  if (glucosePeak) for (let i = gp; i < n; i++) if (tr.series.glucose[i] < base + 8) { glucoseSettles = i; break; }
+  if (glucosePeak)
+    for (let i = gp; i < n; i++)
+      if (tr.series.glucose[i] < base + 8) {
+        glucoseSettles = i;
+        break;
+      }
   const dp = peak(tr.series.drowsy, start + 300);
   const sleepiest = tr.series.drowsy[dp] > PROCESS.sleepyNamedFrom ? { at: dp, value: tr.series.drowsy[dp] } : null;
   const kcalNow = tr.series.stomachKcal[start];
@@ -34,7 +39,8 @@ export function forecast(tr: Trajectory, now: number): Forecast {
     stomachHalf: kcalNow > 30 ? firstBelow(tr.series.stomachKcal, kcalNow / 2) : null,
     stomachEmpty: kcalNow > 30 ? firstBelow(tr.series.stomachKcal, 8) : null,
     tgPeak: tr.series.tg[tp] > tr.anthro.baselineTg + 15 ? { at: tp, value: tr.series.tg[tp] } : null,
-    caffeineBelowFelt: tr.series.caffeine[start] > CAFFEINE.feltAboveMgL ? firstBelow(tr.series.caffeine, CAFFEINE.feltAboveMgL) : null,
+    caffeineBelowFelt:
+      tr.series.caffeine[start] > CAFFEINE.feltAboveMgL ? firstBelow(tr.series.caffeine, CAFFEINE.feltAboveMgL) : null,
     caffeineAtBedMgL: tr.series.caffeine[Math.min(n - 1, DAY.sleepMin)],
   };
 }

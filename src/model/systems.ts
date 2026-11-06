@@ -14,15 +14,69 @@ export interface SystemDef {
 const muscleReadings = MUSCLE_GROUPS.map((group): ReadingId => `muscle:${group}`);
 
 export const SYSTEMS: SystemDef[] = [
-  { id: "overview", title: "Overview", organs: [], readings: ["glucose", "hr", "stomach", "temperature"], more: ["insulin", "tg", "caffeine", "glycogen"] },
-  { id: "digestion", title: "Digestion", organs: ["stomach", "small_intestine", "large_intestine", "pancreas", "liver"], readings: ["stomach", "absorbing", "flowGut"], more: [] },
-  { id: "energy", title: "Sugar & energy", organs: ["pancreas", "liver", "muscle", "fat"], readings: ["glucose", "insulin", "glycogen", "tg"], more: ["muscleUptake", "burn", "fuel"] },
-  { id: "circulation", title: "Heart & lungs", organs: ["heart", "lungs"], readings: ["hr", "bloodPressure", "breaths", "flowGut"], more: ["output", "flowMuscle", "flowBrain", "flowKidneys"] },
-  { id: "muscles", title: "Muscles", organs: ["muscle"], readings: muscleReadings.slice(0, 4), more: muscleReadings.slice(4) },
-  { id: "brain", title: "Brain & mood", organs: ["brain"], readings: ["alertness", "stressLevel", "reward", "caffeine"], more: ["alcohol"] },
-  { id: "immune", title: "Illness & recovery", organs: ["spleen"], readings: ["temperature", "immune"], more: ["inflammation"] },
-  { id: "clearing", title: "Liver & kidneys", organs: ["liver", "kidneys", "bladder"], readings: ["caffeine", "alcohol", "bladder", "fluid"], more: ["flowKidneys"] },
-  { id: "reproductive", title: "Reproductive", organs: ["uterus", "ovaries", "prostate"], readings: ["cycleDay", "estradiol", "progesterone"], more: [] },
+  {
+    id: "overview",
+    title: "Overview",
+    organs: [],
+    readings: ["glucose", "hr", "stomach", "temperature"],
+    more: ["insulin", "tg", "caffeine", "glycogen"],
+  },
+  {
+    id: "digestion",
+    title: "Digestion",
+    organs: ["stomach", "small_intestine", "large_intestine", "pancreas", "liver"],
+    readings: ["stomach", "absorbing", "flowGut"],
+    more: [],
+  },
+  {
+    id: "energy",
+    title: "Sugar & energy",
+    organs: ["pancreas", "liver", "muscle", "fat"],
+    readings: ["glucose", "insulin", "glycogen", "tg"],
+    more: ["muscleUptake", "burn", "fuel"],
+  },
+  {
+    id: "circulation",
+    title: "Heart & lungs",
+    organs: ["heart", "lungs"],
+    readings: ["hr", "bloodPressure", "breaths", "flowGut"],
+    more: ["output", "flowMuscle", "flowBrain", "flowKidneys"],
+  },
+  {
+    id: "muscles",
+    title: "Muscles",
+    organs: ["muscle"],
+    readings: muscleReadings.slice(0, 4),
+    more: muscleReadings.slice(4),
+  },
+  {
+    id: "brain",
+    title: "Brain & mood",
+    organs: ["brain"],
+    readings: ["alertness", "stressLevel", "reward", "caffeine"],
+    more: ["alcohol"],
+  },
+  {
+    id: "immune",
+    title: "Illness & recovery",
+    organs: ["spleen"],
+    readings: ["temperature", "immune"],
+    more: ["inflammation"],
+  },
+  {
+    id: "clearing",
+    title: "Liver & kidneys",
+    organs: ["liver", "kidneys", "bladder"],
+    readings: ["caffeine", "alcohol", "bladder", "fluid"],
+    more: ["flowKidneys"],
+  },
+  {
+    id: "reproductive",
+    title: "Reproductive",
+    organs: ["uterus", "ovaries", "prostate"],
+    readings: ["cycleDay", "estradiol", "progesterone"],
+    more: [],
+  },
 ];
 
 export const ORGAN_NAME: Record<OrganId, string> = {

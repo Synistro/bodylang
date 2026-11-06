@@ -16,18 +16,18 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
     ['import { getState } from "../../store";', /can't import/],
     ['export { x } from "../simulate";', /can't import/],
     ['const x = await import("./other");', /can't load anything/],
-    ['const key = process.env.SECRET;', /can't use process/],
+    ["const key = process.env.SECRET;", /can't use process/],
     ['fetch("https://example.com");', /can't use fetch/],
     ["const f = new Function('return 1');", /can't use Function/],
     ['eval("1");', /can't use eval/],
     ["const g = [].constructor.constructor('return this')();", /can't use constructor/],
     ['const g = []["constructor"]["constructor"]("return this")();', /can't use constructor/],
-    ['const t = window.location;', /can't use window/],
+    ["const t = window.location;", /can't use window/],
     ['localStorage.setItem("a", "b");', /can't use localStorage/],
-    ['const u = import.meta.url;', /can't use import.meta/],
-    ['setTimeout(() => 0, 1);', /can't use setTimeout/],
+    ["const u = import.meta.url;", /can't use import.meta/],
+    ["setTimeout(() => 0, 1);", /can't use setTimeout/],
     ['const f = []["con" + "structor"];', /property name from strings/],
-    ['const f = [][`constructor`];', /property name from strings/],
+    ["const f = [][`constructor`];", /property name from strings/],
     ['new Image().src = "https://example.com/";', /can't use Image/],
     ['location.href = "https://example.com";', /can't use location/],
     ['top.postMessage("x", "*");', /can't use top/],
@@ -44,13 +44,22 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
   });
 
   it("lets a test import the model, and nothing else", () => {
-    expect(checkSource('import { it } from "vitest"; import { simulate } from "../engine/simulate"; import { extension } from "./thyroid";', testImports("thyroid"))).toEqual([]);
-    expect(checkSource('import { execSync } from "node:child_process";', testImports("thyroid")).join()).toMatch(/can't import/);
+    expect(
+      checkSource(
+        'import { it } from "vitest"; import { simulate } from "../engine/simulate"; import { extension } from "./thyroid";',
+        testImports("thyroid"),
+      ),
+    ).toEqual([]);
+    expect(checkSource('import { execSync } from "node:child_process";', testImports("thyroid")).join()).toMatch(
+      /can't import/,
+    );
   });
 
   it("passes the process that is already in the repository", () => {
     expect(checkSource(readFileSync("src/model/extensions/thyroid.ts", "utf8"), PROCESS_IMPORTS)).toEqual([]);
-    expect(checkSource(readFileSync("src/model/extensions/thyroid.test.ts", "utf8"), testImports("thyroid"))).toEqual([]);
+    expect(checkSource(readFileSync("src/model/extensions/thyroid.test.ts", "utf8"), testImports("thyroid"))).toEqual(
+      [],
+    );
   });
 
   it("keeps a test away from what vitest can load", () => {
@@ -64,7 +73,10 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
 
 describe("what the build session is told", () => {
   it("names only files that exist", () => {
-    const told = readFileSync("server/extendSession.ts", "utf8") + readFileSync("server/extend.ts", "utf8") + readFileSync("src/model/extensions/api.ts", "utf8");
+    const told =
+      readFileSync("server/extendSession.ts", "utf8") +
+      readFileSync("server/extend.ts", "utf8") +
+      readFileSync("src/model/extensions/api.ts", "utf8");
     const named = told.match(/src\/[\w/.]+\.ts/g) ?? [];
     expect(named.length).toBeGreaterThan(2);
     expect(named.filter((path) => !existsSync(path))).toEqual([]);

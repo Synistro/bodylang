@@ -3,7 +3,19 @@ import { Ledger, ledgerAt, Trajectory } from "../engine/trajectory";
 import { foodKcalOf, Intake } from "../scenario";
 import { OrganId } from "../ids";
 import type { RouteId } from "../ids";
-import { Draft, Process, clock, flowRate, hasStarted, mealProcessId, mealTitle, numbered, percent, postureAt, shareOf } from "./line";
+import {
+  Draft,
+  Process,
+  clock,
+  flowRate,
+  hasStarted,
+  mealProcessId,
+  mealTitle,
+  numbered,
+  percent,
+  postureAt,
+  shareOf,
+} from "./line";
 
 interface FoodView {
   eaten: boolean;
@@ -40,7 +52,8 @@ const FOOD_STOPS: FoodStop[] = [
     say: (f) => {
       if (!f.eaten) return "It lands here later.";
       if (f.l.stomach < f.total * PROCESS.presentShare) return "Your stomach has passed it all on.";
-      if (f.emptying < PROCESS.stomachStillBelowKcalPerMin) return `${kcal(f.l.stomach)} of ${kcal(f.total)} is still here. The outlet opens about ${STOMACH.solidLagMin} minutes after you eat.`;
+      if (f.emptying < PROCESS.stomachStillBelowKcalPerMin)
+        return `${kcal(f.l.stomach)} of ${kcal(f.total)} is still here. The outlet opens about ${STOMACH.solidLagMin} minutes after you eat.`;
       return `${kcal(f.l.stomach)} of ${kcal(f.total)} is still here. It leaves at about ${f.emptying.toFixed(1)} kcal a minute${f.fatHeavy ? ", slowed by fat" : ""}.`;
     },
   },
@@ -51,8 +64,11 @@ const FOOD_STOPS: FoodStop[] = [
     routes: ["stomach_out", "duodenum", "jejunum"],
     flow: (f) => flowRate(f.emptying, FOOD_FULL_FLOW),
     say: (f) => {
-      if (f.l.intestine >= 1) return `${kcal(f.l.intestine)} is here. Enzymes split it into sugar, fat and amino acids, and the wall absorbs them.`;
-      return f.eaten && f.total - f.l.stomach >= 1 ? "All absorbed." : `Nothing here yet. Food starts arriving about ${STOMACH.solidLagMin} minutes after you eat.`;
+      if (f.l.intestine >= 1)
+        return `${kcal(f.l.intestine)} is here. Enzymes split it into sugar, fat and amino acids, and the wall absorbs them.`;
+      return f.eaten && f.total - f.l.stomach >= 1
+        ? "All absorbed."
+        : `Nothing here yet. Food starts arriving about ${STOMACH.solidLagMin} minutes after you eat.`;
     },
   },
   {
@@ -61,7 +77,10 @@ const FOOD_STOPS: FoodStop[] = [
     label: "Liver",
     routes: ["portal_liver"],
     flow: arrivalFlow("liver"),
-    say: (f) => (f.l.liver >= 1 ? `Blood from the gut reaches your liver first. It has kept ${kcal(f.l.liver)}, as glycogen and new proteins.` : "Blood from the gut reaches your liver first. It keeps some and passes the rest on."),
+    say: (f) =>
+      f.l.liver >= 1
+        ? `Blood from the gut reaches your liver first. It has kept ${kcal(f.l.liver)}, as glycogen and new proteins.`
+        : "Blood from the gut reaches your liver first. It keeps some and passes the rest on.",
   },
   {
     key: "blood",
@@ -70,8 +89,11 @@ const FOOD_STOPS: FoodStop[] = [
     routes: ["liver_out", "arch"],
     flow: (f) => flowRate(f.rate("blood") + f.rate("muscle") + f.rate("fat") + f.rate("burned"), FOOD_FULL_FLOW),
     say: (f) => {
-      if (f.l.blood >= 0.5) return `${kcal(f.l.blood)} is in your blood, as sugar, fat and amino acids heading for your cells.`;
-      return f.total - f.l.stomach - f.l.intestine >= 1 ? "It has moved on from your blood to your cells." : "Nothing in your blood yet. Sugar and amino acids arrive first, fat much later.";
+      if (f.l.blood >= 0.5)
+        return `${kcal(f.l.blood)} is in your blood, as sugar, fat and amino acids heading for your cells.`;
+      return f.total - f.l.stomach - f.l.intestine >= 1
+        ? "It has moved on from your blood to your cells."
+        : "Nothing in your blood yet. Sugar and amino acids arrive first, fat much later.";
     },
   },
   {
@@ -81,7 +103,10 @@ const FOOD_STOPS: FoodStop[] = [
     from: "blood",
     routes: ["descending", "leg_L"],
     flow: arrivalFlow("muscle"),
-    say: (f) => (f.l.muscle >= 1 ? `Your muscles hold ${kcal(f.l.muscle)} of this. Insulin opens them to sugar${f.muscleClause}.` : `Insulin opens your muscles to sugar${f.muscleClause}. Nothing has arrived yet.`),
+    say: (f) =>
+      f.l.muscle >= 1
+        ? `Your muscles hold ${kcal(f.l.muscle)} of this. Insulin opens them to sugar${f.muscleClause}.`
+        : `Insulin opens your muscles to sugar${f.muscleClause}. Nothing has arrived yet.`,
   },
   {
     key: "fat",
@@ -90,7 +115,10 @@ const FOOD_STOPS: FoodStop[] = [
     from: "intestine",
     routes: ["lymph"],
     flow: arrivalFlow("fat"),
-    say: (f) => (f.l.fat >= 1 ? `${kcal(f.l.fat)} is stored so far. Meal fat travels by lymph, so it comes later than sugar.` : "Meal fat travels by lymph, so it reaches your fat tissue hours after the sugar."),
+    say: (f) =>
+      f.l.fat >= 1
+        ? `${kcal(f.l.fat)} is stored so far. Meal fat travels by lymph, so it comes later than sugar.`
+        : "Meal fat travels by lymph, so it reaches your fat tissue hours after the sugar.",
   },
   {
     key: "burned",
@@ -99,7 +127,10 @@ const FOOD_STOPS: FoodStop[] = [
     from: "blood",
     routes: ["to_lung_L", "to_lung_R"],
     flow: arrivalFlow("burned"),
-    say: (f) => (f.l.burned >= 1 ? `Your cells burned ${kcal(f.l.burned)} of this. The carbon leaves as CO₂ when you breathe out.` : "Your cells burn some of this for energy. The carbon leaves as CO₂ when you breathe out."),
+    say: (f) =>
+      f.l.burned >= 1
+        ? `Your cells burned ${kcal(f.l.burned)} of this. The carbon leaves as CO₂ when you breathe out.`
+        : "Your cells burn some of this for energy. The carbon leaves as CO₂ when you breathe out.",
   },
   {
     key: "colon",
@@ -108,7 +139,10 @@ const FOOD_STOPS: FoodStop[] = [
     from: "intestine",
     routes: ["ileum", "colon"],
     flow: arrivalFlow("colon"),
-    say: (f) => (f.l.colon >= 1 ? `${kcal(f.l.colon)} moves on to your colon: fiber and what your intestine couldn't absorb.` : "Fiber and what your intestine can't absorb move on to your colon."),
+    say: (f) =>
+      f.l.colon >= 1
+        ? `${kcal(f.l.colon)} moves on to your colon: fiber and what your intestine couldn't absorb.`
+        : "Fiber and what your intestine can't absorb move on to your colon.",
   },
 ];
 
@@ -158,14 +192,22 @@ function foodHeadline(l: Ledger, total: number, active: boolean): string {
       [`${percent(shareOf(l.muscle, total))} in your muscles`, l.muscle],
       [`${percent(shareOf(l.burned, total))} burned`, l.burned],
     ];
-    return `Digested. ${stores.sort((a, b) => b[1] - a[1]).slice(0, 2).map((s) => s[0]).join(", ")}`;
+    return `Digested. ${stores
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map((s) => s[0])
+      .join(", ")}`;
   }
   if (inStomach >= PROCESS.mostlyInStomachShare) {
     const moving = shareOf(l.intestine + l.blood + l.liver + l.muscle + l.fat, total) >= PROCESS.firstArrivalShare;
-    return moving ? `${percent(inStomach)} still in your stomach, only the first sugar has reached your blood` : `${percent(inStomach)} still in your stomach, just eaten`;
+    return moving
+      ? `${percent(inStomach)} still in your stomach, only the first sugar has reached your blood`
+      : `${percent(inStomach)} still in your stomach, just eaten`;
   }
-  if (inStomach >= PROCESS.stillInStomachShare) return `${percent(inStomach)} still in your stomach, ${percent(settled)} stored or burned`;
-  if (l.intestine >= l.stomach) return `${percent(shareOf(l.intestine, total))} left in your intestine, ${percent(settled)} stored or burned`;
+  if (inStomach >= PROCESS.stillInStomachShare)
+    return `${percent(inStomach)} still in your stomach, ${percent(settled)} stored or burned`;
+  if (l.intestine >= l.stomach)
+    return `${percent(shareOf(l.intestine, total))} left in your intestine, ${percent(settled)} stored or burned`;
   return `${percent(inStomach)} left in your stomach, ${percent(settled)} stored or burned`;
 }
 
@@ -187,7 +229,12 @@ export function foodProcess(tr: Trajectory, group: Intake[], t: number): Process
     rate,
     emptying: Math.max(0, -rate("stomach")),
     fatHeavy: fatKcal >= allKcal * PROCESS.fatHeavyShare,
-    muscleClause: posture === "sitting" ? ", slowly while you sit" : posture === "walking" || posture === "running" ? ", quickly while you move" : "",
+    muscleClause:
+      posture === "sitting"
+        ? ", slowly while you sit"
+        : posture === "walking" || posture === "running"
+          ? ", quickly while you move"
+          : "",
   };
   const swallowing = eaten && t - at < PROCESS.swallowedForMin;
   const drafts: Draft[] = FOOD_STOPS.map((stop) => ({

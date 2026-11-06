@@ -40,7 +40,12 @@ export function organStates(tr: Trajectory, t: number): OrganState[] {
       activity: clamp01((stomachMl - STOMACH.restingVolumeMl) / 420),
       tint: stomachKcal > 5 ? "chyme" : null,
       reading: `${round(stomachMl, 10)} ml`,
-      doing: stomachKcal > 5 ? `Holding ${round(stomachKcal, 10)} kcal, letting out ${v("emptyingKcalPerMin").toFixed(1)} kcal a minute` : stomachMl > 90 ? "Passing liquid through" : "Empty and resting",
+      doing:
+        stomachKcal > 5
+          ? `Holding ${round(stomachKcal, 10)} kcal, letting out ${v("emptyingKcalPerMin").toFixed(1)} kcal a minute`
+          : stomachMl > 90
+            ? "Passing liquid through"
+            : "Empty and resting",
     },
     {
       id: "small_intestine",
@@ -48,7 +53,8 @@ export function organStates(tr: Trajectory, t: number): OrganState[] {
       activity: clamp01(absorbG / 0.55 + absorbF / 0.3 + v("gutKcal") / 300),
       tint: absorbG > 0.02 ? "glucose" : v("gutKcal") > 5 ? "chyme" : null,
       reading: absorbG > 0.02 ? `${(absorbG * 60).toFixed(0)} g/h` : "quiet",
-      doing: absorbG > 0.02 ? `Absorbing sugar${absorbF > 0.02 ? " and fat" : ""} into the blood` : "Nothing arriving yet",
+      doing:
+        absorbG > 0.02 ? `Absorbing sugar${absorbF > 0.02 ? " and fat" : ""} into the blood` : "Nothing arriving yet",
     },
     {
       id: "liver",
@@ -56,7 +62,14 @@ export function organStates(tr: Trajectory, t: number): OrganState[] {
       activity: clamp01(v("liverUptakeGMin") / 0.55 + caffeine / 2.2 + alcohol * 3),
       tint: alcohol > 0.03 ? "alcohol" : v("liverUptakeGMin") > 0.05 ? "glucose" : caffeine > 0.2 ? "caffeine" : null,
       reading: `${round(v("liverGlycogen"))} g glycogen`,
-      doing: alcohol > 0.03 ? "Breaking down alcohol first, everything else waits" : v("liverUptakeGMin") > 0.05 ? "Storing sugar from the portal vein, and still clearing caffeine" : caffeine > 0.2 ? "Clearing caffeine, feeding the blood from glycogen" : "Feeding the blood from glycogen",
+      doing:
+        alcohol > 0.03
+          ? "Breaking down alcohol first, everything else waits"
+          : v("liverUptakeGMin") > 0.05
+            ? "Storing sugar from the portal vein, and still clearing caffeine"
+            : caffeine > 0.2
+              ? "Clearing caffeine, feeding the blood from glycogen"
+              : "Feeding the blood from glycogen",
     },
     {
       id: "pancreas",
@@ -64,7 +77,10 @@ export function organStates(tr: Trajectory, t: number): OrganState[] {
       activity: clamp01(insulinOver / 26),
       tint: insulinOver > 2 ? "insulin" : null,
       reading: `${(v("insulin") / 8).toFixed(1)}× insulin`,
-      doing: insulinOver > 2 ? "Releasing insulin, so cells take sugar in and stop burning fat" : "Keeping insulin at its resting level",
+      doing:
+        insulinOver > 2
+          ? "Releasing insulin, so cells take sugar in and stop burning fat"
+          : "Keeping insulin at its resting level",
     },
     {
       id: "heart",
@@ -80,7 +96,10 @@ export function organStates(tr: Trajectory, t: number): OrganState[] {
       activity: clamp01(felt * 1.9),
       tint: felt > 0.1 ? "caffeine" : null,
       reading: occ > 0.01 ? `${round(occ * 100)}% blocked` : "clear",
-      doing: felt > 0.1 ? `Caffeine sitting on adenosine receptors, ${round(caffeine * 10) / 10} mg/L in blood` : "Adenosine building as the day goes on",
+      doing:
+        felt > 0.1
+          ? `Caffeine sitting on adenosine receptors, ${round(caffeine * 10) / 10} mg/L in blood`
+          : "Adenosine building as the day goes on",
     },
     {
       id: "muscle",
@@ -136,13 +155,29 @@ function reproductiveStates(tr: Trajectory, t: number): OrganState[] {
   const phase = cyclePhase(cycle, t);
   const day = `Day ${cycleDay(cycle, t)}`;
   return [
-    { id: "uterus", title: "Uterus", activity: phase === "period" ? 0.8 : 0.25 + 0.3 * liningShare(cycle, t), tint: null, reading: day, doing: phase === "period" ? "Shedding its lining" : "Keeping its lining" },
-    { id: "ovaries", title: "Ovaries", activity: phase === "ovulation" ? 0.85 : phase === "luteal" ? 0.55 : 0.35, tint: null, reading: day, doing: phase === "ovulation" ? "Releasing an egg" : "Making hormones" },
+    {
+      id: "uterus",
+      title: "Uterus",
+      activity: phase === "period" ? 0.8 : 0.25 + 0.3 * liningShare(cycle, t),
+      tint: null,
+      reading: day,
+      doing: phase === "period" ? "Shedding its lining" : "Keeping its lining",
+    },
+    {
+      id: "ovaries",
+      title: "Ovaries",
+      activity: phase === "ovulation" ? 0.85 : phase === "luteal" ? 0.55 : 0.35,
+      tint: null,
+      reading: day,
+      doing: phase === "ovulation" ? "Releasing an egg" : "Making hormones",
+    },
   ];
 }
 
 function postureUptakeText(posture: number) {
-  return posture >= 3 ? "Working, pulling sugar out of the blood without needing much insulin" : "Insulin is opening them to sugar, slowly while you sit";
+  return posture >= 3
+    ? "Working, pulling sugar out of the blood without needing much insulin"
+    : "Insulin is opening them to sugar, slowly while you sit";
 }
 
 function customStates(tr: Trajectory, t: number): OrganState[] {

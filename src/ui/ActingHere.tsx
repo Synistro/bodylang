@@ -20,15 +20,32 @@ export function ActingHere({ organ }: { organ: OrganId }) {
   // What the step is about always makes the list, first. Three beers are one row.
   const rows = useMemo(() => {
     const alreadyYours = yourDay ? processIdsOf(yourDay, minute) : null;
-    const all = actingAt(trajectory, minute, organ).filter((row) => row.process.id === about || !alreadyYours?.has(row.process.id));
-    const ordered = [...all.filter((row) => row.process.id === about), ...all.filter((row) => row.process.id !== about)];
-    return ordered.filter((row, i) => ordered.findIndex((other) => other.process.title === row.process.title) === i).slice(0, MOST_ROWS);
+    const all = actingAt(trajectory, minute, organ).filter(
+      (row) => row.process.id === about || !alreadyYours?.has(row.process.id),
+    );
+    const ordered = [
+      ...all.filter((row) => row.process.id === about),
+      ...all.filter((row) => row.process.id !== about),
+    ];
+    return ordered
+      .filter((row, i) => ordered.findIndex((other) => other.process.title === row.process.title) === i)
+      .slice(0, MOST_ROWS);
   }, [trajectory, yourDay, minute, organ, about]);
   if (!rows.length) return null;
   return (
-    <ul className="acting" aria-label="What is acting on it now" data-pointed={about !== null && rows.some((row) => row.process.id === about) ? true : undefined}>
+    <ul
+      className="acting"
+      aria-label="What is acting on it now"
+      data-pointed={about !== null && rows.some((row) => row.process.id === about) ? true : undefined}
+    >
       {rows.map(({ process, say, strength }) => (
-        <li key={process.id} className="acting-row" data-about={process.id === about || undefined} style={{ "--strength": strength.toFixed(2) }} {...sourced(processOrigin(trajectory, process))}>
+        <li
+          key={process.id}
+          className="acting-row"
+          data-about={process.id === about || undefined}
+          style={{ "--strength": strength.toFixed(2) }}
+          {...sourced(processOrigin(trajectory, process))}
+        >
           <i className="acting-flow" aria-hidden="true" />
           <span className="acting-words">
             <b>{process.title}</b> {say}

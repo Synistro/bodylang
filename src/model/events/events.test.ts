@@ -23,18 +23,99 @@ const toMmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
 const body = { sex: "male" as const, age: 30, heightCm: 180, weightKg: 80 };
 const anthro = anthropometrics(body);
 
-const base: Scenario = { body, activities: [{ from: hm(8), posture: "sitting" }], substances: [], intakes: [], events: [] };
-const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
-const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
-const water: Intake = { ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(12), grams: 1000, waterMl: 1000, liquid: true };
+const base: Scenario = {
+  body,
+  activities: [{ from: hm(8), posture: "sitting" }],
+  substances: [],
+  intakes: [],
+  events: [],
+};
+const coffee: Intake = {
+  ...NO_NUTRIENTS,
+  id: "coffee",
+  label: "Coffee",
+  at: hm(8, 30),
+  grams: 250,
+  waterMl: 250,
+  caffeineMg: 95,
+  liquid: true,
+};
+const pizza: Intake = {
+  ...NO_NUTRIENTS,
+  id: "pizza",
+  label: "Pizza",
+  at: hm(16, 45),
+  grams: 240,
+  waterMl: 110,
+  carbsG: 72,
+  sugarG: 8,
+  fatG: 26,
+  proteinG: 28,
+  fiberG: 4,
+};
+const water: Intake = {
+  ...NO_NUTRIENTS,
+  id: "water",
+  label: "Water",
+  at: hm(12),
+  grams: 1000,
+  waterMl: 1000,
+  liquid: true,
+};
 
 const blank = { muscles: [], symptoms: [], custom: null, source: "" };
-const chestDay: BodyEvent = { ...blank, id: "chest", label: "Chest workout", preset: "training", from: hm(10), until: hm(11), intensity: 0.8, muscles: [{ group: "chest", load: 1 }, { group: "triceps", load: 0.6 }] };
-const cold: BodyEvent = { ...blank, id: "cold", label: "Cold", preset: "illness", from: hm(8), until: null, intensity: 0.4, symptoms: ["cough", "congestion"] };
-const flu: BodyEvent = { ...blank, id: "flu", label: "Flu", preset: "illness", from: -hm(24), until: null, intensity: 0.7, symptoms: ["cough", "fever", "fatigue"] };
+const chestDay: BodyEvent = {
+  ...blank,
+  id: "chest",
+  label: "Chest workout",
+  preset: "training",
+  from: hm(10),
+  until: hm(11),
+  intensity: 0.8,
+  muscles: [
+    { group: "chest", load: 1 },
+    { group: "triceps", load: 0.6 },
+  ],
+};
+const cold: BodyEvent = {
+  ...blank,
+  id: "cold",
+  label: "Cold",
+  preset: "illness",
+  from: hm(8),
+  until: null,
+  intensity: 0.4,
+  symptoms: ["cough", "congestion"],
+};
+const flu: BodyEvent = {
+  ...blank,
+  id: "flu",
+  label: "Flu",
+  preset: "illness",
+  from: -hm(24),
+  until: null,
+  intensity: 0.7,
+  symptoms: ["cough", "fever", "fatigue"],
+};
 const sex: BodyEvent = { ...blank, id: "sex", label: "Sex", preset: "sex", from: hm(21), until: null, intensity: 0.6 };
-const exam: BodyEvent = { ...blank, id: "exam", label: "Exam", preset: "stress", from: hm(14), until: hm(16), intensity: 1 };
-const shortNight: BodyEvent = { ...blank, id: "night", label: "Short night", preset: "poor_sleep", from: hm(8), until: null, intensity: 1 };
+const exam: BodyEvent = {
+  ...blank,
+  id: "exam",
+  label: "Exam",
+  preset: "stress",
+  from: hm(14),
+  until: hm(16),
+  intensity: 1,
+};
+const shortNight: BodyEvent = {
+  ...blank,
+  id: "night",
+  label: "Short night",
+  preset: "poor_sleep",
+  from: hm(8),
+  until: null,
+  intensity: 1,
+};
 const sauna: BodyEvent = {
   ...blank,
   id: "sauna",
@@ -51,13 +132,33 @@ const sauna: BodyEvent = {
       { channel: "temperature", amount: 1, riseMin: 15, halfLifeMin: 20 },
       { channel: "fluidLoss", amount: 15, riseMin: 5, halfLifeMin: 5 },
     ],
-    feelings: [{ id: "flushed", label: "Flushed", amount: 0.6, riseMin: 5, halfLifeMin: 20, cause: "Heat is opening your skin vessels", organ: "heart" }],
-    stops: [{ organ: "heart", muscle: null, label: "Skin", afterMin: 0, say: "Blood moves to your skin to shed heat.", routes: [] }],
+    feelings: [
+      {
+        id: "flushed",
+        label: "Flushed",
+        amount: 0.6,
+        riseMin: 5,
+        halfLifeMin: 20,
+        cause: "Heat is opening your skin vessels",
+        organ: "heart",
+      },
+    ],
+    stops: [
+      {
+        organ: "heart",
+        muscle: null,
+        label: "Skin",
+        afterMin: 0,
+        say: "Blood moves to your skin to shed heat.",
+        routes: [],
+      },
+    ],
   },
 };
 
 const withEvents = (...events: BodyEvent[]) => simulate({ ...base, events });
-const addedBy = (tr: Trajectory, plain: Trajectory, name: Parameters<typeof value>[1], t: number) => value(tr, name, t) - value(plain, name, t);
+const addedBy = (tr: Trajectory, plain: Trajectory, name: Parameters<typeof value>[1], t: number) =>
+  value(tr, name, t) - value(plain, name, t);
 const plain = simulate(base);
 const reading = (a: Assessment, id: Assessment["readings"][number]["id"]) => {
   const found = a.readings.find((r) => r.id === id);
@@ -105,14 +206,18 @@ describe("training, against published numbers", () => {
 
   it("keeps lifting in the light to moderate part of heart rate reserve, about 120 bpm at 0.8", () => {
     const sittingBpm = anthro.restingBpm + 2;
-    const reserveAt = (intensity: number) => (value(withEvents({ ...chestDay, intensity }), "hr", hm(10, 30)) - sittingBpm) / (maxHeartRate(30) - sittingBpm);
+    const reserveAt = (intensity: number) =>
+      (value(withEvents({ ...chestDay, intensity }), "hr", hm(10, 30)) - sittingBpm) / (maxHeartRate(30) - sittingBpm);
     expect(reserveAt(0)).toBeCloseTo(TRAINING.heartReserve.atZero, 1);
     expect(reserveAt(1)).toBeCloseTo(TRAINING.heartReserve.atZero + TRAINING.heartReserve.gain, 1);
     expect(value(tr, "hr", hm(10, 30))).toBeCloseTo(120, -0.5);
   });
 
   it("burns what the Compendium gives for resistance training", () => {
-    const metsAt = (intensity: number) => (value(withEvents({ ...chestDay, intensity }), "kcalPerHour", hm(10, 30)) - anthro.bmrKcalPerDay / 24) / body.weightKg + 1;
+    const metsAt = (intensity: number) =>
+      (value(withEvents({ ...chestDay, intensity }), "kcalPerHour", hm(10, 30)) - anthro.bmrKcalPerDay / 24) /
+        body.weightKg +
+      1;
     expect(metsAt(0)).toBeCloseTo(3.5, 1);
     expect(metsAt(1)).toBeCloseTo(6, 1);
   });
@@ -188,7 +293,7 @@ describe("training, against published numbers", () => {
 
   it("shares more blood with muscle, sweats within Barnes's range, and warms you", () => {
     expect(value(tr, "flowMuscle", hm(10, 30))).toBeGreaterThan(value(plain, "flowMuscle", hm(10, 30)) + 0.15);
-    const litresPerHour = -(value(tr, "fluidBalance", hm(11)) - value(tr, "fluidBalance", hm(10, 30))) * 2 / 1000;
+    const litresPerHour = (-(value(tr, "fluidBalance", hm(11)) - value(tr, "fluidBalance", hm(10, 30))) * 2) / 1000;
     expect(litresPerHour).toBeGreaterThan(0.3);
     expect(litresPerHour).toBeLessThan(0.83);
     expect(addedBy(tr, plain, "temperature", hm(11))).toBeCloseTo(0.8 * (40 / 40), 0);
@@ -197,7 +302,11 @@ describe("training, against published numbers", () => {
   it("lets drinking pay the fluid back", () => {
     const thirsty = value(tr, "fluidBalance", hm(11, 30));
     expect(thirsty).toBeLessThan(-300);
-    const drank = simulate({ ...base, events: [chestDay], intakes: [{ ...water, grams: 1500, waterMl: 1500, at: hm(11, 15) }] });
+    const drank = simulate({
+      ...base,
+      events: [chestDay],
+      intakes: [{ ...water, grams: 1500, waterMl: 1500, at: hm(11, 15) }],
+    });
     expect(value(drank, "fluidBalance", hm(13))).toBeGreaterThan(-100);
     expect(value(drank, "fluidBalance", hm(13))).toBeLessThanOrEqual(0);
   });
@@ -230,7 +339,8 @@ describe("training, against published numbers", () => {
   });
 
   it("shows under each system it crosses", () => {
-    for (const system of ["muscles", "circulation", "energy"] as const) expect(processesFor(tr, hm(10, 30), system).map((p) => p.id)).toContain("event:chest");
+    for (const system of ["muscles", "circulation", "energy"] as const)
+      expect(processesFor(tr, hm(10, 30), system).map((p) => p.id)).toContain("event:chest");
     expect(processesFor(tr, hm(10, 30), "digestion").map((p) => p.id)).not.toContain("event:chest");
   });
 
@@ -300,7 +410,13 @@ describe("illness, against published numbers", () => {
   it("tells the illness as a line, with the cough branching off the airways", () => {
     const line = processesAt(tr, hm(12)).find((p) => p.id === "event:flu");
     expect(line?.stops.map((s) => s.label)).toEqual(["Airways", "Immune system", "Brain", "Cough reflex"]);
-    expect(line?.stops.find((s) => s.label === "Cough reflex")).toMatchObject({ organ: "muscle", muscle: "abs", from: "stop-0", state: "ahead", reading: "Active" });
+    expect(line?.stops.find((s) => s.label === "Cough reflex")).toMatchObject({
+      organ: "muscle",
+      muscle: "abs",
+      from: "stop-0",
+      state: "ahead",
+      reading: "Active",
+    });
     expect(line?.stops.find((s) => s.label === "Airways")?.reading).toBe("Irritated");
     expect(line?.stops.find((s) => s.label === "Immune system")?.reading).toBe("Responding");
     expect(line?.stops.find((s) => s.label === "Brain")).toMatchObject({ state: "here", reading: "+1.4 °C" });
@@ -311,8 +427,16 @@ describe("illness, against published numbers", () => {
   });
 
   it("leaves out the brain stop when there is no fever, and the cough when there is none", () => {
-    expect(processesAt(withEvents(cold), hm(14)).find((p) => p.id === "event:cold")?.stops.map((s) => s.label)).toEqual(["Airways", "Immune system", "Cough reflex"]);
-    expect(processesAt(withEvents({ ...cold, symptoms: [] }), hm(14)).find((p) => p.id === "event:cold")?.stops.map((s) => s.label)).toEqual(["Airways", "Immune system"]);
+    expect(
+      processesAt(withEvents(cold), hm(14))
+        .find((p) => p.id === "event:cold")
+        ?.stops.map((s) => s.label),
+    ).toEqual(["Airways", "Immune system", "Cough reflex"]);
+    expect(
+      processesAt(withEvents({ ...cold, symptoms: [] }), hm(14))
+        .find((p) => p.id === "event:cold")
+        ?.stops.map((s) => s.label),
+    ).toEqual(["Airways", "Immune system"]);
   });
 
   it("stays active while until is null and fades once it ends", () => {
@@ -372,7 +496,14 @@ describe("sex, against published numbers", () => {
     expect(line?.title).toBe("Sexual activity");
     expect(thread?.title).toBe("Sexual activity");
     const a = assess(named, hm(21, 40));
-    const strings = [line?.headline ?? "", ...(line?.stops.flatMap((s) => [s.label, s.say, s.reading]) ?? []), thread?.status ?? "", a.headline, ...a.feelings.flatMap((f) => [f.label, f.cause]), ...a.readings.map((r) => r.why)];
+    const strings = [
+      line?.headline ?? "",
+      ...(line?.stops.flatMap((s) => [s.label, s.say, s.reading]) ?? []),
+      thread?.status ?? "",
+      a.headline,
+      ...a.feelings.flatMap((f) => [f.label, f.cause]),
+      ...a.readings.map((r) => r.why),
+    ];
     expect(strings.join(" ")).not.toMatch(/\b(hot|wife|sexy|fun|great|nice|pleasure|intercourse|naked)\b/i);
   });
 });
@@ -489,7 +620,11 @@ describe("a custom story", () => {
 });
 
 describe("the walking fix", () => {
-  const walkFrom = (from: number, posture: "walking" | "running", until: number): Scenario["activities"] => [{ from: hm(8), posture: "sitting" }, { from, posture }, { from: until, posture: "sitting" }];
+  const walkFrom = (from: number, posture: "walking" | "running", until: number): Scenario["activities"] => [
+    { from: hm(8), posture: "sitting" },
+    { from, posture },
+    { from: until, posture: "sitting" },
+  ];
 
   it("keeps a fasted walk well above low sugar", () => {
     const tr = simulate({ ...base, activities: walkFrom(hm(12), "walking", hm(13)) });
@@ -526,7 +661,10 @@ describe("caffeine has two separate scales", () => {
 
   it("reads receptors blocked from Elmenhorst's PET figure", () => {
     expect(CAFFEINE.receptorA1Ic50Um).toBe(67);
-    expect(13 * CAFFEINE.molarMgPerLToUm / (13 * CAFFEINE.molarMgPerLToUm + CAFFEINE.receptorA1Ic50Um)).toBeCloseTo(0.5, 2);
+    expect((13 * CAFFEINE.molarMgPerLToUm) / (13 * CAFFEINE.molarMgPerLToUm + CAFFEINE.receptorA1Ic50Um)).toBeCloseTo(
+      0.5,
+      2,
+    );
     const day = simulate({ ...base, intakes: [coffee] });
     expect(value(day, "occupancy", hm(17))).toBeCloseTo(0.043, 2);
     expect(reading(assess(day, hm(17)), "receptors").source).toContain("A1");
@@ -546,7 +684,9 @@ describe("caffeine has two separate scales", () => {
 
   it("keeps one cup well under half of receptors, and calls it working long after", () => {
     expect(peakOf(cups(1), "occupancy")).toBeLessThan(0.15);
-    expect(processesAt(simulate({ ...base, intakes: [coffee] }), hm(17)).find((p) => p.id === "intake:coffee")?.active).toBe(true);
+    expect(
+      processesAt(simulate({ ...base, intakes: [coffee] }), hm(17)).find((p) => p.id === "intake:coffee")?.active,
+    ).toBe(true);
   });
 });
 
@@ -565,7 +705,8 @@ describe("the fixed quirks", () => {
     const extra = (t: number) => value(fed, "hr", t) - before;
     expect(extra(pizza.at + 1)).toBeLessThan(1.5);
     expect(extra(pizza.at + 15)).toBeGreaterThan(2);
-    for (let t = pizza.at; t < pizza.at + 60; t++) expect(value(fed, "hr", t + 1) - value(fed, "hr", t)).toBeLessThan(1);
+    for (let t = pizza.at; t < pizza.at + 60; t++)
+      expect(value(fed, "hr", t + 1) - value(fed, "hr", t)).toBeLessThan(1);
   });
 
   it("slows the kidneys overnight", () => {
@@ -585,7 +726,10 @@ describe("the fixed quirks", () => {
   });
 
   it("lets someone stay up by saying so", () => {
-    const up: Scenario["activities"] = [{ from: hm(8), posture: "sitting" }, { from: hm(24, 30), posture: "standing" }];
+    const up: Scenario["activities"] = [
+      { from: hm(8), posture: "sitting" },
+      { from: hm(24, 30), posture: "standing" },
+    ];
     expect(postureAt(up, hm(24))).toBe("sleeping");
     expect(postureAt(up, hm(24, 40))).toBe("standing");
   });
@@ -600,7 +744,17 @@ describe("the fixed quirks", () => {
 
 describe("the rail", () => {
   it("lists nine systems in order, with the agreed titles", () => {
-    expect(SYSTEMS.map((s) => s.title)).toEqual(["Overview", "Digestion", "Sugar & energy", "Heart & lungs", "Muscles", "Brain & mood", "Illness & recovery", "Liver & kidneys", "Reproductive"]);
+    expect(SYSTEMS.map((s) => s.title)).toEqual([
+      "Overview",
+      "Digestion",
+      "Sugar & energy",
+      "Heart & lungs",
+      "Muscles",
+      "Brain & mood",
+      "Illness & recovery",
+      "Liver & kidneys",
+      "Reproductive",
+    ]);
     expect(systemById("clearing").title).toBe("Liver & kidneys");
     expect([...systemById("muscles").readings, ...systemById("muscles").more]).toHaveLength(MUSCLE_GROUPS.length);
     expect(systemById("immune").readings).toContain("temperature");
@@ -610,7 +764,8 @@ describe("the rail", () => {
 
   it("marks quiet systems so nothing has to compare words", () => {
     const rest = assess(plain, hm(7));
-    for (const system of ["digestion", "muscles", "immune", "clearing"] as const) expect(rest.systems[system].quiet).toBe(true);
+    for (const system of ["digestion", "muscles", "immune", "clearing"] as const)
+      expect(rest.systems[system].quiet).toBe(true);
     const busy = assess(withEvents(chestDay), hm(10, 30));
     expect(busy.systems.muscles).toMatchObject({ word: "Working", quiet: false });
     expect(busy.systems.circulation).toMatchObject({ word: "Working", quiet: false });
@@ -618,11 +773,33 @@ describe("the rail", () => {
   });
 
   it("never lets the headline repeat the first notable item", () => {
-    const scenarios = [withEvents(flu), withEvents(chestDay), simulate({ ...base, intakes: [pizza, coffee] }), simulate({ ...base, intakes: [0, 1, 2, 3].map((n) => ({ ...NO_NUTRIENTS, id: `beer_${n}`, label: "Beer", at: hm(19) + n * 10, grams: 500, waterMl: 460, alcoholG: 20, liquid: true })) })];
+    const scenarios = [
+      withEvents(flu),
+      withEvents(chestDay),
+      simulate({ ...base, intakes: [pizza, coffee] }),
+      simulate({
+        ...base,
+        intakes: [0, 1, 2, 3].map((n) => ({
+          ...NO_NUTRIENTS,
+          id: `beer_${n}`,
+          label: "Beer",
+          at: hm(19) + n * 10,
+          grams: 500,
+          waterMl: 460,
+          alcoholG: 20,
+          liquid: true,
+        })),
+      }),
+    ];
     for (const tr of scenarios) {
       for (let t = hm(8); t <= hm(23); t += 10) {
         const a = assess(tr, t);
-        const outOfRange = a.readings.some((r) => r.verdict !== "expected" && r.verdict !== "normal" && (r.value < r.scale.typicalLow || r.value > r.scale.typicalHigh));
+        const outOfRange = a.readings.some(
+          (r) =>
+            r.verdict !== "expected" &&
+            r.verdict !== "normal" &&
+            (r.value < r.scale.typicalLow || r.value > r.scale.typicalHigh),
+        );
         if (outOfRange) expect(a.headline).not.toContain("Nothing is out of range");
         if (!a.notable.length) continue;
         const subject = a.notable[0].text.split(" is ")[0].toLowerCase();
@@ -638,16 +815,38 @@ describe("threads", () => {
     const tr = withEvents(morning, cold);
     const threads = threadsAt(tr, hm(14));
     expect(threads.map((t) => t.id).sort()).toEqual(["event:chest", "event:cold"]);
-    expect(threads.find((t) => t.id === "event:cold")).toMatchObject({ title: "Cold", kind: "illness", status: "fighting it", active: true, processId: "event:cold" });
-    expect(threads.find((t) => t.id === "event:chest")).toMatchObject({ title: "Chest workout", kind: "training", status: "repairing", active: true });
+    expect(threads.find((t) => t.id === "event:cold")).toMatchObject({
+      title: "Cold",
+      kind: "illness",
+      status: "fighting it",
+      active: true,
+      processId: "event:cold",
+    });
+    expect(threads.find((t) => t.id === "event:chest")).toMatchObject({
+      title: "Chest workout",
+      kind: "training",
+      status: "repairing",
+      active: true,
+    });
     expect(threads[0].id).toBe("event:cold");
   });
 
   it("follows food and drink by where they are", () => {
     const tr = simulate({ ...base, intakes: [coffee, pizza] });
     const at = (id: string, t: number) => threadsAt(tr, t).find((x) => x.id === id);
-    expect(at("intake:pizza", hm(17))).toMatchObject({ title: "Ate pizza", kind: "food", status: "in stomach", since: "15 min ago", active: true });
-    expect(at("intake:coffee", hm(17))).toMatchObject({ title: "Drank coffee", kind: "drink", status: "fading", since: "9 h ago" });
+    expect(at("intake:pizza", hm(17))).toMatchObject({
+      title: "Ate pizza",
+      kind: "food",
+      status: "in stomach",
+      since: "15 min ago",
+      active: true,
+    });
+    expect(at("intake:coffee", hm(17))).toMatchObject({
+      title: "Drank coffee",
+      kind: "drink",
+      status: "fading",
+      since: "9 h ago",
+    });
     expect(at("intake:coffee", hm(8, 35))?.status).toBe("absorbing");
     expect(at("intake:coffee", hm(9, 15))?.status).toBe("working");
     expect(at("intake:pizza", hm(12))).toMatchObject({ status: "later", since: "at 16:45", active: false });
@@ -662,26 +861,81 @@ describe("threads", () => {
   });
 
   it("merges a sitting into one thread with a plain title", () => {
-    const bar: Intake = { ...NO_NUTRIENTS, id: "bar", label: "Sugar bar", at: pizza.at - 5, grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
+    const bar: Intake = {
+      ...NO_NUTRIENTS,
+      id: "bar",
+      label: "Sugar bar",
+      at: pizza.at - 5,
+      grams: 50,
+      waterMl: 3,
+      carbsG: 31,
+      sugarG: 27,
+      fatG: 12,
+      proteinG: 4,
+      fiberG: 1,
+    };
     const threads = threadsAt(simulate({ ...base, intakes: [bar, pizza] }), hm(17));
     expect(threads.map((t) => t.id)).toEqual(["meal:bar"]);
     expect(threads[0]).toMatchObject({ title: "Ate sugar bar and pizza", processId: "meal:bar", kind: "food" });
   });
 
   it("gives alcohol and pills their own lines, and plain water none", () => {
-    const ibuprofen = { id: "ibuprofen", label: "Ibuprofen", at: hm(13), doseMg: 400, tmaxMin: 90, halfLifeH: 2, volumeLPerKg: 0.15, bioavailability: 0.9, targets: [{ organ: "brain" as const, effect: "blocks the signal that makes pain" }], source: "test" };
-    const beer = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(13), grams: 500, waterMl: 460, carbsG: 18, alcoholG: 20, liquid: true };
+    const ibuprofen = {
+      id: "ibuprofen",
+      label: "Ibuprofen",
+      at: hm(13),
+      doseMg: 400,
+      tmaxMin: 90,
+      halfLifeH: 2,
+      volumeLPerKg: 0.15,
+      bioavailability: 0.9,
+      targets: [{ organ: "brain" as const, effect: "blocks the signal that makes pain" }],
+      source: "test",
+    };
+    const beer = {
+      ...NO_NUTRIENTS,
+      id: "beer",
+      label: "Beer",
+      at: hm(13),
+      grams: 500,
+      waterMl: 460,
+      carbsG: 18,
+      alcoholG: 20,
+      liquid: true,
+    };
     const tr = simulate({ ...base, intakes: [beer, water], substances: [ibuprofen] });
     const threads = threadsAt(tr, hm(14));
     expect(threads.find((t) => t.id === "intake:beer")?.processId).toBe("alcohol:beer");
-    expect(threads.find((t) => t.id === "substance:ibuprofen")).toMatchObject({ kind: "substance", processId: "substance:ibuprofen" });
+    expect(threads.find((t) => t.id === "substance:ibuprofen")).toMatchObject({
+      kind: "substance",
+      processId: "substance:ibuprofen",
+    });
     expect(threads.find((t) => t.id === "intake:water")).toBeUndefined();
   });
 });
 
 describe("what Claude reads", () => {
   it("opens with one short caption, with no lead-in and at most two sentences", () => {
-    const day = simulate({ ...base, intakes: [coffee, { ...pizza }, { ...NO_NUTRIENTS, id: "bar", label: "Sugar bar", at: pizza.at, grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 }] });
+    const day = simulate({
+      ...base,
+      intakes: [
+        coffee,
+        { ...pizza },
+        {
+          ...NO_NUTRIENTS,
+          id: "bar",
+          label: "Sugar bar",
+          at: pizza.at,
+          grams: 50,
+          waterMl: 3,
+          carbsG: 31,
+          sugarG: 27,
+          fatG: 12,
+          proteinG: 4,
+          fiberG: 1,
+        },
+      ],
+    });
     const lines = openingReply(day, hm(17));
     expect(lines).toHaveLength(1);
     expect(lines[0]).not.toHaveProperty("head");
@@ -706,7 +960,11 @@ describe("what Claude reads", () => {
 });
 
 describe("determinism", () => {
-  const everything: Scenario = { ...base, intakes: [coffee, pizza], events: [chestDay, flu, exam, shortNight, sex, sauna] };
+  const everything: Scenario = {
+    ...base,
+    intakes: [coffee, pizza],
+    events: [chestDay, flu, exam, shortNight, sex, sauna],
+  };
 
   it("gives identical curves and strings for the same input, every time", () => {
     const a = simulate(everything);
@@ -737,7 +995,10 @@ describe("every minute of every kind of event", () => {
   const SCENARIOS: Record<string, Scenario> = {
     training: { ...base, events: [chestDay] },
     "training yesterday": { ...base, events: [{ ...chestDay, from: -hm(6), until: -hm(5) }] },
-    "a whole body session with no end given": { ...base, events: [{ ...chestDay, until: null, muscles: MUSCLE_GROUPS.map((group) => ({ group, load: 0.7 })) }] },
+    "a whole body session with no end given": {
+      ...base,
+      events: [{ ...chestDay, until: null, muscles: MUSCLE_GROUPS.map((group) => ({ group, load: 0.7 })) }],
+    },
     "a cold": { ...base, events: [cold] },
     flu: { ...base, events: [flu] },
     "illness with no symptoms named": { ...base, events: [{ ...cold, symptoms: [] }] },
@@ -757,8 +1018,15 @@ describe("every minute of every kind of event", () => {
     it(`writes nothing broken: ${name}`, () => {
       for (const t of minutes) {
         const a = assess(tr, t);
-        const texts = [a.headline, ...a.notable.map((n) => n.text), ...a.readings.flatMap((r) => [r.display, r.verdictWord, r.why, r.forecast ?? "", r.scale.typicalLabel]), ...a.feelings.flatMap((f) => [f.label, f.word, f.cause, f.when ?? ""]), ...Object.values(a.systems).map((s) => s.word)];
-        for (const p of processesAt(tr, t)) texts.push(p.title, p.headline, ...p.stops.flatMap((s) => [s.label, s.reading, s.say]));
+        const texts = [
+          a.headline,
+          ...a.notable.map((n) => n.text),
+          ...a.readings.flatMap((r) => [r.display, r.verdictWord, r.why, r.forecast ?? "", r.scale.typicalLabel]),
+          ...a.feelings.flatMap((f) => [f.label, f.word, f.cause, f.when ?? ""]),
+          ...Object.values(a.systems).map((s) => s.word),
+        ];
+        for (const p of processesAt(tr, t))
+          texts.push(p.title, p.headline, ...p.stops.flatMap((s) => [s.label, s.reading, s.say]));
         for (const thread of threadsAt(tr, t)) texts.push(thread.title, thread.since, thread.status);
         for (const text of texts) expect(text, text).not.toMatch(/NaN|undefined|Infinity|null|\bthe the\b/);
         for (const r of a.readings) expect(Number.isFinite(r.value), r.id).toBe(true);

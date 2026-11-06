@@ -3,7 +3,8 @@ import { BuildStage, buildStatusSchema, ExtendAction } from "../wire";
 import { showProcess } from "./navigation";
 import { parseProcessId, processIds } from "../model/ids";
 
-const tellServer = (body: ExtendAction) => fetch("/api/extend", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const tellServer = (body: ExtendAction) =>
+  fetch("/api/extend", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
 // A finished build reloads the page, so what happened is asked for again on the way back in.
 export function followBuilds() {
@@ -16,7 +17,10 @@ export function followBuilds() {
 
 export async function removeAddedProcess(processId: string) {
   const response = await tellServer({ action: "remove", id: parseProcessId(processId).ref }).catch(() => null);
-  if (!response?.ok) setUi({ dayProblem: `That process could not be removed. ${(await response?.text()) ?? "Is the dev server running?"}` });
+  if (!response?.ok)
+    setUi({
+      dayProblem: `That process could not be removed. ${(await response?.text()) ?? "Is the dev server running?"}`,
+    });
 }
 
 const WORKING: Partial<Record<BuildStage, string>> = {

@@ -14,8 +14,16 @@ type Setting = (typeof bladderCloseup.keys)[number];
 
 const CENTER = { x: 128, y: 94 };
 const SIZE = { emptyX: 34, fullX: 62, emptyY: 22, fullY: 52 };
-const URETER_L = curve([[100, -4], [98, 20], [108, 48]]);
-const URETER_R = curve([[156, -4], [158, 20], [148, 48]]);
+const URETER_L = curve([
+  [100, -4],
+  [98, 20],
+  [108, 48],
+]);
+const URETER_R = curve([
+  [156, -4],
+  [158, 20],
+  [148, 48],
+]);
 const WAVE_POINTS = 24;
 const DROPS = { leastPerSecond: 0.15, mostPerSecond: 1.6 };
 
@@ -65,9 +73,15 @@ const Drawing = memo(function Drawing() {
       <g data-part="filling">
         <path className="line-soft" d={URETER_L.d} />
         <path className="line-soft" d={URETER_R.d} />
-        {Array.from({ length: 5 }, (_, k) => <circle key={k} data-part="drop-left" className="flow-dot" r="1.6" />)}
-        {Array.from({ length: 5 }, (_, k) => <circle key={k} data-part="drop-right" className="flow-dot" r="1.6" />)}
-        <text x="166" y="14">From the kidneys</text>
+        {Array.from({ length: 5 }, (_, k) => (
+          <circle key={k} data-part="drop-left" className="flow-dot" r="1.6" />
+        ))}
+        {Array.from({ length: 5 }, (_, k) => (
+          <circle key={k} data-part="drop-right" className="flow-dot" r="1.6" />
+        ))}
+        <text x="166" y="14">
+          From the kidneys
+        </text>
       </g>
       <g data-part="holding">
         <g clipPath={`url(#${inside})`}>
@@ -76,7 +90,9 @@ const Drawing = memo(function Drawing() {
         <ellipse data-part="wall" className="line-ink" cx={CENTER.x} cy={CENTER.y} rx={SIZE.emptyX} ry={SIZE.emptyY} />
         <path className="line-soft" d={`M${CENTER.x - 4} 150V182M${CENTER.x + 4} 150V182`} />
         <path className="line-ink" d={`M${CENTER.x - 8} 152H${CENTER.x + 8}`} />
-        <text x={CENTER.x + 14} y="165">Held shut until you go</text>
+        <text x={CENTER.x + 14} y="165">
+          Held shut until you go
+        </text>
       </g>
     </>
   );
@@ -84,11 +100,19 @@ const Drawing = memo(function Drawing() {
 
 function useBladderPlate({ trajectory, t }: InsetProps, levels: Levels<Setting>): PlateWords {
   // The drawing stops at full, and the model can go past it overnight after a big drink.
-  const ml = levels.fullness < 1 ? levels.fullness * BLADDER_FULL.ml : Math.max(BLADDER_FULL.ml, value(trajectory, "bladderMl", t));
+  const ml =
+    levels.fullness < 1
+      ? levels.fullness * BLADDER_FULL.ml
+      : Math.max(BLADDER_FULL.ml, value(trajectory, "bladderMl", t));
   const r = REFERENCE.bladder;
   const caption = `Bladder: ${Math.round(ml / 10) * 10} ml`;
-  const note = ml >= r.strongDesireMl ? "You need to go soon" : ml >= r.firstDesireMl ? "You may start to notice it" : undefined;
-  return { caption, note: note ? { text: note } : undefined, describe: `The bladder filling from the two ureters and stretching as it fills. ${caption}.` };
+  const note =
+    ml >= r.strongDesireMl ? "You need to go soon" : ml >= r.firstDesireMl ? "You may start to notice it" : undefined;
+  return {
+    caption,
+    note: note ? { text: note } : undefined,
+    describe: `The bladder filling from the two ureters and stretching as it fills. ${caption}.`,
+  };
 }
 
 export const BladderInset = closeupInset(bladderCloseup, { Drawing, paint: paintBladder, usePlate: useBladderPlate });

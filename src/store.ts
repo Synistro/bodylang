@@ -172,7 +172,15 @@ function setBodyState(next: BodyState, extra: Partial<Ui> = {}) {
   const trajectory = derived?.trajectory ?? state.trajectory;
   const process = next.view.process === null ? null : followProcess(trajectory, next.view.process, Math.round(state.t));
   const walkthrough = process === next.view.process ? {} : { stop: null, touring: false };
-  state = { ...state, day: next.day, now: next.now, view: { ...next.view, process }, ...derived, ...walkthrough, ...extra };
+  state = {
+    ...state,
+    day: next.day,
+    now: next.now,
+    view: { ...next.view, process },
+    ...derived,
+    ...walkthrough,
+    ...extra,
+  };
   emit();
 }
 
@@ -180,13 +188,25 @@ export function dispatch(action: Action, exchangeId?: number) {
   const next = reduce(bodyOf(state), action);
   const extra: Partial<Ui> = {};
   if (action.name === "guide" && state.asking) {
-    setBodyState(viewOfStep(next, action.args.steps[0]), { asking: { ...state.asking, guide: action.args.steps, step: 0, guideOpen: true, moment: momentOfStep(action.args.steps, 0) }, stop: null, touring: false });
+    setBodyState(viewOfStep(next, action.args.steps[0]), {
+      asking: {
+        ...state.asking,
+        guide: action.args.steps,
+        step: 0,
+        guideOpen: true,
+        moment: momentOfStep(action.args.steps, 0),
+      },
+      stop: null,
+      touring: false,
+    });
     return;
   }
   // Moving "now" brings the view with it; a viewer who scrubbed elsewhere gets pulled back.
   if (action.name === "set_now") extra.t = action.args.at;
   if (exchangeId !== undefined) {
-    extra.exchanges = state.exchanges.map((e) => (e.id === exchangeId ? { ...e, trace: [...e.trace, traceLine(action)] } : e));
+    extra.exchanges = state.exchanges.map((e) =>
+      e.id === exchangeId ? { ...e, trace: [...e.trace, traceLine(action)] } : e,
+    );
   }
   setBodyState(next, extra);
 }
@@ -222,9 +242,22 @@ const momentOfStep = (steps: readonly GuideStep[], index: number) => {
 function viewOfStep(body: BodyState, step: GuideStep): BodyState {
   const { organ } = step;
   const { view } = body;
-  if (!organ) return { ...body, view: { ...view, system: step.system ?? view.system, process: step.process, focus: null, focusMuscle: null } };
+  if (!organ)
+    return {
+      ...body,
+      view: { ...view, system: step.system ?? view.system, process: step.process, focus: null, focusMuscle: null },
+    };
   const belongsHere = systemById(view.system).organs.includes(organ);
-  return { ...body, view: { ...view, system: belongsHere ? view.system : ORGAN_HOME[organ], process: null, focus: organ, focusMuscle: organ === "muscle" ? step.muscle : null } };
+  return {
+    ...body,
+    view: {
+      ...view,
+      system: belongsHere ? view.system : ORGAN_HOME[organ],
+      process: null,
+      focus: organ,
+      focusMuscle: organ === "muscle" ? step.muscle : null,
+    },
+  };
 }
 
 let nextAskId = 1;
@@ -238,7 +271,18 @@ export function enterAsk() {
     ...state,
     view: { ...state.view, whatIf: null },
     whatIf: null,
-    asking: { id, real: bodyOf(state), realDerived: { trajectory, whatIf }, realT: state.t, history: [], guide: null, step: 0, guideOpen: false, moment: null, cancel: null },
+    asking: {
+      id,
+      real: bodyOf(state),
+      realDerived: { trajectory, whatIf },
+      realT: state.t,
+      history: [],
+      guide: null,
+      step: 0,
+      guideOpen: false,
+      moment: null,
+      cancel: null,
+    },
   };
   emit();
   return id;
@@ -249,7 +293,20 @@ export function leaveAsk() {
   const asking = state.asking;
   if (!asking) return;
   asking.cancel?.();
-  state = { ...state, ...asking.real, ...asking.realDerived, t: asking.realT, asking: null, playing: false, stop: null, touring: false, hover: null, hoverMuscle: null, hoverLane: null, fixing: null };
+  state = {
+    ...state,
+    ...asking.real,
+    ...asking.realDerived,
+    t: asking.realT,
+    asking: null,
+    playing: false,
+    stop: null,
+    touring: false,
+    hover: null,
+    hoverMuscle: null,
+    hoverLane: null,
+    fixing: null,
+  };
   emit();
 }
 
@@ -262,7 +319,10 @@ export function dayDocOf(s: AppState): DayDoc | null {
 // Puts a saved day in place, keeping whatever view you are on.
 export function restoreDay({ version: _version, date, ...day }: DayDoc, minute: number) {
   const atNow = Math.abs(state.t - state.now) < 1;
-  setBodyState({ day, now: minute, view: { ...state.view, whatIf: null } }, { date, dayProblem: null, ...(atNow ? { t: minute } : {}) });
+  setBodyState(
+    { day, now: minute, view: { ...state.view, whatIf: null } },
+    { date, dayProblem: null, ...(atNow ? { t: minute } : {}) },
+  );
 }
 
 // The clock moved on. A view resting on now moves with it, and one you scrubbed away stays put.
@@ -304,13 +364,15 @@ export function showMuscleMinute(minute: number) {
 // numbers, but what was already true of it stays off the screen, so only what differs from it shows.
 export const yourDayWhileAsking = (s: AppState) => s.asking?.realDerived.trajectory ?? null;
 
-export const stepOnScreen = (s: AppState) => (s.asking?.guideOpen && !s.touring ? (s.asking.guide?.[s.asking.step] ?? null) : null);
+export const stepOnScreen = (s: AppState) =>
+  s.asking?.guideOpen && !s.touring ? (s.asking.guide?.[s.asking.step] ?? null) : null;
 
 // A drawing Claude composed for the current step.
 export const composedOnScreen = (s: AppState) => stepOnScreen(s)?.composed ?? null;
 
 // The line an injury took through the body, while exploring one.
-export const trackOnScreen = (s: AppState) => (s.asking ? (s.trajectory.events.find((event) => event.track && event.from <= s.t)?.track ?? null) : null);
+export const trackOnScreen = (s: AppState) =>
+  s.asking ? (s.trajectory.events.find((event) => event.track && event.from <= s.t)?.track ?? null) : null;
 
 // What the current walkthrough step points at in the close-up beside the body.
 export const closeupOnScreen = (s: AppState) => stepOnScreen(s)?.closeup ?? null;
@@ -325,7 +387,12 @@ export function goToStep(index: number) {
   const asking = state.asking;
   const step = asking?.guide?.[index];
   if (!asking || !step) return;
-  setBodyState(viewOfStep(bodyOf(state), step), { asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(asking.guide ?? [], index) }, stop: null, touring: false, playing: false });
+  setBodyState(viewOfStep(bodyOf(state), step), {
+    asking: { ...asking, step: index, guideOpen: true, moment: momentOfStep(asking.guide ?? [], index) },
+    stop: null,
+    touring: false,
+    playing: false,
+  });
 }
 
 export function closeGuide() {
@@ -342,7 +409,12 @@ export function setAskCancel(cancel: (() => void) | null) {
 
 export function applyWhatIf() {
   const { whatIf } = state.view;
-  if (whatIf) setBodyState({ ...bodyOf(state), day: { ...state.day, activities: whatIf.activities }, view: { ...state.view, whatIf: null } });
+  if (whatIf)
+    setBodyState({
+      ...bodyOf(state),
+      day: { ...state.day, activities: whatIf.activities },
+      view: { ...state.view, whatIf: null },
+    });
 }
 
 export function clearWhatIf() {
@@ -352,7 +424,17 @@ export function clearWhatIf() {
 let nextExchangeId = 1;
 
 export function beginExchange(text: string, scripted = false) {
-  const exchange: Exchange = { id: nextExchangeId++, text, trace: [], reply: [], answer: "", status: "working", scripted, session: state.asking?.id ?? null, name: null };
+  const exchange: Exchange = {
+    id: nextExchangeId++,
+    text,
+    trace: [],
+    reply: [],
+    answer: "",
+    status: "working",
+    scripted,
+    session: state.asking?.id ?? null,
+    name: null,
+  };
   setUi({ exchanges: [...state.exchanges, exchange] });
   return exchange.id;
 }
@@ -373,7 +455,7 @@ export function currentProcesses(s: AppState): Process[] {
 }
 
 export function selectedProcess(s: AppState): Process | null {
-  return s.view.process ? currentProcesses(s).find((p) => p.id === s.view.process) ?? null : null;
+  return s.view.process ? (currentProcesses(s).find((p) => p.id === s.view.process) ?? null) : null;
 }
 
 export function useStore<T>(selector: (s: AppState) => T): T {

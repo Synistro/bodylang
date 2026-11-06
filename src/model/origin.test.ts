@@ -7,12 +7,46 @@ import { Intake } from "./scenario";
 import type { BodyEvent } from "./events/types";
 
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
-const wake = [{ from: 0, posture: "sleeping" }, { from: 450, posture: "standing" }] as const;
-const meal = (over: Partial<Intake> = {}): Intake => ({ id: "pizza", label: "Pizza", at: 780, grams: 200, waterMl: 90, carbsG: 60, sugarG: 6, fatG: 20, proteinG: 20, fiberG: 4, caffeineMg: 0, alcoholG: 0, ...over });
+const wake = [
+  { from: 0, posture: "sleeping" },
+  { from: 450, posture: "standing" },
+] as const;
+const meal = (over: Partial<Intake> = {}): Intake => ({
+  id: "pizza",
+  label: "Pizza",
+  at: 780,
+  grams: 200,
+  waterMl: 90,
+  carbsG: 60,
+  sugarG: 6,
+  fatG: 20,
+  proteinG: 20,
+  fiberG: 4,
+  caffeineMg: 0,
+  alcoholG: 0,
+  ...over,
+});
 const TABLE = { kind: "table", fdcId: 1, name: "Pizza, cheese", dataset: "FNDDS" } as const;
-const sauna: BodyEvent = { id: "sauna", label: "Sauna", preset: "custom", from: 800, until: 830, intensity: 1, muscles: [], symptoms: [], source: "My estimate", custom: { systems: ["circulation"], effects: [{ channel: "heartRate", amount: 40, riseMin: 5, halfLifeMin: 20 }], feelings: [], stops: [{ organ: "heart", muscle: null, label: "Heart", afterMin: 0, say: "Beating faster.", routes: [] }] } };
+const sauna: BodyEvent = {
+  id: "sauna",
+  label: "Sauna",
+  preset: "custom",
+  from: 800,
+  until: 830,
+  intensity: 1,
+  muscles: [],
+  symptoms: [],
+  source: "My estimate",
+  custom: {
+    systems: ["circulation"],
+    effects: [{ channel: "heartRate", amount: 40, riseMin: 5, halfLifeMin: 20 }],
+    feelings: [],
+    stops: [{ organ: "heart", muscle: null, label: "Heart", afterMin: 0, say: "Beating faster.", routes: [] }],
+  },
+};
 
-const run = (intakes: Intake[], events: BodyEvent[] = []) => simulate({ body, intakes, activities: [...wake], substances: [], events });
+const run = (intakes: Intake[], events: BodyEvent[] = []) =>
+  simulate({ body, intakes, activities: [...wake], substances: [], events });
 const reading = (tr: ReturnType<typeof run>, id: string, t: number) => {
   const found = assess(tr, t).readings.find((r) => r.id === id);
   if (!found) throw new Error(id);
@@ -66,7 +100,9 @@ describe("where a food comes from", () => {
   it("counts an unsourced food as Claude's, because nothing else vouches for it", () => {
     expect(foodOrigin(meal()).kind).toBe("claude-input");
     expect(foodOrigin(meal({ source: { kind: "estimate" } })).kind).toBe("claude-input");
-    const recipe = foodOrigin(meal({ source: { kind: "recipe", ingredients: [{ fdcId: 1, name: "Flour", grams: 30 }] } }));
+    const recipe = foodOrigin(
+      meal({ source: { kind: "recipe", ingredients: [{ fdcId: 1, name: "Flour", grams: 30 }] } }),
+    );
     expect(recipe.kind).toBe("claude-input");
     expect(recipe.detail).toContain("30 g Flour");
   });
@@ -96,7 +132,12 @@ describe("where a meal comes from", () => {
 describe("where a line through the body comes from", () => {
   const line = (tr: ReturnType<typeof run>, id: string, t: number) => {
     const process = processesAt(tr, t).find((p) => p.id === id);
-    if (!process) throw new Error(`${id}: ${processesAt(tr, t).map((p) => p.id).join(", ")}`);
+    if (!process)
+      throw new Error(
+        `${id}: ${processesAt(tr, t)
+          .map((p) => p.id)
+          .join(", ")}`,
+      );
     return processOrigin(tr, process);
   };
 

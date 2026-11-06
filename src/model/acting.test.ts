@@ -4,9 +4,38 @@ import { simulate } from "./engine/simulate";
 import { CustomSubstance, Intake, Scenario } from "./scenario";
 
 const nothing = { waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const lunch: Intake = { ...nothing, id: "lunch", label: "Lunch", at: 13 * 60, grams: 400, waterMl: 200, carbsG: 90, sugarG: 15, fatG: 25, proteinG: 30, fiberG: 6 };
-const coffee: Intake = { ...nothing, id: "coffee", label: "Coffee", at: 12 * 60 + 30, grams: 240, waterMl: 240, caffeineMg: 150 };
-const beer: Intake = { ...nothing, id: "beer", label: "Beer", at: 13 * 60 + 30, grams: 500, waterMl: 450, carbsG: 15, alcoholG: 20 };
+const lunch: Intake = {
+  ...nothing,
+  id: "lunch",
+  label: "Lunch",
+  at: 13 * 60,
+  grams: 400,
+  waterMl: 200,
+  carbsG: 90,
+  sugarG: 15,
+  fatG: 25,
+  proteinG: 30,
+  fiberG: 6,
+};
+const coffee: Intake = {
+  ...nothing,
+  id: "coffee",
+  label: "Coffee",
+  at: 12 * 60 + 30,
+  grams: 240,
+  waterMl: 240,
+  caffeineMg: 150,
+};
+const beer: Intake = {
+  ...nothing,
+  id: "beer",
+  label: "Beer",
+  at: 13 * 60 + 30,
+  grams: 500,
+  waterMl: 450,
+  carbsG: 15,
+  alcoholG: 20,
+};
 const nicotine: CustomSubstance = {
   id: "nicotine",
   label: "Nicotine",
@@ -21,8 +50,18 @@ const nicotine: CustomSubstance = {
   source: "Benowitz 2009",
 };
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
-const activities = [{ from: -1440, posture: "sleeping" as const }, { from: 8 * 60, posture: "sitting" as const }];
-const day = (over: Partial<Scenario> = {}): Scenario => ({ body, activities, substances: [], intakes: [], events: [], ...over });
+const activities = [
+  { from: -1440, posture: "sleeping" as const },
+  { from: 8 * 60, posture: "sitting" as const },
+];
+const day = (over: Partial<Scenario> = {}): Scenario => ({
+  body,
+  activities,
+  substances: [],
+  intakes: [],
+  events: [],
+  ...over,
+});
 // Processes Claude added run all day whatever happens, so these look at what today's events set off.
 const titles = (over: Partial<Scenario>, minute: number, organ: Parameters<typeof actingAt>[2]) =>
   actingAt(simulate(day(over)), minute, organ)
@@ -56,8 +95,12 @@ describe("what is acting on an organ", () => {
   });
 
   it("says something inhaled starts in the lungs, even when it also acts on them", () => {
-    const tr = simulate(day({ substances: [{ ...nicotine, targets: [{ organ: "lungs", effect: "Irritates the lining" }] }] }));
-    expect(actingAt(tr, 13 * 60 + 33, "lungs").find((acting) => acting.process.id === "substance:nicotine")?.from).toBeNull();
+    const tr = simulate(
+      day({ substances: [{ ...nicotine, targets: [{ organ: "lungs", effect: "Irritates the lining" }] }] }),
+    );
+    expect(
+      actingAt(tr, 13 * 60 + 33, "lungs").find((acting) => acting.process.id === "substance:nicotine")?.from,
+    ).toBeNull();
   });
 
   it("leaves out what always runs", () => {

@@ -13,14 +13,21 @@ import { startTurn, TellInput } from "./tellTurn";
 const MAX_TURNS = 14;
 const MAX_REQUEST_BYTES = 200_000;
 
-const bodyStateShape = z.object({ day: dayContentSchema, now: z.number(), view: z.looseObject({ system: z.string(), process: z.string().nullable() }) });
+const bodyStateShape = z.object({
+  day: dayContentSchema,
+  now: z.number(),
+  view: z.looseObject({ system: z.string(), process: z.string().nullable() }),
+});
 
 const requestSchema = z.object({
   text: z.string().min(1).max(4000),
   state: z.custom<BodyState>((v) => bodyStateShape.safeParse(v).success, "Not a body state"),
   mode: z.enum(["tell", "ask"]).default("tell"),
   depth: z.enum(["simple", "deep"]).default("simple"),
-  history: z.array(z.object({ asked: z.string().max(4000), answered: z.string().max(4000) })).max(10).default([]),
+  history: z
+    .array(z.object({ asked: z.string().max(4000), answered: z.string().max(4000) }))
+    .max(10)
+    .default([]),
   date: z.string().regex(DATE_PATTERN).nullable().default(null),
 });
 
@@ -38,15 +45,31 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, { bu
   const input = requestSchema.parse(await readJson(req, MAX_REQUEST_BYTES));
   const stream = openEventStream(res);
   const measured = await runTell(input, planFor(input.mode, input.depth), stream.send, stream.stopped, buildChanged);
-  console.log(`[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, $${measured.costUsd.toFixed(4)}`);
+  console.log(
+    `[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, $${measured.costUsd.toFixed(4)}`,
+  );
   res.end();
 }
 
 // One message, from the sentence to the answer, with each change sent on as it happens.
-export async function runTell(input: TellInput, plan: TellPlan, emit: (event: TellEvent) => void, abort: AbortController, buildChanged: (status: BuildStatus) => void): Promise<TellMeasure> {
+export async function runTell(
+  input: TellInput,
+  plan: TellPlan,
+  emit: (event: TellEvent) => void,
+  abort: AbortController,
+  buildChanged: (status: BuildStatus) => void,
+): Promise<TellMeasure> {
   const started = performance.now();
   const elapsed = () => Math.round(performance.now() - started);
-  const measure: TellMeasure = { subtype: "success", totalMs: 0, firstOutputMs: null, firstActionMs: null, replyMs: null, turns: 0, costUsd: 0 };
+  const measure: TellMeasure = {
+    subtype: "success",
+    totalMs: 0,
+    firstOutputMs: null,
+    firstActionMs: null,
+    replyMs: null,
+    turns: 0,
+    costUsd: 0,
+  };
   const send = (event: TellEvent) => {
     if (event.type === "action" && measure.firstActionMs === null) measure.firstActionMs = elapsed();
     if (event.type === "reply" && measure.replyMs === null) measure.replyMs = elapsed();
@@ -73,7 +96,8 @@ export async function runTell(input: TellInput, plan: TellPlan, emit: (event: Te
         measure.turns = message.num_turns;
         measure.costUsd = message.total_cost_usd;
         measure.subtype = message.subtype;
-        if (message.subtype !== "success") send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
+        if (message.subtype !== "success")
+          send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
       }
     }
     if (!turn.replied()) console.warn("[bodylang] finished without calling reply");

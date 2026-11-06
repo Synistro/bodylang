@@ -10,4 +10,10 @@ function cleanEnvironment() {
 }
 
 // Every session here runs alone: no saved history, none of this machine's settings, and only the tools it is given.
-export const claudeDefaults = () => ({ tools: [], settingSources: [], persistSession: false, permissionMode: "dontAsk" as const, env: cleanEnvironment() });
+export const claudeDefaults = () => ({
+  tools: [],
+  settingSources: [],
+  persistSession: false,
+  permissionMode: "dontAsk" as const,
+  env: cleanEnvironment(),
+});

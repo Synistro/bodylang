@@ -51,7 +51,10 @@ export class Figure {
   readonly bones = new Map<string, THREE.Bone>();
   readonly restJoints = new Map<string, THREE.Vector3>();
   height = 1.8;
-  referenceTorso = { male: { hips: new THREE.Vector3(), neck: new THREE.Vector3() }, female: { hips: new THREE.Vector3(), neck: new THREE.Vector3() } };
+  referenceTorso = {
+    male: { hips: new THREE.Vector3(), neck: new THREE.Vector3() },
+    female: { hips: new THREE.Vector3(), neck: new THREE.Vector3() },
+  };
   private readonly shapes: Record<Sex, Shape>;
   private readonly shell: THREE.SkinnedMesh;
   private readonly shellBack: THREE.SkinnedMesh;
@@ -100,8 +103,14 @@ export class Figure {
       return {
         base: decode(s.base),
         joints: flatten(s.joints),
-        deltas: Object.fromEntries(names.map((k) => [k, decode(s.deltas[k].offset)])) as Record<BodyDeltaName, Float32Array>,
-        jointDeltas: Object.fromEntries(names.map((k) => [k, flatten(s.deltas[k].joints)])) as Record<BodyDeltaName, Float32Array>,
+        deltas: Object.fromEntries(names.map((k) => [k, decode(s.deltas[k].offset)])) as Record<
+          BodyDeltaName,
+          Float32Array
+        >,
+        jointDeltas: Object.fromEntries(names.map((k) => [k, flatten(s.deltas[k].joints)])) as Record<
+          BodyDeltaName,
+          Float32Array
+        >,
       };
     };
     this.shapes = { male: shape("male"), female: shape("female") };
@@ -114,8 +123,14 @@ export class Figure {
 
     this.geometry.setAttribute("position", new THREE.BufferAttribute(this.positions, 3));
     this.geometry.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
-    this.geometry.setAttribute("skinIndex", new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.skinIndex, n * 4), 4));
-    this.geometry.setAttribute("skinWeight", new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.skinWeight, n * 4), 4, true));
+    this.geometry.setAttribute(
+      "skinIndex",
+      new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.skinIndex, n * 4), 4),
+    );
+    this.geometry.setAttribute(
+      "skinWeight",
+      new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.skinWeight, n * 4), 4, true),
+    );
     this.geometry.setIndex(new THREE.BufferAttribute(this.indices, 1));
 
     const skinIndex = new Uint8Array(bin, meta.skinIndex, n * 4);
@@ -132,7 +147,10 @@ export class Figure {
     this.legWeight = weightOn(BELLY.legBones);
     this.belly = new Float32Array(n);
     this.geometry.setAttribute("aBelly", new THREE.BufferAttribute(this.belly, 1));
-    this.geometry.setAttribute("aOpening", new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.opening, n), 1, true));
+    this.geometry.setAttribute(
+      "aOpening",
+      new THREE.Uint8BufferAttribute(new Uint8Array(bin, meta.opening, n), 1, true),
+    );
 
     this.headWeight = weightOn(["head"]);
     this.headVertices = [];
@@ -232,7 +250,14 @@ export class Figure {
     this.geometry.attributes.aBelly.needsUpdate = true;
   }
 
-  private mix(sex: Sex, weight: number, heightWeight: number, ageWeight: number, out: Float32Array, outJoints: Float32Array) {
+  private mix(
+    sex: Sex,
+    weight: number,
+    heightWeight: number,
+    ageWeight: number,
+    out: Float32Array,
+    outJoints: Float32Array,
+  ) {
     const s = this.shapes[sex];
     const up = s.deltas.weight_up;
     const down = s.deltas.weight_down;
@@ -243,13 +268,16 @@ export class Figure {
     const wDown = Math.max(0, -weight);
     const hu = Math.max(0, heightWeight);
     const hd = Math.max(0, -heightWeight);
-    for (let i = 0; i < out.length; i++) out[i] = s.base[i] + up[i] * wUp + down[i] * wDown + hUp[i] * hu + hDown[i] * hd + age[i] * ageWeight;
+    for (let i = 0; i < out.length; i++)
+      out[i] = s.base[i] + up[i] * wUp + down[i] * wDown + hUp[i] * hu + hDown[i] * hd + age[i] * ageWeight;
     const jUp = s.jointDeltas.weight_up;
     const jDown = s.jointDeltas.weight_down;
     const jhUp = s.jointDeltas.height_up;
     const jhDown = s.jointDeltas.height_down;
     const jAge = s.jointDeltas.age_up;
-    for (let i = 0; i < outJoints.length; i++) outJoints[i] = s.joints[i] + jUp[i] * wUp + jDown[i] * wDown + jhUp[i] * hu + jhDown[i] * hd + jAge[i] * ageWeight;
+    for (let i = 0; i < outJoints.length; i++)
+      outJoints[i] =
+        s.joints[i] + jUp[i] * wUp + jDown[i] * wDown + jhUp[i] * hu + jhDown[i] * hd + jAge[i] * ageWeight;
   }
 
   private topOf(positions: Float32Array) {
@@ -271,7 +299,10 @@ export class Figure {
       const a = ind[i] * 3;
       const b = ind[i + 1] * 3;
       const c = ind[i + 2] * 3;
-      v += p[a] * (p[b + 1] * p[c + 2] - p[b + 2] * p[c + 1]) + p[a + 1] * (p[b + 2] * p[c] - p[b] * p[c + 2]) + p[a + 2] * (p[b] * p[c + 1] - p[b + 1] * p[c]);
+      v +=
+        p[a] * (p[b + 1] * p[c + 2] - p[b + 2] * p[c + 1]) +
+        p[a + 1] * (p[b + 2] * p[c] - p[b] * p[c + 2]) +
+        p[a + 2] * (p[b] * p[c + 1] - p[b + 1] * p[c]);
     }
     return Math.abs(v / 6);
   }
@@ -337,8 +368,10 @@ export class Figure {
 
     solveFor("male", this.current, this.currentJoints);
     solveFor("female", this.scratchA, this.scratchJ);
-    for (let i = 0; i < this.positions.length; i++) this.positions[i] = this.current[i] * (1 - sexMix) + this.scratchA[i] * sexMix;
-    for (let i = 0; i < this.currentJoints.length; i++) this.currentJoints[i] = this.currentJoints[i] * (1 - sexMix) + this.scratchJ[i] * sexMix;
+    for (let i = 0; i < this.positions.length; i++)
+      this.positions[i] = this.current[i] * (1 - sexMix) + this.scratchA[i] * sexMix;
+    for (let i = 0; i < this.currentJoints.length; i++)
+      this.currentJoints[i] = this.currentJoints[i] * (1 - sexMix) + this.scratchJ[i] * sexMix;
 
     this.geometry.attributes.position.needsUpdate = true;
     this.geometry.computeVertexNormals();
@@ -383,7 +416,8 @@ export class Figure {
     // Back to the true normal where the head weight runs out, so nothing shows at the neck.
     for (const vertex of this.headVertices) {
       const w = this.headWeight[vertex];
-      for (let k = 0; k < 3; k++) normals[vertex * 3 + k] = original[vertex * 3 + k] * (1 - w) + normals[vertex * 3 + k] * w;
+      for (let k = 0; k < 3; k++)
+        normals[vertex * 3 + k] = original[vertex * 3 + k] * (1 - w) + normals[vertex * 3 + k] * w;
     }
   }
 
@@ -447,7 +481,8 @@ export class Figure {
     const liftR = Math.max(0, Math.sin(this.phase + 1.2 + Math.PI));
     const a = ANGLE.sit;
     // Y last, so a forearm swung forward then turns toward the midline instead of twisting about itself.
-    const set = (name: string, x: number, y = 0, z = 0) => this.bones.get(name)!.rotation.set(rad(x), rad(y), rad(z), "YXZ");
+    const set = (name: string, x: number, y = 0, z = 0) =>
+      this.bones.get(name)!.rotation.set(rad(x), rad(y), rad(z), "YXZ");
     set("thigh.L", a.thigh * k + 22 * swing * w);
     set("thigh.R", a.thigh * k - 22 * swing * w);
     set("shin.L", a.shin * k + 34 * lift * w);

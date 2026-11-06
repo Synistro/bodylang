@@ -25,7 +25,6 @@ import { ProcessLine } from "./processLine";
 import { StomachItem, Stomach } from "./stomach";
 import type { Theme } from "../look";
 
-
 export interface SceneInput {
   trajectory: Trajectory;
   t: number;
@@ -74,7 +73,14 @@ const REM_AT_UNIT_SCALE = 10;
 const FIGURE_AZIMUTH = 0.2;
 const PROFILE = Math.PI / 2;
 // A line seen end on is a dot, so the view turns side-on to a track.
-const TRACK_AZIMUTH: Record<TrackFrom, number> = { front: 1.05, back: 1.05, left: 0.15, right: 0.15, above: 0.5, below: 0.5 };
+const TRACK_AZIMUTH: Record<TrackFrom, number> = {
+  front: 1.05,
+  back: 1.05,
+  left: 0.15,
+  right: 0.15,
+  above: 0.5,
+  below: 0.5,
+};
 const HEAD_CENTRE_BELOW_BRAIN = 0.028; // of figure height, so the Brain view centres the whole head
 const HEADROOM = 0.04; // of the free area's height, to the head's rest position; about 40 px from the canvas top at 1440x900
 const LEVEL_POLAR = 1.5;
@@ -121,7 +127,10 @@ const LINE_FRAMING = { heightMargin: 1.24, widthMargin: 1.36, least: 0.34, overH
 
 type VesselMood = "hidden" | "rest" | "faded" | "subject";
 
-const VESSEL_MOODS: Record<VesselMood, { artery: number; vein: number; body: number; wave: number; coloured: boolean }> = {
+const VESSEL_MOODS: Record<
+  VesselMood,
+  { artery: number; vein: number; body: number; wave: number; coloured: boolean }
+> = {
   hidden: { artery: 0, vein: 0, body: 0, wave: 0, coloured: false },
   rest: { artery: 0.2, vein: 0.12, body: 0, wave: 0, coloured: false },
   faded: { artery: 0.05, vein: 0.03, body: 0, wave: 0, coloured: false },
@@ -173,7 +182,10 @@ const chestToHips = (places: Places, out: THREE.Vector3) => {
   return places.organ("heart", out).lerp(scratch, 0.35);
 };
 
-const row = (view: Omit<SystemView, "atRest" | "turnsToWork" | "parts" | "hides" | "vessels" | "muscles" | "glycogen" | "lymph"> & Partial<SystemView>): SystemView => ({
+const row = (
+  view: Omit<SystemView, "atRest" | "turnsToWork" | "parts" | "hides" | "vessels" | "muscles" | "glycogen" | "lymph"> &
+    Partial<SystemView>,
+): SystemView => ({
   atRest: false,
   turnsToWork: false,
   parts: [],
@@ -285,7 +297,14 @@ interface FocusView extends ViewAngle {
   lymph: number;
 }
 
-const focusOn = (angle: ViewAngle, vessels: VesselMood = "faded", more: Partial<FocusView> = {}): FocusView => ({ ...angle, hides: false, vessels, glycogen: 0, lymph: 0, ...more });
+const focusOn = (angle: ViewAngle, vessels: VesselMood = "faded", more: Partial<FocusView> = {}): FocusView => ({
+  ...angle,
+  hides: false,
+  vessels,
+  glycogen: 0,
+  lymph: 0,
+  ...more,
+});
 
 const FOCUS_VIEWS: Record<OrganId, FocusView> = {
   brain: focusOn({ height: 0.17, width: 0.16, azimuth: PROFILE, polar: PROFILE }),
@@ -299,7 +318,18 @@ const FOCUS_VIEWS: Record<OrganId, FocusView> = {
   large_intestine: focusOn({ height: 0.26, width: 0.26, azimuth: 0.12, polar: LEVEL_POLAR }),
   kidneys: focusOn({ height: 0.16, width: 0.2, azimuth: 2.72, polar: LEVEL_POLAR }),
   bladder: focusOn({ height: 0.09, width: 0.1, azimuth: 0.22, polar: LEVEL_POLAR }),
-  muscle: focusOn({ height: 0.905, standingHeight: 1.02, width: 0.6, azimuth: FIGURE_AZIMUTH, polar: LEVEL_POLAR, headroom: HEADROOM }, "hidden", { hides: true }),
+  muscle: focusOn(
+    {
+      height: 0.905,
+      standingHeight: 1.02,
+      width: 0.6,
+      azimuth: FIGURE_AZIMUTH,
+      polar: LEVEL_POLAR,
+      headroom: HEADROOM,
+    },
+    "hidden",
+    { hides: true },
+  ),
   fat: focusOn({ height: 0.38, width: 0.36, azimuth: FIGURE_AZIMUTH, polar: LEVEL_POLAR }),
   uterus: focusOn({ height: 0.09, width: 0.11, azimuth: 0.24, polar: LEVEL_POLAR }),
   ovaries: focusOn({ height: 0.1, width: 0.14, azimuth: 0.12, polar: LEVEL_POLAR }),
@@ -330,11 +360,49 @@ type View =
 // A click passes through parts drawn as contour on its way to a part drawn solid.
 const CONTOUR_AT_REST: ReadonlySet<OrganId> = new Set<OrganId>(["lungs", "small_intestine", "large_intestine"]);
 
-const STOMACH_STYLE: PartStyle = { organ: "stomach", worksWith: null, ghost: 1, restOpacity: 1, subjectGhost: 0.6, subjectLift: 0, soft: 0, hatch: 0, normalPasses: 0, tinted: true, continues: null, staysOpen: false, subjectFill: 0.09, contextOpacity: 0.4, bareOpacity: 0 };
+const STOMACH_STYLE: PartStyle = {
+  organ: "stomach",
+  worksWith: null,
+  ghost: 1,
+  restOpacity: 1,
+  subjectGhost: 0.6,
+  subjectLift: 0,
+  soft: 0,
+  hatch: 0,
+  normalPasses: 0,
+  tinted: true,
+  continues: null,
+  staysOpen: false,
+  subjectFill: 0.09,
+  contextOpacity: 0.4,
+  bareOpacity: 0,
+};
 
-const ORGANS: readonly OrganId[] = ["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "uterus", "ovaries", "prostate", "muscle", "fat"];
+const ORGANS: readonly OrganId[] = [
+  "brain",
+  "heart",
+  "lungs",
+  "liver",
+  "stomach",
+  "pancreas",
+  "spleen",
+  "small_intestine",
+  "large_intestine",
+  "kidneys",
+  "bladder",
+  "uterus",
+  "ovaries",
+  "prostate",
+  "muscle",
+  "fat",
+];
 
-const LYMPH_NAME: Record<LymphCluster, string> = { neck: "Neck nodes", armpit: "Armpit nodes", abdomen: "Belly nodes", groin: "Groin nodes" };
+const LYMPH_NAME: Record<LymphCluster, string> = {
+  neck: "Neck nodes",
+  armpit: "Armpit nodes",
+  abdomen: "Belly nodes",
+  groin: "Groin nodes",
+};
 
 // How many lit things a view names at most.
 
@@ -351,7 +419,10 @@ const easeTo = (uniform: { value: number }, target: number, k: number) => {
 };
 
 function litMuscleOf(process: Process, spotlight: number | null): MuscleGroup | null {
-  const lit = spotlight === null ? process.stops.find((s) => s.state === "here") : process.stops.find((s) => s.number === spotlight);
+  const lit =
+    spotlight === null
+      ? process.stops.find((s) => s.state === "here")
+      : process.stops.find((s) => s.number === spotlight);
   return lit?.muscle ?? null;
 }
 
@@ -391,15 +462,39 @@ export class Stage {
   private bellyShown = 0;
   private chunksShown = 1;
   private foodCalm = FOOD_CALM;
-  private view: { sex: Sex; sites: string; input: Pick<SceneInput, "focus" | "process" | "stop" | "system" | "theme">; view: View } | null = null;
+  private view: {
+    sex: Sex;
+    sites: string;
+    input: Pick<SceneInput, "focus" | "process" | "stop" | "system" | "theme">;
+    view: View;
+  } | null = null;
   private work: { trajectory: Trajectory; minute: number; activity: Map<OrganId, number>; cough: number } | null = null;
-  private muscleLook: { view: View; trajectory: Trajectory; minute: number; focus: MuscleGroup | null; visible: number; shown: Partial<Record<MuscleGroup, number>>; outlined: MuscleGroup[]; levels: Partial<Record<MuscleGroup, MuscleLevel>> } | null = null;
-  private food: { trajectory: Trajectory; minute: number; pieces: { color: THREE.Color; count: number }[] } | null = null;
+  private muscleLook: {
+    view: View;
+    trajectory: Trajectory;
+    minute: number;
+    focus: MuscleGroup | null;
+    visible: number;
+    shown: Partial<Record<MuscleGroup, number>>;
+    outlined: MuscleGroup[];
+    levels: Partial<Record<MuscleGroup, MuscleLevel>>;
+  } | null = null;
+  private food: { trajectory: Trajectory; minute: number; pieces: { color: THREE.Color; count: number }[] } | null =
+    null;
   private stomachItemPool: StomachItem[] = [];
   private raf = 0;
   private disposed = false;
   private readonly reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  private readonly look: PartLook = { ghost: 0, tint: new THREE.Color(), tintAmount: 0, opacity: 1, highlight: 0, fill: 0, lift: 0, hatch: 0 };
+  private readonly look: PartLook = {
+    ghost: 0,
+    tint: new THREE.Color(),
+    tintAmount: 0,
+    opacity: 1,
+    highlight: 0,
+    fill: 0,
+    lift: 0,
+    hatch: 0,
+  };
   private readonly swayAxis = new THREE.Vector3(0, 1, 0);
   private readonly swayOffset = new THREE.Vector3();
   private readonly scratchA = new THREE.Vector3();
@@ -417,7 +512,17 @@ export class Stage {
     store: new THREE.Color(),
   };
   // Every system's organs flush in its own colour, from barely tinted to full.
-  private readonly ramps: Record<SystemId, Ramp> = { overview: newRamp(), digestion: newRamp(), energy: newRamp(), circulation: newRamp(), muscles: newRamp(), brain: newRamp(), immune: newRamp(), clearing: newRamp(), reproductive: newRamp() };
+  private readonly ramps: Record<SystemId, Ramp> = {
+    overview: newRamp(),
+    digestion: newRamp(),
+    energy: newRamp(),
+    circulation: newRamp(),
+    muscles: newRamp(),
+    brain: newRamp(),
+    immune: newRamp(),
+    clearing: newRamp(),
+    reproductive: newRamp(),
+  };
   private readonly places: Places = {
     height: 1.8,
     organ: (id, out) => this.organCenter(this.currentSet(), id, out),
@@ -431,7 +536,12 @@ export class Stage {
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const pixelRatio = Math.min(window.devicePixelRatio, WALL ? WALL_PIXEL_RATIO : 2);
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance",
+    });
     this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setClearColor(0x000000, 0);
     this.camera = new THREE.PerspectiveCamera(LENS_FOV, 1, 0.1, 30);
@@ -452,7 +562,12 @@ export class Stage {
   }
 
   async load() {
-    const [bodyAsset, male, female, muscleAsset] = await Promise.all([loadBody(), loadOrgans("male"), loadOrgans("female"), loadMuscles()]);
+    const [bodyAsset, male, female, muscleAsset] = await Promise.all([
+      loadBody(),
+      loadOrgans("male"),
+      loadOrgans("female"),
+      loadMuscles(),
+    ]);
     if (this.disposed) return;
     const palette = PALETTES.light;
     this.figure = new Figure(bodyAsset, palette);
@@ -471,7 +586,12 @@ export class Stage {
         stomach,
         network,
         torso,
-        line: new ProcessLine(network, (stop, process, out) => torso.worldToLocal(this.locateStop(set, stop, process, out)), this.resolution, this.renderer.getPixelRatio()),
+        line: new ProcessLine(
+          network,
+          (stop, process, out) => torso.worldToLocal(this.locateStop(set, stop, process, out)),
+          this.resolution,
+          this.renderer.getPixelRatio(),
+        ),
       };
       torso.add(anatomy.group, stomach.group, set.line.group);
       this.figure.hips.add(torso);
@@ -598,9 +718,26 @@ export class Stage {
       const knee = toLocal(f.worldJoint(`shin.${side}`, tmp));
       const ankle = toLocal(f.worldJoint(`foot.${side}`, tmp));
       const toe = ankle.clone().add(new THREE.Vector3(0, -0.04, 0.12));
-      const mid = hip.clone().lerp(knee, 0.5).add(inward(s, 0.012, 0.012));
-      const calf = knee.clone().lerp(ankle, 0.5).add(new THREE.Vector3(0, 0, -0.012));
-      return smooth([bifurcation, hip.clone().add(inward(s, 0.012, 0.03)), mid, knee.clone().add(new THREE.Vector3(0, 0, -0.018)), calf, ankle, toe], 46);
+      const mid = hip
+        .clone()
+        .lerp(knee, 0.5)
+        .add(inward(s, 0.012, 0.012));
+      const calf = knee
+        .clone()
+        .lerp(ankle, 0.5)
+        .add(new THREE.Vector3(0, 0, -0.012));
+      return smooth(
+        [
+          bifurcation,
+          hip.clone().add(inward(s, 0.012, 0.03)),
+          mid,
+          knee.clone().add(new THREE.Vector3(0, 0, -0.018)),
+          calf,
+          ankle,
+          toe,
+        ],
+        46,
+      );
     };
     const arm = (side: "L" | "R", base: THREE.Vector3) => {
       const s = side === "L" ? 1 : -1;
@@ -608,19 +745,49 @@ export class Stage {
       const elbow = toLocal(f.worldJoint(`forearm.${side}`, tmp));
       const wrist = toLocal(f.worldJoint(`hand.${side}`, tmp));
       const hand = wrist.clone().add(wrist.clone().sub(elbow).normalize().multiplyScalar(0.08));
-      return smooth([base, shoulder.clone().add(inward(s, 0.01, 0.005)), shoulder.clone().lerp(elbow, 0.5).add(inward(s, 0.012, 0.004)), elbow, elbow.clone().lerp(wrist, 0.5), wrist, hand], 32);
+      return smooth(
+        [
+          base,
+          shoulder.clone().add(inward(s, 0.01, 0.005)),
+          shoulder
+            .clone()
+            .lerp(elbow, 0.5)
+            .add(inward(s, 0.012, 0.004)),
+          elbow,
+          elbow.clone().lerp(wrist, 0.5),
+          wrist,
+          hand,
+        ],
+        32,
+      );
     };
     const limbs = { legL: leg("L"), legR: leg("R"), armL: arm("L", shoulderL), armR: arm("R", shoulderR) };
     set.network.setLimbs(limbs);
   }
 
   private viewOf(input: SceneInput): View {
-    const sites = input.system === "immune" ? illnessSites(input.trajectory.events, input.t, REFERENCE.immune.high / 100) : [];
+    const sites =
+      input.system === "immune" ? illnessSites(input.trajectory.events, input.t, REFERENCE.immune.high / 100) : [];
     const sex = input.body.sex;
     const sitesKey = sites.join();
     const cached = this.view;
-    if (cached && cached.sex === sex && cached.sites === sitesKey && cached.input.focus === input.focus && cached.input.process === input.process && cached.input.stop === input.stop && cached.input.system === input.system && cached.input.theme === input.theme) return cached.view;
-    this.view = { sex, sites: sitesKey, input: { focus: input.focus, process: input.process, stop: input.stop, system: input.system, theme: input.theme }, view: this.composeView(input, sites) };
+    if (
+      cached &&
+      cached.sex === sex &&
+      cached.sites === sitesKey &&
+      cached.input.focus === input.focus &&
+      cached.input.process === input.process &&
+      cached.input.stop === input.stop &&
+      cached.input.system === input.system &&
+      cached.input.theme === input.theme
+    )
+      return cached.view;
+    this.view = {
+      sex,
+      sites: sitesKey,
+      input: { focus: input.focus, process: input.process, stop: input.stop, system: input.system, theme: input.theme },
+      view: this.composeView(input, sites),
+    };
     return this.view.view;
   }
 
@@ -635,9 +802,18 @@ export class Stage {
         if (!known || stop.share >= known.share) stops.set(stop.organ, stop);
       }
       const spotlight = input.stop === null ? undefined : process.stops.find((s) => s.number === input.stop);
-      return { kind: "process", process, stops, lit: spotlight ?? process.stops.find((s) => s.state === "here") ?? null };
+      return {
+        kind: "process",
+        process,
+        stops,
+        lit: spotlight ?? process.stops.find((s) => s.state === "here") ?? null,
+      };
     }
-    return { kind: "system", view: SYSTEM_VIEWS[input.system], organs: new Set([...systemById(input.system).organs, ...sites].filter((organ) => this.bodyHas(organ))) };
+    return {
+      kind: "system",
+      view: SYSTEM_VIEWS[input.system],
+      organs: new Set([...systemById(input.system).organs, ...sites].filter((organ) => this.bodyHas(organ))),
+    };
   }
 
   private eventOf(process: Process): ResolvedEvent | undefined {
@@ -648,9 +824,17 @@ export class Stage {
     const minute = Math.floor(t);
     if (this.work && this.work.trajectory === tr && this.work.minute === minute) return this.work;
     const activity = new Map<OrganId, number>();
-    for (const state of organStates(tr, minute)) activity.set(state.id, Math.max(activity.get(state.id) ?? 0, state.activity));
+    for (const state of organStates(tr, minute))
+      activity.set(state.id, Math.max(activity.get(state.id) ?? 0, state.activity));
     // A mind under stress, or flooded with reward, is working too.
-    activity.set("brain", Math.max(activity.get("brain") ?? 0, value(tr, "stressLevel", minute) * MOOD.stress, value(tr, "reward", minute) * MOOD.reward));
+    activity.set(
+      "brain",
+      Math.max(
+        activity.get("brain") ?? 0,
+        value(tr, "stressLevel", minute) * MOOD.stress,
+        value(tr, "reward", minute) * MOOD.reward,
+      ),
+    );
     let cough = 0;
     for (const event of tr.events) {
       const feeling = event.feelings.find((f) => f.id === "coughing");
@@ -661,7 +845,7 @@ export class Stage {
   }
 
   private activityOf(tr: Trajectory, t: number, organ: OrganId | null) {
-    return organ ? this.refreshWork(tr, t).activity.get(organ) ?? 0 : 0;
+    return organ ? (this.refreshWork(tr, t).activity.get(organ) ?? 0) : 0;
   }
 
   // The body has one colour at a time: the accent on the overview, or the colour of what is in focus.
@@ -677,7 +861,14 @@ export class Stage {
     out.tintAmount = WORK.most * Math.pow(a, WORK.curve);
   }
 
-  private lookFor(organ: OrganId | null, name: PartName | null, style: PartStyle, view: View, input: SceneInput, out: PartLook) {
+  private lookFor(
+    organ: OrganId | null,
+    name: PartName | null,
+    style: PartStyle,
+    view: View,
+    input: SceneInput,
+    out: PartLook,
+  ) {
     const activity = this.activityOf(input.trajectory, input.t, organ ?? style.worksWith);
     const ramp = this.ramp();
     out.lift = 0;
@@ -760,7 +951,10 @@ export class Stage {
     const cough = this.refreshWork(input.trajectory, input.t).cough;
     for (const part of set.anatomy.parts.values()) {
       this.lookFor(part.style.organ, part.name, part.style, view, input, part.target);
-      part.target.highlight = part.style.organ !== null && (part.style.organ === input.hover || this.crossedByTrack(input, part.style.organ)) ? 1 : 0;
+      part.target.highlight =
+        part.style.organ !== null && (part.style.organ === input.hover || this.crossedByTrack(input, part.style.organ))
+          ? 1
+          : 0;
       if (part.name === "airway" && view.kind !== "process") this.lightAirway(part, cough, breathIn);
     }
   }
@@ -795,7 +989,11 @@ export class Stage {
     easeTo(wall.uHighlight, input.hover === "stomach" ? 1 : 0, k);
     wall.uTint.value.lerp(look.tint, k);
     easeTo(stomach.contentsMaterial.uniforms.uOpacity, inside, k);
-    easeTo(stomach.esophagusMaterial.uniforms.uOpacity, look.opacity === 0 ? 0 : receding ? LOOK.esophagus.context : LOOK.esophagus.subject, k);
+    easeTo(
+      stomach.esophagusMaterial.uniforms.uOpacity,
+      look.opacity === 0 ? 0 : receding ? LOOK.esophagus.context : LOOK.esophagus.subject,
+      k,
+    );
     this.chunksShown += (inside - this.chunksShown) * k;
     stomach.setChunkOpacity(this.chunksShown);
     // A stomach that has fully gone costs nothing until it comes back.
@@ -804,7 +1002,14 @@ export class Stage {
     // Food keeps its own colours only when you are looking at it; otherwise the pieces stay in the warm ramp.
     this.foodCalm += ((inFocus ? 0 : FOOD_CALM) - this.foodCalm) * k;
     const tr = input.trajectory;
-    stomach.update(dt, value(tr, "stomachMl", input.t), look.tint, STOMACH.slowWavesPerMin, this.stomachItems(tr, input.t), value(tr, "emptyingKcalPerMin", input.t));
+    stomach.update(
+      dt,
+      value(tr, "stomachMl", input.t),
+      look.tint,
+      STOMACH.slowWavesPerMin,
+      this.stomachItems(tr, input.t),
+      value(tr, "emptyingKcalPerMin", input.t),
+    );
   }
 
   private presentVessels(set: SexSet, input: SceneInput, view: View, motion: boolean) {
@@ -840,7 +1045,11 @@ export class Stage {
   // One group's flush from what it has been through: full colour while it works, a calmer one as it
   // repairs and gets sore. Null when nothing is going on in it.
   private flushOf(state: MuscleState): MuscleLevel | null {
-    const settling = Math.max(state.soreness, state.repair * MUSCLE_LOOK.repairWeight, state.fatigue * MUSCLE_LOOK.fatigueWeight);
+    const settling = Math.max(
+      state.soreness,
+      state.repair * MUSCLE_LOOK.repairWeight,
+      state.fatigue * MUSCLE_LOOK.fatigueWeight,
+    );
     const level = Math.max(state.work, settling);
     if (level < MUSCLE_RECOVERY.activeAbove) return null;
     const working = state.work / level;
@@ -857,7 +1066,14 @@ export class Stage {
     const minute = Math.floor(input.muscleMinute);
     const focus = view.kind === "focus" && view.organ === "muscle" ? input.focusMuscle : null;
     const cached = this.muscleLook;
-    if (cached && cached.view === view && cached.trajectory === tr && cached.minute === minute && cached.focus === focus) return cached;
+    if (
+      cached &&
+      cached.view === view &&
+      cached.trajectory === tr &&
+      cached.minute === minute &&
+      cached.focus === focus
+    )
+      return cached;
 
     const shown: Partial<Record<MuscleGroup, number>> = {};
     const levels: Partial<Record<MuscleGroup, MuscleLevel>> = {};
@@ -932,7 +1148,15 @@ export class Stage {
 
   private presentMuscles(input: SceneInput, view: View, dt: number) {
     const look = this.composeMuscleLook(input, view);
-    this.muscles.update(dt, { visible: look.visible, shown: look.shown, outlined: look.outlined, levels: look.levels, palette: PALETTES[input.theme], hover: input.hoverMuscle, focus: look.focus });
+    this.muscles.update(dt, {
+      visible: look.visible,
+      shown: look.shown,
+      outlined: look.outlined,
+      levels: look.levels,
+      palette: PALETTES[input.theme],
+      hover: input.hoverMuscle,
+      focus: look.focus,
+    });
   }
 
   private lymphShown(view: View) {
@@ -979,7 +1203,8 @@ export class Stage {
       this.food = { trajectory: tr, minute, pieces };
     }
     const { pieces } = this.food;
-    while (this.stomachItemPool.length < pieces.length) this.stomachItemPool.push({ color: new THREE.Color(), count: 0 });
+    while (this.stomachItemPool.length < pieces.length)
+      this.stomachItemPool.push({ color: new THREE.Color(), count: 0 });
     this.stomachItemPool.length = pieces.length;
     pieces.forEach((piece, i) => {
       const item = this.stomachItemPool[i];
@@ -1005,11 +1230,16 @@ export class Stage {
         return out.copy(set.stomach.center).applyMatrix4(set.torso.matrixWorld);
       case "muscle": {
         const f = this.figure;
-        const site = (from: string, to: string, t: number, target: THREE.Vector3) => f.worldJoint(from, target).lerp(f.worldJoint(to, this.scratchB), t);
+        const site = (from: string, to: string, t: number, target: THREE.Vector3) =>
+          f.worldJoint(from, target).lerp(f.worldJoint(to, this.scratchB), t);
         site("thigh.L", "shin.L", 0.45, out);
         if (!near) return out;
         let best = out.distanceToSquared(near);
-        for (const [from, to, t] of [["thigh.R", "shin.R", 0.45], ["arm.L", "forearm.L", 0.5], ["arm.R", "forearm.R", 0.5]] as const) {
+        for (const [from, to, t] of [
+          ["thigh.R", "shin.R", 0.45],
+          ["arm.L", "forearm.L", 0.5],
+          ["arm.R", "forearm.R", 0.5],
+        ] as const) {
           site(from, to, t, this.scratchA);
           const d = this.scratchA.distanceToSquared(near);
           if (d < best) {
@@ -1021,7 +1251,11 @@ export class Stage {
       }
       case "fat": {
         const hips = this.figure.worldJoint("hips", out);
-        return out.set(hips.x - this.figure.height * 0.065, hips.y + this.figure.height * 0.04, hips.z + this.figure.height * 0.075);
+        return out.set(
+          hips.x - this.figure.height * 0.065,
+          hips.y + this.figure.height * 0.04,
+          hips.z + this.figure.height * 0.075,
+        );
       }
       case "lungs":
         return this.sideNearest(set, "lung_L", "lung_R", out, near);
@@ -1037,7 +1271,9 @@ export class Stage {
       case "large_intestine":
         return this.partAnchor(set, id, out);
       case "ovaries":
-        return set.anatomy.has("ovary_L") ? this.sideNearest(set, "ovary_L", "ovary_R", out, near) : this.partAnchor(set, "bladder", out);
+        return set.anatomy.has("ovary_L")
+          ? this.sideNearest(set, "ovary_L", "ovary_R", out, near)
+          : this.partAnchor(set, "bladder", out);
       case "uterus":
       case "prostate":
         return this.partAnchor(set, set.anatomy.has(id) ? id : "bladder", out);
@@ -1125,7 +1361,8 @@ export class Stage {
     const lit: { id: AnchorId; name: string }[] = [];
     if (view.view.muscles === "figure") {
       const levels = this.composeMuscleLook(input, view).levels;
-      for (const group of MUSCLE_GROUPS) if (levels[group]) lit.push({ id: `muscle:${group}`, name: MUSCLE_LABEL[group] });
+      for (const group of MUSCLE_GROUPS)
+        if (levels[group]) lit.push({ id: `muscle:${group}`, name: MUSCLE_LABEL[group] });
       return lit;
     }
     for (const organ of view.organs) if (organ !== "fat") lit.push({ id: organ, name: ORGAN_NAME[organ] });
@@ -1185,7 +1422,8 @@ export class Stage {
     for (const part of set.anatomy.parts.values()) {
       if (part.mesh.visible && part.style.organ && part.name !== "airway") candidates.push(part.mesh);
     }
-    const organOf = (object: THREE.Object3D): OrganId | null => (object === set.stomach.wall ? "stomach" : set.anatomy.organOf(object));
+    const organOf = (object: THREE.Object3D): OrganId | null =>
+      object === set.stomach.wall ? "stomach" : set.anatomy.organOf(object);
     const hits = this.raycaster.intersectObjects(candidates, false);
     const view = this.viewOf(input);
     const muscle = this.muscles.pick(this.raycaster);
@@ -1199,7 +1437,11 @@ export class Stage {
       return { organ, muscle: null, onBody: true };
     }
     if (muscle) return { organ: null, muscle: muscle.group, onBody: true };
-    if (this.bellyShown > BELLY_WASH.pickableAbove && this.raycaster.ray.distanceToPoint(this.organCenter(set, "fat", this.scratchA)) < BELLY_WASH.radius * this.figure.height) {
+    if (
+      this.bellyShown > BELLY_WASH.pickableAbove &&
+      this.raycaster.ray.distanceToPoint(this.organCenter(set, "fat", this.scratchA)) <
+        BELLY_WASH.radius * this.figure.height
+    ) {
       return { organ: "fat", muscle: null, onBody: true };
     }
     for (const hit of hits) {
@@ -1260,37 +1502,55 @@ export class Stage {
   private framingKeyOf(input: SceneInput) {
     const body = `${input.body.sex}|${input.body.heightCm}`;
     const posture = this.sit > 0.5 ? "seated" : "standing";
-    if (input.focus) return `focus:${input.focus}:${input.focus === "muscle" ? input.focusMuscle : ""}|${input.focus === "muscle" ? posture : ""}|${body}`;
+    if (input.focus)
+      return `focus:${input.focus}:${input.focus === "muscle" ? input.focusMuscle : ""}|${input.focus === "muscle" ? posture : ""}|${body}`;
     if (!input.process) {
       const view = SYSTEM_VIEWS[input.system];
       return `system:${input.system}|${view.standingHeight ? posture : ""}|${view.turnsToWork ? this.workedAzimuth(input) : ""}|${body}`;
     }
-    return input.stop === null ? `process:${input.process.id}|${litMuscleOf(input.process, null)}|${body}` : `stop:${input.process.id}:${input.stop}|${body}`;
+    return input.stop === null
+      ? `process:${input.process.id}|${litMuscleOf(input.process, null)}|${body}`
+      : `stop:${input.process.id}:${input.stop}|${body}`;
   }
 
   private framingSourceOf(set: SexSet, input: SceneInput): FramingSource {
-    const angled = (angle: ViewAngle, center: (out: THREE.Vector3) => THREE.Vector3, azimuth: number = angle.azimuth): FramingSource => (out) => {
-      center(out.target);
-      const share = THREE.MathUtils.lerp(angle.standingHeight ?? angle.height, angle.height, this.sit);
-      out.height = share * this.figure.height;
-      out.width = angle.width * this.figure.height;
-      out.azimuth = azimuth;
-      out.polar = angle.polar;
-      out.headroom = angle.headroom ?? null;
-    };
-    const withHead = (source: FramingSource): FramingSource => (out) => {
-      source(out);
-      this.figure.headHeights(out.head);
-    };
+    const angled =
+      (
+        angle: ViewAngle,
+        center: (out: THREE.Vector3) => THREE.Vector3,
+        azimuth: number = angle.azimuth,
+      ): FramingSource =>
+      (out) => {
+        center(out.target);
+        const share = THREE.MathUtils.lerp(angle.standingHeight ?? angle.height, angle.height, this.sit);
+        out.height = share * this.figure.height;
+        out.width = angle.width * this.figure.height;
+        out.azimuth = azimuth;
+        out.polar = angle.polar;
+        out.headroom = angle.headroom ?? null;
+      };
+    const withHead =
+      (source: FramingSource): FramingSource =>
+      (out) => {
+        source(out);
+        this.figure.headHeights(out.head);
+      };
     const { focus, focusMuscle, process, stop } = input;
-    if (focus === "muscle" && focusMuscle) return withHead(angled(MUSCLE_VIEWS[focusMuscle], (out) => this.muscleCenter(focusMuscle, out)));
+    if (focus === "muscle" && focusMuscle)
+      return withHead(angled(MUSCLE_VIEWS[focusMuscle], (out) => this.muscleCenter(focusMuscle, out)));
     if (focus === "muscle") {
       const figure = SYSTEM_VIEWS.muscles;
       return withHead(angled(figure, (out) => figure.center(this.places, out)));
     }
     if (focus) {
       const view = FOCUS_VIEWS[focus];
-      return withHead(angled(view, (out) => this.organCenter(set, focus, out), input.track ? TRACK_AZIMUTH[input.track.from] : view.azimuth));
+      return withHead(
+        angled(
+          view,
+          (out) => this.organCenter(set, focus, out),
+          input.track ? TRACK_AZIMUTH[input.track.from] : view.azimuth,
+        ),
+      );
     }
     const systemView = SYSTEM_VIEWS[input.system];
     const turned = systemView.turnsToWork ? this.workedAzimuth(input) : null;
@@ -1367,13 +1627,16 @@ export class Stage {
 
     // The camera stays on the torso when the figure sits or stands, so the organs never leave the frame.
     this.figure.worldJoint("hips", this.hipsWorld);
-    if (this.framedHipsY !== null && Math.abs(this.hipsWorld.y - this.framedHipsY) > 1e-4) this.rig.translateY(this.hipsWorld.y - this.framedHipsY);
+    if (this.framedHipsY !== null && Math.abs(this.hipsWorld.y - this.framedHipsY) > 1e-4)
+      this.rig.translateY(this.hipsWorld.y - this.framedHipsY);
     this.framedHipsY = this.hipsWorld.y;
     // Heartbeat and breathing run at the model's rates.
     this.beat += dt * (value(tr, "hr", input.t) / 60);
     this.breath += dt * (value(tr, "breaths", input.t) / 60);
     const beatPhase = this.beat % 1;
-    const lub = motion ? Math.exp(-((beatPhase - 0.08) ** 2) / 0.003) + 0.55 * Math.exp(-((beatPhase - 0.3) ** 2) / 0.005) : 0;
+    const lub = motion
+      ? Math.exp(-((beatPhase - 0.08) ** 2) / 0.003) + 0.55 * Math.exp(-((beatPhase - 0.3) ** 2) / 0.005)
+      : 0;
     const heart = set.anatomy.part("heart");
     heart.scalePulse = -0.05 * lub;
     heart.material.uniforms.uPulse.value = lub;
@@ -1413,7 +1676,10 @@ export class Stage {
     if (this.idle && motion && !this.rig.flying) {
       this.idleClock += dt;
       this.swayOffset.copy(this.camera.position).sub(this.controls.target);
-      this.swayOffset.applyAxisAngle(this.swayAxis, Math.cos(this.idleClock * IDLE_SWAY.rate) * IDLE_SWAY.radiansPerSecond * dt);
+      this.swayOffset.applyAxisAngle(
+        this.swayAxis,
+        Math.cos(this.idleClock * IDLE_SWAY.rate) * IDLE_SWAY.radiansPerSecond * dt,
+      );
       this.camera.position.copy(this.controls.target).add(this.swayOffset);
     }
     this.controls.update();
@@ -1422,4 +1688,3 @@ export class Stage {
     for (const listener of this.frameListeners) listener(this, dt);
   }
 }
-

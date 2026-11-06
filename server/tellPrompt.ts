@@ -120,27 +120,38 @@ const BRIEF_PROMPT = `
 
 Work in as few messages as you can, because the person is watching and each message costs them seconds. Send every call you can together in one message. Logging tools record and return nothing, so put read_body at the current time in the same message as your last log or view call, and then call reply. A reply alone in the next message is ideal. For a food: find_foods first, then all the log_food and log_dish calls, the view and read_body together, then reply. This overrides what the other instructions say about each tool returning a readout.`;
 
-export const systemPromptFor = (mode: Mode, depth: Depth, plan: TellPlan) => SYSTEM_PROMPT + (mode === "ask" ? ASK_PROMPT + DEPTH_PROMPT[depth] : TELL_PROMPT) + (plan.brief ? BRIEF_PROMPT : "");
+export const systemPromptFor = (mode: Mode, depth: Depth, plan: TellPlan) =>
+  SYSTEM_PROMPT + (mode === "ask" ? ASK_PROMPT + DEPTH_PROMPT[depth] : TELL_PROMPT) + (plan.brief ? BRIEF_PROMPT : "");
 
 // set_now moves the clock for the scripted demo. Claude reads the real clock and never gets it.
 export type ToolAction = Exclude<ActionName, "set_now">;
 
 const HIDDEN_IN: Record<Mode, readonly ToolAction[]> = { tell: ["guide"], ask: ["what_if"] };
 
-export const actionToolsFor = (mode: Mode) => (Object.keys(ACTION_DESCRIPTIONS) as ToolAction[]).filter((name) => !HIDDEN_IN[mode].includes(name));
+export const actionToolsFor = (mode: Mode) =>
+  (Object.keys(ACTION_DESCRIPTIONS) as ToolAction[]).filter((name) => !HIDDEN_IN[mode].includes(name));
 
-const SYSTEM_WORDS = SYSTEMS.map(({ id, title }) => (title.toLowerCase() === id ? id : `${id} (${title.toLowerCase()})`)).join(", ");
+const SYSTEM_WORDS = SYSTEMS.map(({ id, title }) =>
+  title.toLowerCase() === id ? id : `${id} (${title.toLowerCase()})`,
+).join(", ");
 
 export const ACTION_DESCRIPTIONS: Record<ToolAction, string> = {
-  correct_intake: "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
-  set_sleep: "Sets last night's sleep. Past their usual bedtime the model counts them as still up, and it uses the real length of the night for how today feels. Returns a readout.",
-  set_cycle: "Sets when their latest period began. The model then places a typical menstrual cycle from that date: the hormones, a slightly warmer body and higher heart rate after ovulation, and lower insulin sensitivity. Pass null if they use a hormonal contraceptive, are pregnant or past menopause, because this curve doesn't apply. Returns a readout.",
-  guide: "Walks the person through your explanation on the body, one step at a time. Each step moves the view and the time, and shows your words. The first step goes on screen immediately. A process id must exist in the readout at that point, so log first. Returns nothing to act on.",
-  log_intake: "Records one food or drink at a time of day. The stomach, blood and organs respond immediately. Reusing an id replaces that entry. Returns a readout at the current time.",
+  correct_intake:
+    "Corrects something already logged: how much they really had, when they really had it, or both. Everything in the food scales with the grams. If the id is unknown the error lists the known ids. Returns a readout.",
+  set_sleep:
+    "Sets last night's sleep. Past their usual bedtime the model counts them as still up, and it uses the real length of the night for how today feels. Returns a readout.",
+  set_cycle:
+    "Sets when their latest period began. The model then places a typical menstrual cycle from that date: the hormones, a slightly warmer body and higher heart rate after ovulation, and lower insulin sensitivity. Pass null if they use a hormonal contraceptive, are pregnant or past menopause, because this curve doesn't apply. Returns a readout.",
+  guide:
+    "Walks the person through your explanation on the body, one step at a time. Each step moves the view and the time, and shows your words. The first step goes on screen immediately. A process id must exist in the readout at that point, so log first. Returns nothing to act on.",
+  log_intake:
+    "Records one food or drink at a time of day. The stomach, blood and organs respond immediately. Reusing an id replaces that entry. Returns a readout at the current time.",
   remove_intake: "Removes a logged food or drink by id. Returns a readout.",
-  set_activity: "Sets what the body is doing from a time onward, or between two times. The figure changes posture and the model changes muscle uptake and heart rate. Use it for sitting, standing, walking, running and sleeping. A gym session is log_event with the training preset, without this as well, or its effort would count twice. Returns a readout.",
+  set_activity:
+    "Sets what the body is doing from a time onward, or between two times. The figure changes posture and the model changes muscle uptake and heart rate. Use it for sitting, standing, walking, running and sleeping. A gym session is log_event with the training preset, without this as well, or its effort would count twice. Returns a readout.",
   set_body: "Changes sex, age, height or weight. Pass only what changed. Returns a readout.",
-  define_substance: "Adds a drug or supplement the model has no built-in kinetics for, as a one-compartment dose that is swallowed, inhaled or injected. It circulates on screen and shows on the page of every target organ, with the effect you give. It changes no heart rate or other reading by itself, so pair it with a custom log_event for what it does to those. Returns a readout.",
+  define_substance:
+    "Adds a drug or supplement the model has no built-in kinetics for, as a one-compartment dose that is swallowed, inhaled or injected. It circulates on screen and shows on the page of every target organ, with the effect you give. It changes no heart rate or other reading by itself, so pair it with a custom log_event for what it does to those. Returns a readout.",
   log_event: `Records something that happened to the body or is still going on, other than food, drugs and plain posture. The model computes every curve from the preset. The event appears in the readout under events and threads, and as a process with id event:<id>. Reusing an id replaces that event. Label it the way a person says it, such as "Chest and triceps workout" or "Cold", since the label is shown as written. When describing how it may feel, say "you may feel", never "you should feel". Pick one preset:
 - training: a gym or bodyweight session. Pass muscles, using only the groups they name or that the exercise works. Give until; without it the session counts as 60 minutes.
 - illness: a cold, flu or other infection. Pass the symptoms they report. until null while they are ill, and end_event when it is over.
@@ -149,31 +160,62 @@ export const ACTION_DESCRIPTIONS: Record<ToolAction, string> = {
 - poor_sleep: a short night. from is when they woke. Without until it lasts until bedtime.
 - custom: only when none of these fits. Compose it in custom from channels, feelings and stops, and say in source where the numbers come from. It is marked as your estimate.
 On a bad value the error names the parameter to fix. Returns a readout.`,
-  end_event: "Marks an ongoing event as over, for example when they say the cold has gone. Its effects then fade over the following hours or days. If the id is unknown the error lists the known ids. Returns a readout.",
+  end_event:
+    "Marks an ongoing event as over, for example when they say the cold has gone. Its effects then fade over the following hours or days. If the id is unknown the error lists the known ids. Returns a readout.",
   show_system: `Switches the view to one body system: ${SYSTEM_WORDS}. Returns a readout.`,
-  show_process: "Draws one process as a numbered line through the body, for example where a food has got to, or a workout or a cold as event:<id>. Ids are in the readout under processes. Pass null to hide it. Returns a readout.",
+  show_process:
+    "Draws one process as a numbered line through the body, for example where a food has got to, or a workout or a cold as event:<id>. Ids are in the readout under processes. Pass null to hide it. Returns a readout.",
   focus_organ: "Flies the camera to one organ and fades the rest. Pass null for the whole body. Returns a readout.",
-  what_if: "Draws an alternative activity on the timeline for comparison without applying it. Returns a readout of the alternative at the end of the activity.",
+  what_if:
+    "Draws an alternative activity on the timeline for comparison without applying it. Returns a readout of the alternative at the end of the activity.",
 };
 
-const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+const dayName = (date: string) =>
+  new Date(`${date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
-export function renderContext({ day, now }: BodyState, text: string, mode: Mode, history: { asked: string; answered: string }[], date: string | null) {
+export function renderContext(
+  { day, now }: BodyState,
+  text: string,
+  mode: Mode,
+  history: { asked: string; answered: string }[],
+  date: string | null,
+) {
   const clock = (m: number) => `${formatClock(m)} (minute ${m})`;
   const logged = (i: Intake) => {
-    const where = i.source?.kind === "table" ? `USDA: ${i.source.name}` : i.source?.kind === "estimate" ? "your estimate" : i.source?.kind === "recipe" ? `your recipe: ${i.source.ingredients.map((part) => `${Math.round(part.grams)} g ${part.name}`).join(", ")}` : null;
+    const where =
+      i.source?.kind === "table"
+        ? `USDA: ${i.source.name}`
+        : i.source?.kind === "estimate"
+          ? "your estimate"
+          : i.source?.kind === "recipe"
+            ? `your recipe: ${i.source.ingredients.map((part) => `${Math.round(part.grams)} g ${part.name}`).join(", ")}`
+            : null;
     return `- ${i.label} (id ${i.id}) at ${clock(i.at)}, ${Math.round(i.grams)} g${day.assumptions[i.id] ? `, ${day.assumptions[i.id]}` : ""}${where ? `, ${where}` : ""}`;
   };
   const list = (items: Intake[]) => (items.length ? items.map(logged).join("\n") : "- nothing yet");
   const fromYesterday = day.intakes.filter((i) => i.at < 0);
   const intakes = `${list(day.intakes.filter((i) => i.at >= 0))}${fromYesterday.length ? `\n\nYesterday, already counted:\n${list(fromYesterday)}` : ""}`;
-  const activities = [...day.activities].sort((a, b) => a.from - b.from).map((a) => `- from ${clock(a.from)}: ${a.posture}`).join("\n");
-  const substances = day.substances.length ? day.substances.map((s) => `- ${s.label} (id ${s.id}), ${s.doseMg} mg at ${clock(s.at)}`).join("\n") : "- none";
-  const cycle = day.cycle ? `Latest period began at minute ${day.cycle.start}, ${day.cycle.lengthDays}-day cycle.` : "No cycle logged.";
-  const events = day.events.length
-    ? day.events.map((e) => `- ${e.label} (id ${e.id}, ${e.preset}), from ${clock(e.from)}, ${e.until === null ? "still going on" : `until ${clock(e.until)}`}`).join("\n")
+  const activities = [...day.activities]
+    .sort((a, b) => a.from - b.from)
+    .map((a) => `- from ${clock(a.from)}: ${a.posture}`)
+    .join("\n");
+  const substances = day.substances.length
+    ? day.substances.map((s) => `- ${s.label} (id ${s.id}), ${s.doseMg} mg at ${clock(s.at)}`).join("\n")
     : "- none";
-  const earlier = history.length ? `\n\nEarlier in this exploration:\n${history.map((h) => `They asked: ${h.asked}\nYou answered: ${h.answered}`).join("\n")}` : "";
+  const cycle = day.cycle
+    ? `Latest period began at minute ${day.cycle.start}, ${day.cycle.lengthDays}-day cycle.`
+    : "No cycle logged.";
+  const events = day.events.length
+    ? day.events
+        .map(
+          (e) =>
+            `- ${e.label} (id ${e.id}, ${e.preset}), from ${clock(e.from)}, ${e.until === null ? "still going on" : `until ${clock(e.until)}`}`,
+        )
+        .join("\n")
+    : "- none";
+  const earlier = history.length
+    ? `\n\nEarlier in this exploration:\n${history.map((h) => `They asked: ${h.asked}\nYou answered: ${h.answered}`).join("\n")}`
+    : "";
   return `<simulation${mode === "ask" ? ' kind="temporary copy of their day"' : ""}>
 ${date ? `Today is ${dayName(date)}. ` : ""}Current time: ${clock(now)}. Tools take times as minutes since 00:00.
 Body: ${day.body.sex}, ${day.body.age} years, ${day.body.heightCm} cm, ${day.body.weightKg} kg.${day.body.sex === "female" ? ` ${cycle}` : ""}

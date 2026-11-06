@@ -6,9 +6,32 @@ import { hm, NO_NUTRIENTS } from "./testKit";
 import { arrivingFoods, foodsInStomach, whereabouts } from "./whereabouts";
 
 const body = { sex: "male" as const, age: 30, heightCm: 180, weightKg: 80 };
-const quiet: Scenario = { body, activities: [{ from: 0, posture: "sleeping" }, { from: hm(7), posture: "sitting" }], substances: [], intakes: [], events: [] };
-const food = (id: string, at: number, parts: Partial<Intake>): Intake => ({ ...NO_NUTRIENTS, id, label: id, at, ...parts });
-const pizza = food("pizza", hm(12), { grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 });
+const quiet: Scenario = {
+  body,
+  activities: [
+    { from: 0, posture: "sleeping" },
+    { from: hm(7), posture: "sitting" },
+  ],
+  substances: [],
+  intakes: [],
+  events: [],
+};
+const food = (id: string, at: number, parts: Partial<Intake>): Intake => ({
+  ...NO_NUTRIENTS,
+  id,
+  label: id,
+  at,
+  ...parts,
+});
+const pizza = food("pizza", hm(12), {
+  grams: 240,
+  waterMl: 110,
+  carbsG: 72,
+  sugarG: 8,
+  fatG: 26,
+  proteinG: 28,
+  fiberG: 4,
+});
 const smallJuice = food("small juice", hm(12), { grams: 100, waterMl: 90, carbsG: 10, sugarG: 10, liquid: true });
 const bigJuice = food("big juice", hm(12), { grams: 300, waterMl: 270, carbsG: 30, sugarG: 30, liquid: true });
 const coffee = food("coffee", hm(9), { grams: 250, waterMl: 250, caffeineMg: 95, liquid: true });
@@ -24,7 +47,9 @@ describe("where a food is", () => {
       const shares = where.places.reduce((sum, place) => sum + place.share, 0);
       expect(shares).toBeGreaterThan(0.97);
       expect(shares).toBeLessThan(1 + (pizza.fiberG * GUT.fiberKcalPerG) / foodKcalOf(pizza) + 0.001);
-      expect(where.places.map((place) => place.amount)).toEqual(where.places.map((place) => place.amount).sort((a, b) => b - a));
+      expect(where.places.map((place) => place.amount)).toEqual(
+        where.places.map((place) => place.amount).sort((a, b) => b - a),
+      );
     }
   });
 
@@ -43,7 +68,15 @@ describe("where a food is", () => {
 
   it("drops yesterday's food once it has arrived, and keeps a late one still on its way", () => {
     const lateLastNight = { ...pizza, id: "late", at: -30 };
-    const day = simulate({ ...quiet, activities: [{ from: -1440, posture: "sitting" }, { from: 0, posture: "sleeping" }, { from: hm(7), posture: "sitting" }], intakes: [lateLastNight] });
+    const day = simulate({
+      ...quiet,
+      activities: [
+        { from: -1440, posture: "sitting" },
+        { from: 0, posture: "sleeping" },
+        { from: hm(7), posture: "sitting" },
+      ],
+      intakes: [lateLastNight],
+    });
     expect(whereabouts(day, 0).map((where) => where.id)).toEqual(["late"]);
     expect(whereabouts(day, hm(20))).toEqual([]);
   });

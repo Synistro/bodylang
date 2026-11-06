@@ -32,12 +32,32 @@ const ALL_PLANS = {
 const PLANS = flag("plans", Object.keys(ALL_PLANS).join(",")).split(",");
 
 const NOW = 14 * 60 + 30;
-const pizza = { id: "pizza", label: "Pizza", at: 790, grams: 214, waterMl: 92, carbsG: 71, sugarG: 7.6, fatG: 20.7, proteinG: 24, fiberG: 4.9, caffeineMg: 0, alcoholG: 0, source: { kind: "table", fdcId: 2708615, name: "Pizza, cheese", dataset: "FNDDS" }, serving: { label: "slice", grams: 107 } };
+const pizza = {
+  id: "pizza",
+  label: "Pizza",
+  at: 790,
+  grams: 214,
+  waterMl: 92,
+  carbsG: 71,
+  sugarG: 7.6,
+  fatG: 20.7,
+  proteinG: 24,
+  fiberG: 4.9,
+  caffeineMg: 0,
+  alcoholG: 0,
+  source: { kind: "table", fdcId: 2708615, name: "Pizza, cheese", dataset: "FNDDS" },
+  serving: { label: "slice", grams: 107 },
+};
 const base = (day = {}) => ({
   day: {
     body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
     intakes: [],
-    activities: [{ from: -1440, posture: "sleeping" }, { from: -990, posture: "standing" }, { from: -30, posture: "sleeping" }, { from: 450, posture: "standing" }],
+    activities: [
+      { from: -1440, posture: "sleeping" },
+      { from: -990, posture: "standing" },
+      { from: -30, posture: "sleeping" },
+      { from: 450, posture: "standing" },
+    ],
     substances: [],
     events: [],
     cycle: null,
@@ -53,76 +73,120 @@ const near = (x, want, within) => Math.abs(x - want) <= within;
 
 // Each sentence, and what doing the right thing means for it, as a check code can run.
 const SENTENCES = [
-  { id: "lunch", text: "two slices of pizza and a coke at 13:10", check: (a) => {
-    const foods = a.filter((x) => x.name === "log_intake");
-    const za = foods.find((x) => /pizza/i.test(x.args.label));
-    const coke = foods.find((x) => /coke|cola/i.test(x.args.label));
-    if (!za || !coke) return "missing a food";
-    if (za.args.at !== 790 || coke.args.at !== 790) return "wrong time";
-    if (za.args.source?.kind !== "table") return "pizza not from the table";
-    if (coke.args.source?.kind !== "table") return "coke not from the table";
-    if (za.args.grams < 120 || za.args.grams > 400) return `pizza ${za.args.grams} g`;
-    return null;
-  } },
-  { id: "coffee", text: "I just had a flat white and a banana", check: (a) => {
-    const foods = a.filter((x) => x.name === "log_intake");
-    if (foods.length !== 2) return `${foods.length} foods`;
-    if (foods.some((x) => !near(x.args.at, NOW, 10))) return "wrong time";
-    if (!foods.some((x) => x.args.caffeine_mg >= 40)) return "no caffeine";
-    if (!foods.some((x) => /banana/i.test(x.args.label) && x.args.carbs_g > 15)) return "banana wrong";
-    return null;
-  } },
-  { id: "gym", text: "chest and triceps at the gym this morning from 7 to 8, pretty hard", check: (a) => {
-    const e = a.find((x) => x.name === "log_event");
-    if (!e || e.args.preset !== "training") return "no training";
-    const groups = e.args.muscles.map((m) => m.group);
-    if (!groups.includes("chest") || !groups.includes("triceps")) return `muscles ${groups}`;
-    if (e.args.from !== 420 || e.args.until !== 480) return `times ${e.args.from}-${e.args.until}`;
-    if (e.args.intensity < 0.6) return `intensity ${e.args.intensity}`;
-    return null;
-  } },
-  { id: "cold", text: "I think I'm coming down with a cold, sore throat and a bit of a fever", check: (a) => {
-    const e = a.find((x) => x.name === "log_event");
-    if (!e || e.args.preset !== "illness") return "no illness";
-    if (e.args.until !== null) return "ended";
-    if (!e.args.symptoms.includes("fever")) return "no fever";
-    return null;
-  } },
-  { id: "night", text: "slept only 4 hours last night, went to bed at 3", check: (a) => {
-    const s = a.find((x) => x.name === "set_sleep");
-    if (!s) return "no set_sleep";
-    if (!near(s.args.bed, 180, 5) || !near(s.args.wake, 420, 15)) return `${s.args.bed}-${s.args.wake}`;
-    return null;
-  } },
-  { id: "sauna", text: "just got out of the sauna, was in there for 20 minutes", check: (a) => {
-    const e = a.find((x) => x.name === "log_event");
-    if (!e || e.args.preset !== "custom") return "no custom event";
-    if (!near(e.args.until - e.args.from, 20, 5)) return "wrong length";
-    if (!e.args.custom.effects.some((x) => x.channel === "temperature" || x.channel === "heartRate")) return "no effect";
-    return null;
-  } },
-  { id: "drug", text: "took 400 mg ibuprofen an hour ago", check: (a) => {
-    const s = a.find((x) => x.name === "define_substance");
-    if (!s) return "no substance";
-    if (s.args.dose_mg !== 400 || !near(s.args.at, NOW - 60, 5)) return "wrong dose or time";
-    if (!s.args.source) return "no source";
-    return null;
-  } },
-  { id: "correction", text: "actually the pizza was only one slice", state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }), check: (a) => {
-    const c = a.find((x) => x.name === "correct_intake");
-    const again = a.find((x) => x.name === "log_intake");
-    if (again && !c) return near(again.args.grams, 107, 25) && again.args.id === "pizza" ? null : "logged a second one";
-    if (!c || c.args.id !== "pizza") return "no correction";
-    return near(c.args.grams, 107, 25) ? null : `${c.args.grams} g`;
-  } },
-  { id: "emergency", text: "crushing pain in my chest and my left arm has gone numb", check: (a, reply) => {
-    if (logged(a).length) return "logged something";
-    return /emergency|911|999|112|ambulance|medical help|call/i.test(reply) ? null : "didn't send for help";
-  } },
-  { id: "question", text: "what's happening in my stomach right now", state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }), check: (a, reply) => {
-    if (logged(a).length) return "logged something";
-    return /\d/.test(reply) ? null : "no number";
-  } },
+  {
+    id: "lunch",
+    text: "two slices of pizza and a coke at 13:10",
+    check: (a) => {
+      const foods = a.filter((x) => x.name === "log_intake");
+      const za = foods.find((x) => /pizza/i.test(x.args.label));
+      const coke = foods.find((x) => /coke|cola/i.test(x.args.label));
+      if (!za || !coke) return "missing a food";
+      if (za.args.at !== 790 || coke.args.at !== 790) return "wrong time";
+      if (za.args.source?.kind !== "table") return "pizza not from the table";
+      if (coke.args.source?.kind !== "table") return "coke not from the table";
+      if (za.args.grams < 120 || za.args.grams > 400) return `pizza ${za.args.grams} g`;
+      return null;
+    },
+  },
+  {
+    id: "coffee",
+    text: "I just had a flat white and a banana",
+    check: (a) => {
+      const foods = a.filter((x) => x.name === "log_intake");
+      if (foods.length !== 2) return `${foods.length} foods`;
+      if (foods.some((x) => !near(x.args.at, NOW, 10))) return "wrong time";
+      if (!foods.some((x) => x.args.caffeine_mg >= 40)) return "no caffeine";
+      if (!foods.some((x) => /banana/i.test(x.args.label) && x.args.carbs_g > 15)) return "banana wrong";
+      return null;
+    },
+  },
+  {
+    id: "gym",
+    text: "chest and triceps at the gym this morning from 7 to 8, pretty hard",
+    check: (a) => {
+      const e = a.find((x) => x.name === "log_event");
+      if (!e || e.args.preset !== "training") return "no training";
+      const groups = e.args.muscles.map((m) => m.group);
+      if (!groups.includes("chest") || !groups.includes("triceps")) return `muscles ${groups}`;
+      if (e.args.from !== 420 || e.args.until !== 480) return `times ${e.args.from}-${e.args.until}`;
+      if (e.args.intensity < 0.6) return `intensity ${e.args.intensity}`;
+      return null;
+    },
+  },
+  {
+    id: "cold",
+    text: "I think I'm coming down with a cold, sore throat and a bit of a fever",
+    check: (a) => {
+      const e = a.find((x) => x.name === "log_event");
+      if (!e || e.args.preset !== "illness") return "no illness";
+      if (e.args.until !== null) return "ended";
+      if (!e.args.symptoms.includes("fever")) return "no fever";
+      return null;
+    },
+  },
+  {
+    id: "night",
+    text: "slept only 4 hours last night, went to bed at 3",
+    check: (a) => {
+      const s = a.find((x) => x.name === "set_sleep");
+      if (!s) return "no set_sleep";
+      if (!near(s.args.bed, 180, 5) || !near(s.args.wake, 420, 15)) return `${s.args.bed}-${s.args.wake}`;
+      return null;
+    },
+  },
+  {
+    id: "sauna",
+    text: "just got out of the sauna, was in there for 20 minutes",
+    check: (a) => {
+      const e = a.find((x) => x.name === "log_event");
+      if (!e || e.args.preset !== "custom") return "no custom event";
+      if (!near(e.args.until - e.args.from, 20, 5)) return "wrong length";
+      if (!e.args.custom.effects.some((x) => x.channel === "temperature" || x.channel === "heartRate"))
+        return "no effect";
+      return null;
+    },
+  },
+  {
+    id: "drug",
+    text: "took 400 mg ibuprofen an hour ago",
+    check: (a) => {
+      const s = a.find((x) => x.name === "define_substance");
+      if (!s) return "no substance";
+      if (s.args.dose_mg !== 400 || !near(s.args.at, NOW - 60, 5)) return "wrong dose or time";
+      if (!s.args.source) return "no source";
+      return null;
+    },
+  },
+  {
+    id: "correction",
+    text: "actually the pizza was only one slice",
+    state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }),
+    check: (a) => {
+      const c = a.find((x) => x.name === "correct_intake");
+      const again = a.find((x) => x.name === "log_intake");
+      if (again && !c)
+        return near(again.args.grams, 107, 25) && again.args.id === "pizza" ? null : "logged a second one";
+      if (!c || c.args.id !== "pizza") return "no correction";
+      return near(c.args.grams, 107, 25) ? null : `${c.args.grams} g`;
+    },
+  },
+  {
+    id: "emergency",
+    text: "crushing pain in my chest and my left arm has gone numb",
+    check: (a, reply) => {
+      if (logged(a).length) return "logged something";
+      return /emergency|911|999|112|ambulance|medical help|call/i.test(reply) ? null : "didn't send for help";
+    },
+  },
+  {
+    id: "question",
+    text: "what's happening in my stomach right now",
+    state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }),
+    check: (a, reply) => {
+      if (logged(a).length) return "logged something";
+      return /\d/.test(reply) ? null : "no number";
+    },
+  },
 ];
 
 // Explaining, in Ask mode, where the answer's wording matters most. Each has to walk through it on the body.
@@ -141,7 +205,13 @@ if (flag("ask", "no") === "yes") {
     { id: "insulin", mode: "ask", text: "how does insulin work", check: guided(false) },
     { id: "run", mode: "ask", text: "what would a 5k run tonight do to me", check: guided(true) },
     { id: "coffee_why", mode: "ask", text: "why does coffee keep me awake", check: guided(false) },
-    { id: "skip", mode: "ask", text: "what if I hadn't had the pizza", state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }), check: guided(true) },
+    {
+      id: "skip",
+      mode: "ask",
+      text: "what if I hadn't had the pizza",
+      state: base({ intakes: [pizza], assumptions: { pizza: "Two slices" } }),
+      check: guided(true),
+    },
   );
 }
 
@@ -155,10 +225,16 @@ if (existsSync(OUT)) {
   }
 }
 
-const jobs = PLANS.flatMap((plan) => SENTENCES.flatMap((sentence) => Array.from({ length: REPEATS }, (_, repeat) => ({ plan, sentence, repeat })))).filter((j) => !done.has(`${j.plan}/${j.sentence.id}/${j.repeat}`));
+const jobs = PLANS.flatMap((plan) =>
+  SENTENCES.flatMap((sentence) => Array.from({ length: REPEATS }, (_, repeat) => ({ plan, sentence, repeat }))),
+).filter((j) => !done.has(`${j.plan}/${j.sentence.id}/${j.repeat}`));
 console.log(`${jobs.length} runs to do, $${spent.toFixed(2)} spent so far, stopping at $${BUDGET}`);
 
-const vite = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
+const vite = await createServer({
+  server: { middlewareMode: true, hmr: false, watch: null },
+  appType: "custom",
+  logLevel: "error",
+});
 const { runTell } = await vite.ssrLoadModule("/server/tell.ts");
 
 async function runOne({ plan, sentence, repeat }) {
@@ -167,7 +243,14 @@ async function runOne({ plan, sentence, repeat }) {
   let unverified = [];
   let say = "";
   const measure = await runTell(
-    { text: sentence.text, state: sentence.state ?? base(), mode: sentence.mode ?? "tell", depth: "simple", history: [], date: "2026-11-05" },
+    {
+      text: sentence.text,
+      state: sentence.state ?? base(),
+      mode: sentence.mode ?? "tell",
+      depth: "simple",
+      history: [],
+      date: "2026-11-05",
+    },
     ALL_PLANS[plan],
     (event) => {
       if (event.type === "action") actions.push({ name: event.name, args: event.args });
@@ -187,7 +270,18 @@ async function runOne({ plan, sentence, repeat }) {
     problem = `check threw: ${e.message}`;
   }
   if (!reply) problem = problem ?? "no reply";
-  return { plan, sentence: sentence.id, repeat, ...measure, ok: problem === null, problem, reply, say, unverified, tools: actions.map((a) => a.name) };
+  return {
+    plan,
+    sentence: sentence.id,
+    repeat,
+    ...measure,
+    ok: problem === null,
+    problem,
+    reply,
+    say,
+    unverified,
+    tools: actions.map((a) => a.name),
+  };
 }
 
 let next = 0;
@@ -199,7 +293,9 @@ async function worker() {
       const row = await runOne(job);
       spent += row.costUsd;
       appendFileSync(OUT, `${JSON.stringify(row)}\n`);
-      console.log(`${next}/${jobs.length} ${row.plan} ${row.sentence}: ${row.totalMs} ms ${row.ok ? "ok" : `WRONG (${row.problem})`} $${spent.toFixed(2)}`);
+      console.log(
+        `${next}/${jobs.length} ${row.plan} ${row.sentence}: ${row.totalMs} ms ${row.ok ? "ok" : `WRONG (${row.problem})`} $${spent.toFixed(2)}`,
+      );
     } catch (e) {
       failures++;
       console.log(`${job.plan} ${job.sentence.id}: failed: ${e.message}`);

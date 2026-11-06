@@ -45,15 +45,21 @@ function eventHeadline(event: ResolvedEvent, t: number): string {
       const named = namesOf(event.muscles);
       if (running) return `Working your ${named}, heart up ${heart} bpm`;
       const peak = (end ?? t) + PROCESS.sorenessPeakMin;
-      return t < peak ? `Repairing your ${named}, soreness peaks ${whenWords(peak, t)}` : `Your ${named} are healing, soreness easing`;
+      return t < peak
+        ? `Repairing your ${named}, soreness peaks ${whenWords(peak, t)}`
+        : `Your ${named} are healing, soreness easing`;
     }
     case "illness": {
       const fever = effectAt(event, "temperature", t);
       if (!running) return "Recovering, and insulin stays less effective for days";
-      return fever >= PROCESS.feverNamedFromC ? `Immune system fighting it, temperature up ${fever.toFixed(1)} °C` : "Immune system fighting it, no fever";
+      return fever >= PROCESS.feverNamedFromC
+        ? `Immune system fighting it, temperature up ${fever.toFixed(1)} °C`
+        : "Immune system fighting it, no fever";
     }
     case "sex":
-      return running ? `Heart up about ${heart} bpm, pressure raised` : "Heart rate back near baseline, prolactin stays raised";
+      return running
+        ? `Heart up about ${heart} bpm, pressure raised`
+        : "Heart rate back near baseline, prolactin stays raised";
     case "stress":
       return running ? `Stress hormones up, heart up ${heart} bpm` : `Easing off, heart still up ${heart} bpm`;
     case "poor_sleep":
@@ -67,7 +73,14 @@ function eventHeadline(event: ResolvedEvent, t: number): string {
   }
 }
 
-function eventStop(event: ResolvedEvent, stop: EventStop, index: number, here: number, t: number, level: number): Draft {
+function eventStop(
+  event: ResolvedEvent,
+  stop: EventStop,
+  index: number,
+  here: number,
+  t: number,
+  level: number,
+): Draft {
   const elapsed = t - event.from;
   const isHere = index === here;
   const reached = stop.afterMin <= elapsed;

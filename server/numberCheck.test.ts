@@ -8,7 +8,9 @@ const book = (...texts: string[]) => {
 };
 
 describe("checking Claude's numbers against the model's", () => {
-  const readout = book(JSON.stringify({ glucose: 6.31, insulin_fold: 4.3, stomach: "65%", share: 0.42, settles: "17:36", hours: 12 }));
+  const readout = book(
+    JSON.stringify({ glucose: 6.31, insulin_fold: 4.3, stomach: "65%", share: 0.42, settles: "17:36", hours: 12 }),
+  );
 
   it("passes what the model returned, at any rounding", () => {
     expect(unverifiedNumbers("Blood sugar is 6.3 mmol/L, with insulin at 4.3 times resting.", readout)).toEqual([]);

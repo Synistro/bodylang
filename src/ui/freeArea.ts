@@ -13,7 +13,8 @@ export const freeArea = () => current;
 
 function measure(sheet: HTMLElement): Insets {
   // Stacked, only the clock stands over the canvas.
-  if (window.innerWidth <= STACKED_BELOW_PX) return { ...NO_PANELS, top: sheet.querySelector(".header-slot")?.getBoundingClientRect().bottom ?? 0 };
+  if (window.innerWidth <= STACKED_BELOW_PX)
+    return { ...NO_PANELS, top: sheet.querySelector(".header-slot")?.getBoundingClientRect().bottom ?? 0 };
   const left = sheet.querySelector(".left")?.getBoundingClientRect();
   const right = sheet.querySelector(".right")?.getBoundingClientRect();
   const consoleBox = sheet.querySelector(".console")?.getBoundingClientRect();
@@ -37,7 +38,13 @@ export function useFreeArea(sheet: RefObject<HTMLElement | null>, asking: boolea
     if (!el || !consoleBox) return;
     const update = () => {
       const next = measure(el);
-      if (next.left === current.left && next.right === current.right && next.top === current.top && next.bottom === current.bottom) return;
+      if (
+        next.left === current.left &&
+        next.right === current.right &&
+        next.top === current.top &&
+        next.bottom === current.bottom
+      )
+        return;
       current = next;
       // The same numbers fade the figure out before it reaches a panel.
       const style = document.documentElement.style;

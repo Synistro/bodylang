@@ -83,13 +83,21 @@ export function panelsOf<K extends string>(step: Omit<Directions<K>, "basis"> | 
   ];
 }
 
-const mapLevels = <K extends string>(keys: readonly K[], level: (key: K) => number) => Object.fromEntries(keys.map((key) => [key, level(key)])) as Levels<K>;
+const mapLevels = <K extends string>(keys: readonly K[], level: (key: K) => number) =>
+  Object.fromEntries(keys.map((key) => [key, level(key)])) as Levels<K>;
 
 // What the drawing shows: the model's levels, with whatever the step changed.
-export function levelsAt<K extends string>(keys: readonly K[], fromModel: FromModel<K>, place: Place, minute: number, { set, times }: Adjustment<K>): Levels<K> {
+export function levelsAt<K extends string>(
+  keys: readonly K[],
+  fromModel: FromModel<K>,
+  place: Place,
+  minute: number,
+  { set, times }: Adjustment<K>,
+): Levels<K> {
   const model = fromModel(place, minute);
   return mapLevels(keys, (key) => clamp01((set[key] ?? model[key]) * (times[key] ?? 1)));
 }
 
 // With nothing singled out, everything is as bright as it gets.
-export const litLevels = <K extends string>(keys: readonly K[], light: readonly K[] | null): Levels<K> => mapLevels(keys, (key) => (!light || light.includes(key) ? 1 : 0));
+export const litLevels = <K extends string>(keys: readonly K[], light: readonly K[] | null): Levels<K> =>
+  mapLevels(keys, (key) => (!light || light.includes(key) ? 1 : 0));

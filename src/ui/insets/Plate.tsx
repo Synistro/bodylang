@@ -21,7 +21,14 @@ interface PlateProps extends PlateWords {
 export function Plate({ caption, captionHint, note, describe, artRef, children }: PlateProps) {
   return (
     <figure className="inset">
-      <svg ref={artRef} className="inset-art" viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`} fontSize={ART_TEXT_SIZE} role="img" aria-label={describe}>
+      <svg
+        ref={artRef}
+        className="inset-art"
+        viewBox={`0 0 ${ART_WIDTH} ${ART_HEIGHT}`}
+        fontSize={ART_TEXT_SIZE}
+        role="img"
+        aria-label={describe}
+      >
         {children}
         <text className="inset-caption" x={CAPTION_AT.x} y={CAPTION_AT.y}>
           {captionHint ? <title>{captionHint}</title> : null}

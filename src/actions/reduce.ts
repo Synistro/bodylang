@@ -30,15 +30,43 @@ export interface BodyState {
   view: ViewState;
 }
 
-const inDay = (state: BodyState, change: Partial<DayContent>): BodyState => ({ ...state, day: { ...state.day, ...change } });
-const inView = (state: BodyState, change: Partial<ViewState>): BodyState => ({ ...state, view: { ...state.view, ...change } });
+const inDay = (state: BodyState, change: Partial<DayContent>): BodyState => ({
+  ...state,
+  day: { ...state.day, ...change },
+});
+const inView = (state: BodyState, change: Partial<ViewState>): BodyState => ({
+  ...state,
+  view: { ...state.view, ...change },
+});
 
 function storyFrom(custom: z.infer<typeof customStory>): CustomStory {
   return {
     systems: custom.systems,
-    effects: custom.effects.map((e) => ({ channel: e.channel, amount: e.amount, riseMin: e.rise_min, halfLifeMin: e.half_life_min, after: e.after })),
-    feelings: custom.feelings.map((f) => ({ id: f.id, label: f.label, amount: f.amount, riseMin: f.rise_min, halfLifeMin: f.half_life_min, after: f.after, cause: f.cause, organ: f.organ })),
-    stops: custom.stops.map((s) => ({ organ: s.organ, muscle: s.muscle, label: s.label, afterMin: s.after_min, say: s.say, routes: s.routes })),
+    effects: custom.effects.map((e) => ({
+      channel: e.channel,
+      amount: e.amount,
+      riseMin: e.rise_min,
+      halfLifeMin: e.half_life_min,
+      after: e.after,
+    })),
+    feelings: custom.feelings.map((f) => ({
+      id: f.id,
+      label: f.label,
+      amount: f.amount,
+      riseMin: f.rise_min,
+      halfLifeMin: f.half_life_min,
+      after: f.after,
+      cause: f.cause,
+      organ: f.organ,
+    })),
+    stops: custom.stops.map((s) => ({
+      organ: s.organ,
+      muscle: s.muscle,
+      label: s.label,
+      afterMin: s.after_min,
+      say: s.say,
+      routes: s.routes,
+    })),
     track: custom.track ?? null,
   };
 }
@@ -66,30 +94,64 @@ export function reduce(state: BodyState, action: Action): BodyState {
         source: a.source,
         serving: a.serving,
       };
-      return inDay(state, { intakes: [...day.intakes.filter((i) => i.id !== a.id), intake], assumptions: { ...day.assumptions, [a.id]: a.assumption } });
+      return inDay(state, {
+        intakes: [...day.intakes.filter((i) => i.id !== a.id), intake],
+        assumptions: { ...day.assumptions, [a.id]: a.assumption },
+      });
     }
     case "correct_intake": {
       const { id, grams, at, assumption } = action.args;
       const intake = day.intakes.find((i) => i.id === id);
-      if (!intake) throw new Error(`No food or drink with id ${id}. Known ids: ${day.intakes.map((i) => i.id).join(", ") || "none"}`);
-      if (grams !== undefined && intake.grams <= 0) throw new Error(`${intake.label} was logged with no weight, so log it again with its real amount.`);
-      const corrected: Intake = { ...(grams === undefined ? intake : { ...scaledTo(intake, grams), portionBy: "you" as const }), at: at ?? intake.at };
-      return inDay(state, { intakes: day.intakes.map((i) => (i.id === id ? corrected : i)), assumptions: assumption === undefined ? day.assumptions : { ...day.assumptions, [id]: assumption } });
+      if (!intake)
+        throw new Error(
+          `No food or drink with id ${id}. Known ids: ${day.intakes.map((i) => i.id).join(", ") || "none"}`,
+        );
+      if (grams !== undefined && intake.grams <= 0)
+        throw new Error(`${intake.label} was logged with no weight, so log it again with its real amount.`);
+      const corrected: Intake = {
+        ...(grams === undefined ? intake : { ...scaledTo(intake, grams), portionBy: "you" as const }),
+        at: at ?? intake.at,
+      };
+      return inDay(state, {
+        intakes: day.intakes.map((i) => (i.id === id ? corrected : i)),
+        assumptions: assumption === undefined ? day.assumptions : { ...day.assumptions, [id]: assumption },
+      });
     }
     case "remove_intake": {
       const { id } = action.args;
       const followed = view.process === processIds.intake(id) || view.process === processIds.meal(id);
       const { [id]: _removed, ...assumptions } = day.assumptions;
-      return { ...state, day: { ...day, intakes: day.intakes.filter((i) => i.id !== id), assumptions }, view: followed ? { ...view, process: null } : view };
+      return {
+        ...state,
+        day: { ...day, intakes: day.intakes.filter((i) => i.id !== id), assumptions },
+        view: followed ? { ...view, process: null } : view,
+      };
     }
     case "set_activity":
-      return { ...state, day: { ...day, activities: withActivity(day.activities, action.args.posture, action.args.from, action.args.until) }, view: { ...view, whatIf: null } };
+      return {
+        ...state,
+        day: {
+          ...day,
+          activities: withActivity(day.activities, action.args.posture, action.args.from, action.args.until),
+        },
+        view: { ...view, whatIf: null },
+      };
     case "set_sleep":
-      return { ...state, day: { ...day, activities: withSleep(day.activities, action.args.bed, action.args.wake) }, view: { ...view, whatIf: null } };
+      return {
+        ...state,
+        day: { ...day, activities: withSleep(day.activities, action.args.bed, action.args.wake) },
+        view: { ...view, whatIf: null },
+      };
     case "set_cycle": {
       const { last_start: start, length_days: lengthDays, period_days: periodDays } = action.args;
       if (start === null) return inDay(state, { cycle: null });
-      return inDay(state, { cycle: { start, lengthDays: lengthDays ?? day.cycle?.lengthDays ?? CYCLE.lengthDays, periodDays: periodDays ?? day.cycle?.periodDays ?? CYCLE.periodDays } });
+      return inDay(state, {
+        cycle: {
+          start,
+          lengthDays: lengthDays ?? day.cycle?.lengthDays ?? CYCLE.lengthDays,
+          periodDays: periodDays ?? day.cycle?.periodDays ?? CYCLE.periodDays,
+        },
+      });
     }
     case "set_body": {
       const a = action.args;
@@ -140,8 +202,12 @@ export function reduce(state: BodyState, action: Action): BodyState {
     case "end_event": {
       const { id, at } = action.args;
       const event = day.events.find((e) => e.id === id);
-      if (!event) throw new Error(`No event with id ${id}. Known ids: ${day.events.map((e) => e.id).join(", ") || "none"}`);
-      if (at < event.from) throw new Error(`${event.label} started at minute ${event.from}, so it can't end at minute ${at}. Log it again with the right start if it began earlier.`);
+      if (!event)
+        throw new Error(`No event with id ${id}. Known ids: ${day.events.map((e) => e.id).join(", ") || "none"}`);
+      if (at < event.from)
+        throw new Error(
+          `${event.label} started at minute ${event.from}, so it can't end at minute ${at}. Log it again with the right start if it began earlier.`,
+        );
       return inDay(state, { events: day.events.map((e) => (e.id === id ? { ...e, until: at } : e)) });
     }
     case "show_system":
@@ -150,16 +216,31 @@ export function reduce(state: BodyState, action: Action): BodyState {
       return inView(state, { process: action.args.id });
     case "focus_organ": {
       const wanted = action.args.organ;
-      if ((wanted === "uterus" || wanted === "ovaries") && day.body.sex !== "female") throw new Error(`This body has no ${wanted}. Its sex is set to ${day.body.sex}.`);
-      if (wanted === "prostate" && day.body.sex !== "male") throw new Error(`This body has no prostate. Its sex is set to ${day.body.sex}.`);
+      if ((wanted === "uterus" || wanted === "ovaries") && day.body.sex !== "female")
+        throw new Error(`This body has no ${wanted}. Its sex is set to ${day.body.sex}.`);
+      if (wanted === "prostate" && day.body.sex !== "male")
+        throw new Error(`This body has no prostate. Its sex is set to ${day.body.sex}.`);
       // An organ outside the section you are in takes you to its own, so the path always says where you are.
-      const elsewhere = wanted !== null && !view.process && view.system !== "overview" && !systemById(view.system).organs.includes(wanted);
-      return inView(state, { system: elsewhere ? ORGAN_HOME[wanted] : view.system, focus: action.args.organ, focusMuscle: action.args.organ === "muscle" ? action.args.muscle ?? null : null });
+      const elsewhere =
+        wanted !== null &&
+        !view.process &&
+        view.system !== "overview" &&
+        !systemById(view.system).organs.includes(wanted);
+      return inView(state, {
+        system: elsewhere ? ORGAN_HOME[wanted] : view.system,
+        focus: action.args.organ,
+        focusMuscle: action.args.organ === "muscle" ? (action.args.muscle ?? null) : null,
+      });
     }
     case "guide":
       return state;
     case "what_if":
-      return inView(state, { whatIf: { label: action.args.label, activities: withActivity(day.activities, action.args.posture, action.args.from, action.args.until) } });
+      return inView(state, {
+        whatIf: {
+          label: action.args.label,
+          activities: withActivity(day.activities, action.args.posture, action.args.from, action.args.until),
+        },
+      });
     default: {
       const exhaustive: never = action;
       return exhaustive;

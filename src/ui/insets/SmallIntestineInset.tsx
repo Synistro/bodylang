@@ -17,12 +17,34 @@ const VILLI = [34, 62, 90, 118, 146, 174, 202];
 const VILLUS = { base: 124, tip: 60, halfWidth: 9 };
 const VESSEL_FROM_X = -10;
 const VESSEL_LENGTH = 260;
-const BLOOD = vessel({ id: "blood", radius: 5, points: [[VESSEL_FROM_X, 138], [120, 136], [VESSEL_FROM_X + VESSEL_LENGTH, 138]] });
-const LYMPH = vessel({ id: "lymph", tone: "lymph", radius: 3.6, points: [[VESSEL_FROM_X, 156], [120, 154], [VESSEL_FROM_X + VESSEL_LENGTH, 156]] });
-const FOOD = curve([[-4, 44], [120, 42], [244, 44]]);
+const BLOOD = vessel({
+  id: "blood",
+  radius: 5,
+  points: [
+    [VESSEL_FROM_X, 138],
+    [120, 136],
+    [VESSEL_FROM_X + VESSEL_LENGTH, 138],
+  ],
+});
+const LYMPH = vessel({
+  id: "lymph",
+  tone: "lymph",
+  radius: 3.6,
+  points: [
+    [VESSEL_FROM_X, 156],
+    [120, 154],
+    [VESSEL_FROM_X + VESSEL_LENGTH, 156],
+  ],
+});
+const FOOD = curve([
+  [-4, 44],
+  [120, 42],
+  [244, 44],
+]);
 const MOST_PER_SECOND = { food: 3.4, sugar: 5.5, fat: 3.4 };
 
-const villusPath = (x: number) => `M${x - VILLUS.halfWidth} ${VILLUS.base}C${x - VILLUS.halfWidth} ${VILLUS.tip + 18} ${x - VILLUS.halfWidth + 1} ${VILLUS.tip} ${x} ${VILLUS.tip}C${x + VILLUS.halfWidth - 1} ${VILLUS.tip} ${x + VILLUS.halfWidth} ${VILLUS.tip + 18} ${x + VILLUS.halfWidth} ${VILLUS.base}`;
+const villusPath = (x: number) =>
+  `M${x - VILLUS.halfWidth} ${VILLUS.base}C${x - VILLUS.halfWidth} ${VILLUS.tip + 18} ${x - VILLUS.halfWidth + 1} ${VILLUS.tip} ${x} ${VILLUS.tip}C${x + VILLUS.halfWidth - 1} ${VILLUS.tip} ${x + VILLUS.halfWidth} ${VILLUS.tip + 18} ${x + VILLUS.halfWidth} ${VILLUS.base}`;
 const CORE = (x: number) => `M${x} ${VILLUS.base + 12}V${VILLUS.tip + 10}`;
 
 // In through the tip of one finger, down its core, and away along a vessel.
@@ -44,7 +66,11 @@ function paintIntestine(art: SVGSVGElement) {
   const toLymph = crossing(LYMPH.route, 154);
   const paintBlood = BLOOD.attach(art);
   const paintLymph = LYMPH.attach(art);
-  const groups = { food: part<SVGGElement>(art, "foods"), sugar: part<SVGGElement>(art, "sugars"), fat: part<SVGGElement>(art, "fats") };
+  const groups = {
+    food: part<SVGGElement>(art, "foods"),
+    sugar: part<SVGGElement>(art, "sugars"),
+    fat: part<SVGGElement>(art, "fats"),
+  };
   const tags = { sugar: part<SVGTextElement>(art, "sugar-tag"), fat: part<SVGTextElement>(art, "fat-tag") };
   return (frame: Frame, { levels, lit }: Look<Setting>) => {
     food(frame, levels.food * MOST_PER_SECOND.food, along(FOOD.route));
@@ -69,19 +95,50 @@ const Drawing = memo(function Drawing() {
           <path className="line-soft" d={villusPath(x)} />
         </g>
       ))}
-      <g data-part="foods">{Array.from({ length: 16 }, (_, k) => <circle key={k} data-part="food" className="flow-dot-food" r="2.2" />)}</g>
-      <g data-part="sugars">{Array.from({ length: 22 }, (_, k) => <circle key={k} data-part="sugar" className="flow-dot" r="1.5" />)}</g>
-      <g data-part="fats">{Array.from({ length: 14 }, (_, k) => <circle key={k} data-part="fat" className="flow-dot-quiet" r="1.7" />)}</g>
-      <Tag part="sugar-tag" x={232} y={148} anchor="end">Sugar and protein, to your liver</Tag>
-      <Tag part="fat-tag" x={232} y={166} anchor="end">Fat, through the lymph</Tag>
+      <g data-part="foods">
+        {Array.from({ length: 16 }, (_, k) => (
+          <circle key={k} data-part="food" className="flow-dot-food" r="2.2" />
+        ))}
+      </g>
+      <g data-part="sugars">
+        {Array.from({ length: 22 }, (_, k) => (
+          <circle key={k} data-part="sugar" className="flow-dot" r="1.5" />
+        ))}
+      </g>
+      <g data-part="fats">
+        {Array.from({ length: 14 }, (_, k) => (
+          <circle key={k} data-part="fat" className="flow-dot-quiet" r="1.7" />
+        ))}
+      </g>
+      <Tag part="sugar-tag" x={232} y={148} anchor="end">
+        Sugar and protein, to your liver
+      </Tag>
+      <Tag part="fat-tag" x={232} y={166} anchor="end">
+        Fat, through the lymph
+      </Tag>
     </>
   );
 });
 
 function useIntestinePlate({ trajectory: tr, t }: InsetProps, _levels: Levels<Setting>): PlateWords {
-  const grams = value(tr, "glucoseAbsorbMgMin", t) * 0.06 + (value(tr, "fatAbsorbGMin", t) + value(tr, "proteinAbsorbGMin", t)) * 60;
-  const caption = grams >= 1 ? `Absorbing ${tenth(Math.round(grams))} g an hour` : value(tr, "gutKcal", t) > 5 ? "Breaking food down" : "Nothing to absorb";
-  return { caption, describe: `The fingers lining the small intestine, passing sugar and protein into the blood and fat into the lymph. ${caption}.` };
+  const grams =
+    value(tr, "glucoseAbsorbMgMin", t) * 0.06 +
+    (value(tr, "fatAbsorbGMin", t) + value(tr, "proteinAbsorbGMin", t)) * 60;
+  const caption =
+    grams >= 1
+      ? `Absorbing ${tenth(Math.round(grams))} g an hour`
+      : value(tr, "gutKcal", t) > 5
+        ? "Breaking food down"
+        : "Nothing to absorb";
+  return {
+    caption,
+    describe: `The fingers lining the small intestine, passing sugar and protein into the blood and fat into the lymph. ${caption}.`,
+  };
 }
 
-export const SmallIntestineInset = closeupInset(smallIntestineCloseup, { Drawing, paint: paintIntestine, usePlate: useIntestinePlate, captionFromModel: true });
+export const SmallIntestineInset = closeupInset(smallIntestineCloseup, {
+  Drawing,
+  paint: paintIntestine,
+  usePlate: useIntestinePlate,
+  captionFromModel: true,
+});

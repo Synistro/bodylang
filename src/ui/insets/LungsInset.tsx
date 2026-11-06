@@ -52,9 +52,17 @@ const rad = (deg: number) => (deg * Math.PI) / 180;
 function curve(from: Point, control: Point, to: Point, generation: number, parent: Branch | null): Branch {
   const points = Array.from({ length: 9 }, (_, i) => {
     const k = i / 8;
-    return { x: (1 - k) ** 2 * from.x + 2 * (1 - k) * k * control.x + k * k * to.x, y: (1 - k) ** 2 * from.y + 2 * (1 - k) * k * control.y + k * k * to.y };
+    return {
+      x: (1 - k) ** 2 * from.x + 2 * (1 - k) * k * control.x + k * k * to.x,
+      y: (1 - k) ** 2 * from.y + 2 * (1 - k) * k * control.y + k * k * to.y,
+    };
   });
-  return { generation, d: `M${tenth(from.x)} ${tenth(from.y)}Q${tenth(control.x)} ${tenth(control.y)} ${tenth(to.x)} ${tenth(to.y)}`, points, parent };
+  return {
+    generation,
+    d: `M${tenth(from.x)} ${tenth(from.y)}Q${tenth(control.x)} ${tenth(control.y)} ${tenth(to.x)} ${tenth(to.y)}`,
+    points,
+    parent,
+  };
 }
 
 interface Tree {
@@ -71,7 +79,10 @@ const TREE: Tree = (() => {
     const angle = side > 0 ? Math.max(wanted, INNER_LIMIT) : Math.min(wanted, -INNER_LIMIT);
     const to = { x: from.x + Math.sin(rad(angle)) * length, y: from.y + Math.cos(rad(angle)) * length };
     // Leaves along the parent's direction, so a fork reads as one airway dividing.
-    const control = { x: from.x + Math.sin(rad(heading)) * length * 0.4, y: from.y + Math.cos(rad(heading)) * length * 0.4 };
+    const control = {
+      x: from.x + Math.sin(rad(heading)) * length * 0.4,
+      y: from.y + Math.cos(rad(heading)) * length * 0.4,
+    };
     const branch = curve(from, control, to, generation, parent);
     branches.push(branch);
     if (generation === GENERATIONS - 1) {
@@ -109,7 +120,8 @@ const COUGH_ROUTE = (() => {
   const points: Point[] = [];
   for (let b: Branch | null = deepest; b; b = b.parent) points.push(...[...b.points].reverse());
   let length = 0;
-  for (let i = 1; i < points.length; i++) length += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+  for (let i = 1; i < points.length; i++)
+    length += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
   return { d: points.map((p, i) => `${i ? "L" : "M"}${tenth(p.x)} ${tenth(p.y)}`).join(""), length };
 })();
 
@@ -201,7 +213,8 @@ function paintLungs(art: SVGSVGElement) {
 
     coughPulse.style.visibility = coughing ? "visible" : "hidden";
     // A positive offset, which every engine honours: the dash starts behind the route's start and runs through it.
-    if (coughing) coughPulse.setAttribute("stroke-dashoffset", tenth(COUGH_DASH + COUGH_ROUTE.length * (1 - coughProgress)));
+    if (coughing)
+      coughPulse.setAttribute("stroke-dashoffset", tenth(COUGH_DASH + COUGH_ROUTE.length * (1 - coughProgress)));
 
     setLit(sacGroup, lit.rate);
     setLit(airways, Math.max(lit.rate, lit.irritation));
@@ -218,11 +231,18 @@ const Drawing = memo(function Drawing() {
           <circle key={k} data-part="sac" className="lung-sac" cx={tenth(sac.x)} cy={tenth(sac.y)} r={SAC_RADIUS} />
         ))}
         <path className="leader" d="M105 160H92M135 160H148" />
-        <text x="120" y="162.2" textAnchor="middle">Air sacs</text>
+        <text x="120" y="162.2" textAnchor="middle">
+          Air sacs
+        </text>
       </g>
       <g data-part="airways">
         {AIRWAYS.map((d, generation) => (
-          <path key={generation} className="airway-wall" style={{ strokeWidth: BORE[generation] + WALL_THICKNESS * 2 }} d={d} />
+          <path
+            key={generation}
+            className="airway-wall"
+            style={{ strokeWidth: BORE[generation] + WALL_THICKNESS * 2 }}
+            d={d}
+          />
         ))}
         <g data-part="linings">
           {AIRWAYS.map((d, generation) => (
@@ -230,15 +250,34 @@ const Drawing = memo(function Drawing() {
           ))}
         </g>
         {AIRWAYS.map((d, generation) => (
-          <path key={generation} data-part="lumen" className="airway-lumen" style={{ strokeWidth: BORE[generation] }} d={d} />
+          <path
+            key={generation}
+            data-part="lumen"
+            className="airway-lumen"
+            style={{ strokeWidth: BORE[generation] }}
+            d={d}
+          />
         ))}
         <path className="airway-ring" d={RINGS} />
         <path data-part="irritation" className="airway-irritation" d={IRRITATION} />
         <path className="leader" d={`M${CARINA.x + BORE[0] / 2 + 1} 10h6`} />
-        <text x={CARINA.x + BORE[0] / 2 + 9} y="12.3">Windpipe</text>
+        <text x={CARINA.x + BORE[0] / 2 + 9} y="12.3">
+          Windpipe
+        </text>
       </g>
-      <path data-part="cough" className="airway-cough" strokeDasharray={`${COUGH_DASH} ${tenth(COUGH_ROUTE.length + COUGH_DASH)}`} d={COUGH_ROUTE.d} />
-      <text data-part="cough-word" x={CARINA.x + BORE[0] / 2 + 9} y="21" className="inset-accent" style={{ opacity: 0 }}>
+      <path
+        data-part="cough"
+        className="airway-cough"
+        strokeDasharray={`${COUGH_DASH} ${tenth(COUGH_ROUTE.length + COUGH_DASH)}`}
+        d={COUGH_ROUTE.d}
+      />
+      <text
+        data-part="cough-word"
+        x={CARINA.x + BORE[0] / 2 + 9}
+        y="21"
+        className="inset-accent"
+        style={{ opacity: 0 }}
+      >
         A cough travels up
       </text>
     </>
@@ -247,7 +286,10 @@ const Drawing = memo(function Drawing() {
 
 function useLungsPlate(_props: InsetProps, levels: Levels<Setting>): PlateWords {
   const caption = `${Math.round(breathsPerMinute(levels.rate))} breaths a minute`;
-  return { caption, describe: `The airway branching down to air sacs that swell with each breath. ${caption}.${levels.cough > COUGHING_FROM ? " The lining is irritated and a cough travels up." : ""}` };
+  return {
+    caption,
+    describe: `The airway branching down to air sacs that swell with each breath. ${caption}.${levels.cough > COUGHING_FROM ? " The lining is irritated and a cough travels up." : ""}`,
+  };
 }
 
 export const LungsInset = closeupInset(lungsCloseup, { Drawing, paint: paintLungs, usePlate: useLungsPlate });

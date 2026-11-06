@@ -3,7 +3,17 @@ import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { z } from "zod";
 import { claudeDefaults } from "./claude";
-import { BuildRequest, SessionContext, checkSource, EXTENSIONS_FOLDER, processPath, PROCESS_IMPORTS, quickChecks, testImports, testPath } from "./extendCheck";
+import {
+  BuildRequest,
+  SessionContext,
+  checkSource,
+  EXTENSIONS_FOLDER,
+  processPath,
+  PROCESS_IMPORTS,
+  quickChecks,
+  testImports,
+  testPath,
+} from "./extendCheck";
 
 // A separate Claude Code session adds a process the model doesn't have. It works in a throwaway copy of
 // the repository and can write exactly two files there.
@@ -23,7 +33,11 @@ A deterministic physiology model computes the day minute by minute. You are addi
 Write two files, with write_process and write_test:
 
 1. ${processPath(id)}, which exports \`extension\` as a ProcessExtension. Read ${EXTENSIONS_FOLDER}/api.ts first: it is the whole contract. Its only import may be from "./api".
-2. ${testPath(id)}, with at least three tests that run the real model with simulate() and check behaviour you can trace to your source, such as when a daily rhythm peaks or how a hormone responds to a logged illness. Don't test your own arithmetic back at itself. It may import from ${testImports(id).map((path) => `"${path}"`).join(", ")}.
+2. ${testPath(id)}, with at least three tests that run the real model with simulate() and check behaviour you can trace to your source, such as when a daily rhythm peaks or how a hormone responds to a logged illness. Don't test your own arithmetic back at itself. It may import from ${testImports(
+    id,
+  )
+    .map((path) => `"${path}"`)
+    .join(", ")}.
 
 Also read these, for what you can use:
 - SERIES in src/model/engine/trajectory.ts: every curve \`view.value\` can read, such as "temperature", "hoursAwake", "stressLevel", "inflammation", "glucose".
@@ -48,7 +62,8 @@ function createClaudeSession(context: SessionContext) {
   const inside = (path: string) => {
     const full = resolve(worktree, path);
     const rel = relative(worktree, full);
-    if (rel.startsWith("..") || rel.split(sep).includes("node_modules") || rel.split(sep).includes(".git")) throw new Error(`${path} is outside what you can read`);
+    if (rel.startsWith("..") || rel.split(sep).includes("node_modules") || rel.split(sep).includes(".git"))
+      throw new Error(`${path} is outside what you can read`);
     return full;
   };
   const text = (value: string, isError = false) => ({ content: [{ type: "text" as const, text: value }], isError });
@@ -64,27 +79,57 @@ function createClaudeSession(context: SessionContext) {
       tool("list_files", "Lists one folder of the repository.", { folder: z.string() }, async ({ folder }) => {
         try {
           const full = inside(folder);
-          return text(readdirSync(full).filter((name) => name !== "node_modules" && name !== ".git").map((name) => (statSync(join(full, name)).isDirectory() ? `${name}/` : name)).join("\n"));
+          return text(
+            readdirSync(full)
+              .filter((name) => name !== "node_modules" && name !== ".git")
+              .map((name) => (statSync(join(full, name)).isDirectory() ? `${name}/` : name))
+              .join("\n"),
+          );
         } catch (e: unknown) {
           return text(e instanceof Error ? e.message : String(e), true);
         }
       }),
-      tool("read_file", "Reads one file of the repository, by its path from the root.", { path: z.string() }, async ({ path }) => {
-        try {
-          return text(readFileSync(inside(path), "utf8").slice(0, READ_MOST_CHARS));
-        } catch (e: unknown) {
-          return text(e instanceof Error ? e.message : String(e), true);
-        }
-      }),
-      tool("write_process", `Writes the whole of ${processPath(id)}, replacing what was there.`, { code: z.string().min(1) }, async ({ code }) => write(processPath(id), code, PROCESS_IMPORTS)),
-      tool("write_test", `Writes the whole of ${testPath(id)}, replacing what was there.`, { code: z.string().min(1) }, async ({ code }) => write(testPath(id), code, testImports(id))),
-      tool("run_checks", "Checks both files, the types, and the tests a new process can affect. Returns what to fix, or that it passed.", {}, async () => {
-        stage("testing");
-        const problem = await quickChecks(worktree, id, signal);
-        stage("writing");
-        return text(problem ?? "Passed. Call finish.", problem !== null);
-      }),
-      tool("finish", "Ends the session. The app then runs every test before anything is added.", { summary: z.string() }, async () => text("Done.")),
+      tool(
+        "read_file",
+        "Reads one file of the repository, by its path from the root.",
+        { path: z.string() },
+        async ({ path }) => {
+          try {
+            return text(readFileSync(inside(path), "utf8").slice(0, READ_MOST_CHARS));
+          } catch (e: unknown) {
+            return text(e instanceof Error ? e.message : String(e), true);
+          }
+        },
+      ),
+      tool(
+        "write_process",
+        `Writes the whole of ${processPath(id)}, replacing what was there.`,
+        { code: z.string().min(1) },
+        async ({ code }) => write(processPath(id), code, PROCESS_IMPORTS),
+      ),
+      tool(
+        "write_test",
+        `Writes the whole of ${testPath(id)}, replacing what was there.`,
+        { code: z.string().min(1) },
+        async ({ code }) => write(testPath(id), code, testImports(id)),
+      ),
+      tool(
+        "run_checks",
+        "Checks both files, the types, and the tests a new process can affect. Returns what to fix, or that it passed.",
+        {},
+        async () => {
+          stage("testing");
+          const problem = await quickChecks(worktree, id, signal);
+          stage("writing");
+          return text(problem ?? "Passed. Call finish.", problem !== null);
+        },
+      ),
+      tool(
+        "finish",
+        "Ends the session. The app then runs every test before anything is added.",
+        { summary: z.string() },
+        async () => text("Done."),
+      ),
     ],
   });
 }
@@ -101,13 +146,17 @@ export async function claudeSession(context: SessionContext) {
       maxTurns: MOST_TURNS,
       maxBudgetUsd: MOST_DOLLARS,
       cwd: context.worktree,
-      systemPrompt: "You add one process at a time to a physiology model. You can only use the tools you are given, and you work until run_checks passes.",
+      systemPrompt:
+        "You add one process at a time to a physiology model. You can only use the tools you are given, and you work until run_checks passes.",
       allowedTools: ["mcp__build__*"],
       mcpServers: { build: createClaudeSession(context) },
       abortController,
     },
   });
   for await (const message of session) {
-    if (message.type === "result") console.log(`[bodylang] build of ${context.id}: ${message.subtype}, ${message.num_turns} turns, $${message.total_cost_usd.toFixed(3)}`);
+    if (message.type === "result")
+      console.log(
+        `[bodylang] build of ${context.id}: ${message.subtype}, ${message.num_turns} turns, $${message.total_cost_usd.toFixed(3)}`,
+      );
   }
 }

@@ -1,6 +1,19 @@
 import type { GuideStep } from "../actions/schemas";
 import { closeupOf } from "../closeup/list";
-import { aheadOf, Ahead, DAY_SPAN, dayMoments, dayStops, fromSeverity, isStill, Lane, Moment, MuscleSubject, recoveryOf, Span } from "../model/lanes";
+import {
+  aheadOf,
+  Ahead,
+  DAY_SPAN,
+  dayMoments,
+  dayStops,
+  fromSeverity,
+  isStill,
+  Lane,
+  Moment,
+  MuscleSubject,
+  recoveryOf,
+  Span,
+} from "../model/lanes";
 import { LANES } from "../model/params";
 import type { Trajectory } from "../model/engine/trajectory";
 import { levelWord } from "../model/words";
@@ -77,7 +90,10 @@ function storyOf({ tr, now, walkthrough }: Page): Extract<DayView, { kind: "stor
 const momentKey = ({ at, label }: Moment) => `${at}|${label}`;
 
 // A thread you already had, or a curve the question didn't move, is only your day again.
-const isYourDayAgain = (lane: Lane, tr: Trajectory, yourDay: Trajectory, alreadyYours: Set<string>) => tr === yourDay || lane.sameAsYourDay === true || (lane.target?.kind === "process" && alreadyYours.has(lane.target.id));
+const isYourDayAgain = (lane: Lane, tr: Trajectory, yourDay: Trajectory, alreadyYours: Set<string>) =>
+  tr === yourDay ||
+  lane.sameAsYourDay === true ||
+  (lane.target?.kind === "process" && alreadyYours.has(lane.target.id));
 
 export function dayViewOf(page: Page): DayView {
   const { tr, now, muscles, walkthrough, readings, yourDay } = page;
@@ -102,7 +118,9 @@ export function viewStops(view: DayView, now: number): { at: number; label: stri
     case "recovery":
       return dayStops(view.lanes, view.moments, now);
     case "next":
-      return [...dayStops([], view.moments, now), ...view.items.map((item) => ({ at: item.at, label: null }))].sort((a, b) => a.at - b.at);
+      return [...dayStops([], view.moments, now), ...view.items.map((item) => ({ at: item.at, label: null }))].sort(
+        (a, b) => a.at - b.at,
+      );
     case "quiet":
       return dayStops([], view.moments, now);
     case "story":

@@ -21,7 +21,9 @@ export interface PartStyle {
   continues: OrganId | null; // it carries on from this organ, so that organ's close-up keeps it in view
 }
 
-const part = (style: Pick<PartStyle, "organ" | "ghost" | "subjectGhost" | "contextOpacity"> & Partial<PartStyle>): PartStyle => ({
+const part = (
+  style: Pick<PartStyle, "organ" | "ghost" | "subjectGhost" | "contextOpacity"> & Partial<PartStyle>,
+): PartStyle => ({
   worksWith: null,
   restOpacity: 1,
   subjectLift: 0,
@@ -38,12 +40,49 @@ const part = (style: Pick<PartStyle, "organ" | "ghost" | "subjectGhost" | "conte
 
 const PARTS = {
   // With no skull on the muscle figure, a faint brain is what the outline of the head holds.
-  brain: part({ organ: "brain", ghost: 0, subjectGhost: 0, soft: 1, hatch: 0.28, normalPasses: 3, contextOpacity: 0.34, bareOpacity: 0.3 }),
+  brain: part({
+    organ: "brain",
+    ghost: 0,
+    subjectGhost: 0,
+    soft: 1,
+    hatch: 0.28,
+    normalPasses: 3,
+    contextOpacity: 0.34,
+    bareOpacity: 0.3,
+  }),
   heart: part({ organ: "heart", ghost: 0, subjectGhost: 0, contextOpacity: 0.6 }),
   // Lungs wrap the heart and great vessels, so they are always a pale outline with a soft fill.
-  lung_L: part({ organ: "lungs", ghost: 1, subjectGhost: 0.95, subjectLift: 1, tinted: false, staysOpen: true, subjectFill: 0.42, contextOpacity: 0.42 }),
-  lung_R: part({ organ: "lungs", ghost: 1, subjectGhost: 0.95, subjectLift: 1, tinted: false, staysOpen: true, subjectFill: 0.42, contextOpacity: 0.42 }),
-  airway: part({ organ: "lungs", ghost: 1, restOpacity: 0.7, subjectGhost: 1, subjectLift: 1, tinted: false, staysOpen: true, subjectFill: 0.3, contextOpacity: 0.3 }),
+  lung_L: part({
+    organ: "lungs",
+    ghost: 1,
+    subjectGhost: 0.95,
+    subjectLift: 1,
+    tinted: false,
+    staysOpen: true,
+    subjectFill: 0.42,
+    contextOpacity: 0.42,
+  }),
+  lung_R: part({
+    organ: "lungs",
+    ghost: 1,
+    subjectGhost: 0.95,
+    subjectLift: 1,
+    tinted: false,
+    staysOpen: true,
+    subjectFill: 0.42,
+    contextOpacity: 0.42,
+  }),
+  airway: part({
+    organ: "lungs",
+    ghost: 1,
+    restOpacity: 0.7,
+    subjectGhost: 1,
+    subjectLift: 1,
+    tinted: false,
+    staysOpen: true,
+    subjectFill: 0.3,
+    contextOpacity: 0.3,
+  }),
   liver: part({ organ: "liver", ghost: 0, subjectGhost: 0, contextOpacity: 0.6 }),
   spleen: part({ organ: "spleen", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
   pancreas: part({ organ: "pancreas", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
@@ -61,9 +100,36 @@ const PARTS = {
   thymus: part({ organ: null, worksWith: "spleen", ghost: 1, restOpacity: 0.4, subjectGhost: 0, contextOpacity: 0.25 }),
   // The gut starts as contour so it doesn't wall off the abdomen, and when it is the subject it is a
   // flat pale tone with fine lines, a little open so the pancreas behind it still reads.
-  small_intestine: part({ organ: "small_intestine", ghost: 1, restOpacity: 0.36, subjectGhost: 0.08, subjectLift: 0.72, soft: 1, hatch: 0.4, contextOpacity: 0.2 }),
-  duodenum: part({ organ: "small_intestine", continues: "stomach", ghost: 1, subjectGhost: 0.08, subjectLift: 0.72, soft: 1, hatch: 0.4, contextOpacity: 0.36 }),
-  large_intestine: part({ organ: "large_intestine", ghost: 1, subjectGhost: 0.14, subjectLift: 0.72, soft: 1, hatch: 0.4, normalPasses: 4, contextOpacity: 0.32 }),
+  small_intestine: part({
+    organ: "small_intestine",
+    ghost: 1,
+    restOpacity: 0.36,
+    subjectGhost: 0.08,
+    subjectLift: 0.72,
+    soft: 1,
+    hatch: 0.4,
+    contextOpacity: 0.2,
+  }),
+  duodenum: part({
+    organ: "small_intestine",
+    continues: "stomach",
+    ghost: 1,
+    subjectGhost: 0.08,
+    subjectLift: 0.72,
+    soft: 1,
+    hatch: 0.4,
+    contextOpacity: 0.36,
+  }),
+  large_intestine: part({
+    organ: "large_intestine",
+    ghost: 1,
+    subjectGhost: 0.14,
+    subjectLift: 0.72,
+    soft: 1,
+    hatch: 0.4,
+    normalPasses: 4,
+    contextOpacity: 0.32,
+  }),
 };
 
 export type PartName = keyof typeof PARTS;
@@ -77,7 +143,30 @@ const ANCHOR_NEAR: Partial<Record<PartName, string>> = {
   small_intestine: "jejunum_end",
 };
 
-const PART_NAMES: PartName[] = ["brain", "heart", "lung_L", "lung_R", "airway", "liver", "spleen", "pancreas", "kidney_L", "kidney_R", "bladder", "uterus", "ovary_L", "ovary_R", "tube_L", "tube_R", "prostate", "spinal_cord", "thymus", "small_intestine", "duodenum", "large_intestine"];
+const PART_NAMES: PartName[] = [
+  "brain",
+  "heart",
+  "lung_L",
+  "lung_R",
+  "airway",
+  "liver",
+  "spleen",
+  "pancreas",
+  "kidney_L",
+  "kidney_R",
+  "bladder",
+  "uterus",
+  "ovary_L",
+  "ovary_R",
+  "tube_L",
+  "tube_R",
+  "prostate",
+  "spinal_cord",
+  "thymus",
+  "small_intestine",
+  "duodenum",
+  "large_intestine",
+];
 
 export interface PartLook {
   ghost: number;
@@ -167,7 +256,11 @@ function buildGeometry(asset: OrganAsset, meta: OrganMeshMeta) {
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(asset.bin, meta.index, meta.indexCount), 1));
   geometry.computeVertexNormals();
-  if (meta.along !== undefined) geometry.setAttribute("aAlong", new THREE.BufferAttribute(new Float32Array(asset.bin, meta.along, meta.vertexCount), 1));
+  if (meta.along !== undefined)
+    geometry.setAttribute(
+      "aAlong",
+      new THREE.BufferAttribute(new Float32Array(asset.bin, meta.along, meta.vertexCount), 1),
+    );
   return geometry;
 }
 
@@ -211,7 +304,10 @@ export class Anatomy {
       this.organByMesh.set(mesh, style.organ);
       const center = new THREE.Vector3().fromArray(meta.center);
       const near = ANCHOR_NEAR[name];
-      const anchor = near === undefined ? center : nearestVertex(geometry, new THREE.Vector3().fromArray(asset.meta.landmarks[near]));
+      const anchor =
+        near === undefined
+          ? center
+          : nearestVertex(geometry, new THREE.Vector3().fromArray(asset.meta.landmarks[near]));
       this.parts.set(name, {
         name,
         mesh,
@@ -221,7 +317,16 @@ export class Anatomy {
         center,
         anchor,
         style,
-        target: { ghost: style.ghost, tint: new THREE.Color("#ffffff"), tintAmount: 0, opacity: style.restOpacity, highlight: 0, fill: 0.12, lift: 0, hatch: 0 },
+        target: {
+          ghost: style.ghost,
+          tint: new THREE.Color("#ffffff"),
+          tintAmount: 0,
+          opacity: style.restOpacity,
+          highlight: 0,
+          fill: 0.12,
+          lift: 0,
+          hatch: 0,
+        },
         scalePulse: 0,
       });
     }

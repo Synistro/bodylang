@@ -31,7 +31,12 @@ interface DoseEntry {
   routesToBlood: RouteId[];
 }
 
-const THROUGH_THE_GUT: DoseEntry = { organ: "small_intestine", label: "Small intestine", routesIn: ["stomach_out", "duodenum", "jejunum"], routesToBlood: ["portal_liver", "liver_out", "arch"] };
+const THROUGH_THE_GUT: DoseEntry = {
+  organ: "small_intestine",
+  label: "Small intestine",
+  routesIn: ["stomach_out", "duodenum", "jejunum"],
+  routesToBlood: ["portal_liver", "liver_out", "arch"],
+};
 
 // Everything that differs between one dose line and another.
 interface DoseLine {
@@ -133,7 +138,8 @@ export function doseProcess(line: DoseLine, t: number): Process {
   let here: string | null = null;
   if (active) {
     if (l.blood >= l.stomach + l.intestine) here = line.settlesAt(d);
-    else if (hasStomach && l.stomach >= l.dose * PROCESS.stomachHereAboveShare && l.stomach >= l.intestine) here = "stomach";
+    else if (hasStomach && l.stomach >= l.dose * PROCESS.stomachHereAboveShare && l.stomach >= l.intestine)
+      here = "stomach";
     else if (l.intestine >= l.dose * PROCESS.stomachHereAboveShare) here = "intestine";
     else here = line.settlesAt(d);
   }
@@ -195,22 +201,45 @@ export function caffeineLine(tr: Trajectory, intake: Intake, t: number): DoseLin
         reading: `${blockedPerHundred(d)}% blocked`,
         share: 0,
         flow: feltFrom(d),
-        say: blockedPerHundred(d) >= 1 ? `Caffeine sits where the tired signal, adenosine, would land, stopping ${blockedPerHundred(d)} of every 100. So you feel less sleepy.` : "Almost none of the tired signal is blocked now.",
+        say:
+          blockedPerHundred(d) >= 1
+            ? `Caffeine sits where the tired signal, adenosine, would land, stopping ${blockedPerHundred(d)} of every 100. So you feel less sleepy.`
+            : "Almost none of the tired signal is blocked now.",
         routes: ["carotid"],
       },
     ],
     working: (d) => feltFrom(d) >= PROCESS.caffeineWorkingAboveFelt,
     settlesAt: (d) => (feltFrom(d) >= PROCESS.caffeineWorkingAboveFelt ? "blood" : "liver"),
     say: {
-      stomach: (d) => (!d.started ? "It lands here later." : d.l.stomach >= d.l.dose * PROCESS.presentShare ? `${mg(d.l.stomach)} of ${mg(d.l.dose)} is still here. Drinks leave the stomach quickly.` : "It has left your stomach."),
-      intestine: (d) => (d.l.intestine >= d.l.dose * PROCESS.presentShare ? `${mg(d.l.intestine)} is here, crossing the gut wall into your blood.` : d.started ? "It has all crossed the gut wall." : "Caffeine crosses the gut wall into your blood here."),
-      blood: (d) => (d.l.blood >= 1 ? `${mg(d.l.blood)} of ${mg(d.l.dose)} is still in your blood, ${value(tr, "caffeine", t).toFixed(2)} mg/L. Half of it leaves every ${caffeineHalfLifeH(tr)} hours.` : "Blood carries caffeine to every organ within minutes."),
-      cleared: (d) => (d.l.cleared >= 1 ? `Your liver has cleared ${mg(d.l.cleared)}, ${percent(shareOf(d.l.cleared, d.l.dose))} of it. It removes about ${(d.clearingPerMin * 60).toFixed(1)} mg an hour now.` : "Your liver breaks caffeine down, slowly and steadily."),
+      stomach: (d) =>
+        !d.started
+          ? "It lands here later."
+          : d.l.stomach >= d.l.dose * PROCESS.presentShare
+            ? `${mg(d.l.stomach)} of ${mg(d.l.dose)} is still here. Drinks leave the stomach quickly.`
+            : "It has left your stomach.",
+      intestine: (d) =>
+        d.l.intestine >= d.l.dose * PROCESS.presentShare
+          ? `${mg(d.l.intestine)} is here, crossing the gut wall into your blood.`
+          : d.started
+            ? "It has all crossed the gut wall."
+            : "Caffeine crosses the gut wall into your blood here.",
+      blood: (d) =>
+        d.l.blood >= 1
+          ? `${mg(d.l.blood)} of ${mg(d.l.dose)} is still in your blood, ${value(tr, "caffeine", t).toFixed(2)} mg/L. Half of it leaves every ${caffeineHalfLifeH(tr)} hours.`
+          : "Blood carries caffeine to every organ within minutes.",
+      cleared: (d) =>
+        d.l.cleared >= 1
+          ? `Your liver has cleared ${mg(d.l.cleared)}, ${percent(shareOf(d.l.cleared, d.l.dose))} of it. It removes about ${(d.clearingPerMin * 60).toFixed(1)} mg an hour now.`
+          : "Your liver breaks caffeine down, slowly and steadily.",
     },
     clearedLabel: "Cleared by liver",
     headline: {
-      working: (d) => (d.l.stomach + d.l.intestine > d.l.blood ? `Reaching your blood, ${percent(shareOf(d.l.blood, d.l.dose))} so far` : `${percent(shareOf(d.l.blood, d.l.dose))} still in your blood, ${blocked(d)}`),
-      done: (d) => `Worn off. ${percent(shareOf(d.l.cleared, d.l.dose))} cleared by your liver, ${percent(shareOf(d.l.blood, d.l.dose))} left in your blood`,
+      working: (d) =>
+        d.l.stomach + d.l.intestine > d.l.blood
+          ? `Reaching your blood, ${percent(shareOf(d.l.blood, d.l.dose))} so far`
+          : `${percent(shareOf(d.l.blood, d.l.dose))} still in your blood, ${blocked(d)}`,
+      done: (d) =>
+        `Worn off. ${percent(shareOf(d.l.cleared, d.l.dose))} cleared by your liver, ${percent(shareOf(d.l.blood, d.l.dose))} left in your blood`,
     },
   };
 }
@@ -242,21 +271,36 @@ export function alcoholLine(tr: Trajectory, intake: Intake, t: number): DoseLine
         reading: `${level.toFixed(2)} g/L`,
         share: 0,
         flow: clamp01(level / REFERENCE.alcohol.limitGPerL),
-        say: inBlood ? `At ${level.toFixed(2)} g/L alcohol slows signals between nerve cells. Reaction time and judgement slip as it rises.` : "No alcohol is reaching your brain now.",
+        say: inBlood
+          ? `At ${level.toFixed(2)} g/L alcohol slows signals between nerve cells. Reaction time and judgement slip as it rises.`
+          : "No alcohol is reaching your brain now.",
         routes: ["carotid"],
       },
     ],
     working: () => inBlood,
     settlesAt: () => (level >= REFERENCE.alcohol.newDriverLimitGPerL ? "blood" : "liver"),
     say: {
-      stomach: (d) => (!d.started ? "It lands here later." : d.l.stomach >= d.l.dose * PROCESS.presentShare ? `${grams(d.l.stomach)} of ${grams(d.l.dose)} of alcohol is still here. Food in your stomach holds it back.` : "It has left your stomach."),
-      intestine: (d) => (d.l.intestine >= d.l.dose * PROCESS.presentShare ? `${grams(d.l.intestine)} is here. Alcohol crosses the gut wall quickly.` : "Alcohol crosses the gut wall quickly here."),
-      blood: () => (inBlood ? `Your blood reads ${level.toFixed(2)} g/L. Crash risk climbs from ${REFERENCE.alcohol.riskGPerL} g/L.` : "Alcohol spreads through your blood and body water within minutes."),
-      cleared: (d) => `Your liver has cleared ${grams(d.l.cleared)} of this. It works at about ${ALCOHOL.eliminationGPerLPerH} g/L an hour, a little faster after food.`,
+      stomach: (d) =>
+        !d.started
+          ? "It lands here later."
+          : d.l.stomach >= d.l.dose * PROCESS.presentShare
+            ? `${grams(d.l.stomach)} of ${grams(d.l.dose)} of alcohol is still here. Food in your stomach holds it back.`
+            : "It has left your stomach.",
+      intestine: (d) =>
+        d.l.intestine >= d.l.dose * PROCESS.presentShare
+          ? `${grams(d.l.intestine)} is here. Alcohol crosses the gut wall quickly.`
+          : "Alcohol crosses the gut wall quickly here.",
+      blood: () =>
+        inBlood
+          ? `Your blood reads ${level.toFixed(2)} g/L. Crash risk climbs from ${REFERENCE.alcohol.riskGPerL} g/L.`
+          : "Alcohol spreads through your blood and body water within minutes.",
+      cleared: (d) =>
+        `Your liver has cleared ${grams(d.l.cleared)} of this. It works at about ${ALCOHOL.eliminationGPerLPerH} g/L an hour, a little faster after food.`,
     },
     clearedLabel: "Cleared by liver",
     headline: {
-      working: (d) => `Your blood reads ${level.toFixed(2)} g/L, ${percent(shareOf(d.l.cleared, d.l.dose))} of this already cleared`,
+      working: (d) =>
+        `Your blood reads ${level.toFixed(2)} g/L, ${percent(shareOf(d.l.cleared, d.l.dose))} of this already cleared`,
       done: () => "Your liver has cleared it",
     },
   };
@@ -321,7 +365,10 @@ export function substanceLine(tr: Trajectory, substance: CustomSubstance, t: num
   const available = substance.doseMg * substance.bioavailability;
   const minute = Math.max(0, Math.min(DAY.minutes, Math.floor(t)));
   const mgL = track.series[minute];
-  const level = shareOf(mgL, track.series.reduce((a, b) => Math.max(a, b), 0));
+  const level = shareOf(
+    mgL,
+    track.series.reduce((a, b) => Math.max(a, b), 0),
+  );
   const name = inSentence(substance.label);
   const ledger = (at: number): DoseLedger => {
     const found = substanceLedgerAt(tr, substance.id, at);
@@ -355,9 +402,16 @@ export function substanceLine(tr: Trajectory, substance: CustomSubstance, t: num
     settlesAt: () => "blood",
     say: {
       stomach: null,
-      intestine: (d) => (!d.started ? `You take the ${name} later.` : d.l.intestine >= available * PROCESS.presentShare ? `${mg(d.l.intestine)} is here, ${way.crossing}.` : "It has all crossed the gut wall."),
-      blood: (d) => `${mg(d.l.blood)} is in your blood and tissues, ${mgL.toFixed(1)} mg/L. Half of it leaves every ${substance.halfLifeH} hours.`,
-      cleared: (d) => `Your body has cleared ${mg(d.l.cleared)} so far, ${percent(shareOf(d.l.cleared, available))} of it.`,
+      intestine: (d) =>
+        !d.started
+          ? `You take the ${name} later.`
+          : d.l.intestine >= available * PROCESS.presentShare
+            ? `${mg(d.l.intestine)} is here, ${way.crossing}.`
+            : "It has all crossed the gut wall.",
+      blood: (d) =>
+        `${mg(d.l.blood)} is in your blood and tissues, ${mgL.toFixed(1)} mg/L. Half of it leaves every ${substance.halfLifeH} hours.`,
+      cleared: (d) =>
+        `Your body has cleared ${mg(d.l.cleared)} so far, ${percent(shareOf(d.l.cleared, available))} of it.`,
     },
     clearedLabel: "Cleared",
     headline: {

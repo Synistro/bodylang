@@ -8,11 +8,49 @@ import { createNodeMaterial, Palette } from "./materials";
 export const LYMPH_CLUSTERS = ["neck", "armpit", "abdomen", "groin"] as const;
 export type LymphCluster = (typeof LYMPH_CLUSTERS)[number];
 
-const CLUSTERS: Record<LymphCluster, { joint: string; sided: boolean; both: boolean; offset: [number, number, number]; spread: [number, number, number]; count: number }> = {
-  neck: { joint: "neck", sided: false, both: true, offset: [0.042, -0.012, 0.032], spread: [0.008, 0.026, 0.01], count: 3 },
-  armpit: { joint: "arm", sided: true, both: true, offset: [-0.045, -0.085, 0.005], spread: [0.012, 0.018, 0.018], count: 3 },
-  abdomen: { joint: "spine", sided: false, both: false, offset: [0.008, 0.02, 0.075], spread: [0.032, 0.04, 0.008], count: 5 },
-  groin: { joint: "thigh", sided: true, both: true, offset: [-0.046, 0.016, 0.085], spread: [0.016, 0.01, 0.008], count: 3 },
+const CLUSTERS: Record<
+  LymphCluster,
+  {
+    joint: string;
+    sided: boolean;
+    both: boolean;
+    offset: [number, number, number];
+    spread: [number, number, number];
+    count: number;
+  }
+> = {
+  neck: {
+    joint: "neck",
+    sided: false,
+    both: true,
+    offset: [0.042, -0.012, 0.032],
+    spread: [0.008, 0.026, 0.01],
+    count: 3,
+  },
+  armpit: {
+    joint: "arm",
+    sided: true,
+    both: true,
+    offset: [-0.045, -0.085, 0.005],
+    spread: [0.012, 0.018, 0.018],
+    count: 3,
+  },
+  abdomen: {
+    joint: "spine",
+    sided: false,
+    both: false,
+    offset: [0.008, 0.02, 0.075],
+    spread: [0.032, 0.04, 0.008],
+    count: 5,
+  },
+  groin: {
+    joint: "thigh",
+    sided: true,
+    both: true,
+    offset: [-0.046, 0.016, 0.085],
+    spread: [0.016, 0.01, 0.008],
+    count: 3,
+  },
 };
 
 const LOOK = { sizePx: 3.6, renderOrder: 33, easeRate: 7, reference: 1.8, quietOpacity: 0.42 };

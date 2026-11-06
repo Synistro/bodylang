@@ -2,7 +2,14 @@ import type { BodyView } from "../extensions/api";
 import { EXTENSIONS } from "../extensions";
 import { Trajectory, value } from "../engine/trajectory";
 import type { SystemId } from "../ids";
-import { alertnessProcess, circulationProcess, clearingProcess, cycleProcess, fatRouteProcess, insulinProcess } from "./body";
+import {
+  alertnessProcess,
+  circulationProcess,
+  clearingProcess,
+  cycleProcess,
+  fatRouteProcess,
+  insulinProcess,
+} from "./body";
 import { alcoholLine, caffeineLine, doseProcess, substanceLine } from "./dose";
 import { eventProcess } from "./event";
 import { foodProcess } from "./food";
@@ -21,7 +28,12 @@ export function viewOf(tr: Trajectory): BodyView {
     body: tr.scenario.body,
     restingBpm: tr.anthro.restingBpm,
     value: (name, minute) => value(tr, name, minute),
-    events: tr.events.map((event) => ({ label: event.label, preset: event.preset, from: event.from, until: event.until })),
+    events: tr.events.map((event) => ({
+      label: event.label,
+      preset: event.preset,
+      from: event.from,
+      until: event.until,
+    })),
   };
 }
 
@@ -34,7 +46,17 @@ function extensionLines(tr: Trajectory, t: number): Process[] {
   return EXTENSIONS.flatMap((extension) => {
     try {
       const { active, headline, here, stops } = extension.at(view, t);
-      return [{ id: processIds.added(extension.id), title: extension.title, system: extension.system, substance: "other" as const, active, headline, stops: numbered(stops, here, "ahead", true) }];
+      return [
+        {
+          id: processIds.added(extension.id),
+          title: extension.title,
+          system: extension.system,
+          substance: "other" as const,
+          active,
+          headline,
+          stops: numbered(stops, here, "ahead", true),
+        },
+      ];
     } catch (e: unknown) {
       if (!broken.has(extension.id)) console.error(`The process ${extension.id} failed`, e);
       broken.add(extension.id);
@@ -47,7 +69,10 @@ function extensionLines(tr: Trajectory, t: number): Process[] {
 const stillHere = (from: number, line: Process) => (from >= 0 || line.active ? [line] : []);
 
 const PROCESS_BUILDERS: ProcessBuilder[] = [
-  (tr, t) => mealGroups(tr.scenario.intakes).reverse().flatMap((group) => stillHere(group[0].at, foodProcess(tr, group, t))),
+  (tr, t) =>
+    mealGroups(tr.scenario.intakes)
+      .reverse()
+      .flatMap((group) => stillHere(group[0].at, foodProcess(tr, group, t))),
   (tr, t) =>
     newestFirst(tr)
       .filter((intake) => intake.caffeineMg > 0)
@@ -63,7 +88,10 @@ const PROCESS_BUILDERS: ProcessBuilder[] = [
     newestFirst(tr)
       .filter((intake) => intake.alcoholG > 0)
       .flatMap((intake) => stillHere(intake.at, doseProcess(alcoholLine(tr, intake, t), t))),
-  (tr, t) => tr.scenario.substances.flatMap((substance) => stillHere(substance.at, doseProcess(substanceLine(tr, substance, t), t))),
+  (tr, t) =>
+    tr.scenario.substances.flatMap((substance) =>
+      stillHere(substance.at, doseProcess(substanceLine(tr, substance, t), t)),
+    ),
   (tr, t) => [...tr.events].sort((a, b) => b.from - a.from).map((event) => eventProcess(event, t)),
 ];
 
@@ -76,10 +104,15 @@ export function processesAt(tr: Trajectory, t: number): Process[] {
 export function followProcess(tr: Trajectory, id: string, t: number): string | null {
   if (processesAt(tr, t).some((p) => p.id === id)) return id;
   const food = /^(?:intake|meal):(.+)$/.exec(id)?.[1];
-  const group = food === undefined ? undefined : mealGroups(tr.scenario.intakes).find((g) => g.some((intake) => intake.id === food));
+  const group =
+    food === undefined
+      ? undefined
+      : mealGroups(tr.scenario.intakes).find((g) => g.some((intake) => intake.id === food));
   return group ? mealProcessId(group) : null;
 }
 
 export function processesFor(tr: Trajectory, t: number, system: SystemId): Process[] {
-  return processesAt(tr, t).filter((p) => system === "overview" || p.system === system || (p.alsoIn ?? []).includes(system));
+  return processesAt(tr, t).filter(
+    (p) => system === "overview" || p.system === system || (p.alsoIn ?? []).includes(system),
+  );
 }

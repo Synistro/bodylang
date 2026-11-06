@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { reduce, BodyState } from "../actions/reduce";
-import { carryOver, clockAt, daysBetween, DayDoc, firstDay, parseDayDoc, stayAwake, typicalDayFromYesterday } from "./day";
+import {
+  carryOver,
+  clockAt,
+  daysBetween,
+  DayDoc,
+  firstDay,
+  parseDayDoc,
+  stayAwake,
+  typicalDayFromYesterday,
+} from "./day";
 import { DAY } from "./params";
 import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
@@ -9,13 +18,61 @@ import { threadsAt } from "./threads";
 import { stateWith } from "../actions/testState";
 
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
-const nothing = { grams: 0, waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
-const coffee = (at: number) => ({ ...nothing, id: "coffee", label: "Coffee", at, grams: 250, waterMl: 245, caffeineMg: 200, liquid: true });
-const beers = (at: number) => ({ ...nothing, id: "beers", label: "Beers", at, grams: 1000, waterMl: 930, carbsG: 30, sugarG: 0, alcoholG: 40, liquid: true });
-const dinner = (at: number) => ({ ...nothing, id: "dinner", label: "Dinner", at, grams: 500, waterMl: 250, carbsG: 80, sugarG: 10, fatG: 40, proteinG: 40, fiberG: 6 });
+const nothing = {
+  grams: 0,
+  waterMl: 0,
+  carbsG: 0,
+  sugarG: 0,
+  fatG: 0,
+  proteinG: 0,
+  fiberG: 0,
+  caffeineMg: 0,
+  alcoholG: 0,
+};
+const coffee = (at: number) => ({
+  ...nothing,
+  id: "coffee",
+  label: "Coffee",
+  at,
+  grams: 250,
+  waterMl: 245,
+  caffeineMg: 200,
+  liquid: true,
+});
+const beers = (at: number) => ({
+  ...nothing,
+  id: "beers",
+  label: "Beers",
+  at,
+  grams: 1000,
+  waterMl: 930,
+  carbsG: 30,
+  sugarG: 0,
+  alcoholG: 40,
+  liquid: true,
+});
+const dinner = (at: number) => ({
+  ...nothing,
+  id: "dinner",
+  label: "Dinner",
+  at,
+  grams: 500,
+  waterMl: 250,
+  carbsG: 80,
+  sugarG: 10,
+  fatG: 40,
+  proteinG: 40,
+  fiberG: 6,
+});
 
 const day = (over: Partial<DayDoc> = {}): DayDoc => ({ ...firstDay("2026-11-05", body), ...over });
-const scenarioOf = (doc: DayDoc): Scenario => ({ body: doc.body, intakes: doc.intakes, activities: doc.activities, substances: doc.substances, events: doc.events });
+const scenarioOf = (doc: DayDoc): Scenario => ({
+  body: doc.body,
+  intakes: doc.intakes,
+  activities: doc.activities,
+  substances: doc.substances,
+  events: doc.events,
+});
 
 describe("the clock", () => {
   it("counts a late night as part of the day it began in", () => {
@@ -62,7 +119,13 @@ describe("carrying a day into the next", () => {
   });
 
   it("keeps a late night", () => {
-    const late = day({ activities: [...typicalDayFromYesterday(), { from: DAY.sleepMin, posture: "sitting" }, { from: 26 * 60, posture: "sleeping" }] });
+    const late = day({
+      activities: [
+        ...typicalDayFromYesterday(),
+        { from: DAY.sleepMin, posture: "sitting" },
+        { from: 26 * 60, posture: "sleeping" },
+      ],
+    });
     const next = carryOver(late, "2026-11-06");
     expect(postureAt(next.activities, 30)).toBe("sitting");
     expect(postureAt(next.activities, 2 * 60 + 30)).toBe("sleeping");
@@ -70,15 +133,43 @@ describe("carrying a day into the next", () => {
   });
 
   it("forgets the days it wasn't opened", () => {
-    expect(carryOver(day({ activities: [{ from: 600, posture: "running" }] }), "2026-11-10").activities).toEqual(typicalDayFromYesterday());
+    expect(carryOver(day({ activities: [{ from: 600, posture: "running" }] }), "2026-11-10").activities).toEqual(
+      typicalDayFromYesterday(),
+    );
   });
 
   it("keeps an illness going and ended events for a fortnight", () => {
-    const cold = { id: "cold", label: "Cold", preset: "illness", from: 500, until: null, intensity: 0.5, muscles: [], symptoms: [], custom: null, source: "" } as const;
-    const gym = { id: "gym", label: "Gym", preset: "training", from: 500, until: 560, intensity: 0.6, muscles: [{ group: "chest", load: 1 }], symptoms: [], custom: null, source: "" } as const;
+    const cold = {
+      id: "cold",
+      label: "Cold",
+      preset: "illness",
+      from: 500,
+      until: null,
+      intensity: 0.5,
+      muscles: [],
+      symptoms: [],
+      custom: null,
+      source: "",
+    } as const;
+    const gym = {
+      id: "gym",
+      label: "Gym",
+      preset: "training",
+      from: 500,
+      until: 560,
+      intensity: 0.6,
+      muscles: [{ group: "chest", load: 1 }],
+      symptoms: [],
+      custom: null,
+      source: "",
+    } as const;
     const next = carryOver(day({ events: [cold, gym] as never }), "2026-11-07");
     expect(next.events.find((e) => e.label === "Cold")).toMatchObject({ id: "cold", from: 500 - 2880, until: null });
-    expect(next.events.find((e) => e.label === "Gym")).toMatchObject({ id: "gym@2026-11-05", from: 500 - 2880, until: 560 - 2880 });
+    expect(next.events.find((e) => e.label === "Gym")).toMatchObject({
+      id: "gym@2026-11-05",
+      from: 500 - 2880,
+      until: 560 - 2880,
+    });
     expect(carryOver(day({ events: [gym] as never }), "2026-11-25").events).toEqual([]);
   });
 
@@ -130,7 +221,13 @@ describe("what carries through midnight", () => {
 
   it("makes the morning after a short night feel worse than a full one", () => {
     const full = simulate(scenarioOf(carryOver(day(), "2026-11-06")));
-    const late = day({ activities: [...typicalDayFromYesterday(), { from: DAY.sleepMin, posture: "sitting" }, { from: 27 * 60, posture: "sleeping" }] });
+    const late = day({
+      activities: [
+        ...typicalDayFromYesterday(),
+        { from: DAY.sleepMin, posture: "sitting" },
+        { from: 27 * 60, posture: "sleeping" },
+      ],
+    });
     const short = simulate(scenarioOf(carryOver(late, "2026-11-06")));
     const morning = DAY.wakeMin + 30;
     expect(short.series.sleepPressure[morning]).toBeGreaterThan(full.series.sleepPressure[morning] + 0.05);
@@ -139,14 +236,34 @@ describe("what carries through midnight", () => {
 
   it("leaves a day with nothing logged the same as a fresh start by morning", () => {
     const carried = simulate(scenarioOf(carryOver(day(), "2026-11-06")));
-    const fresh = simulate({ body, intakes: [], substances: [], events: [], activities: [{ from: 0, posture: "sleeping" }, { from: DAY.wakeMin, posture: "standing" }] });
+    const fresh = simulate({
+      body,
+      intakes: [],
+      substances: [],
+      events: [],
+      activities: [
+        { from: 0, posture: "sleeping" },
+        { from: DAY.wakeMin, posture: "standing" },
+      ],
+    });
     for (const name of ["glucose", "insulin", "tg", "alertness", "hunger", "liverGlycogen", "bladderMl"] as const) {
-      expect(Math.abs(carried.series[name][12 * 60] - fresh.series[name][12 * 60])).toBeLessThan(Math.abs(fresh.series[name][12 * 60]) * 0.02 + 0.01);
+      expect(Math.abs(carried.series[name][12 * 60] - fresh.series[name][12 * 60])).toBeLessThan(
+        Math.abs(fresh.series[name][12 * 60]) * 0.02 + 0.01,
+      );
     }
   });
 
   it("doesn't read a partly logged yesterday as a day of fasting", () => {
-    const fresh = simulate({ body, intakes: [], substances: [], events: [], activities: [{ from: 0, posture: "sleeping" }, { from: DAY.wakeMin, posture: "standing" }] });
+    const fresh = simulate({
+      body,
+      intakes: [],
+      substances: [],
+      events: [],
+      activities: [
+        { from: 0, posture: "sleeping" },
+        { from: DAY.wakeMin, posture: "standing" },
+      ],
+    });
     const carried = simulate(scenarioOf(carryOver(day({ intakes: [coffee(9 * 60)] }), "2026-11-06")));
     expect(carried.series.liverGlycogen[DAY.wakeMin]).toBeCloseTo(fresh.series.liverGlycogen[DAY.wakeMin], 0);
     expect(carried.series.glucose[DAY.wakeMin]).toBeCloseTo(fresh.series.glucose[DAY.wakeMin], 0);
@@ -210,7 +327,10 @@ describe("correcting what was logged", () => {
   const logged = () => stateWith({ intakes: [dinner(13 * 60)], assumptions: { dinner: "Two plates" } });
 
   it("scales everything in the food", () => {
-    const next = reduce(logged(), { name: "correct_intake", args: { id: "dinner", grams: 250, assumption: "One plate" } });
+    const next = reduce(logged(), {
+      name: "correct_intake",
+      args: { id: "dinner", grams: 250, assumption: "One plate" },
+    });
     expect(next.day.intakes[0]).toMatchObject({ grams: 250, carbsG: 40, fatG: 20, proteinG: 20, fiberG: 3 });
     expect(next.day.assumptions.dinner).toBe("One plate");
   });
@@ -225,7 +345,8 @@ describe("correcting what was logged", () => {
   });
 
   it("redraws the curves", () => {
-    const run = (s: BodyState) => simulate({ body, intakes: s.day.intakes, activities: typicalDayFromYesterday(), substances: [], events: [] });
+    const run = (s: BodyState) =>
+      simulate({ body, intakes: s.day.intakes, activities: typicalDayFromYesterday(), substances: [], events: [] });
     const more = run(logged());
     const less = run(reduce(logged(), { name: "correct_intake", args: { id: "dinner", grams: 250 } }));
     expect(less.series.stomachKcal[13 * 60 + 30]).toBeLessThan(more.series.stomachKcal[13 * 60 + 30]);

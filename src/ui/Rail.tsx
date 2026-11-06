@@ -31,7 +31,8 @@ function useLeaves(system: SystemId): Leaf[] {
     const threads = threadsAt(tr, minute);
     const alreadyYours = yourDay ? processIdsOf(yourDay, minute) : null;
     const isNews = (id: string) => !alreadyYours?.has(id);
-    const hereOf = (id: string) => processes.find((p) => p.id === id)?.stops.find((stop) => stop.state === "here")?.organ ?? null;
+    const hereOf = (id: string) =>
+      processes.find((p) => p.id === id)?.stops.find((stop) => stop.state === "here")?.organ ?? null;
     const originOf = (id: string) => {
       const process = processes.find((p) => p.id === id);
       return process ? processOrigin(tr, process) : SENTENCE_ORIGIN;
@@ -39,14 +40,28 @@ function useLeaves(system: SystemId): Leaf[] {
     if (system === "overview") {
       return threads
         .filter((t) => t.at <= minute && isNews(t.processId))
-        .map((t) => ({ id: t.processId, title: t.title, note: t.status, active: t.active, organ: hereOf(t.processId), origin: originOf(t.processId) }));
+        .map((t) => ({
+          id: t.processId,
+          title: t.title,
+          note: t.status,
+          active: t.active,
+          organ: hereOf(t.processId),
+          origin: originOf(t.processId),
+        }));
     }
     return processes
       .filter((p) => (p.system === system || (p.alsoIn?.includes(system) ?? false)) && isNews(p.id))
       .sort((a, b) => Number(b.active) - Number(a.active))
       .map((p) => {
         const thread = threads.find((t) => t.processId === p.id);
-        return { id: p.id, title: p.title, note: thread?.status ?? "", active: p.active, organ: hereOf(p.id), origin: originOf(p.id) };
+        return {
+          id: p.id,
+          title: p.title,
+          note: thread?.status ?? "",
+          active: p.active,
+          organ: hereOf(p.id),
+          origin: originOf(p.id),
+        };
       });
   }, [tr, yourDay, minute, system]);
 }
@@ -83,9 +98,17 @@ function Leaves({ system }: { system: SystemId }) {
   const leaves = useLeaves(system);
   const processId = useStore((s) => s.view.process);
   const focused = useStore((s) => s.view.focus !== null);
-  const selected = useStore((s) => (s.view.process ? currentProcesses(s).find((p) => p.id === s.view.process) ?? null : null));
+  const selected = useStore((s) =>
+    s.view.process ? (currentProcesses(s).find((p) => p.id === s.view.process) ?? null) : null,
+  );
   // Something selected from elsewhere, such as by Claude, still needs its place in the outline.
-  const shown = selected && !leaves.some((leaf) => leaf.id === selected.id) ? [...leaves, { id: selected.id, title: selected.title, note: "", active: true, organ: null, origin: SENTENCE_ORIGIN }] : leaves;
+  const shown =
+    selected && !leaves.some((leaf) => leaf.id === selected.id)
+      ? [
+          ...leaves,
+          { id: selected.id, title: selected.title, note: "", active: true, organ: null, origin: SENTENCE_ORIGIN },
+        ]
+      : leaves;
   return (
     <>
       <ul className="tree-leaves">
@@ -93,7 +116,15 @@ function Leaves({ system }: { system: SystemId }) {
           const here = leaf.id === processId;
           return (
             <li key={leaf.id}>
-              <button type="button" className="tree-leaf" data-idle={!leaf.active || undefined} data-open={here || undefined} aria-current={here && !focused ? "location" : undefined} onClick={() => showProcess(leaf.id)} {...organHover(leaf.organ)}>
+              <button
+                type="button"
+                className="tree-leaf"
+                data-idle={!leaf.active || undefined}
+                data-open={here || undefined}
+                aria-current={here && !focused ? "location" : undefined}
+                onClick={() => showProcess(leaf.id)}
+                {...organHover(leaf.organ)}
+              >
                 <span className="tree-leaf-title">{leaf.title}</span>
                 {leaf.note ? (
                   <span className="tree-note" {...sourced(leaf.origin)}>
@@ -144,7 +175,14 @@ export function Rail() {
         const Icon = SYSTEM_GLYPH[s.id];
         return (
           <div key={s.id} className="tree-node">
-            <button type="button" className="tree-row" data-quiet={quiet || undefined} data-open={open || undefined} aria-current={open && atSystem ? "location" : undefined} onClick={() => showSystem(s.id)}>
+            <button
+              type="button"
+              className="tree-row"
+              data-quiet={quiet || undefined}
+              data-open={open || undefined}
+              aria-current={open && atSystem ? "location" : undefined}
+              onClick={() => showSystem(s.id)}
+            >
               <Icon className="tree-icon" weight="light" />
               <span className="tree-title">{s.title}</span>
               {speaks ? (

@@ -2,29 +2,134 @@ import { describe, expect, it } from "vitest";
 import { assess } from "./assess/assess";
 import { BodyEvent } from "./events/types";
 import { LANES } from "./params";
-import { dayMoments, dayStops, fitWindow, muscleStateLanes, processLanes, readingLanes, systemLanes, threadLanes, workedMuscleLanes } from "./lanes";
+import {
+  dayMoments,
+  dayStops,
+  fitWindow,
+  muscleStateLanes,
+  processLanes,
+  readingLanes,
+  systemLanes,
+  threadLanes,
+  workedMuscleLanes,
+} from "./lanes";
 import { simulate } from "./engine/simulate";
 import { Intake, Scenario } from "./scenario";
 import { hm, NO_NUTRIENTS } from "./testKit";
 
-
-const COFFEE: Intake = { id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 245, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 95, alcoholG: 0, liquid: true };
-const PIZZA: Intake = { id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4, caffeineMg: 0, alcoholG: 0, liquid: false };
-const BEER: Intake = { id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 2, fatG: 0, proteinG: 2, fiberG: 0, caffeineMg: 0, alcoholG: 20, liquid: true };
+const COFFEE: Intake = {
+  id: "coffee",
+  label: "Coffee",
+  at: hm(8, 30),
+  grams: 250,
+  waterMl: 245,
+  carbsG: 0,
+  sugarG: 0,
+  fatG: 0,
+  proteinG: 0,
+  fiberG: 0,
+  caffeineMg: 95,
+  alcoholG: 0,
+  liquid: true,
+};
+const PIZZA: Intake = {
+  id: "pizza",
+  label: "Pizza",
+  at: hm(16, 45),
+  grams: 240,
+  waterMl: 110,
+  carbsG: 72,
+  sugarG: 8,
+  fatG: 26,
+  proteinG: 28,
+  fiberG: 4,
+  caffeineMg: 0,
+  alcoholG: 0,
+  liquid: false,
+};
+const BEER: Intake = {
+  id: "beer",
+  label: "Beer",
+  at: hm(19),
+  grams: 500,
+  waterMl: 460,
+  carbsG: 18,
+  sugarG: 2,
+  fatG: 0,
+  proteinG: 2,
+  fiberG: 0,
+  caffeineMg: 0,
+  alcoholG: 20,
+  liquid: true,
+};
 
 const day = (intakes: Intake[], events: BodyEvent[] = []) => {
-  const scenario: Scenario = { body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes, activities: [{ from: 0, posture: "sleeping" }, { from: 450, posture: "sitting" }], substances: [], events };
+  const scenario: Scenario = {
+    body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+    intakes,
+    activities: [
+      { from: 0, posture: "sleeping" },
+      { from: 450, posture: "sitting" },
+    ],
+    substances: [],
+    events,
+  };
   return simulate(scenario);
 };
 
-const LEG_DAY: BodyEvent = { id: "legs", label: "Leg day", preset: "training", from: hm(10), until: hm(11), intensity: 0.8, muscles: [{ group: "quads", load: 0.9 }, { group: "glutes", load: 0.7 }], symptoms: [], custom: null, source: "test" };
+const LEG_DAY: BodyEvent = {
+  id: "legs",
+  label: "Leg day",
+  preset: "training",
+  from: hm(10),
+  until: hm(11),
+  intensity: 0.8,
+  muscles: [
+    { group: "quads", load: 0.9 },
+    { group: "glutes", load: 0.7 },
+  ],
+  symptoms: [],
+  custom: null,
+  source: "test",
+};
 
 describe("how much of a meal is left", () => {
-  const beer: Intake = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(13), grams: 355, waterMl: 330, carbsG: 13, proteinG: 1.6, alcoholG: 14, liquid: true };
-  const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(13), grams: 240, waterMl: 110, carbsG: 72, fatG: 26, proteinG: 28, fiberG: 4 };
+  const beer: Intake = {
+    ...NO_NUTRIENTS,
+    id: "beer",
+    label: "Beer",
+    at: hm(13),
+    grams: 355,
+    waterMl: 330,
+    carbsG: 13,
+    proteinG: 1.6,
+    alcoholG: 14,
+    liquid: true,
+  };
+  const pizza: Intake = {
+    ...NO_NUTRIENTS,
+    id: "pizza",
+    label: "Pizza",
+    at: hm(13),
+    grams: 240,
+    waterMl: 110,
+    carbsG: 72,
+    fatG: 26,
+    proteinG: 28,
+    fiberG: 4,
+  };
 
   it("starts from all of it, with alcohol counted apart", () => {
-    const tr = simulate({ body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [beer, pizza], activities: [{ from: 0, posture: "sleeping" }, { from: hm(7), posture: "sitting" }], substances: [], events: [] });
+    const tr = simulate({
+      body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
+      intakes: [beer, pizza],
+      activities: [
+        { from: 0, posture: "sleeping" },
+        { from: hm(7), posture: "sitting" },
+      ],
+      substances: [],
+      events: [],
+    });
     const lane = threadLanes(tr, hm(13, 5)).find((l) => l.label.startsWith("Beer") || l.label.includes("Pizza"));
     expect(lane?.read(hm(13, 5))).toMatch(/^(100|99|98)% left$/);
   });
@@ -71,7 +176,23 @@ describe("the day chart's lanes", () => {
   });
 
   it("says when something has no end yet", () => {
-    const tr = day([], [{ id: "cold", label: "Cold", preset: "illness", from: hm(8), until: null, intensity: 0.6, muscles: [], symptoms: ["cough"], custom: null, source: "" }]);
+    const tr = day(
+      [],
+      [
+        {
+          id: "cold",
+          label: "Cold",
+          preset: "illness",
+          from: hm(8),
+          until: null,
+          intensity: 0.6,
+          muscles: [],
+          symptoms: ["cough"],
+          custom: null,
+          source: "",
+        },
+      ],
+    );
     expect(threadLanes(tr, hm(14))[0]).toMatchObject({ mark: null, beyond: "Still going" });
   });
 
@@ -195,9 +316,19 @@ describe("the day chart's lanes", () => {
 
   it("keeps every value in its lane", () => {
     const tr = day([COFFEE, PIZZA, BEER], [LEG_DAY]);
-    for (const system of ["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing"] as const) {
+    for (const system of [
+      "overview",
+      "digestion",
+      "energy",
+      "circulation",
+      "muscles",
+      "brain",
+      "immune",
+      "clearing",
+    ] as const) {
       const lanes = systemLanes(tr, hm(17), system);
-      for (const lane of lanes) for (const v of lane.values) expect(v).toBeGreaterThanOrEqual(-0.001), expect(v).toBeLessThanOrEqual(1.001);
+      for (const lane of lanes)
+        for (const v of lane.values) expect(v).toBeGreaterThanOrEqual(-0.001), expect(v).toBeLessThanOrEqual(1.001);
     }
   });
 });

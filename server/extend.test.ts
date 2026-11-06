@@ -11,8 +11,10 @@ import type { BuildStatus } from "../src/wire";
 import { BuildParts, removeProcess, runBuild } from "./extend";
 
 const git = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, encoding: "utf8" });
-const GOOD_PROCESS = 'import type { ProcessExtension } from "./api";\nexport const extension: ProcessExtension = {} as ProcessExtension;\n';
-const GOOD_TEST = 'import { it } from "vitest";\nimport { simulate } from "../engine/simulate";\nit("a", () => { simulate; });\nit("b", () => {});\nit("c", () => { simulate(0 as never); });\n';
+const GOOD_PROCESS =
+  'import type { ProcessExtension } from "./api";\nexport const extension: ProcessExtension = {} as ProcessExtension;\n';
+const GOOD_TEST =
+  'import { it } from "vitest";\nimport { simulate } from "../engine/simulate";\nit("a", () => { simulate; });\nit("b", () => {});\nit("c", () => { simulate(0 as never); });\n';
 
 describe("building a process", () => {
   let repo: string;
@@ -20,7 +22,12 @@ describe("building a process", () => {
   const statuses: BuildStatus[] = [];
   const request = { id: "thyroid", title: "Thyroid", what: "How my thyroid works" };
   const go = (parts: Partial<BuildParts>, signal = new AbortController().signal) =>
-    runBuild(request, { repo, buildsFolder: builds, session: async () => undefined, suite: async () => null, ...parts }, (s) => statuses.push(s), signal);
+    runBuild(
+      request,
+      { repo, buildsFolder: builds, session: async () => undefined, suite: async () => null, ...parts },
+      (s) => statuses.push(s),
+      signal,
+    );
   const writes =
     (processCode = GOOD_PROCESS, testCode = GOOD_TEST): BuildParts["session"] =>
     async ({ worktree }) => {
@@ -59,7 +66,10 @@ describe("building a process", () => {
     expect(result.stage).toBe("ready");
     expect(added()).toBe(true);
     expect(commits()[0]).toBe("Add process: Thyroid");
-    expect(git(repo, "show", "--name-only", "--format=", "HEAD").trim().split("\n").sort()).toEqual(["src/model/extensions/thyroid.test.ts", "src/model/extensions/thyroid.ts"]);
+    expect(git(repo, "show", "--name-only", "--format=", "HEAD").trim().split("\n").sort()).toEqual([
+      "src/model/extensions/thyroid.test.ts",
+      "src/model/extensions/thyroid.ts",
+    ]);
     expect(statuses.map((s) => s.stage)).toEqual(["writing", "final", "ready"]);
   });
 
@@ -105,12 +115,15 @@ describe("building a process", () => {
 
   it("stops when told to", async () => {
     const stopper = new AbortController();
-    const result = await go({
-      session: async (context) => {
-        await writes()(context);
-        stopper.abort();
+    const result = await go(
+      {
+        session: async (context) => {
+          await writes()(context);
+          stopper.abort();
+        },
       },
-    }, stopper.signal);
+      stopper.signal,
+    );
     expect(result.stage).toBe("stopped");
     expect(added()).toBe(false);
   });
@@ -126,13 +139,16 @@ describe("building a process", () => {
 
   it("stops when told to during the long suite", async () => {
     const stopper = new AbortController();
-    const result = await go({
-      session: writes(),
-      suite: async () => {
-        stopper.abort();
-        return "killed";
+    const result = await go(
+      {
+        session: writes(),
+        suite: async () => {
+          stopper.abort();
+          return "killed";
+        },
       },
-    }, stopper.signal);
+      stopper.signal,
+    );
     expect(result.stage).toBe("stopped");
     expect(added()).toBe(false);
   });

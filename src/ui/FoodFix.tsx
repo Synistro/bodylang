@@ -32,23 +32,51 @@ function portion(intake: Intake): { text: string; less: number; more: number } {
     const steps = count / SERVING_STEP;
     const down = (Math.ceil(steps - 1e-6) - 1) * SERVING_STEP;
     const up = (Math.floor(steps + 1e-6) + 1) * SERVING_STEP;
-    return { text: `${countText(count)} ${plural(serving.label, count)}`, less: down * serving.grams, more: up * serving.grams };
+    return {
+      text: `${countText(count)} ${plural(serving.label, count)}`,
+      less: down * serving.grams,
+      more: up * serving.grams,
+    };
   }
   const step = grams >= GRAM_STEP.largeFrom ? GRAM_STEP.large : GRAM_STEP.small;
-  return { text: `${Math.round(grams)} g`, less: (Math.ceil(grams / step - 1e-6) - 1) * step, more: (Math.floor(grams / step + 1e-6) + 1) * step };
+  return {
+    text: `${Math.round(grams)} g`,
+    less: (Math.ceil(grams / step - 1e-6) - 1) * step,
+    more: (Math.floor(grams / step + 1e-6) + 1) * step,
+  };
 }
 
 const portionWords = (intake: Intake, grams: number) => portion({ ...intake, grams }).text;
 
 function holds(intake: Intake): string {
   const kcal = kcalOf(intake);
-  const what = intake.caffeineMg > 0 && kcal < CAFFEINE_SHOWN_BELOW_KCAL ? `${Math.round(intake.caffeineMg)} mg caffeine` : `${Math.round(kcal)} kcal`;
+  const what =
+    intake.caffeineMg > 0 && kcal < CAFFEINE_SHOWN_BELOW_KCAL
+      ? `${Math.round(intake.caffeineMg)} mg caffeine`
+      : `${Math.round(kcal)} kcal`;
   return `${Math.round(intake.grams)} g, ${what}`;
 }
 
-const sourceWords = (intake: Intake) => (intake.source?.kind === "table" ? `USDA: ${intake.source.name}` : intake.source?.kind === "recipe" ? "Claude's recipe, USDA ingredients" : "Claude's estimate");
+const sourceWords = (intake: Intake) =>
+  intake.source?.kind === "table"
+    ? `USDA: ${intake.source.name}`
+    : intake.source?.kind === "recipe"
+      ? "Claude's recipe, USDA ingredients"
+      : "Claude's estimate";
 
-function Stepper({ text, label, onLess, onMore, canLess }: { text: string; label: string; onLess: () => void; onMore: () => void; canLess: boolean }) {
+function Stepper({
+  text,
+  label,
+  onLess,
+  onMore,
+  canLess,
+}: {
+  text: string;
+  label: string;
+  onLess: () => void;
+  onMore: () => void;
+  canLess: boolean;
+}) {
   return (
     <span className="stepper" role="group" aria-label={label}>
       <button type="button" aria-label={`Less, ${label}`} disabled={!canLess} onClick={onLess}>
@@ -64,14 +92,25 @@ function Stepper({ text, label, onLess, onMore, canLess }: { text: string; label
 
 function FoodRow({ intake }: { intake: Intake }) {
   const { text, less, more } = portion(intake);
-  const correct = (grams: number) => dispatch({ name: "correct_intake", args: { id: intake.id, grams, assumption: portionWords(intake, grams) } });
+  const correct = (grams: number) =>
+    dispatch({ name: "correct_intake", args: { id: intake.id, grams, assumption: portionWords(intake, grams) } });
   return (
     <div className="fix-row">
       <span className="fix-name">{intake.label}</span>
-      <button type="button" className="link fix-remove" onClick={() => dispatch({ name: "remove_intake", args: { id: intake.id } })}>
+      <button
+        type="button"
+        className="link fix-remove"
+        onClick={() => dispatch({ name: "remove_intake", args: { id: intake.id } })}
+      >
         Remove
       </button>
-      <Stepper text={text} label={`how much ${intake.label}`} canLess={less > 0} onLess={() => correct(less)} onMore={() => correct(more)} />
+      <Stepper
+        text={text}
+        label={`how much ${intake.label}`}
+        canLess={less > 0}
+        onLess={() => correct(less)}
+        onMore={() => correct(more)}
+      />
       <p className="fix-note" {...sourced(foodOrigin(intake))}>
         {holds(intake)}. {sourceWords(intake)}
       </p>
@@ -108,9 +147,21 @@ export function FoodFix() {
     setUi({ t: s });
   };
   return (
-    <div ref={root} className="fix" role="dialog" aria-label="Correct what you had" style={{ "--fix-x": `${fixing.x}px` }}>
+    <div
+      ref={root}
+      className="fix"
+      role="dialog"
+      aria-label="Correct what you had"
+      style={{ "--fix-x": `${fixing.x}px` }}
+    >
       <div className="fix-head">
-        <Stepper text={formatClock(at)} label="when" canLess onLess={() => move(-TIME_STEP_MIN)} onMore={() => move(TIME_STEP_MIN)} />
+        <Stepper
+          text={formatClock(at)}
+          label="when"
+          canLess
+          onLess={() => move(-TIME_STEP_MIN)}
+          onMore={() => move(TIME_STEP_MIN)}
+        />
         <button type="button" className="icon-button" aria-label="Close" onClick={() => setUi({ fixing: null })}>
           <X />
         </button>

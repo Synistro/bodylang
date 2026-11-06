@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 import { reduce } from "../actions/reduce";
 import { assess } from "./assess/assess";
 import { hasSomethingToSay } from "./assess/types";
-import { crampLevel, Cycle, cycleDay, cyclePhase, daysIntoCycle, hormonesAt, liningShare, minutesToNextPeriod } from "./cycle";
+import {
+  crampLevel,
+  Cycle,
+  cycleDay,
+  cyclePhase,
+  daysIntoCycle,
+  hormonesAt,
+  liningShare,
+  minutesToNextPeriod,
+} from "./cycle";
 import { carryOver, firstDay } from "./day";
 import { CYCLE, DAY } from "./params";
 import { processesAt } from "./processes/processes";
@@ -11,11 +20,15 @@ import { stateWith } from "../actions/testState";
 
 const woman = { sex: "female", age: 30, heightCm: 168, weightKg: 62 } as const;
 const man = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
-const wake = [{ from: 0, posture: "sleeping" }, { from: DAY.wakeMin, posture: "standing" }] as const;
+const wake = [
+  { from: 0, posture: "sleeping" },
+  { from: DAY.wakeMin, posture: "standing" },
+] as const;
 
 // Today is the given day of a 28-day cycle.
 const onDay = (day: number): Cycle => ({ start: -(day - 1) * 1440, lengthDays: 28, periodDays: 5 });
-const dayOf = (cycle: Cycle | null) => simulate({ body: woman, intakes: [], activities: [...wake], substances: [], events: [], cycle });
+const dayOf = (cycle: Cycle | null) =>
+  simulate({ body: woman, intakes: [], activities: [...wake], substances: [], events: [], cycle });
 const NOON = 12 * 60;
 
 describe("the phases of a cycle", () => {
@@ -88,20 +101,46 @@ describe("what a cycle changes in the rest of the body", () => {
   });
 
   it("leaves the same meal higher in the luteal phase, because insulin works less well", () => {
-    const meal = { id: "meal", label: "Meal", at: 13 * 60, grams: 300, waterMl: 150, carbsG: 70, sugarG: 10, fatG: 8, proteinG: 15, fiberG: 3, caffeineMg: 0, alcoholG: 0 };
-    const withMeal = (cycle: Cycle) => simulate({ body: woman, intakes: [meal], activities: [...wake], substances: [], events: [], cycle });
+    const meal = {
+      id: "meal",
+      label: "Meal",
+      at: 13 * 60,
+      grams: 300,
+      waterMl: 150,
+      carbsG: 70,
+      sugarG: 10,
+      fatG: 8,
+      proteinG: 15,
+      fiberG: 3,
+      caffeineMg: 0,
+      alcoholG: 0,
+    };
+    const withMeal = (cycle: Cycle) =>
+      simulate({ body: woman, intakes: [meal], activities: [...wake], substances: [], events: [], cycle });
     const peak = (cycle: Cycle) => Math.max(...withMeal(cycle).series.glucose.slice(13 * 60, 16 * 60));
     expect(peak(onDay(21))).toBeGreaterThan(peak(onDay(9)));
     expect(peak(onDay(21)) - peak(onDay(9))).toBeLessThan(10);
   });
 
   it("changes nothing for someone with no cycle logged", () => {
-    expect(none.series.temperature[NOON]).toBeCloseTo(simulate({ body: woman, intakes: [], activities: [...wake], substances: [], events: [] }).series.temperature[NOON], 5);
+    expect(none.series.temperature[NOON]).toBeCloseTo(
+      simulate({ body: woman, intakes: [], activities: [...wake], substances: [], events: [] }).series.temperature[
+        NOON
+      ],
+      5,
+    );
     expect(none.series.estradiol[NOON]).toBe(0);
   });
 
   it("ignores a cycle on a body without the anatomy for one", () => {
-    const tr = simulate({ body: man, intakes: [], activities: [...wake], substances: [], events: [], cycle: onDay(21) });
+    const tr = simulate({
+      body: man,
+      intakes: [],
+      activities: [...wake],
+      substances: [],
+      events: [],
+      cycle: onDay(21),
+    });
     expect(tr.cycle).toBeNull();
     expect(tr.series.progesterone[NOON]).toBe(0);
   });
@@ -128,7 +167,8 @@ describe("how it reads", () => {
 
   it("never paints an ordinary cycle as a problem", () => {
     for (let day = 1; day <= 28; day++) {
-      for (const r of readings(onDay(day))) if (["cycleDay", "estradiol", "progesterone", "temperature", "hr"].includes(r.id)) expect(r.tone).toBe("calm");
+      for (const r of readings(onDay(day)))
+        if (["cycleDay", "estradiol", "progesterone", "temperature", "hr"].includes(r.id)) expect(r.tone).toBe("calm");
     }
   });
 
@@ -161,7 +201,11 @@ describe("telling it", () => {
   const state = () => stateWith();
 
   it("uses a usual cycle unless told otherwise", () => {
-    expect(reduce(state(), { name: "set_cycle", args: { last_start: -4320 } }).day.cycle).toEqual({ start: -4320, lengthDays: CYCLE.lengthDays, periodDays: CYCLE.periodDays });
+    expect(reduce(state(), { name: "set_cycle", args: { last_start: -4320 } }).day.cycle).toEqual({
+      start: -4320,
+      lengthDays: CYCLE.lengthDays,
+      periodDays: CYCLE.periodDays,
+    });
   });
 
   it("keeps a length it was told, across a new start date", () => {

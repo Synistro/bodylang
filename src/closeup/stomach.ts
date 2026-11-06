@@ -15,7 +15,10 @@ export const stomachCloseup = defineCloseup({
     emptying: "How fast food is leaving through the outlet into the intestine",
   },
   fromModel: ({ trajectory }, minute) => ({
-    fullness: clamp01((value(trajectory, "stomachMl", minute) - STOMACH.restingVolumeMl) / (STOMACH.fullnessMl - STOMACH.restingVolumeMl)),
+    fullness: clamp01(
+      (value(trajectory, "stomachMl", minute) - STOMACH.restingVolumeMl) /
+        (STOMACH.fullnessMl - STOMACH.restingVolumeMl),
+    ),
     food: clamp01(value(trajectory, "stomachKcal", minute) / STOMACH_FULL.kcal),
     emptying: clamp01(value(trajectory, "emptyingKcalPerMin", minute) / STOMACH_FULL.emptyingKcalPerMin),
   }),

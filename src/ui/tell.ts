@@ -1,6 +1,17 @@
 import { ACTION_SCHEMAS, Action, ActionName } from "../actions/schemas";
 import { stayAwake } from "../model/day";
-import { beginExchange, bodyOf, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rememberAsked, setAskCancel, updateExchange } from "../store";
+import {
+  beginExchange,
+  bodyOf,
+  clearWhatIf,
+  dispatch,
+  enterAsk,
+  getState,
+  leaveAsk,
+  rememberAsked,
+  setAskCancel,
+  updateExchange,
+} from "../store";
 import { nameReplySchema, readEvents, tellEventSchema } from "../wire";
 
 function isActionName(name: string): name is ActionName {
@@ -19,7 +30,11 @@ const NAME_FROM_WORDS = 7;
 async function nameQuestion(id: number, text: string) {
   if (text.trim().split(/\s+/).length < NAME_FROM_WORDS) return;
   try {
-    const response = await fetch("/api/name-question", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+    const response = await fetch("/api/name-question", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
     if (!response.ok) return;
     const { name } = nameReplySchema.parse(await response.json());
     if (name) updateExchange(id, { name });
@@ -52,7 +67,14 @@ export async function tell(text: string) {
     const response = await fetch("/api/tell", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text, state: bodyOf(s), mode, depth: s.depth, history: s.asking?.history ?? [], date: s.date }),
+      body: JSON.stringify({
+        text,
+        state: bodyOf(s),
+        mode,
+        depth: s.depth,
+        history: s.asking?.history ?? [],
+        date: s.date,
+      }),
       signal: stop.signal,
     });
     if (!response.ok) throw new Error(`The Claude Code bridge answered ${response.status}.`);
@@ -82,7 +104,8 @@ export async function tell(text: string) {
         }
       }
     }
-    if (!replied && !failed && stillAsking()) updateExchange(id, { status: "error", error: "Claude finished without an answer. Try saying it again." });
+    if (!replied && !failed && stillAsking())
+      updateExchange(id, { status: "error", error: "Claude finished without an answer. Try saying it again." });
   } catch (e: unknown) {
     // Past a failure this page stops following the stream, so the server shouldn't keep working or paying.
     stop.abort();

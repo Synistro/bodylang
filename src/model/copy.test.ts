@@ -48,8 +48,10 @@ function shownAt(tr: Trajectory, t: number): string[] {
 }
 
 const BROKEN = /NaN|undefined|Infinity|\bnull\b|\[object|\bthe the\b|\ba a\b|\bof of\b|  |\.\./;
-const RETIRED = /\bdone\b|\b\d+ of 100\b|\bblocking\b|thermostat|set point|you should feel|strength lost|receptors blocked|low fluid|reward signals|brainstem|liver glycogen/i;
-const BAD_GRAMMAR = /\bthe stress\b|(?<![.\d])1(\.0)? hours\b|\b1 minutes\b|\b(cold|flu|exam|stress|workout) pull\b|\bmuscles? adds\b|\band triceps adds\b|\bis raising it\b/i;
+const RETIRED =
+  /\bdone\b|\b\d+ of 100\b|\bblocking\b|thermostat|set point|you should feel|strength lost|receptors blocked|low fluid|reward signals|brainstem|liver glycogen/i;
+const BAD_GRAMMAR =
+  /\bthe stress\b|(?<![.\d])1(\.0)? hours\b|\b1 minutes\b|\b(cold|flu|exam|stress|workout) pull\b|\bmuscles? adds\b|\band triceps adds\b|\bis raising it\b/i;
 const CONTRAST = /\bnot just\b|\brather than\b|\bnot only\b|\bbut not\b|\binstead of\b/i;
 const FALSE_ALARM = /blood sugar is low|\b4[0-9] h\b/i;
 const FORBIDDEN_WORDS = Object.entries({ BROKEN, RETIRED, BAD_GRAMMAR, CONTRAST, FALSE_ALARM });
@@ -62,7 +64,8 @@ describe("the sweep from 06:00 to 26:00", () => {
       const problems: string[] = [];
       for (const t of MINUTES) {
         for (const text of shownAt(tr, t)) {
-          for (const [rule, pattern] of FORBIDDEN_WORDS) if (pattern.test(text)) problems.push(`${rule} at ${formatClock(t)}: ${text}`);
+          for (const [rule, pattern] of FORBIDDEN_WORDS)
+            if (pattern.test(text)) problems.push(`${rule} at ${formatClock(t)}: ${text}`);
         }
       }
       expect(problems).toEqual([]);
@@ -80,7 +83,8 @@ describe("the sweep from 06:00 to 26:00", () => {
         expect(a.feelings.length).toBeLessThanOrEqual(3);
         for (const f of a.feelings) expect(words(f.cause), f.cause).toBeLessThanOrEqual(10);
         for (const thread of threadsAt(tr, t)) expect(words(thread.status), thread.status).toBeLessThanOrEqual(2);
-        for (const p of processesAt(tr, t)) for (const s of p.stops) expect(words(s.say), s.say).toBeLessThanOrEqual(25);
+        for (const p of processesAt(tr, t))
+          for (const s of p.stops) expect(words(s.say), s.say).toBeLessThanOrEqual(25);
       }
     });
 
@@ -133,7 +137,17 @@ describe("false alarms", () => {
   const glucoseLow = (name: string) => MINUTES.filter((t) => reading(at(name, t), "glucose").verdict === "low");
 
   it("never calls sugar low after a normal meal, a walk or a run", () => {
-    for (const name of ["three meals", "two apples", "banana", "rice", "the opening day", "a walk after a meal", "a run after breakfast", "a fasted run", "cola"]) {
+    for (const name of [
+      "three meals",
+      "two apples",
+      "banana",
+      "rice",
+      "the opening day",
+      "a walk after a meal",
+      "a run after breakfast",
+      "a fasted run",
+      "cola",
+    ]) {
       expect(glucoseLow(name), name).toEqual([]);
     }
   });
@@ -256,7 +270,9 @@ describe("grammar, at the template", () => {
   });
 
   it("agrees with a label that names two muscles", () => {
-    expect(reading(at("chest and triceps", hm(8, 30)), "hr").why).toBe("About 51 bpm from the chest and triceps workout");
+    expect(reading(at("chest and triceps", hm(8, 30)), "hr").why).toBe(
+      "About 51 bpm from the chest and triceps workout",
+    );
   });
 
   it("agrees with a cold", () => {
@@ -274,7 +290,9 @@ describe("contradictions", () => {
     const tr = simulate(day([pizza]));
     const t = hm(17, 20);
     expect(reading(assess(tr, t), "absorbing").value).toBeGreaterThan(0);
-    expect(processesAt(tr, t).find((p) => p.id === "intake:pizza")?.headline).toContain("only the first sugar has reached your blood");
+    expect(processesAt(tr, t).find((p) => p.id === "intake:pizza")?.headline).toContain(
+      "only the first sugar has reached your blood",
+    );
   });
 
   it("names a day and a time of day past 24 hours, in the same words everywhere", () => {
@@ -337,7 +355,8 @@ describe("the words people read", () => {
 
   it("uses the app's one accent for every process line", () => {
     for (const tr of TRAJECTORIES.values()) {
-      for (const p of processesAt(tr, hm(17))) expect(["chyme", "glucose", "fat", "caffeine", "insulin", "alcohol", "other"]).toContain(p.substance);
+      for (const p of processesAt(tr, hm(17)))
+        expect(["chyme", "glucose", "fat", "caffeine", "insulin", "alcohol", "other"]).toContain(p.substance);
     }
   });
 });

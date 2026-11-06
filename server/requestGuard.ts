@@ -18,7 +18,9 @@ const hostOf = (origin: string) => {
 export function requestProblem(method: string | undefined, headers: IncomingHttpHeaders): RequestProblem | null {
   if (method === "GET" || method === "HEAD") return null;
   const { origin, host } = headers;
-  if (origin !== undefined && hostOf(origin) !== host) return { status: 403, message: `Requests from ${origin} aren't allowed.` };
-  if (!headers["content-type"]?.startsWith("application/json")) return { status: 415, message: "This route only takes JSON." };
+  if (origin !== undefined && hostOf(origin) !== host)
+    return { status: 403, message: `Requests from ${origin} aren't allowed.` };
+  if (!headers["content-type"]?.startsWith("application/json"))
+    return { status: 415, message: "This route only takes JSON." };
   return null;
 }

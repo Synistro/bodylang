@@ -66,7 +66,6 @@ export function setMaterialClock(seconds: number) {
   clock.value = seconds;
 }
 
-
 const ORGAN_VERT = /* glsl */ `
   attribute float aAlong;
   varying vec3 vNormalV;
@@ -507,7 +506,12 @@ export interface LineUniforms {
 
 // Drawn twice: depth-tested at full strength, then again where a solid organ covers it, so the
 // line carries on visibly through whatever it enters.
-export function createLineMaterial(shared: LineUniforms, resolution: THREE.Vector2, depthFunc: THREE.DepthModes, depthAlpha: number): THREE.ShaderMaterial {
+export function createLineMaterial(
+  shared: LineUniforms,
+  resolution: THREE.Vector2,
+  depthFunc: THREE.DepthModes,
+  depthAlpha: number,
+): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: LINE_VERT,
     fragmentShader: LINE_FRAG,
@@ -573,7 +577,11 @@ export interface BeadUniforms {
   pixelRatio: { value: number }; // device pixels per unit of aSize
 }
 
-export function createBeadMaterial(shared: BeadUniforms, depthFunc: THREE.DepthModes, depthAlpha: number): THREE.ShaderMaterial {
+export function createBeadMaterial(
+  shared: BeadUniforms,
+  depthFunc: THREE.DepthModes,
+  depthAlpha: number,
+): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: BEAD_VERT,
     fragmentShader: BEAD_FRAG,

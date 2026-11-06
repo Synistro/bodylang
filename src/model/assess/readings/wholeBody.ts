@@ -3,7 +3,28 @@ import { CYCLE, Evidence, KIDNEY, PROCESS, REFERENCE } from "../../params";
 import { SeriesName } from "../../engine/trajectory";
 import { OrganId } from "../../ids";
 import { levelWord } from "../../words";
-import { Context, ReadingSpec, ReasonRow, Said, Sample, always, causedBy, fixed, fromCycle, fromMoving, identity, movedWord, near, nextVoid, percentOf, raises, reaches, rounded, startedBy, tens } from "../context";
+import {
+  Context,
+  ReadingSpec,
+  ReasonRow,
+  Said,
+  Sample,
+  always,
+  causedBy,
+  fixed,
+  fromCycle,
+  fromMoving,
+  identity,
+  movedWord,
+  near,
+  nextVoid,
+  percentOf,
+  raises,
+  reaches,
+  rounded,
+  startedBy,
+  tens,
+} from "../context";
 import { Judgement } from "../types";
 import { EXPECTED, HIGH, LOW, NORMAL, SLIGHTLY_RAISED, quiet, unpainted } from "../verdicts";
 
@@ -18,7 +39,15 @@ export const bladderSpec: ReadingSpec = {
   headingChange: null,
   range: () => {
     const r = REFERENCE.bladder;
-    return { min: 0, max: r.capacityMl, typicalLow: 0, typicalHigh: r.strongDesireMl, typicalLabel: `You notice it near ${r.firstDesireMl} ml, urgent near ${r.strongDesireMl} ml`, evidence: r.evidence, source: r.source };
+    return {
+      min: 0,
+      max: r.capacityMl,
+      typicalLow: 0,
+      typicalHigh: r.strongDesireMl,
+      typicalLabel: `You notice it near ${r.firstDesireMl} ml, urgent near ${r.strongDesireMl} ml`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.bladder;
@@ -38,7 +67,14 @@ export const bladderSpec: ReadingSpec = {
 };
 
 // Scales from 0 to 100 that only move when something pushes them.
-function eventScaleSpec(label: string, organ: OrganId, series: SeriesName, band: { high: number; evidence: Evidence; source: string }, why: readonly ReasonRow[], judge: (c: Context, s: Sample) => Judgement): ReadingSpec {
+function eventScaleSpec(
+  label: string,
+  organ: OrganId,
+  series: SeriesName,
+  band: { high: number; evidence: Evidence; source: string },
+  why: readonly ReasonRow[],
+  judge: (c: Context, s: Sample) => Judgement,
+): ReadingSpec {
   return {
     label,
     organ,
@@ -48,10 +84,24 @@ function eventScaleSpec(label: string, organ: OrganId, series: SeriesName, band:
     format: (x) => levelWord(x / 100),
     trendEpsilon: 0.003,
     headingChange: 0.05,
-    range: () => ({ min: 0, max: 100, typicalLow: 0, typicalHigh: band.high, typicalLabel: band.high < 100 ? "Quiet at rest" : "Rises with what you do", evidence: band.evidence, source: band.source }),
+    range: () => ({
+      min: 0,
+      max: 100,
+      typicalLow: 0,
+      typicalHigh: band.high,
+      typicalLabel: band.high < 100 ? "Quiet at rest" : "Rises with what you do",
+      evidence: band.evidence,
+      source: band.source,
+    }),
     judge,
     why,
-    forecast: [reaches((_c, s) => s.value >= 5, (raw) => raw * 100 < 5, () => "Settles")],
+    forecast: [
+      reaches(
+        (_c, s) => s.value >= 5,
+        (raw) => raw * 100 < 5,
+        () => "Settles",
+      ),
+    ],
   };
 }
 
@@ -70,7 +120,14 @@ export const temperatureSpec: ReadingSpec = {
   headingChange: 0.3,
   range: () => {
     const r = REFERENCE.temperature;
-    return { ...r.scale, typicalLow: r.low, typicalHigh: r.high, typicalLabel: `${r.low} to ${r.high} °C at rest`, evidence: r.evidence, source: r.source };
+    return {
+      ...r.scale,
+      typicalLow: r.low,
+      typicalHigh: r.high,
+      typicalLabel: `${r.low} to ${r.high} °C at rest`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.temperature;
@@ -127,14 +184,35 @@ export const immuneSpec = eventScaleSpec(
   (_c, s) => (s.value < REFERENCE.immune.high ? NORMAL : EXPECTED),
 );
 
-export const PHASE_WORD: Record<CyclePhase, string> = { period: "Period", follicular: "Follicular phase", ovulation: "Around ovulation", luteal: "Luteal phase" };
+export const PHASE_WORD: Record<CyclePhase, string> = {
+  period: "Period",
+  follicular: "Follicular phase",
+  ovulation: "Around ovulation",
+  luteal: "Luteal phase",
+};
 export const phaseOf = (c: Context): CyclePhase | null => (c.tr.cycle ? cyclePhase(c.tr.cycle, c.t) : null);
 
 export const PHASE_SAYS: Record<CyclePhase, { day: string; estradiol: string; progesterone: string }> = {
-  period: { day: "The lining of the uterus is shedding", estradiol: "Low, and starting to rise as a follicle grows", progesterone: "Low, which is what started the period" },
-  follicular: { day: "An egg is ripening and the lining is rebuilding", estradiol: "Rising, because a follicle in the ovary is growing", progesterone: "Low until an egg is released" },
-  ovulation: { day: "A surge of LH releases an egg about now", estradiol: "At its peak, which triggers the LH surge", progesterone: "Just starting to rise" },
-  luteal: { day: "The lining stays ready, and your body runs slightly warmer", estradiol: "A second, smaller rise from the empty follicle", progesterone: "High, made by the empty follicle" },
+  period: {
+    day: "The lining of the uterus is shedding",
+    estradiol: "Low, and starting to rise as a follicle grows",
+    progesterone: "Low, which is what started the period",
+  },
+  follicular: {
+    day: "An egg is ripening and the lining is rebuilding",
+    estradiol: "Rising, because a follicle in the ovary is growing",
+    progesterone: "Low until an egg is released",
+  },
+  ovulation: {
+    day: "A surge of LH releases an egg about now",
+    estradiol: "At its peak, which triggers the LH surge",
+    progesterone: "Just starting to rise",
+  },
+  luteal: {
+    day: "The lining stays ready, and your body runs slightly warmer",
+    estradiol: "A second, smaller rise from the empty follicle",
+    progesterone: "High, made by the empty follicle",
+  },
 };
 
 const nextPeriod = (c: Context): Said | null => {
@@ -155,14 +233,29 @@ export const cycleDaySpec: ReadingSpec = {
   headingChange: null,
   range: (c) => {
     const length = c.tr.cycle?.lengthDays ?? CYCLE.lengthDays;
-    return { min: 1, max: length, typicalLow: 1, typicalHigh: length, typicalLabel: `Of a ${length}-day cycle`, evidence: CYCLE.evidence, source: CYCLE.source };
+    return {
+      min: 1,
+      max: length,
+      typicalLow: 1,
+      typicalHigh: length,
+      typicalLabel: `Of a ${length}-day cycle`,
+      evidence: CYCLE.evidence,
+      source: CYCLE.source,
+    };
   },
   judge: (c) => quiet(PHASE_WORD[phaseOf(c) ?? "follicular"]),
   why: [[always, (c) => PHASE_SAYS[phaseOf(c) ?? "follicular"].day]],
   forecast: [(c) => nextPeriod(c)],
 };
 
-const hormoneSpec = (label: string, organ: OrganId, series: "estradiol" | "progesterone", unit: string, digits: number, says: "estradiol" | "progesterone"): ReadingSpec => ({
+const hormoneSpec = (
+  label: string,
+  organ: OrganId,
+  series: "estradiol" | "progesterone",
+  unit: string,
+  digits: number,
+  says: "estradiol" | "progesterone",
+): ReadingSpec => ({
   label,
   organ,
   series,
@@ -173,7 +266,15 @@ const hormoneSpec = (label: string, organ: OrganId, series: "estradiol" | "proge
   headingChange: null,
   range: () => {
     const r = CYCLE.scale[says];
-    return { min: r.min, max: r.max, typicalLow: r.low, typicalHigh: r.high, typicalLabel: `${r.low} to ${r.high} ${unit} across a cycle`, evidence: CYCLE.evidence, source: CYCLE.source };
+    return {
+      min: r.min,
+      max: r.max,
+      typicalLow: r.low,
+      typicalHigh: r.high,
+      typicalLabel: `${r.low} to ${r.high} ${unit} across a cycle`,
+      evidence: CYCLE.evidence,
+      source: CYCLE.source,
+    };
   },
   judge: (c) => quiet(PHASE_WORD[phaseOf(c) ?? "follicular"]),
   why: [[always, (c) => PHASE_SAYS[phaseOf(c) ?? "follicular"][says]]],
@@ -183,7 +284,14 @@ const hormoneSpec = (label: string, organ: OrganId, series: "estradiol" | "proge
 export const estradiolSpec = hormoneSpec("Estrogen", "ovaries", "estradiol", "pmol/L", 0, "estradiol");
 export const progesteroneSpec = hormoneSpec("Progesterone", "ovaries", "progesterone", "nmol/L", 1, "progesterone");
 
-export const rewardSpec = eventScaleSpec("Feel-good chemicals", "brain", "reward", REFERENCE.reward, [causedBy("reward", 0.02, raises), [always, () => "At their usual level"]], () => NORMAL);
+export const rewardSpec = eventScaleSpec(
+  "Feel-good chemicals",
+  "brain",
+  "reward",
+  REFERENCE.reward,
+  [causedBy("reward", 0.02, raises), [always, () => "At their usual level"]],
+  () => NORMAL,
+);
 
 const fluidLitresPerPercent = (c: Context, share: number) => (c.tr.scenario.body.weightKg * share * 1000) / 1000;
 const fluidLost = (s: Sample) => s.value < -0.05;
@@ -200,12 +308,22 @@ export const fluidSpec: ReadingSpec = {
   range: (c) => {
     const r = REFERENCE.fluid;
     const typicalLow = -fluidLitresPerPercent(c, r.noticeableShareOfWeight);
-    return { min: -fluidLitresPerPercent(c, r.impairingShareOfWeight * 2), max: 0.2, typicalLow, typicalHigh: 0.1, typicalLabel: `Within ${Math.abs(typicalLow).toFixed(1)} L of even`, evidence: r.evidence, source: r.source };
+    return {
+      min: -fluidLitresPerPercent(c, r.impairingShareOfWeight * 2),
+      max: 0.2,
+      typicalLow,
+      typicalHigh: 0.1,
+      typicalLabel: `Within ${Math.abs(typicalLow).toFixed(1)} L of even`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.fluid;
     if (s.value <= -fluidLitresPerPercent(c, r.impairingShareOfWeight)) return { ...LOW, word: "Dry" };
-    return s.value <= -fluidLitresPerPercent(c, r.noticeableShareOfWeight) ? { ...unpainted(LOW), word: "A little dry" } : NORMAL;
+    return s.value <= -fluidLitresPerPercent(c, r.noticeableShareOfWeight)
+      ? { ...unpainted(LOW), word: "A little dry" }
+      : NORMAL;
   },
   why: [
     [(c) => c.moving || c.training !== null, () => "Lost through sweat and breath"],

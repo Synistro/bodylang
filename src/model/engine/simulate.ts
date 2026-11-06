@@ -6,7 +6,16 @@ import { POSTURES, Posture, Scenario } from "../scenario";
 import { Feelings, stepFeeling } from "./feel";
 import { Contents, stepAlcoholAndFluids, stepContents } from "./fluids";
 import { Energy, stepEnergy, stepFatAndProtein, stepGlucoseInsulin, SugarFlows } from "./glucose";
-import { absorbGut, Absorbed, CaffeineLevels, caffeineLevels, emptyStomach, Emptying, ingest, stepSubstances } from "./gut";
+import {
+  absorbGut,
+  Absorbed,
+  CaffeineLevels,
+  caffeineLevels,
+  emptyStomach,
+  Emptying,
+  ingest,
+  stepSubstances,
+} from "./gut";
 import { bloodKcalOf, gutKcalOf, stomachKcalOf } from "./tracks";
 import { Circulation, stepHeart } from "./heart";
 import { BodyConstants, bodyConstants, Minute, Pools, resetAtMidnight, startingPools, startMinute } from "./pools";
@@ -26,7 +35,12 @@ interface MinuteResult {
   feelings: Feelings;
 }
 
-function recordSeries(series: Record<SeriesName, Float32Array>, pools: Pools, result: MinuteResult, { cycle, channels, muscleWork, alcoholVolumeL }: BodyConstants) {
+function recordSeries(
+  series: Record<SeriesName, Float32Array>,
+  pools: Pools,
+  result: MinuteResult,
+  { cycle, channels, muscleWork, alcoholVolumeL }: BodyConstants,
+) {
   const { minute, emptying, absorbed, sugar, caffeine, contents, circulation, energy, feelings } = result;
   const { i, t, posture, stress } = minute;
   const hours = t / 60;
@@ -37,7 +51,8 @@ function recordSeries(series: Record<SeriesName, Float32Array>, pools: Pools, re
   series.occupancy[i] = caffeine.occupancy;
   series.alcohol[i] = pools.alcoholBodyG / alcoholVolumeL;
   series.hr[i] = circulation.hr;
-  series.breaths[i] = HEART.breathsByActivity[posture] + pools.digest * HEART.breathsPerDigestion + channels.breathing[i];
+  series.breaths[i] =
+    HEART.breathsByActivity[posture] + pools.digest * HEART.breathsPerDigestion + channels.breathing[i];
   series.cardiacOutput[i] = circulation.cardiacOutput;
   series.flowBrain[i] = BLOOD_FLOW.rest.brain / circulation.flowTotal;
   series.flowKidneys[i] = circulation.flowKidneys / circulation.flowTotal;
@@ -74,13 +89,17 @@ function recordSeries(series: Record<SeriesName, Float32Array>, pools: Pools, re
   series.sleepPressure[i] = pools.sleepPressure;
   series.hoursAwake[i] = pools.hoursAwake;
   series.caffeineFelt[i] = caffeine.felt;
-  series.temperature[i] = BODY_TEMPERATURE.meanC + BODY_TEMPERATURE.swingC * Math.cos((2 * Math.PI * (hours - BODY_TEMPERATURE.peakHour)) / 24) + channels.temperature[i];
+  series.temperature[i] =
+    BODY_TEMPERATURE.meanC +
+    BODY_TEMPERATURE.swingC * Math.cos((2 * Math.PI * (hours - BODY_TEMPERATURE.peakHour)) / 24) +
+    channels.temperature[i];
   series.stressLevel[i] = stress;
   series.inflammation[i] = Math.min(1, channels.inflammation[i]);
   series.immune[i] = Math.min(1, channels.immune[i]);
   series.reward[i] = Math.min(1, channels.reward[i]);
   series.fluidBalance[i] = -pools.fluidDeficitMl;
-  series.systolic[i] = RESTING_SYSTOLIC_MMHG + channels.bloodPressure[i] + CAFFEINE.bloodPressureGainMmHgPerMgL * caffeine.mgL;
+  series.systolic[i] =
+    RESTING_SYSTOLIC_MMHG + channels.bloodPressure[i] + CAFFEINE.bloodPressureGainMmHgPerMgL * caffeine.mgL;
   series.muscleWork[i] = muscleWork[i];
   if (cycle) {
     const hormones = hormonesAt(cycle, t);
@@ -107,7 +126,20 @@ function recordLedgers({ tracks }: Pools, i: number) {
     k.caffeineLedger[c + 1] = k.gutCaffeine;
     k.caffeineLedger[c + 2] = k.caffeineBody;
     k.caffeineLedger[c + 3] = k.caffeineCleared;
-    k.flows.set([k.stomachFat, k.gutFat, k.bloodFatG, k.fatCleared, k.carbsAbsorbedPerMin, k.fatAbsorbedPerMin, k.stomachAlcohol, k.gutAlcohol, k.alcoholAbsorbed], i * FLOW_SIZE);
+    k.flows.set(
+      [
+        k.stomachFat,
+        k.gutFat,
+        k.bloodFatG,
+        k.fatCleared,
+        k.carbsAbsorbedPerMin,
+        k.fatAbsorbedPerMin,
+        k.stomachAlcohol,
+        k.gutAlcohol,
+        k.alcoholAbsorbed,
+      ],
+      i * FLOW_SIZE,
+    );
   }
 }
 
@@ -115,7 +147,10 @@ export function simulate(scenario: Scenario): Trajectory {
   const constants = bodyConstants(scenario);
   const pools = startingPools(scenario, constants);
   const { leadIn, minutes, channels, events, anthro, activities, cycle } = constants;
-  const series = Object.fromEntries(SERIES.map((name) => [name, new Float32Array(minutes)])) as Record<SeriesName, Float32Array>;
+  const series = Object.fromEntries(SERIES.map((name) => [name, new Float32Array(minutes)])) as Record<
+    SeriesName,
+    Float32Array
+  >;
 
   for (let i = 0; i < minutes; i++) {
     const t = i - leadIn;
@@ -133,7 +168,12 @@ export function simulate(scenario: Scenario): Trajectory {
     const circulation = stepHeart(pools, minute, caffeine, constants);
     const energy = stepEnergy(pools, absorbed, sugar, minute, constants);
     const feelings = stepFeeling(pools, minute, caffeine, contents, constants);
-    recordSeries(series, pools, { minute, emptying, absorbed, sugar, caffeine, contents, circulation, energy, feelings }, constants);
+    recordSeries(
+      series,
+      pools,
+      { minute, emptying, absorbed, sugar, caffeine, contents, circulation, energy, feelings },
+      constants,
+    );
     recordLedgers(pools, i);
   }
 
@@ -141,11 +181,32 @@ export function simulate(scenario: Scenario): Trajectory {
   return {
     scenario,
     anthro,
-    series: Object.fromEntries(SERIES.map((name) => [name, series[name].subarray(leadIn)])) as Record<SeriesName, Float32Array>,
-    intakeLedgers: new Map(pools.tracks.map((k) => [k.intake.id, { ledger: k.ledger.subarray(leadIn * LEDGER_SIZE), caffeineMg: k.intake.caffeineMg, caffeineLedger: k.caffeineLedger.subarray(leadIn * 4), flows: k.flows.subarray(leadIn * FLOW_SIZE), alcoholG: k.intake.alcoholG }])),
-    substances: new Map(pools.substanceTracks.map((s) => [s.substance.id, { series: s.series.subarray(leadIn), ledger: s.ledger.subarray(leadIn * 3), substance: s.substance }])),
+    series: Object.fromEntries(SERIES.map((name) => [name, series[name].subarray(leadIn)])) as Record<
+      SeriesName,
+      Float32Array
+    >,
+    intakeLedgers: new Map(
+      pools.tracks.map((k) => [
+        k.intake.id,
+        {
+          ledger: k.ledger.subarray(leadIn * LEDGER_SIZE),
+          caffeineMg: k.intake.caffeineMg,
+          caffeineLedger: k.caffeineLedger.subarray(leadIn * 4),
+          flows: k.flows.subarray(leadIn * FLOW_SIZE),
+          alcoholG: k.intake.alcoholG,
+        },
+      ]),
+    ),
+    substances: new Map(
+      pools.substanceTracks.map((s) => [
+        s.substance.id,
+        { series: s.series.subarray(leadIn), ledger: s.ledger.subarray(leadIn * 3), substance: s.substance },
+      ]),
+    ),
     events,
-    channels: Object.fromEntries((Object.keys(channels) as ChannelId[]).map((id) => [id, channels[id].subarray(leadIn)])) as Record<ChannelId, Float32Array>,
+    channels: Object.fromEntries(
+      (Object.keys(channels) as ChannelId[]).map((id) => [id, channels[id].subarray(leadIn)]),
+    ) as Record<ChannelId, Float32Array>,
     muscleEvents: [...(scenario.events ?? []), ...runSessions(activities)],
     cycle,
   };

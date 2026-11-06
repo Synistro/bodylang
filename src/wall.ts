@@ -7,7 +7,12 @@ export const WALL_FPS = 90;
 export const WALL_PIXEL_RATIO = 1.5;
 
 function report(event: Record<string, unknown>) {
-  void fetch("/api/beacon", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(event), keepalive: true }).catch(() => undefined);
+  void fetch("/api/beacon", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(event),
+    keepalive: true,
+  }).catch(() => undefined);
 }
 
 export function startBeacon() {
@@ -23,11 +28,25 @@ export function startBeacon() {
   requestAnimationFrame(tick);
   const canvas = document.querySelector("canvas");
   const gl = canvas?.getContext("webgl2");
-  report({ where, readyAfterMs: Math.round(performance.now()), engine: navigator.userAgent.includes("Chrome") ? "chromium" : "webkit", width: innerWidth, height: innerHeight, dpr: devicePixelRatio, webgl2: Boolean(gl) });
+  report({
+    where,
+    readyAfterMs: Math.round(performance.now()),
+    engine: navigator.userAgent.includes("Chrome") ? "chromium" : "webkit",
+    width: innerWidth,
+    height: innerHeight,
+    dpr: devicePixelRatio,
+    webgl2: Boolean(gl),
+  });
   // Only the wallpaper needs a heartbeat, since nobody is watching its console.
   if (!WALL) return;
   window.setInterval(() => {
-    report({ where, rafPerSecond: Math.round(frames / 20), width: innerWidth, height: innerHeight, visible: document.visibilityState });
+    report({
+      where,
+      rafPerSecond: Math.round(frames / 20),
+      width: innerWidth,
+      height: innerHeight,
+      visible: document.visibilityState,
+    });
     frames = 0;
   }, 20000);
 }

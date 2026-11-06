@@ -10,12 +10,66 @@ import { SYSTEMS } from "../systems";
 import { hm, NO_NUTRIENTS } from "../testKit";
 import { SCENARIOS as EVERY_DAY } from "../testScenarios";
 
-
-const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
-const sugarBar: Intake = { ...NO_NUTRIENTS, id: "sugar_bar", label: "Sugar bar", at: hm(16, 45), grams: 50, waterMl: 3, carbsG: 31, sugarG: 27, fatG: 12, proteinG: 4, fiberG: 1 };
-const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(16, 45), grams: 240, waterMl: 110, carbsG: 72, sugarG: 8, fatG: 26, proteinG: 28, fiberG: 4 };
-const beer: Intake = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(19), grams: 500, waterMl: 460, carbsG: 18, sugarG: 1, alcoholG: 20, liquid: true };
-const ibuprofen: CustomSubstance = { id: "ibuprofen", label: "Ibuprofen", at: hm(13), doseMg: 400, tmaxMin: 90, halfLifeH: 2, volumeLPerKg: 0.15, bioavailability: 0.9, targets: [{ organ: "brain", effect: "blocks the signal that makes pain" }], source: "test" };
+const coffee: Intake = {
+  ...NO_NUTRIENTS,
+  id: "coffee",
+  label: "Coffee",
+  at: hm(8, 30),
+  grams: 250,
+  waterMl: 250,
+  caffeineMg: 95,
+  liquid: true,
+};
+const sugarBar: Intake = {
+  ...NO_NUTRIENTS,
+  id: "sugar_bar",
+  label: "Sugar bar",
+  at: hm(16, 45),
+  grams: 50,
+  waterMl: 3,
+  carbsG: 31,
+  sugarG: 27,
+  fatG: 12,
+  proteinG: 4,
+  fiberG: 1,
+};
+const pizza: Intake = {
+  ...NO_NUTRIENTS,
+  id: "pizza",
+  label: "Pizza",
+  at: hm(16, 45),
+  grams: 240,
+  waterMl: 110,
+  carbsG: 72,
+  sugarG: 8,
+  fatG: 26,
+  proteinG: 28,
+  fiberG: 4,
+};
+const beer: Intake = {
+  ...NO_NUTRIENTS,
+  id: "beer",
+  label: "Beer",
+  at: hm(19),
+  grams: 500,
+  waterMl: 460,
+  carbsG: 18,
+  sugarG: 1,
+  alcoholG: 20,
+  liquid: true,
+};
+const ibuprofen: CustomSubstance = {
+  id: "ibuprofen",
+  label: "Ibuprofen",
+  at: hm(13),
+  doseMg: 400,
+  tmaxMin: 90,
+  halfLifeH: 2,
+  volumeLPerKg: 0.15,
+  bioavailability: 0.9,
+  targets: [{ organ: "brain", effect: "blocks the signal that makes pain" }],
+  source: "test",
+};
 
 const day: Scenario = {
   body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 },
@@ -73,7 +127,8 @@ const words = (text: string) => text.trim().split(/\s+/).length;
 // Every string a person could read in an assessment.
 function stringsIn(a: Assessment): string[] {
   const out = [a.headline, ...a.notable.map((n) => n.text)];
-  for (const r of a.readings) out.push(r.label, r.display, r.unit, r.verdictWord, r.why, r.forecast ?? "", r.source, r.scale.typicalLabel);
+  for (const r of a.readings)
+    out.push(r.label, r.display, r.unit, r.verdictWord, r.why, r.forecast ?? "", r.source, r.scale.typicalLabel);
   for (const f of a.feelings) out.push(f.label, f.word, f.cause, f.when ?? "");
   for (const s of Object.values(a.systems)) out.push(s.word);
   return out;
@@ -82,10 +137,27 @@ function stringsIn(a: Assessment): string[] {
 const SCENARIOS: Record<string, Scenario> = {
   "the test day": day,
   "nothing logged": { ...day, intakes: [] },
-  "a drink only": { ...day, intakes: [{ ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }] },
-  "pure spirit": { ...day, intakes: [{ ...NO_NUTRIENTS, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true }] },
+  "a drink only": {
+    ...day,
+    intakes: [{ ...NO_NUTRIENTS, id: "water", label: "Water", at: hm(9), grams: 500, waterMl: 500, liquid: true }],
+  },
+  "pure spirit": {
+    ...day,
+    intakes: [
+      { ...NO_NUTRIENTS, id: "vodka", label: "Vodka", at: hm(20), grams: 60, waterMl: 40, alcoholG: 20, liquid: true },
+    ],
+  },
   "a beer and a pill": { ...day, intakes: [beer, pizza], substances: [ibuprofen] },
-  "a walk and a run": { ...day, activities: [{ from: hm(8), posture: "sitting" }, { from: hm(17), posture: "walking" }, { from: hm(18), posture: "running" }, { from: hm(19), posture: "standing" }, { from: hm(23), posture: "sleeping" }] },
+  "a walk and a run": {
+    ...day,
+    activities: [
+      { from: hm(8), posture: "sitting" },
+      { from: hm(17), posture: "walking" },
+      { from: hm(18), posture: "running" },
+      { from: hm(19), posture: "standing" },
+      { from: hm(23), posture: "sleeping" },
+    ],
+  },
   "another body": { ...day, body: { sex: "female", age: 62, heightCm: 158, weightKg: 92 } },
 };
 
@@ -247,7 +319,23 @@ describe("later in the same meal", () => {
   });
 
   it("calls blood fat above 150 expected hours after a fatty meal", () => {
-    const fatty = simulate({ ...day, intakes: [{ ...NO_NUTRIENTS, id: "test_meal", label: "Fat test", at: hm(9), grams: 300, waterMl: 150, carbsG: 25, sugarG: 15, fatG: 75, proteinG: 10 }] });
+    const fatty = simulate({
+      ...day,
+      intakes: [
+        {
+          ...NO_NUTRIENTS,
+          id: "test_meal",
+          label: "Fat test",
+          at: hm(9),
+          grams: 300,
+          waterMl: 150,
+          carbsG: 25,
+          sugarG: 15,
+          fatG: 75,
+          proteinG: 10,
+        },
+      ],
+    });
     const t = readingAt(hm(12, 15), "tg", fatty);
     expect(t.value).toBeGreaterThan(180);
     expect(t.verdict).toBe("expected");
@@ -342,7 +430,14 @@ describe("other bodies and days", () => {
   });
 
   it("names at most two foods and then calls it the meal", () => {
-    const buffet = simulate({ ...day, intakes: [{ ...pizza, id: "a", label: "Pasta" }, { ...pizza, id: "b", label: "Bread" }, { ...pizza, id: "c", label: "Cake" }] });
+    const buffet = simulate({
+      ...day,
+      intakes: [
+        { ...pizza, id: "a", label: "Pasta" },
+        { ...pizza, id: "b", label: "Bread" },
+        { ...pizza, id: "c", label: "Cake" },
+      ],
+    });
     expect(readingAt(hm(17, 10), "glucose", buffet).why).toBe("Sugar from the meal is arriving");
   });
 });
@@ -380,7 +475,10 @@ describe("the reading table", () => {
 
   it("puts every reading on a page, because one on no system is computed and never seen", () => {
     // Receptors are only ever drawn on the alertness line's chart.
-    const onAPage = new Set<string>(["receptors", ...SYSTEMS.flatMap((system) => [...system.readings, ...system.more])]);
+    const onAPage = new Set<string>([
+      "receptors",
+      ...SYSTEMS.flatMap((system) => [...system.readings, ...system.more]),
+    ]);
     expect(ALL_READINGS.filter((id) => !onAPage.has(id))).toEqual([]);
   });
 });
@@ -414,7 +512,8 @@ describe("every minute of every kind of day", () => {
         const a = assess(trajectory, t);
         for (const r of a.readings) expect(words(r.why), r.why).toBeLessThanOrEqual(10);
         for (const f of a.feelings) expect(words(f.cause), f.cause).toBeLessThanOrEqual(10);
-        for (const text of stringsIn(a)) expect(text).not.toMatch(/\bnot just\b|\brather than\b|\bbut not\b|\bnot only\b/i);
+        for (const text of stringsIn(a))
+          expect(text).not.toMatch(/\bnot just\b|\brather than\b|\bbut not\b|\bnot only\b/i);
       }
     });
   }

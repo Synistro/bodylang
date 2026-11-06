@@ -5,7 +5,8 @@ import { clamp01 } from "../model/curve";
 // How many kcal held here bring each of the drawing's streams to its fullest.
 export const LARGE_INTESTINE_FULL = { contentsKcal: 83.2, waterKcal: 100.8 };
 
-export const heldKcal = (tr: Trajectory, minute: number) => tr.scenario.intakes.reduce((sum, intake) => sum + (ledgerAt(tr, intake.id, minute)?.colon ?? 0), 0);
+export const heldKcal = (tr: Trajectory, minute: number) =>
+  tr.scenario.intakes.reduce((sum, intake) => sum + (ledgerAt(tr, intake.id, minute)?.colon ?? 0), 0);
 
 export const largeIntestineCloseup = defineCloseup({
   organ: "large_intestine",
@@ -15,11 +16,15 @@ export const largeIntestineCloseup = defineCloseup({
   },
   fromModel: ({ trajectory }, minute) => {
     const held = heldKcal(trajectory, minute);
-    return { contents: clamp01(held / LARGE_INTESTINE_FULL.contentsKcal), water: clamp01(held / LARGE_INTESTINE_FULL.waterKcal) };
+    return {
+      contents: clamp01(held / LARGE_INTESTINE_FULL.contentsKcal),
+      water: clamp01(held / LARGE_INTESTINE_FULL.waterKcal),
+    };
   },
   travels: {
     contents: { kind: "food", from: "small_intestine", through: [], to: "here" },
     water: { kind: "blood", from: "here", through: [], to: "liver" },
   },
-  about: "The model counts the energy that reaches the large intestine, and the contents and the water drawn back both follow that count.",
+  about:
+    "The model counts the energy that reaches the large intestine, and the contents and the water drawn back both follow that count.",
 });

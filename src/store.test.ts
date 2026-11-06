@@ -3,7 +3,22 @@ import { firstDay } from "./model/day";
 import { dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
 
 const body = { sex: "female", age: 41, heightCm: 170, weightKg: 62 } as const;
-const coffee = { id: "coffee", label: "Coffee", at: 500, grams: 240, water_ml: 238, carbs_g: 0, sugar_g: 0, fat_g: 0, protein_g: 0, fiber_g: 0, caffeine_mg: 96, alcohol_g: 0, liquid: true, assumption: "One cup" };
+const coffee = {
+  id: "coffee",
+  label: "Coffee",
+  at: 500,
+  grams: 240,
+  water_ml: 238,
+  carbs_g: 0,
+  sugar_g: 0,
+  fat_g: 0,
+  protein_g: 0,
+  fiber_g: 0,
+  caffeine_mg: 96,
+  alcohol_g: 0,
+  liquid: true,
+  assumption: "One cup",
+};
 
 describe("your day and the store", () => {
   beforeEach(() => {

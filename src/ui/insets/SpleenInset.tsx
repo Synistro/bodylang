@@ -27,7 +27,17 @@ const GOLDEN_ANGLE = 2.39996;
 const WANDER = { idle: 0.9, gathered: 1.1 };
 const STILL_CLOCK = 13;
 
-const BLOOD = vessel({ id: "blood", radius: 7.5, points: [[226, -8], [220, 40], [226, 92], [218, 140], [224, 188]] });
+const BLOOD = vessel({
+  id: "blood",
+  radius: 7.5,
+  points: [
+    [226, -8],
+    [220, 40],
+    [226, 92],
+    [218, 140],
+    [224, 188],
+  ],
+});
 const DRIFT_SECONDS = 46; // how long a resting cell takes to float the length of the plate
 
 // A round body with a soft outline and a lobed nucleus, the look of the cells that answer first.
@@ -157,34 +167,70 @@ const Drawing = memo(function Drawing() {
   return (
     <>
       <g data-part="thermometer">
-        <rect className="thermo-band" x={tubeRight} y={yOfTemperature(r.high)} width={TICK.major + 13} height={yOfTemperature(r.low) - yOfTemperature(r.high)} />
+        <rect
+          className="thermo-band"
+          x={tubeRight}
+          y={yOfTemperature(r.high)}
+          width={TICK.major + 13}
+          height={yOfTemperature(r.low) - yOfTemperature(r.high)}
+        />
         {ticks.map((tick) => (
-          <path key={tick.y} className={tick.major ? "line-soft" : "line-hair"} d={`M${tubeRight} ${tenth(tick.y)}h${tick.major ? TICK.major : TICK.minor}`} />
+          <path
+            key={tick.y}
+            className={tick.major ? "line-soft" : "line-hair"}
+            d={`M${tubeRight} ${tenth(tick.y)}h${tick.major ? TICK.major : TICK.minor}`}
+          />
         ))}
         {ticks.flatMap((tick) =>
-          tick.label === null ? [] : [
-            <text key={tick.label} className="inset-number" x={tubeRight + TICK.major + TICK.labelGap} y={tenth(tick.y + 2.2)}>
-              {tick.label}
-            </text>,
-          ],
+          tick.label === null
+            ? []
+            : [
+                <text
+                  key={tick.label}
+                  className="inset-number"
+                  x={tubeRight + TICK.major + TICK.labelGap}
+                  y={tenth(tick.y + 2.2)}
+                >
+                  {tick.label}
+                </text>,
+              ],
         )}
-        <path className="line-ink" d={`M${tubeLeft} ${TUBE.bottom + 1}V${TUBE.top + TUBE.halfWidth}A${TUBE.halfWidth} ${TUBE.halfWidth} 0 0 1 ${tubeRight} ${TUBE.top + TUBE.halfWidth}V${TUBE.bottom + 1}`} />
+        <path
+          className="line-ink"
+          d={`M${tubeLeft} ${TUBE.bottom + 1}V${TUBE.top + TUBE.halfWidth}A${TUBE.halfWidth} ${TUBE.halfWidth} 0 0 1 ${tubeRight} ${TUBE.top + TUBE.halfWidth}V${TUBE.bottom + 1}`}
+        />
         <circle className="line-ink" cx={TUBE.x} cy={TUBE.bottom + TUBE.bulbRadius} r={TUBE.bulbRadius} />
-        <circle data-part="bulb" className="thermo-bulb" cx={TUBE.x} cy={TUBE.bottom + TUBE.bulbRadius} r={TUBE.bulbRadius - 2.2} />
+        <circle
+          data-part="bulb"
+          className="thermo-bulb"
+          cx={TUBE.x}
+          cy={TUBE.bottom + TUBE.bulbRadius}
+          r={TUBE.bulbRadius - 2.2}
+        />
         <path data-part="column" className="thermo-column" />
         <path data-part="pointer" className="thermo-pointer" d="M-4.5 -2.6L0 0L-4.5 2.6Z" />
-        <text x={tubeRight + TICK.major + 13 + 2} y={yOfTemperature((r.low + r.high) / 2) + 2.2} className="inset-quiet">Typical</text>
+        <text
+          x={tubeRight + TICK.major + 13 + 2}
+          y={yOfTemperature((r.low + r.high) / 2) + 2.2}
+          className="inset-quiet"
+        >
+          Typical
+        </text>
       </g>
       <BLOOD.Art />
       <g data-part="immune">
-        <text x="208" y="10" textAnchor="end">Blood</text>
+        <text x="208" y="10" textAnchor="end">
+          Blood
+        </text>
         <g className="immune-cell" transform={`translate(${KEY.cellX} ${KEY.y - 2.2}) scale(0.72)`}>
           <path d={CELL_OUTLINES[0]} />
           {NUCLEUS_LOBES.map((lobe, i) => (
             <circle key={i} className="immune-nucleus" cx={lobe.x} cy={lobe.y} r="1.15" />
           ))}
         </g>
-        <text x={KEY.cellWordX} y={KEY.y}>Immune cells</text>
+        <text x={KEY.cellWordX} y={KEY.y}>
+          Immune cells
+        </text>
       </g>
       <g data-part="germs">
         <g data-part="germ-key" style={{ opacity: 0 }}>
@@ -192,10 +238,18 @@ const Drawing = memo(function Drawing() {
             <circle r="1.7" />
             <path d={INVADER} />
           </g>
-          <text x={KEY.germWordX} y={KEY.y}>Germs</text>
+          <text x={KEY.germWordX} y={KEY.y}>
+            Germs
+          </text>
         </g>
         {INVADERS.map((invader, k) => (
-          <g key={k} data-part="invader" className="immune-invader" transform={`translate(${tenth(invader.x)} ${tenth(invader.y)})`} style={{ opacity: 0 }}>
+          <g
+            key={k}
+            data-part="invader"
+            className="immune-invader"
+            transform={`translate(${tenth(invader.x)} ${tenth(invader.y)})`}
+            style={{ opacity: 0 }}
+          >
             <circle r="1.7" />
             <path d={INVADER} />
           </g>
@@ -225,7 +279,10 @@ function temperatureLabel(c: number) {
 
 function useImmunePlate(_props: InsetProps, levels: Levels<Setting>): PlateWords {
   const caption = temperatureLabel(degreesC(levels.temperature));
-  return { caption, describe: `A thermometer with the typical band from ${REFERENCE.temperature.low} to ${REFERENCE.temperature.high} °C, beside immune cells that gather as the immune system works harder. ${caption}.` };
+  return {
+    caption,
+    describe: `A thermometer with the typical band from ${REFERENCE.temperature.low} to ${REFERENCE.temperature.high} °C, beside immune cells that gather as the immune system works harder. ${caption}.`,
+  };
 }
 
 export const SpleenInset = closeupInset(spleenCloseup, { Drawing, paint: paintImmune, usePlate: useImmunePlate });

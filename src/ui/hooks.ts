@@ -11,7 +11,8 @@ const SCROLL_FADE_PX = 28;
 
 // The minute that readings and sentences draw from. Coarser while the day plays, so the figures
 // stay readable and React is never busy at frame rate. Deferred, so a scrub stays ahead of it.
-const readableMinute = (s: AppState, t: number) => (s.playing ? Math.round(t / PLAY_STEP_MINUTES) * PLAY_STEP_MINUTES : Math.round(t));
+const readableMinute = (s: AppState, t: number) =>
+  s.playing ? Math.round(t / PLAY_STEP_MINUTES) * PLAY_STEP_MINUTES : Math.round(t);
 
 export function useMinute(): number {
   return useDeferredValue(useStore((s) => readableMinute(s, s.t)));
@@ -36,7 +37,9 @@ export function assessmentAt(tr: Trajectory, minute: number): Assessment {
 // Whether a reading says anything about the question: while exploring, one that reads the same on your day doesn't.
 export function useIsNews(minute: number) {
   const yourDay = useStore(yourDayWhileAsking);
-  return (reading: Reading) => !yourDay || assessmentAt(yourDay, minute).readings.find((yours) => yours.id === reading.id)?.display !== reading.display;
+  return (reading: Reading) =>
+    !yourDay ||
+    assessmentAt(yourDay, minute).readings.find((yours) => yours.id === reading.id)?.display !== reading.display;
 }
 
 export function useFrame(stage: Stage | null, listener: (stage: Stage, dt: number) => void) {
@@ -54,10 +57,13 @@ export function useFrame(stage: Stage | null, listener: (stage: Stage, dt: numbe
 
 export const rootRem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-export const scrollBehavior = (): ScrollBehavior => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+export const scrollBehavior = (): ScrollBehavior =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
 export const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLTextAreaElement || (target instanceof HTMLInputElement && target.type !== "range") || (target instanceof HTMLElement && target.isContentEditable);
+  target instanceof HTMLTextAreaElement ||
+  (target instanceof HTMLInputElement && target.type !== "range") ||
+  (target instanceof HTMLElement && target.isContentEditable);
 
 export function organHover(organ: OrganId | null) {
   return {

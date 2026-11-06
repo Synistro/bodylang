@@ -40,7 +40,16 @@ function ReadingRow({ reading, hot }: { reading: Reading; hot: boolean }) {
     else setOpen(!open);
   };
   return (
-    <button type="button" className="reading" data-tone={reading.tone} data-outside={outsideTypical(reading) || undefined} data-open={open || undefined} data-hot={hot || undefined} onClick={press} {...organHover(reading.organ)}>
+    <button
+      type="button"
+      className="reading"
+      data-tone={reading.tone}
+      data-outside={outsideTypical(reading) || undefined}
+      data-open={open || undefined}
+      data-hot={hot || undefined}
+      onClick={press}
+      {...organHover(reading.organ)}
+    >
       <span className="reading-head">
         <span className="reading-label">{reading.label}</span>
         <TrendMark trend={reading.trend} />
@@ -90,7 +99,12 @@ function FeelingRow({ feeling }: { feeling: Feeling }) {
   const Icon = look?.glyph ?? FEELING_FROM_CLAUDE;
   return (
     <li className="feel" {...organHover(feeling.organ)}>
-      <Icon className="feel-icon" weight="light" style={{ color: look ? `var(--hue-${look.system})` : "var(--ink-3)" }} aria-hidden="true" />
+      <Icon
+        className="feel-icon"
+        weight="light"
+        style={{ color: look ? `var(--hue-${look.system})` : "var(--ink-3)" }}
+        aria-hidden="true"
+      />
       <span className="feel-label">{feeling.label}</span>
       <span className="feel-cause" {...sourced(feelingOrigin(feeling))}>
         {feeling.cause}
@@ -126,13 +140,18 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
   const [showMore, setShowMore] = useState(false);
   const def = systemById(system);
   const isNews = useIsNews(useMinute());
-  const present = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && hasSomethingToSay(r) && isNews(r)));
+  const present = (ids: Reading["id"][]) =>
+    ids.filter((id) => assessment.readings.some((r) => r.id === id && hasSomethingToSay(r) && isNews(r)));
   const well = system === "immune" && assessment.systems.immune.quiet;
   const primary = well ? [] : present(def.readings);
   const more = well ? [] : present(def.more);
-  const symptoms = system === "immune" ? assessment.feelings.filter((f) => FEELING_LOOK[f.id]?.system === "immune" || f.byClaude) : [];
+  const symptoms =
+    system === "immune" ? assessment.feelings.filter((f) => FEELING_LOOK[f.id]?.system === "immune" || f.byClaude) : [];
   const sex = useStore((s) => s.day.body.sex);
-  const hint = assessment.systems[system].quiet && (system !== "reproductive" || sex === "female") ? QUIET_HINT[system] : undefined;
+  const hint =
+    assessment.systems[system].quiet && (system !== "reproductive" || sex === "female")
+      ? QUIET_HINT[system]
+      : undefined;
   return (
     <>
       {symptoms.length ? (
@@ -155,11 +174,7 @@ function SystemDetail({ system, assessment }: { system: SystemId; assessment: As
           ) : null}
         </section>
       ) : null}
-      {hint ? (
-        <p className="hint">
-          {hint}
-        </p>
-      ) : null}
+      {hint ? <p className="hint">{hint}</p> : null}
     </>
   );
 }
@@ -205,7 +220,9 @@ function MuscleRow({ muscle, hot }: { muscle: MuscleSummary; hot: boolean }) {
 // Level 1 for muscles: only the groups that have been worked. The rest are one quiet line.
 function MusclesDetail({ assessment }: { assessment: Assessment }) {
   const hoverMuscle = useStore((s) => s.hoverMuscle);
-  const worked = assessment.muscles.filter((m) => assessment.readings.find((r) => r.id === `muscle:${m.group}`)?.verdict !== "normal").sort((a, b) => b.level - a.level);
+  const worked = assessment.muscles
+    .filter((m) => assessment.readings.find((r) => r.id === `muscle:${m.group}`)?.verdict !== "normal")
+    .sort((a, b) => b.level - a.level);
   const rested = assessment.muscles.length - worked.length;
   if (!worked.length) return <p className="hint">{QUIET_HINT.muscles}</p>;
   return (
@@ -225,7 +242,8 @@ function MusclesDetail({ assessment }: { assessment: Assessment }) {
 }
 
 // Feel-good chemicals sit at rest most of the day, and a row saying so tells you nothing.
-const worthARow = (assessment: Assessment) => (id: Reading["id"]) => id !== "reward" || (assessment.readings.find((r) => r.id === id)?.value ?? 0) >= PROCESS.liftedFrom * 100;
+const worthARow = (assessment: Assessment) => (id: Reading["id"]) =>
+  id !== "reward" || (assessment.readings.find((r) => r.id === id)?.value ?? 0) >= PROCESS.liftedFrom * 100;
 
 export function BrainPage() {
   const tr = useStore((s) => s.trajectory);
@@ -233,7 +251,8 @@ export function BrainPage() {
   const assessment = assessmentAt(tr, minute);
   const story = organStory("brain", tr, minute);
   const isNews = useIsNews(minute);
-  const newsOnly = (ids: Reading["id"][]) => ids.filter((id) => assessment.readings.some((r) => r.id === id && isNews(r)));
+  const newsOnly = (ids: Reading["id"][]) =>
+    ids.filter((id) => assessment.readings.some((r) => r.id === id && isNews(r)));
   const feel = newsOnly(BRAIN_PAGE.feel.filter(worthARow(assessment)));
   const acting = newsOnly(BRAIN_PAGE.acting);
   return (
@@ -278,7 +297,13 @@ export function SystemPage() {
   }, [level]);
 
   return (
-    <section ref={scroller} className="state" data-away={focused || undefined} inert={focused} aria-label="State of the body">
+    <section
+      ref={scroller}
+      className="state"
+      data-away={focused || undefined}
+      inert={focused}
+      aria-label="State of the body"
+    >
       <Swap k={level}>
         <PanelContent system={system} processId={processId} />
       </Swap>

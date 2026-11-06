@@ -108,7 +108,14 @@ export function Guide() {
           Auto
         </button>
       </div>
-      {auto && !isLast ? <i key={index} className="tour-progress" style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }} aria-hidden="true" /> : null}
+      {auto && !isLast ? (
+        <i
+          key={index}
+          className="tour-progress"
+          style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }}
+          aria-hidden="true"
+        />
+      ) : null}
     </aside>
   );
 }

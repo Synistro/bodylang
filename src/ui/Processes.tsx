@@ -38,7 +38,7 @@ function layoutStops(stops: ProcessStop[]): StopRow[] {
   const indexOf = new Map(stops.map((s, i) => [s.id, i]));
   const parentIndex = (i: number) => {
     const from = stops[i].from;
-    return from === null ? i - 1 : indexOf.get(from) ?? i - 1;
+    return from === null ? i - 1 : (indexOf.get(from) ?? i - 1);
   };
   const isBranch = (i: number) => {
     const from = stops[i].from;
@@ -70,7 +70,17 @@ function layoutStops(stops: ProcessStop[]): StopRow[] {
   return rows;
 }
 
-function StopItem({ row, spotlight, touring, origin }: { row: StopRow; spotlight: number | null; touring: boolean; origin: Origin }) {
+function StopItem({
+  row,
+  spotlight,
+  touring,
+  origin,
+}: {
+  row: StopRow;
+  spotlight: number | null;
+  touring: boolean;
+  origin: Origin;
+}) {
   const { stop } = row;
   const on = spotlight === stop.number;
   const el = useRef<HTMLLIElement>(null);
@@ -90,13 +100,32 @@ function StopItem({ row, spotlight, touring, origin }: { row: StopRow; spotlight
     <li ref={el} className="stop" data-on={on || undefined} data-state={stop.state} style={{ "--depth": row.depth }}>
       <span className="stop-rail" aria-hidden="true">
         {row.through.map((line) => (
-          <i key={line.depth} className="stop-line" data-part="through" data-state={line.state} style={{ "--at": line.depth }} />
+          <i
+            key={line.depth}
+            className="stop-line"
+            data-part="through"
+            data-state={line.state}
+            style={{ "--at": line.depth }}
+          />
         ))}
-        {row.incoming ? <i className="stop-line" data-part="in" data-state={stop.state} style={{ "--at": row.depth }} /> : null}
-        {row.branchFrom !== null ? <i className="stop-elbow" data-state={stop.state} style={{ "--at": row.branchFrom }} /> : null}
-        {row.outgoing ? <i className="stop-line" data-part="out" data-state={row.outgoing.state} style={{ "--at": row.depth }} /> : null}
+        {row.incoming ? (
+          <i className="stop-line" data-part="in" data-state={stop.state} style={{ "--at": row.depth }} />
+        ) : null}
+        {row.branchFrom !== null ? (
+          <i className="stop-elbow" data-state={stop.state} style={{ "--at": row.branchFrom }} />
+        ) : null}
+        {row.outgoing ? (
+          <i className="stop-line" data-part="out" data-state={row.outgoing.state} style={{ "--at": row.depth }} />
+        ) : null}
       </span>
-      <button type="button" className="stop-button" aria-pressed={on} aria-label={`Stop ${stop.number}, ${stop.label}${stop.reading ? `, ${stop.reading}` : ""}`} onClick={press} {...organHover(stop.organ)}>
+      <button
+        type="button"
+        className="stop-button"
+        aria-pressed={on}
+        aria-label={`Stop ${stop.number}, ${stop.label}${stop.reading ? `, ${stop.reading}` : ""}`}
+        onClick={press}
+        {...organHover(stop.organ)}
+      >
         <span className="stop-face" data-state={stop.state} data-on={on || undefined}>
           {stop.number}
         </span>
@@ -134,7 +163,11 @@ export function ProcessDetail({ processId }: { processId: string }) {
         ))}
       </ol>
       {rows.length > 1 && !touring ? (
-        <button type="button" className="action walk" onClick={() => setUi({ touring: true, stop: process.stops[0].number })}>
+        <button
+          type="button"
+          className="action walk"
+          onClick={() => setUi({ touring: true, stop: process.stops[0].number })}
+        >
           <Play weight="fill" />
           Walk me through it
         </button>

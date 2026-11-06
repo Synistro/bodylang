@@ -7,7 +7,40 @@ import type { OrganMeta } from "./assets";
 import { RouteNetwork, tracePath, traceStrands } from "./routes";
 
 const ROUTE_IDS = [
-  "esophagus", "stomach_out", "duodenum", "jejunum", "ileum", "colon", "portal_liver", "liver_out", "ivc", "svc", "to_lung_L", "to_lung_R", "from_lung_L", "from_lung_R", "arch", "carotid", "to_neck", "descending", "to_gut", "to_kidney_L", "to_kidney_R", "from_kidney_L", "from_kidney_R", "from_brain", "to_liver_art", "pancreas_portal", "lymph", "lymph_svc", "leg_L", "leg_R", "arm_L", "arm_R", "to_bladder_L", "to_bladder_R",
+  "esophagus",
+  "stomach_out",
+  "duodenum",
+  "jejunum",
+  "ileum",
+  "colon",
+  "portal_liver",
+  "liver_out",
+  "ivc",
+  "svc",
+  "to_lung_L",
+  "to_lung_R",
+  "from_lung_L",
+  "from_lung_R",
+  "arch",
+  "carotid",
+  "to_neck",
+  "descending",
+  "to_gut",
+  "to_kidney_L",
+  "to_kidney_R",
+  "from_kidney_L",
+  "from_kidney_R",
+  "from_brain",
+  "to_liver_art",
+  "pancreas_portal",
+  "lymph",
+  "lymph_svc",
+  "leg_L",
+  "leg_R",
+  "arm_L",
+  "arm_R",
+  "to_bladder_L",
+  "to_bladder_R",
 ] as const satisfies readonly RouteId[];
 
 function networkFor(sex: Sex) {
@@ -30,11 +63,14 @@ describe.each<Sex>(["male", "female"])("routes on the %s body", (sex) => {
     return points[points.length - 1];
   };
 
-  it.each(ROUTE_IDS.filter((id) => !id.startsWith("leg_") && !id.startsWith("arm_")))("%s is one continuous line", (id) => {
-    const { points } = network.route(id);
-    expect(points.length).toBeGreaterThan(2);
-    for (let i = 1; i < points.length; i++) expect(points[i].distanceTo(points[i - 1])).toBeLessThan(0.012);
-  });
+  it.each(ROUTE_IDS.filter((id) => !id.startsWith("leg_") && !id.startsWith("arm_")))(
+    "%s is one continuous line",
+    (id) => {
+      const { points } = network.route(id);
+      expect(points.length).toBeGreaterThan(2);
+      for (let i = 1; i < points.length; i++) expect(points[i].distanceTo(points[i - 1])).toBeLessThan(0.012);
+    },
+  );
 
   it("runs blood in the direction it flows", () => {
     expect(first("descending").y).toBeGreaterThan(last("descending").y);

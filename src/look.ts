@@ -36,7 +36,11 @@ export const ACCENT_SYSTEM: SystemId = "digestion";
 
 // Whose colour the screen is in. A process keeps its own system's colour, and an organ reached from
 // the overview brings its own.
-export function viewSystemOf(view: { system: SystemId; process: { system: SystemId } | null; focus: OrganId | null }): SystemId {
+export function viewSystemOf(view: {
+  system: SystemId;
+  process: { system: SystemId } | null;
+  focus: OrganId | null;
+}): SystemId {
   if (view.process) return view.process.system;
   if (view.system !== "overview") return view.system;
   return view.focus ? ORGAN_HOME[view.focus] : "overview";

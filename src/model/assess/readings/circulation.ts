@@ -2,11 +2,40 @@ import { maxHeartRate } from "../../events/muscles";
 import { BLOOD_FLOW, HEART, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG } from "../../params";
 import { POSTURES } from "../../scenario";
 import { OrganId } from "../../ids";
-import { Context, ForecastRule, ReadingSpec, ReasonRow, Sample, always, causedBy, digesting, firstWhen, fixed, fromMoving, heartCauses, heartReason, identity, movedWord, near, ownRestBpm, percentOf, reaches, rounded, topCause } from "../context";
+import {
+  Context,
+  ForecastRule,
+  ReadingSpec,
+  ReasonRow,
+  Sample,
+  always,
+  causedBy,
+  digesting,
+  firstWhen,
+  fixed,
+  fromMoving,
+  heartCauses,
+  heartReason,
+  identity,
+  movedWord,
+  near,
+  ownRestBpm,
+  percentOf,
+  reaches,
+  rounded,
+  topCause,
+} from "../context";
 import { EXPECTED, HIGH, LOW, NORMAL, SLIGHTLY_RAISED, heartVerdict, unpainted } from "../verdicts";
 
 // One row per share of the blood. They read alike, so one builder makes all four.
-export function bloodShareSpec(id: "flowGut" | "flowMuscle" | "flowBrain" | "flowKidneys", label: string, organ: OrganId, band: { low: number; high: number; max: number }, why: readonly ReasonRow[], forecast: readonly ForecastRule[] = []): ReadingSpec {
+export function bloodShareSpec(
+  id: "flowGut" | "flowMuscle" | "flowBrain" | "flowKidneys",
+  label: string,
+  organ: OrganId,
+  band: { low: number; high: number; max: number },
+  why: readonly ReasonRow[],
+  forecast: readonly ForecastRule[] = [],
+): ReadingSpec {
   const r = REFERENCE.bloodFlow;
   return {
     label,
@@ -17,8 +46,20 @@ export function bloodShareSpec(id: "flowGut" | "flowMuscle" | "flowBrain" | "flo
     format: rounded,
     trendEpsilon: 0.002,
     headingChange: 0.015,
-    range: () => ({ min: 0, max: band.max, typicalLow: band.low, typicalHigh: band.high, typicalLabel: `${band.low} to ${band.high}% at rest`, evidence: r.evidence, source: r.source }),
-    judge: (c, s) => ((s.value < band.low || s.value > band.high) && (digesting(c) || c.moving || c.exerting || c.v("stressLevel") >= 0.1) ? EXPECTED : NORMAL),
+    range: () => ({
+      min: 0,
+      max: band.max,
+      typicalLow: band.low,
+      typicalHigh: band.high,
+      typicalLabel: `${band.low} to ${band.high}% at rest`,
+      evidence: r.evidence,
+      source: r.source,
+    }),
+    judge: (c, s) =>
+      (s.value < band.low || s.value > band.high) &&
+      (digesting(c) || c.moving || c.exerting || c.v("stressLevel") >= 0.1)
+        ? EXPECTED
+        : NORMAL,
     why,
     forecast,
   };
@@ -35,9 +76,23 @@ export const heartSpec: ReadingSpec = {
   headingChange: 2,
   range: () => {
     const r = REFERENCE.heart;
-    return { ...r.scale, typicalLow: r.low, typicalHigh: r.high, typicalLabel: `${r.low} to ${r.high} bpm at rest`, evidence: r.evidence, source: r.source };
+    return {
+      ...r.scale,
+      typicalLow: r.low,
+      typicalHigh: r.high,
+      typicalLabel: `${r.low} to ${r.high} bpm at rest`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
-  judge: (c, s) => heartVerdict(s.raw, { exerting: c.exerting || c.moving, asleep: c.asleep, ownRestBpm: ownRestBpm(c), explainedBpm: heartCauses(c).reduce((sum, cause) => sum + cause.bpm, 0), maxBpm: maxHeartRate(c.tr.scenario.body.age) }),
+  judge: (c, s) =>
+    heartVerdict(s.raw, {
+      exerting: c.exerting || c.moving,
+      asleep: c.asleep,
+      ownRestBpm: ownRestBpm(c),
+      explainedBpm: heartCauses(c).reduce((sum, cause) => sum + cause.bpm, 0),
+      maxBpm: maxHeartRate(c.tr.scenario.body.age),
+    }),
   why: [
     [(c) => heartReason(c) !== null, (c) => heartReason(c) ?? ""],
     [(c) => c.asleep, () => "Your heart slows while you sleep"],
@@ -46,13 +101,17 @@ export const heartSpec: ReadingSpec = {
   forecast: [
     (c, s) => {
       if (s.raw - ownRestBpm(c) < 2) return null;
-      const at = firstWhen(c, (m) => c.tr.series.hr[m] - ownRestBpm(c, POSTURES[Math.round(c.tr.series.posture[m])]) < 1.5);
+      const at = firstWhen(
+        c,
+        (m) => c.tr.series.hr[m] - ownRestBpm(c, POSTURES[Math.round(c.tr.series.posture[m])]) < 1.5,
+      );
       return at === null ? null : near(`Back to ${Math.round(c.tr.series.hr[at])}`, at);
     },
   ],
 };
 
-const outputRaised = (c: Context, s: Sample) => s.raw - (ownRestBpm(c) * s.raw) / c.v("hr") >= REFERENCE.cardiacOutput.raisedAboveOwnRestL;
+const outputRaised = (c: Context, s: Sample) =>
+  s.raw - (ownRestBpm(c) * s.raw) / c.v("hr") >= REFERENCE.cardiacOutput.raisedAboveOwnRestL;
 
 export const outputSpec: ReadingSpec = {
   label: "Heart output",
@@ -66,7 +125,14 @@ export const outputSpec: ReadingSpec = {
   range: (c) => {
     const r = REFERENCE.cardiacOutput;
     const band = c.tr.scenario.body.sex === "male" ? r.male : r.female;
-    return { ...r.scale, typicalLow: band.low, typicalHigh: band.high, typicalLabel: `${band.low} to ${band.high} L/min at rest`, evidence: r.evidence, source: r.source };
+    return {
+      ...r.scale,
+      typicalLow: band.low,
+      typicalHigh: band.high,
+      typicalLabel: `${band.low} to ${band.high} L/min at rest`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.cardiacOutput;
@@ -95,7 +161,14 @@ export const breathingSpec: ReadingSpec = {
   headingChange: 1,
   range: () => {
     const r = REFERENCE.breathing;
-    return { ...r.scale, typicalLow: r.low, typicalHigh: r.high, typicalLabel: `${r.low} to ${r.high} a minute at rest`, evidence: r.evidence, source: r.source };
+    return {
+      ...r.scale,
+      typicalLow: r.low,
+      typicalHigh: r.high,
+      typicalLabel: `${r.low} to ${r.high} a minute at rest`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.breathing;
@@ -148,7 +221,14 @@ export const bloodPressureSpec: ReadingSpec = {
   headingChange: 5,
   range: () => {
     const r = REFERENCE.bloodPressure;
-    return { ...r.scale, typicalLow: r.typicalLow, typicalHigh: r.high, typicalLabel: `Under ${r.high} mmHg at rest`, evidence: r.evidence, source: r.source };
+    return {
+      ...r.scale,
+      typicalLow: r.typicalLow,
+      typicalHigh: r.high,
+      typicalLabel: `Under ${r.high} mmHg at rest`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.bloodPressure;
@@ -158,8 +238,14 @@ export const bloodPressureSpec: ReadingSpec = {
     return s.value >= r.high ? unpainted(SLIGHTLY_RAISED) : NORMAL;
   },
   why: [
-    [(c) => fromMoving(c, "bloodPressure") >= PROCESS.movingNamedFromMmHg, (c) => `About ${Math.round(fromMoving(c, "bloodPressure"))} mmHg from ${movedWord(c)}`],
-    [(c) => pressureCauses(c) !== null, (c, s) => `About ${Math.round(s.raw - RESTING_SYSTOLIC_MMHG)} mmHg from ${pressureCauses(c)?.causeName ?? ""}`],
+    [
+      (c) => fromMoving(c, "bloodPressure") >= PROCESS.movingNamedFromMmHg,
+      (c) => `About ${Math.round(fromMoving(c, "bloodPressure"))} mmHg from ${movedWord(c)}`,
+    ],
+    [
+      (c) => pressureCauses(c) !== null,
+      (c, s) => `About ${Math.round(s.raw - RESTING_SYSTOLIC_MMHG)} mmHg from ${pressureCauses(c)?.causeName ?? ""}`,
+    ],
     [always, () => "My estimate of your resting pressure"],
   ],
   forecast: [],

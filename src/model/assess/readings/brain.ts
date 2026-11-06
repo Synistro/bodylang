@@ -1,6 +1,28 @@
 import { DAY, FEELING_DISPLAY, REFERENCE } from "../../params";
 import { inSentence, levelWord } from "../../words";
-import { ReadingSpec, Sample, alertnessDrains, always, caffeineDoseMgL, caffeineLeft, caffeinePresent, causeOf, clock, costsSleep, extremeAhead, fixed, identity, near, peakAhead, peaksAt, percentOf, reaches, rounded, startedBy, minutesUntilSleep } from "../context";
+import {
+  ReadingSpec,
+  Sample,
+  alertnessDrains,
+  always,
+  caffeineDoseMgL,
+  caffeineLeft,
+  caffeinePresent,
+  causeOf,
+  clock,
+  costsSleep,
+  extremeAhead,
+  fixed,
+  identity,
+  near,
+  peakAhead,
+  peaksAt,
+  percentOf,
+  reaches,
+  rounded,
+  startedBy,
+  minutesUntilSleep,
+} from "../context";
 import { EXPECTED, HIGH, LOW, NORMAL, SLIGHTLY_RAISED, quiet, unpainted } from "../verdicts";
 
 export const caffeineSpec: ReadingSpec = {
@@ -15,7 +37,15 @@ export const caffeineSpec: ReadingSpec = {
   range: (c) => {
     const r = REFERENCE.caffeine;
     const typicalHigh = caffeineDoseMgL(c, r.singleDoseMg);
-    return { min: 0, max: r.scaleMaxMgL, typicalLow: 0, typicalHigh, typicalLabel: `Under ${typicalHigh.toFixed(1)} mg/L, a ${r.singleDoseMg} mg dose for you`, evidence: r.evidence, source: r.source };
+    return {
+      min: 0,
+      max: r.scaleMaxMgL,
+      typicalLow: 0,
+      typicalHigh,
+      typicalLabel: `Under ${typicalHigh.toFixed(1)} mg/L, a ${r.singleDoseMg} mg dose for you`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.caffeine;
@@ -46,7 +76,13 @@ export const caffeineSpec: ReadingSpec = {
     (c) => {
       if (!caffeinePresent(c) || c.t >= DAY.sleepMin) return null;
       const atBed = c.v("caffeine", DAY.sleepMin);
-      return { text: costsSleep(c) ? `Still ${atBed.toFixed(1)} mg/L at ${clock(DAY.sleepMin)}, which may cost you sleep` : `${atBed.toFixed(2)} mg/L left by ${clock(DAY.sleepMin)}`, short: `${atBed.toFixed(costsSleep(c) ? 1 : 2)} mg/L at ${clock(DAY.sleepMin)}`, at: DAY.sleepMin };
+      return {
+        text: costsSleep(c)
+          ? `Still ${atBed.toFixed(1)} mg/L at ${clock(DAY.sleepMin)}, which may cost you sleep`
+          : `${atBed.toFixed(2)} mg/L left by ${clock(DAY.sleepMin)}`,
+        short: `${atBed.toFixed(costsSleep(c) ? 1 : 2)} mg/L at ${clock(DAY.sleepMin)}`,
+        at: DAY.sleepMin,
+      };
     },
   ],
 };
@@ -64,7 +100,15 @@ export const receptorsSpec: ReadingSpec = {
   headingChange: 0.02,
   range: () => {
     const r = REFERENCE.receptors;
-    return { min: 0, max: 100, typicalLow: 0, typicalHigh: r.high, typicalLabel: `Up to about ${r.high}% from several cups a day`, evidence: r.evidence, source: r.source };
+    return {
+      min: 0,
+      max: 100,
+      typicalLow: 0,
+      typicalHigh: r.high,
+      typicalLabel: `Up to about ${r.high}% from several cups a day`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (_c, s) => {
     if (s.value >= REFERENCE.receptors.high) return SLIGHTLY_RAISED;
@@ -95,7 +139,15 @@ export const alertnessSpec: ReadingSpec = {
   headingChange: 0.03,
   range: () => {
     const r = REFERENCE.alertness;
-    return { min: 0, max: 100, typicalLow: r.low, typicalHigh: r.high, typicalLabel: "My estimate of a usual waking day", evidence: r.evidence, source: r.source };
+    return {
+      min: 0,
+      max: 100,
+      typicalLow: r.low,
+      typicalHigh: r.high,
+      typicalLabel: "My estimate of a usual waking day",
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (c, s) => {
     const r = REFERENCE.alertness;
@@ -118,7 +170,8 @@ export const alertnessSpec: ReadingSpec = {
       const sleepiest = peakAhead(c, "drowsy", 0.02, FEELING_DISPLAY.peakHorizonMin);
       if (sleepiest && sleepiest.at <= horizonEnd) return near("Lowest", sleepiest.at);
       const low = extremeAhead(c, "alertness", "min");
-      if (low.at > c.t + 2 && low.at <= horizonEnd && c.v("alertness") - low.value >= 0.03) return near("Lowest", low.at);
+      if (low.at > c.t + 2 && low.at <= horizonEnd && c.v("alertness") - low.value >= 0.03)
+        return near("Lowest", low.at);
       const high = peakAhead(c, "alertness", 0.03);
       return high && high.at <= horizonEnd ? near("Picks up", high.at) : null;
     },
@@ -138,7 +191,15 @@ export const alcoholSpec: ReadingSpec = {
   headingChange: 0.02,
   range: () => {
     const r = REFERENCE.alcohol;
-    return { min: 0, max: r.scaleMaxGPerL, typicalLow: 0, typicalHigh: r.limitGPerL, typicalLabel: `Crash risk climbs from ${r.riskGPerL} g/L`, evidence: r.evidence, source: r.source };
+    return {
+      min: 0,
+      max: r.scaleMaxGPerL,
+      typicalLow: 0,
+      typicalHigh: r.limitGPerL,
+      typicalLabel: `Crash risk climbs from ${r.riskGPerL} g/L`,
+      evidence: r.evidence,
+      source: r.source,
+    };
   },
   judge: (_c, s) => {
     const r = REFERENCE.alcohol;

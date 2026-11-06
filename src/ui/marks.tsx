@@ -16,14 +16,29 @@ export const isNumeric = (text: string) => /\d/.test(text);
 // One arrow that turns, so a change of direction reads as a movement instead of a swap.
 export function TrendMark({ trend }: { trend: Trend }) {
   return (
-    <svg className="trend" data-trend={trend} viewBox="0 0 10 10" style={{ transform: `rotate(${TREND_ANGLE[trend]}deg)` }} role="img" aria-label={trend}>
-      <path d="M1.2 5h7.3M5.6 2.1 8.5 5 5.6 7.9" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      className="trend"
+      data-trend={trend}
+      viewBox="0 0 10 10"
+      style={{ transform: `rotate(${TREND_ANGLE[trend]}deg)` }}
+      role="img"
+      aria-label={trend}
+    >
+      <path
+        d="M1.2 5h7.3M5.6 2.1 8.5 5 5.6 7.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
 // A reading past its typical band owes an explanation, even when it's nothing to worry about.
-export const outsideTypical = ({ value, scale }: { value: number; scale: ReadingScale }) => value < scale.typicalLow || value > scale.typicalHigh;
+export const outsideTypical = ({ value, scale }: { value: number; scale: ReadingScale }) =>
+  value < scale.typicalLow || value > scale.typicalHigh;
 
 // A typical band and a dot for you.
 export function RangeBar({ scale, value, tone }: { scale: ReadingScale; value: number; tone: Tone }) {

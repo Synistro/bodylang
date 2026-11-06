@@ -10,11 +10,27 @@ import { hm, NO_NUTRIENTS } from "./testKit";
 const mmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
 const man: Body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 };
 const woman: Body = { sex: "female", age: 62, heightCm: 163, weightKg: 92 };
-const wake: ActivitySpan[] = [{ from: 0, posture: "sleeping" }, { from: hm(7, 30), posture: "sitting" }];
+const wake: ActivitySpan[] = [
+  { from: 0, posture: "sleeping" },
+  { from: hm(7, 30), posture: "sitting" },
+];
 const blank = { muscles: [], symptoms: [], custom: null, source: "" };
 
-const scenario = (intakes: Intake[], extra: Partial<Scenario> = {}): Scenario => ({ body: man, activities: wake, substances: [], intakes, events: [], ...extra });
-const food = (id: string, at: number, parts: Partial<Intake>): Intake => ({ ...NO_NUTRIENTS, id, label: id, at, ...parts });
+const scenario = (intakes: Intake[], extra: Partial<Scenario> = {}): Scenario => ({
+  body: man,
+  activities: wake,
+  substances: [],
+  intakes,
+  events: [],
+  ...extra,
+});
+const food = (id: string, at: number, parts: Partial<Intake>): Intake => ({
+  ...NO_NUTRIENTS,
+  id,
+  label: id,
+  at,
+  ...parts,
+});
 
 const peakOf = (series: Float32Array, from: number, to: number) => {
   let at = from;
@@ -26,7 +42,8 @@ const lowestOf = (series: Float32Array, from: number, to: number) => {
   for (let t = from; t <= to; t++) if (series[t] < series[at]) at = t;
   return { at, value: series[at] };
 };
-const eatenKcal = (tr: Trajectory, id: string) => foodKcalOf(tr.scenario.intakes.find((intake) => intake.id === id) ?? NO_NUTRIENTS);
+const eatenKcal = (tr: Trajectory, id: string) =>
+  foodKcalOf(tr.scenario.intakes.find((intake) => intake.id === id) ?? NO_NUTRIENTS);
 
 // Minutes until the stomach holds under a share of what was eaten.
 const stomachBelow = (tr: Trajectory, id: string, at: number, share: number) => {
@@ -34,26 +51,68 @@ const stomachBelow = (tr: Trajectory, id: string, at: number, share: number) => 
   for (let m = 0; m < 900; m++) if ((ledgerAt(tr, id, at + m)?.stomach ?? 0) < kcal * share) return m;
   throw new Error("Never emptied");
 };
-const retained = (tr: Trajectory, id: string, at: number, minutes: number) => (ledgerAt(tr, id, at + minutes)?.stomach ?? 0) / eatenKcal(tr, id);
+const retained = (tr: Trajectory, id: string, at: number, minutes: number) =>
+  (ledgerAt(tr, id, at + minutes)?.stomach ?? 0) / eatenKcal(tr, id);
 
 const AT = hm(8, 30);
-const apples = food("apples", AT, { grams: 364, waterMl: 310, carbsG: 50, sugarG: 38, fatG: 0.6, proteinG: 1, fiberG: 9, fructoseShare: 0.6 });
-const banana = food("banana", AT, { grams: 120, waterMl: 90, carbsG: 27, sugarG: 14, fatG: 0.4, proteinG: 1.3, fiberG: 3 });
+const apples = food("apples", AT, {
+  grams: 364,
+  waterMl: 310,
+  carbsG: 50,
+  sugarG: 38,
+  fatG: 0.6,
+  proteinG: 1,
+  fiberG: 9,
+  fructoseShare: 0.6,
+});
+const banana = food("banana", AT, {
+  grams: 120,
+  waterMl: 90,
+  carbsG: 27,
+  sugarG: 14,
+  fatG: 0.4,
+  proteinG: 1.3,
+  fiberG: 3,
+});
 const rice = food("rice", AT, { grams: 250, waterMl: 170, carbsG: 70, fatG: 0.7, proteinG: 7, fiberG: 1 });
 const glucoseDrink = food("glucose", AT, { grams: 300, waterMl: 225, carbsG: 75, liquid: true });
-const breakfast = food("breakfast", hm(8), { grams: 300, waterMl: 150, carbsG: 60, sugarG: 15, fatG: 10, proteinG: 15, fiberG: 5 });
+const breakfast = food("breakfast", hm(8), {
+  grams: 300,
+  waterMl: 150,
+  carbsG: 60,
+  sugarG: 15,
+  fatG: 10,
+  proteinG: 15,
+  fiberG: 5,
+});
 const fatTest = food("fat", hm(12), { grams: 300, waterMl: 150, carbsG: 25, sugarG: 15, fatG: 75, proteinG: 10 });
 const threeMeals = [
   food("breakfast", hm(8), { grams: 350, waterMl: 200, carbsG: 60, sugarG: 15, fatG: 10, proteinG: 15, fiberG: 6 }),
   food("lunch", hm(13), { grams: 500, waterMl: 300, carbsG: 75, sugarG: 10, fatG: 20, proteinG: 30, fiberG: 7 }),
   food("dinner", hm(19), { grams: 550, waterMl: 350, carbsG: 80, sugarG: 10, fatG: 25, proteinG: 35, fiberG: 8 }),
 ];
-const running = (from: number, until: number): ActivitySpan[] => [...wake, { from, posture: "running" }, { from: until, posture: "sitting" }];
-const walking = (from: number, until: number): ActivitySpan[] => [...wake, { from, posture: "walking" }, { from: until, posture: "sitting" }];
+const running = (from: number, until: number): ActivitySpan[] => [
+  ...wake,
+  { from, posture: "running" },
+  { from: until, posture: "sitting" },
+];
+const walking = (from: number, until: number): ActivitySpan[] => [
+  ...wake,
+  { from, posture: "walking" },
+  { from: until, posture: "sitting" },
+];
 
 describe("how fast food leaves, against Tougas 2000 and Benini 1995", () => {
   it("holds a 255 kcal meal inside Tougas's limits for a healthy stomach", () => {
-    const meal = food("meal", AT, { grams: 255, waterMl: 150, carbsG: 46, sugarG: 15, fatG: 0.6, proteinG: 15, fiberG: 1.3 });
+    const meal = food("meal", AT, {
+      grams: 255,
+      waterMl: 150,
+      carbsG: 46,
+      sugarG: 15,
+      fatG: 0.6,
+      proteinG: 15,
+      fiberG: 1.3,
+    });
     const tr = simulate(scenario([meal]));
     expect(retained(tr, "meal", AT, 60)).toBeGreaterThan(0.5);
     expect(retained(tr, "meal", AT, 60)).toBeLessThan(0.9);
@@ -62,8 +121,16 @@ describe("how fast food leaves, against Tougas 2000 and Benini 1995", () => {
   });
 
   it("slows a 870 kcal meal when it has more fibre, in Benini's direction", () => {
-    const low = simulate(scenario([food("meal", AT, { grams: 650, waterMl: 350, carbsG: 105.5, sugarG: 15, fatG: 35, proteinG: 37, fiberG: 3.5 })]));
-    const high = simulate(scenario([food("meal", AT, { grams: 750, waterMl: 400, carbsG: 119.4, sugarG: 15, fatG: 35, proteinG: 37, fiberG: 17.4 })]));
+    const low = simulate(
+      scenario([
+        food("meal", AT, { grams: 650, waterMl: 350, carbsG: 105.5, sugarG: 15, fatG: 35, proteinG: 37, fiberG: 3.5 }),
+      ]),
+    );
+    const high = simulate(
+      scenario([
+        food("meal", AT, { grams: 750, waterMl: 400, carbsG: 119.4, sugarG: 15, fatG: 35, proteinG: 37, fiberG: 17.4 }),
+      ]),
+    );
     expect(stomachBelow(high, "meal", AT, 0.5)).toBeGreaterThan(stomachBelow(low, "meal", AT, 0.5) + 5);
     expect(stomachBelow(low, "meal", AT, 0.5)).toBeGreaterThan(90);
   });
@@ -138,8 +205,13 @@ describe("running and walking", () => {
   });
 
   it("cuts a walk's insulin response by about what Nygaard measured", () => {
-    const area = (tr: Trajectory) => tr.series.insulin.slice(hm(8), hm(10)).reduce((sum, x) => sum + Math.max(0, x - 8), 0);
-    const walked = simulate(scenario([breakfast], { activities: [...wake, { from: hm(8), posture: "walking" }, { from: hm(9), posture: "sitting" }] }));
+    const area = (tr: Trajectory) =>
+      tr.series.insulin.slice(hm(8), hm(10)).reduce((sum, x) => sum + Math.max(0, x - 8), 0);
+    const walked = simulate(
+      scenario([breakfast], {
+        activities: [...wake, { from: hm(8), posture: "walking" }, { from: hm(9), posture: "sitting" }],
+      }),
+    );
     const sat = simulate(scenario([breakfast], { activities: [...wake, { from: hm(8), posture: "sitting" }] }));
     const cut = 1 - area(walked) / area(sat);
     expect(cut).toBeGreaterThan(0.05);
@@ -148,8 +220,17 @@ describe("running and walking", () => {
 
   it("slows the stomach in a hard run, and speeds it on a walk", () => {
     const at = hm(8);
-    const meal = food("meal", at, { grams: 300, waterMl: 150, carbsG: 60, sugarG: 15, fatG: 15, proteinG: 20, fiberG: 3 });
-    const during = (posture: "sitting" | "walking" | "running") => simulate(scenario([meal], { activities: [...wake, { from: at, posture }] })).series.stomachKcal[hm(9)];
+    const meal = food("meal", at, {
+      grams: 300,
+      waterMl: 150,
+      carbsG: 60,
+      sugarG: 15,
+      fatG: 15,
+      proteinG: 20,
+      fiberG: 3,
+    });
+    const during = (posture: "sitting" | "walking" | "running") =>
+      simulate(scenario([meal], { activities: [...wake, { from: at, posture }] })).series.stomachKcal[hm(9)];
     expect(during("running")).toBeGreaterThan(during("sitting"));
     expect(during("walking")).toBeLessThan(during("sitting"));
   });
@@ -180,7 +261,9 @@ describe("running and walking", () => {
     const meal = { ...breakfast, at: hm(13) };
     const sat = simulate(scenario([meal]));
     const walked = simulate(scenario([meal], { activities: walking(hm(13, 30), hm(14)) }));
-    expect(peakOf(walked.series.glucose, hm(13), hm(17)).value).toBeLessThan(peakOf(sat.series.glucose, hm(13), hm(17)).value - 5);
+    expect(peakOf(walked.series.glucose, hm(13), hm(17)).value).toBeLessThan(
+      peakOf(sat.series.glucose, hm(13), hm(17)).value - 5,
+    );
     expect(mmol(lowestOf(walked.series.glucose, hm(13, 30), hm(17)).value)).toBeGreaterThan(4.3);
   });
 
@@ -192,7 +275,8 @@ describe("running and walking", () => {
   });
 
   it("sets heart rate from reserve, 70% running and 30% walking, and caps it at your maximum", () => {
-    const reserve = (tr: Trajectory, t: number, rest: number, age: number) => (value(tr, "hr", t) - rest) / (maxHeartRate(age) - rest);
+    const reserve = (tr: Trajectory, t: number, rest: number, age: number) =>
+      (value(tr, "hr", t) - rest) / (maxHeartRate(age) - rest);
     expect(reserve(fasted, hm(10, 30), fasted.anthro.restingBpm, 30)).toBeCloseTo(ACTIVITY.heartReserve.running, 1);
     const walk = simulate(scenario([], { activities: walking(hm(10), hm(11)) }));
     expect(reserve(walk, hm(10, 30), walk.anthro.restingBpm, 30)).toBeCloseTo(ACTIVITY.heartReserve.walking, 1);
@@ -240,7 +324,8 @@ describe("running and walking", () => {
   });
 
   it("burns by body mass: what a posture adds over rest is METs times kilograms", () => {
-    const metsFrom = (tr: Trajectory, t: number, body: Body) => (value(tr, "kcalPerHour", t) - tr.anthro.bmrKcalPerDay / 24) / body.weightKg + 1;
+    const metsFrom = (tr: Trajectory, t: number, body: Body) =>
+      (value(tr, "kcalPerHour", t) - tr.anthro.bmrKcalPerDay / 24) / body.weightKg + 1;
     expect(metsFrom(fasted, hm(10, 30), man)).toBeCloseTo(8.5, 0);
     const heavier = simulate({ ...scenario([], { activities: running(hm(10), hm(11)) }), body: woman });
     expect(metsFrom(heavier, hm(10, 30), woman)).toBeCloseTo(8.5, 0);
@@ -250,8 +335,20 @@ describe("running and walking", () => {
 
 describe("alertness through a day", () => {
   const fed = simulate(scenario(threeMeals));
-  const night: BodyEvent = { ...blank, id: "night", label: "Short night", preset: "poor_sleep", from: hm(7), until: null, intensity: 1 };
-  const shortSleep: ActivitySpan[] = [{ from: 0, posture: "sitting" }, { from: hm(3), posture: "sleeping" }, { from: hm(7), posture: "sitting" }];
+  const night: BodyEvent = {
+    ...blank,
+    id: "night",
+    label: "Short night",
+    preset: "poor_sleep",
+    from: hm(7),
+    until: null,
+    intensity: 1,
+  };
+  const shortSleep: ActivitySpan[] = [
+    { from: 0, posture: "sitting" },
+    { from: hm(3), posture: "sleeping" },
+    { from: hm(7), posture: "sitting" },
+  ];
 
   it("sits near 40 at 14:30 and 43 at 20:30 on a normal day", () => {
     expect(value(fed, "alertness", hm(14, 30))).toBeCloseTo(0.4, 1);
@@ -269,7 +366,8 @@ describe("alertness through a day", () => {
 
   it("is never zero while you are awake", () => {
     const slept = simulate(scenario([], { activities: shortSleep, events: [night] }));
-    for (let t = hm(7); t < hm(23, 30); t++) expect(slept.series.alertness[t]).toBeGreaterThanOrEqual(FEEL.alertnessFloorAwake - 1e-6);
+    for (let t = hm(7); t < hm(23, 30); t++)
+      expect(slept.series.alertness[t]).toBeGreaterThanOrEqual(FEEL.alertnessFloorAwake - 1e-6);
   });
 
   it("carries yesterday's waking hours, and counts awake time from when you woke", () => {
@@ -321,7 +419,9 @@ describe("a long stretch of stress, a fast and a drink", () => {
   });
 
   it("starts the drift afresh once you eat", () => {
-    const tr = simulate(scenario([food("snack", hm(17), { grams: 100, waterMl: 50, carbsG: 25, sugarG: 10, fatG: 5, proteinG: 5 })]));
+    const tr = simulate(
+      scenario([food("snack", hm(17), { grams: 100, waterMl: 50, carbsG: 25, sugarG: 10, fatG: 5, proteinG: 5 })]),
+    );
     expect(value(tr, "glucose", hm(23))).toBeGreaterThan(value(simulate(scenario([])), "glucose", hm(23)));
   });
 
@@ -338,7 +438,12 @@ describe("a long stretch of stress, a fast and a drink", () => {
   it("clears alcohol about 1.3 times as fast after food, as Ramchandani measured", () => {
     const spirit = food("spirit", hm(19), { grams: 150, waterMl: 110, alcoholG: 40, liquid: true });
     const empty = simulate(scenario([spirit]));
-    const fed = simulate(scenario([spirit, food("meal", hm(19), { grams: 500, waterMl: 200, carbsG: 80, sugarG: 10, fatG: 30, proteinG: 30, fiberG: 5 })]));
+    const fed = simulate(
+      scenario([
+        spirit,
+        food("meal", hm(19), { grams: 500, waterMl: 200, carbsG: 80, sugarG: 10, fatG: 30, proteinG: 30, fiberG: 5 }),
+      ]),
+    );
     // Both read as the liver's own rate at the same blood level, with what is still arriving taken out.
     const litres = ALCOHOL.widmarkMale * man.weightKg;
     const liverRateAtLevel = (tr: Trajectory, level: number) => {
@@ -346,7 +451,9 @@ describe("a long stretch of stress, a fast and a drink", () => {
       let t = peak;
       while (value(tr, "alcohol", t) > level) t++;
       const absorbed = (at: number) => intakeFlowsAt(tr, "spirit", at)?.alcoholAbsorbed ?? 0;
-      return absorbed(t + 15) - absorbed(t - 15) - (value(tr, "alcohol", t + 15) - value(tr, "alcohol", t - 15)) * litres;
+      return (
+        absorbed(t + 15) - absorbed(t - 15) - (value(tr, "alcohol", t + 15) - value(tr, "alcohol", t - 15)) * litres
+      );
     };
     const ratio = liverRateAtLevel(fed, 0.2) / liverRateAtLevel(empty, 0.2);
     expect(ratio).toBeGreaterThan(1.15);
