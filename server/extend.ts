@@ -35,11 +35,11 @@ function defaultParts(): BuildParts {
 let building: { status: BuildStatus; abort: AbortController } | null = null;
 let latest: BuildStatus | null = null;
 
-export function stopBuild() {
+function stopBuild() {
   building?.abort.abort();
 }
 
-export function dismissBuild() {
+function dismissBuild() {
   if (!building) latest = null;
 }
 

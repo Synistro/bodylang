@@ -96,6 +96,6 @@ export function currentStopIndex(event: ResolvedEvent, t: number): number {
   return at;
 }
 
-export const MUSCLE_STATES: readonly (keyof MuscleState)[] = ["work", "fatigue", "soreness", "repair", "glycogenUsed"];
+const MUSCLE_STATES: readonly (keyof MuscleState)[] = ["work", "fatigue", "soreness", "repair", "glycogenUsed"];
 
 export const isMuscleState = (shows: StopShows): shows is keyof MuscleState => MUSCLE_STATES.some((state) => state === shows);

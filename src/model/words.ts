@@ -16,7 +16,7 @@ export const theFoods = (labels: string[]) => (labels.length > 2 || labels.lengt
 export const startCase = (text: string) => (text ? text[0].toUpperCase() + text.slice(1) : text);
 
 // "9.5" and "10", never "10.0".
-export const hoursText = (hours: number) => String(Number(hours.toFixed(1)));
+const hoursText = (hours: number) => String(Number(hours.toFixed(1)));
 
 // "1 hour", "9.5 hours".
 export function hoursWord(hours: number): string {

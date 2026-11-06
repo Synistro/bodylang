@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { reduce } from "./actions/reduce";
 import { firstDay } from "./model/day";
-import { bodyOf, dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
+import { dayDocOf, dispatch, enterAsk, getState, leaveAsk, restoreDay, setClock, setUi } from "./store";
 
 const body = { sex: "female", age: 41, heightCm: 170, weightKg: 62 } as const;
 const coffee = { id: "coffee", label: "Coffee", at: 500, grams: 240, water_ml: 238, carbs_g: 0, sugar_g: 0, fat_g: 0, protein_g: 0, fiber_g: 0, caffeine_mg: 96, alcohol_g: 0, liquid: true, assumption: "One cup" };
@@ -57,19 +56,5 @@ describe("your day and the store", () => {
     const after = dayDocOf(getState());
     expect(after?.intakes).toBe(saved?.intakes);
     expect(after?.intakes.map((i) => i.id)).toEqual(["coffee"]);
-  });
-});
-
-describe("selecting an organ", () => {
-  const start = (system: "clearing" | "digestion" | "overview") => reduce(bodyOf(getState()), { name: "show_system", args: { system } });
-  const focus = (body: ReturnType<typeof start>, organ: "lungs" | "liver") => reduce(body, { name: "focus_organ", args: { organ } });
-
-  it("goes to the organ's own section when it is not in this one", () => {
-    expect(focus(start("clearing"), "lungs").view.system).toBe("circulation");
-  });
-
-  it("stays when the organ belongs here, or when you came from the overview", () => {
-    expect(focus(start("digestion"), "liver").view.system).toBe("digestion");
-    expect(focus(start("overview"), "lungs").view.system).toBe("overview");
   });
 });

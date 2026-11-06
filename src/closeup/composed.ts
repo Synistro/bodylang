@@ -4,10 +4,10 @@ import { shortText } from "../model/shortText";
 // A drawing Claude composes for what no organ's own drawing shows, such as dopamine at a nerve ending, smoke
 // in an air sac or a torn vessel. Claude says what is there: layers from top to bottom, and things moving
 // between them. Code does all the layout, so a composition can't overlap, run off the plate or fall apart.
-export const LAYER_KINDS = ["blood", "lymph", "air", "tissue", "wall", "nerve", "space"] as const;
-export const LAYER_STATES = ["healthy", "torn", "blocked", "narrowed", "inflamed"] as const;
-export const ACTOR_LOOKS = ["cell", "molecule", "dot", "pulse"] as const;
-export const ACTOR_TONES = ["blood", "immune", "food", "nerve", "drug", "gas"] as const;
+const LAYER_KINDS = ["blood", "lymph", "air", "tissue", "wall", "nerve", "space"] as const;
+const LAYER_STATES = ["healthy", "torn", "blocked", "narrowed", "inflamed"] as const;
+const ACTOR_LOOKS = ["cell", "molecule", "dot", "pulse"] as const;
+const ACTOR_TONES = ["blood", "immune", "food", "nerve", "drug", "gas"] as const;
 
 const MOST_LAYERS = 5;
 const MOST_ACTORS = 5;

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Everything that crosses between the browser and the dev server, defined once so both sides agree.
 
-export const BUILD_STAGES = ["writing", "testing", "final", "ready", "failed", "stopped"] as const;
+const BUILD_STAGES = ["writing", "testing", "final", "ready", "failed", "stopped"] as const;
 export const buildStatusSchema = z.object({ id: z.string(), title: z.string(), stage: z.enum(BUILD_STAGES), message: z.string().nullable() });
 export type BuildStatus = z.infer<typeof buildStatusSchema>;
 export type BuildStage = BuildStatus["stage"];

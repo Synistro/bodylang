@@ -9,7 +9,7 @@ interface BodyLine {
 }
 
 // What is known about each line that runs all day. Lines of food, doses and events take after what they follow.
-export const BODY_LINES: Record<BodyLineId, BodyLine> = {
+const BODY_LINES: Record<BodyLineId, BodyLine> = {
   insulin: { evidence: "B", source: SOURCES.minimalModel, readings: ["glucose", "insulin", "muscleUptake", "glycogen"], actsOnOrgans: true },
   "fat-route": { evidence: "B", source: SOURCES.lipemia, readings: ["tg", "fuel"], actsOnOrgans: true },
   // Blood reaches everything all the time, so it says nothing about any one organ.

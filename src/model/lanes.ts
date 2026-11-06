@@ -67,7 +67,7 @@ const ended = (text: string, at: number) => ({ at, text: `${text} ${formatClock(
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 const seriesAt = (series: Float32Array, minute: number) => series[Math.max(0, Math.min(series.length - 1, Math.round(minute)))];
 
-export const laneMinute = (index: number) => LANES.from + index * LANES.stepMin;
+const laneMinute = (index: number) => LANES.from + index * LANES.stepMin;
 
 // Scaled to its own fullest point over the drawn day.
 function fromLevels(level: (minute: number) => number): Float32Array {

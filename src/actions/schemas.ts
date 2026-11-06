@@ -10,13 +10,13 @@ import { SUBSTANCE_ROUTES } from "../model/scenario";
 // The one vocabulary between language and the body: Claude calls these as tools, the scripted
 // opening replays them, and the browser and server share the same reducer.
 
-export const minute = z.number().int().min(-1440).max(1799).describe("Minutes since 00:00 today, for example 16:45 is 1005. Yesterday is negative: 23:00 yesterday is -60");
-export const organ = z.enum(ORGANS);
-export const posture = z.enum(["sleeping", "sitting", "standing", "walking", "running"]);
-export const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing", "reproductive"]);
+const minute = z.number().int().min(-1440).max(1799).describe("Minutes since 00:00 today, for example 16:45 is 1005. Yesterday is negative: 23:00 yesterday is -60");
+const organ = z.enum(ORGANS);
+const posture = z.enum(["sleeping", "sitting", "standing", "walking", "running"]);
+const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing", "reproductive"]);
 const eventMinute = z.number().int().min(-14 * 1440).max(1799).describe("Minutes since 00:00 today. Negative for earlier days: 18:00 yesterday is -360");
 const foodSource = z.discriminatedUnion("kind", [z.object({ kind: z.literal("table"), fdcId: z.number(), name: z.string(), dataset: z.string() }), z.object({ kind: z.literal("estimate") }), z.object({ kind: z.literal("recipe"), ingredients: z.array(z.object({ fdcId: z.number(), name: z.string(), grams: z.number() })) })]);
-export const serving = z.object({ label: z.string().min(1).describe("What one serving is, in the singular, such as slice or cup"), grams: z.number().positive() });
+const serving = z.object({ label: z.string().min(1).describe("What one serving is, in the singular, such as slice or cup"), grams: z.number().positive() });
 
 export const customStory = z.object({
   systems: z.array(system.exclude(["overview"])).min(1).describe("Body systems this touches, the main one first"),
