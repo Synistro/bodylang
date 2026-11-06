@@ -21,8 +21,8 @@ import { BodySide, MuscleLevel, Muscles, loadMuscles } from "./muscles";
 import { Anatomy, OrganPart, PartLook, PartName, PartStyle } from "./organs";
 import { ProcessLine } from "./processLine";
 import { StomachItem, Tract } from "./tract";
+import type { Theme } from "../look";
 
-export type Theme = keyof typeof PALETTES;
 
 export interface SceneInput {
   trajectory: Trajectory;
@@ -452,7 +452,7 @@ export class Stage {
   async load() {
     const [bodyAsset, male, female, muscleAsset] = await Promise.all([loadBody(), loadOrgans("male"), loadOrgans("female"), loadMuscles()]);
     if (this.disposed) return;
-    const palette = PALETTES.plate;
+    const palette = PALETTES.light;
     this.figure = new Figure(bodyAsset, palette);
     this.scene.add(this.figure.group);
     this.muscles = new Muscles(muscleAsset, this.figure, palette, this.resolution);

@@ -1,9 +1,8 @@
 import { memo, useId } from "react";
 import type { Levels } from "../../closeup/define";
 import { STOMACH_FULL, stomachCloseup } from "../../closeup/stomach";
-import { REFERENCE, STOMACH } from "../../model/params";
+import { REFERENCE, STOMACH, WAVE_SPEEDUP } from "../../model/params";
 import { value } from "../../model/engine/trajectory";
-import { WAVE_SPEEDUP } from "../../scene/tract";
 import { closeupInset, Look } from "./closeupInset";
 import { bump, easeToward, lerp, part, parts, pointAlong, polyline, tenth, sampleTube, seededRandom, smoothstep, TubeSample } from "./draw";
 import type { Frame, InsetProps } from "./loop";

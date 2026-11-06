@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { shortText } from "../agent/shortText";
+import { shortText } from "../model/shortText";
 
 // A drawing Claude composes for what no organ's own drawing shows, such as dopamine at a nerve ending, smoke
 // in an air sac or a torn vessel. Claude says what is there: layers from top to bottom, and things moving

@@ -5,7 +5,7 @@ import { WALL } from "../wall";
 import { followBuilds } from "./Build";
 import { playOpening } from "./opening";
 
-const lookSchema = z.object({ theme: z.enum(["plate", "xray"]), layers: z.object({ skin: z.boolean(), vessels: z.boolean() }) });
+const lookSchema = z.object({ theme: z.enum(["light", "dark"]), layers: z.object({ skin: z.boolean(), vessels: z.boolean() }) });
 
 const TICK_MS = 5000;
 const SAVE_AFTER_MS = 300;
@@ -96,11 +96,8 @@ const LOOK_KEY = "bodylang.look";
 // won't store it just starts from the default.
 export function rememberLook() {
   try {
-    const raw = localStorage.getItem(LOOK_KEY);
-    if (raw) {
-      const look = lookSchema.parse(JSON.parse(raw));
-      setUi({ theme: look.theme, layers: look.layers });
-    }
+    const look = lookSchema.safeParse(JSON.parse(localStorage.getItem(LOOK_KEY) ?? "null"));
+    if (look.success) setUi({ theme: look.data.theme, layers: look.data.layers });
     let last = "";
     subscribe(() => {
       const { theme, layers } = getState();

@@ -44,6 +44,26 @@ export const ORGAN_NAME: Record<OrganId, string> = {
   prostate: "Prostate",
 };
 
+// The system an organ belongs to when nothing else on screen says otherwise.
+export const ORGAN_HOME: Record<OrganId, SystemId> = {
+  brain: "brain",
+  heart: "circulation",
+  lungs: "circulation",
+  liver: "clearing",
+  stomach: "digestion",
+  pancreas: "energy",
+  spleen: "immune",
+  small_intestine: "digestion",
+  large_intestine: "digestion",
+  kidneys: "clearing",
+  bladder: "clearing",
+  muscle: "muscles",
+  fat: "energy",
+  uterus: "reproductive",
+  ovaries: "reproductive",
+  prostate: "reproductive",
+};
+
 export const systemById = (id: SystemId) => {
   const found = SYSTEMS.find((s) => s.id === id);
   if (!found) throw new Error(`Unknown system ${id}`);

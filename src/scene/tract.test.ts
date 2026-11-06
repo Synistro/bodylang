@@ -40,7 +40,7 @@ describe.each<Sex>(["male", "female"])("food in the tract of the %s body", (sex)
   const bin = file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength);
 
   it("keeps every piece and its outline inside the stomach as a meal empties", () => {
-    const tract = new Tract(meta, PALETTES.plate, new THREE.Vector2(1000, 800));
+    const tract = new Tract(meta, PALETTES.light, new THREE.Vector2(1000, 800));
     const outlines = tract.group.children.find((child) => child instanceof THREE.InstancedMesh && child.material instanceof THREE.MeshBasicMaterial);
     if (!(outlines instanceof THREE.InstancedMesh)) throw new Error("The stomach has no piece outlines");
     const matrix = new THREE.Matrix4();

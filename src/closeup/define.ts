@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { shortText } from "../agent/shortText";
+import { shortText } from "../model/shortText";
 import type { MuscleGroup } from "../model/muscleGroups";
 import type { Trajectory } from "../model/engine/trajectory";
 import type { OrganId } from "../model/ids";

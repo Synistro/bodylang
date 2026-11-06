@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { Action, BodyState, GuideStep, reduce, traceLine } from "./agent/actions";
-import { ORGAN_HOME } from "./look";
+import { ORGAN_HOME, systemById } from "./model/systems";
 import { DayDoc } from "./model/day";
 import { LANES } from "./model/params";
 import type { MuscleGroup } from "./model/muscleGroups";
@@ -9,8 +9,7 @@ import { followProcess, Process, processesAt } from "./model/processes";
 import { simulate } from "./model/simulate";
 import { Scenario } from "./model/scenario";
 import { Trajectory } from "./model/engine/trajectory";
-import { systemById } from "./model/systems";
-import type { Theme } from "./scene/stage";
+import type { Theme } from "./look";
 
 export interface Exchange {
   id: number;
@@ -139,7 +138,7 @@ let state: AppState = {
   playing: false,
   playUntil: LANES.to,
   dayMoment: null,
-  theme: "xray",
+  theme: "dark",
   layers: { skin: true, vessels: true },
   hover: null,
   hoverLane: null,

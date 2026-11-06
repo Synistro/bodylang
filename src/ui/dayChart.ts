@@ -1,4 +1,4 @@
-import { ACCENT_SYSTEM, LookTheme, SYSTEM_HUE } from "../look";
+import { ACCENT_SYSTEM, Theme, SYSTEM_HUE } from "../look";
 import { DAY_SPAN, fitWindow, Lane, Moment, Span } from "../model/lanes";
 import { LANES } from "../model/params";
 import { formatClock } from "../model/words";
@@ -115,7 +115,7 @@ export class DayChart {
   private stopXs: number[] = [];
   private pointedStop: number | null = null;
   private pressedMoment: { moment: Moment; x: number } | null = null;
-  private theme: LookTheme = "xray";
+  private theme: Theme = "dark";
   private colors = { ink: "#d0cec6", ink2: "#a19e97", ink3: "#8a8782", line: "rgba(208,206,198,.09)", surface: "#1d1b1a" };
   private colorsStale = true;
   private dirty = true;
@@ -210,7 +210,7 @@ export class DayChart {
     return { from: fit.from, to: Math.min(LANES.to, to) };
   }
 
-  setTheme(theme: LookTheme) {
+  setTheme(theme: Theme) {
     this.theme = theme;
     this.colorsStale = true;
     this.dirty = true;

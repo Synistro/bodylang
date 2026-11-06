@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { Theme } from "../look";
 
 export interface Palette {
   background: string;
@@ -16,8 +17,8 @@ export interface Palette {
   hatch: number; // how strongly fine engraved lines show: a light line on a dark plate reads far stronger
 }
 
-export const PALETTES: Record<"plate" | "xray", Palette> = {
-  plate: {
+export const PALETTES: Record<Theme, Palette> = {
+  light: {
     background: "#ffffff",
     ink: "#17181a",
     tone1: "#ffffff",
@@ -32,7 +33,7 @@ export const PALETTES: Record<"plate" | "xray", Palette> = {
     store: "#ad8301",
     hatch: 1,
   },
-  xray: {
+  dark: {
     background: "#110f0e",
     ink: "#d0cec6",
     tone1: "#343331",

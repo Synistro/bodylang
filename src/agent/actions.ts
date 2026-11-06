@@ -6,11 +6,10 @@ import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
 import type { Cycle } from "../model/cycle";
 import { CYCLE, DAY } from "../model/params";
 import { ROUTE_IDS, SystemId, OrganId, ORGANS } from "../model/ids";
-import { shortText } from "./shortText";
+import { shortText } from "../model/shortText";
 import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt, SUBSTANCE_ROUTES } from "../model/scenario";
 import { formatClock } from "../model/words";
-import { systemById } from "../model/systems";
-import { ORGAN_HOME } from "../look";
+import { systemById, ORGAN_HOME } from "../model/systems";
 
 // The one vocabulary between language and the body: Claude calls these as tools, the scripted
 // opening replays them, and the browser and server share the same reducer.

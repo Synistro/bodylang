@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STOMACH } from "../model/params";
+import { WAVE_SPEEDUP, STOMACH } from "../model/params";
 import type { OrganMeta } from "./assets";
 import { createChunkMaterial, createOrganMaterial, createOutlineMaterial, Palette } from "./materials";
 
@@ -9,8 +9,6 @@ export interface StomachItem {
   count: number;
 }
 
-// A slow wave takes twenty seconds in life, so the screen runs them this much faster, and says so.
-export const WAVE_SPEEDUP = 5;
 
 // Visible Human has no stomach mesh, and a stomach has to change shape with what's in it anyway, so
 // it is lofted here. Each section runs from the lesser curvature, the short inner bend that stays

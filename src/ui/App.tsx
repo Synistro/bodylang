@@ -32,7 +32,7 @@ const CREDITS = "Food composition: USDA FoodData Central, public domain. Organs 
 
 rememberLook();
 if (WALL) document.documentElement.dataset.wall = "";
-document.documentElement.dataset.theme = getState().theme === "xray" ? "dark" : "light";
+document.documentElement.dataset.theme = getState().theme;
 applyHues(getState().theme);
 
 function sceneInput(s: AppState) {
@@ -167,7 +167,7 @@ export function App() {
   useStillWhileHidden();
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme === "xray" ? "dark" : "light";
+    document.documentElement.dataset.theme = theme;
     applyHues(theme);
   }, [theme]);
 
@@ -266,7 +266,7 @@ export function App() {
   }, [stage]);
 
   return (
-    <div className="plate" data-asking={asking || undefined} data-directed={directed || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
+    <div className="app" data-asking={asking || undefined} data-directed={directed || undefined} style={{ "--view-hue": `var(--hue-${view})` }}>
       <div className="object">
         <canvas ref={canvas} aria-label="Three-dimensional model of the body. Drag to rotate, scroll to zoom." />
         {stage ? <AtlasKeys stage={stage} /> : null}

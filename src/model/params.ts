@@ -826,3 +826,6 @@ export const SUBSTANCE_STEP = { maxAbsorptionPerMin: 0.5, maxClearancePerMin: 0.
 
 // The lean mass formulas run past body weight on a very tall, very light body. My estimate of a floor for fat and everything else.
 export const BODY_COMPOSITION = { maxLeanShare: 0.9 } as const;
+
+// A slow wave takes twenty seconds in life, so the screen runs them this much faster, and says so.
+export const WAVE_SPEEDUP = 5;

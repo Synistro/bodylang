@@ -21,7 +21,7 @@ function muscleAsset(): MuscleAsset {
   return { meta, bin: buffer("public/assets/muscles.bin") };
 }
 
-const QUIET: MuscleInput = { visible: 0, shown: {}, outlined: [], levels: {}, palette: PALETTES.plate, hover: null, focus: null };
+const QUIET: MuscleInput = { visible: 0, shown: {}, outlined: [], levels: {}, palette: PALETTES.light, hover: null, focus: null };
 
 describe("the muscle figure", () => {
   let muscles: Muscles;
@@ -36,10 +36,10 @@ describe("the muscle figure", () => {
   };
 
   beforeAll(() => {
-    const figure = new Figure(bodyAsset(), PALETTES.plate);
+    const figure = new Figure(bodyAsset(), PALETTES.light);
     figure.setBody({ sex: "male", age: 30, heightCm: 180, weightKg: 80 }, 0);
     figure.setPose(0, 0, 0);
-    muscles = new Muscles(muscleAsset(), figure, PALETTES.plate, new THREE.Vector2(1000, 800));
+    muscles = new Muscles(muscleAsset(), figure, PALETTES.light, new THREE.Vector2(1000, 800));
     muscles.setBody("male", 1.8, 80);
   });
 

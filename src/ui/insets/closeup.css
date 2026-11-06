@@ -1,6 +1,6 @@
 /* Parts: anatomy keeps its own colour in every close-up, whatever view is open. */
-.plate { --fig-blood: #af3029; --fig-nerve: #ad8301; }
-:root[data-theme="dark"] .plate { --fig-blood: #d14d41; --fig-nerve: #d0a215; }
+.app { --fig-blood: #af3029; --fig-nerve: #ad8301; }
+:root[data-theme="dark"] .app { --fig-blood: #d14d41; --fig-nerve: #d0a215; }
 .inset-art .part-vessel-wall, .inset-art .part-vessel-inside { vector-effect: none; stroke-linecap: butt; fill: none; }
 .part-vessel-wall { stroke: color-mix(in srgb, var(--fig-blood) 70%, var(--bg)); }
 .part-vessel-inside { stroke: color-mix(in srgb, var(--fig-blood) 16%, var(--bg)); }
@@ -13,7 +13,7 @@
 .inset-art .part-tag { fill: var(--ink); }
 
 /* A walkthrough explains through the close-up, so it gets more room while one does. */
-.plate[data-directed] { --side-right: clamp(34rem, 28vw, 44rem); }
+.app[data-directed] { --side-right: clamp(34rem, 28vw, 44rem); }
 
 /* Comparing: two drawings, one under the other. */
 .inset + .inset { margin-top: 0.6rem; }

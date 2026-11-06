@@ -96,7 +96,7 @@ export function ViewControls() {
       <button type="button" className="toggle" aria-pressed={layers.vessels} disabled={noVessels} onClick={() => setUi({ layers: { ...getState().layers, vessels: !layers.vessels } })}>
         Vessels
       </button>
-      <button type="button" className="toggle" aria-pressed={theme === "plate"} onClick={() => setUi({ theme: theme === "xray" ? "plate" : "xray" })}>
+      <button type="button" className="toggle" aria-pressed={theme === "light"} onClick={() => setUi({ theme: theme === "dark" ? "light" : "dark" })}>
         Light
       </button>
     </div>

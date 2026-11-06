@@ -18,7 +18,7 @@ function lineFor(sex: Sex) {
   // A stop anchored anywhere on the body has to work, so this one sits each stop by its number.
   const locate = (stop: ProcessStop, _process: Process, out: THREE.Vector3) => out.set(0, 1.2 + stop.number * 0.03, 0.1);
   const line = new ProcessLine(network, locate, new THREE.Vector2(1000, 800), 2);
-  line.setPalette(PALETTES.plate);
+  line.setPalette(PALETTES.light);
   return line;
 }
 
