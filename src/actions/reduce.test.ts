@@ -24,6 +24,11 @@ describe("the tools", () => {
     expect(reduce(showing, { name: "remove_intake", args: { id: "bar" } }).view.process).toBeNull();
   });
 
+  it("forgets what it assumed about a food when the food is removed", () => {
+    const logged = stateWith({ intakes: [{ ...NO_NUTRIENTS, id: "bar", label: "Bar", at: hm(16), grams: 50, carbsG: 30 }], assumptions: { bar: "One bar", other: "Kept" } });
+    expect(reduce(logged, { name: "remove_intake", args: { id: "bar" } }).day.assumptions).toEqual({ other: "Kept" });
+  });
+
   it("logs and ends an event through the reducer", () => {
     const logged = reduce(state, { name: "log_event", args: ACTION_SCHEMAS.log_event.parse(args) });
     expect(logged.day.events).toHaveLength(1);

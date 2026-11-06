@@ -83,7 +83,7 @@ uv venv --python 3.12 .venv-pipeline
 ```
 
 ```bash
-uv pip install --python .venv-pipeline/bin/python anny torch scipy scikit-image fast-simplification trimesh
+uv pip install --python .venv-pipeline/bin/python -r pipeline/requirements.txt
 ```
 
 ```bash

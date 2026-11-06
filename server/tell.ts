@@ -43,7 +43,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, { bu
 }
 
 // One message, from the sentence to the answer, with each change sent on as it happens.
-async function runTell(input: TellInput, plan: TellPlan, emit: (event: TellEvent) => void, abort: AbortController, buildChanged: (status: BuildStatus) => void): Promise<TellMeasure> {
+export async function runTell(input: TellInput, plan: TellPlan, emit: (event: TellEvent) => void, abort: AbortController, buildChanged: (status: BuildStatus) => void): Promise<TellMeasure> {
   const started = performance.now();
   const elapsed = () => Math.round(performance.now() - started);
   const measure: TellMeasure = { subtype: "success", totalMs: 0, firstOutputMs: null, firstActionMs: null, replyMs: null, turns: 0, costUsd: 0 };

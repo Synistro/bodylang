@@ -79,7 +79,8 @@ export function reduce(state: BodyState, action: Action): BodyState {
     case "remove_intake": {
       const { id } = action.args;
       const followed = view.process === processIds.intake(id) || view.process === processIds.meal(id);
-      return { ...state, day: { ...day, intakes: day.intakes.filter((i) => i.id !== id) }, view: followed ? { ...view, process: null } : view };
+      const { [id]: _removed, ...assumptions } = day.assumptions;
+      return { ...state, day: { ...day, intakes: day.intakes.filter((i) => i.id !== id), assumptions }, view: followed ? { ...view, process: null } : view };
     }
     case "set_activity":
       return { ...state, day: { ...day, activities: withActivity(day.activities, action.args.posture, action.args.from, action.args.until) }, view: { ...view, whatIf: null } };

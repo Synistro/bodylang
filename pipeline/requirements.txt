@@ -1,0 +1,10 @@
+# What the pipeline scripts import, pinned to the releases current on 2026-11-06. The assets in public/assets
+# were built before this file existed. numpy, scipy, scikit-image, fast-simplification and trimesh match the
+# .venv-pipeline that built the organs; anny and torch have not been run against a rebuild at these versions.
+anny==0.6.2
+fast-simplification==0.2.0
+numpy==2.5.4
+scikit-image==0.26.0
+scipy==1.18.1
+torch==2.15.0
+trimesh==5.2.0
