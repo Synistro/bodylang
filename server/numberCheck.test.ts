@@ -23,6 +23,10 @@ describe("checking Claude's numbers against the model's", () => {
     expect(unverifiedNumbers("It settles around 19:00.", readout)).toEqual(["19:00"]);
   });
 
+  it("doesn't let a clock vouch for its parts", () => {
+    expect(unverifiedNumbers("About 36 of them, 17 in all.", book("settles at 17:36"))).toEqual(["36", "17"]);
+  });
+
   it("takes the person's own numbers as known", () => {
     expect(unverifiedNumbers("Your 2 slices at 13:10.", book("I had 2 slices at 13:10"))).toEqual([]);
   });

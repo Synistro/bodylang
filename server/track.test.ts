@@ -44,6 +44,12 @@ describe("what a straight line through the body crosses", () => {
     expect(traceTrack("fat", "front", "male")).toEqual([]);
   });
 
+  it("reaches the organs only one body has", () => {
+    expect(traceTrack("uterus", "front", "female").some((part) => part.organ === "uterus")).toBe(true);
+    expect(traceTrack("ovaries", "front", "female").some((part) => part.organ === "ovaries")).toBe(true);
+    expect(traceTrack("prostate", "front", "male").some((part) => part.organ === "prostate")).toBe(true);
+  });
+
   it("works on both bodies", () => {
     expect(traceTrack("liver", "right", "female").some((part) => part.organ === "liver")).toBe(true);
   });

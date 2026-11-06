@@ -34,9 +34,12 @@ const MESHES: Record<string, { organ: OrganId | null; name: string }> = {
   large_intestine: { organ: "large_intestine", name: "large intestine" },
   bladder: { organ: "bladder", name: "bladder" },
   prostate: { organ: "prostate", name: "prostate" },
+  uterus: { organ: "uterus", name: "uterus" },
+  ovary_L: { organ: "ovaries", name: "left ovary" },
+  ovary_R: { organ: "ovaries", name: "right ovary" },
   spinal_cord: { organ: null, name: "spinal cord" },
 };
-const AIM_MESHES: Partial<Record<OrganId, string[]>> = { lungs: ["lung_R", "lung_L"], kidneys: ["kidney_R", "kidney_L"] };
+const AIM_MESHES: Partial<Record<OrganId, string[]>> = { lungs: ["lung_R", "lung_L"], kidneys: ["kidney_R", "kidney_L"], ovaries: ["ovary_R", "ovary_L"] };
 const OUTSIDE_BODY = 0.7; // metres back from the organ's centre, well outside the skin
 const LINE_LENGTH = OUTSIDE_BODY * 2;
 const VESSEL_MARGIN = 0.004;

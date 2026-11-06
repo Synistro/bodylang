@@ -12,7 +12,7 @@ export class NumberBook {
   // Anything Claude was given or was told: readouts, the food table, the person's own words.
   add(text: string) {
     for (const clock of text.match(CLOCK) ?? []) this.clocks.add(clock.padStart(5, "0"));
-    for (const number of text.match(LOOSE_NUMBER) ?? []) this.values.add(Number(number));
+    for (const number of text.replace(CLOCK, " ").match(LOOSE_NUMBER) ?? []) this.values.add(Number(number));
   }
 
   // A number said to fewer decimals still matches, so 6.31 backs up "6.3", and 0.65 backs up "65%".
