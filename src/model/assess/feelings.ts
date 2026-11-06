@@ -4,7 +4,7 @@ import { muscleStateAt, namesOf } from "../events/muscles";
 import { MUSCLE_GROUPS } from "../muscleGroups";
 import { ACTIVITY, FEELING_DISPLAY, PROCESS, REFERENCE } from "../params";
 import { drowsyFromMeal, drowsyFromSleepPressure, mealDipOf } from "../engine/feel";
-import { foodKcalOf, Intake, kcalOf } from "../scenario";
+import { Intake, kcalOf } from "../scenario";
 import { OrganId } from "../ids";
 import { hoursWord, whenWords } from "../words";
 import { clamp01 } from "../curve";
@@ -17,8 +17,6 @@ import {
   hoursAwake,
   nearestMinute,
   peakAhead,
-  tens,
-  toMmol,
   groupsWhere,
   minutesUntilSleep,
   sorenessPeak,
@@ -32,13 +30,6 @@ function intensityWord(now: number, later: number): string {
   if (now - later >= d.changeShownAbove) return "Fading";
   if (now >= d.moderateFrom) return "Moderate";
   return now >= d.mildFrom ? "Mild" : "Faint";
-}
-
-// Food logged within a few minutes of another counts as one sitting.
-function sittingKcal(c: Context, meal: Intake): number {
-  return c.eaten
-    .filter((i) => Math.abs(i.at - meal.at) <= PROCESS.sameSittingMin)
-    .reduce((sum, i) => sum + foodKcalOf(i), 0);
 }
 
 // The meal doing the most to make you drowsy now, which is often an earlier one than the last.
@@ -56,7 +47,7 @@ const SLEEPY_CAUSES: { size: (c: Context) => number; text: (c: Context) => strin
     size: mealDrowsiness,
     text: (c) => {
       const meal = heaviestMeal(c);
-      return meal ? `You ate ${Math.round(sittingKcal(c, meal))} kcal at ${clock(meal.at)}` : "You ate recently";
+      return meal ? `You ate a meal at ${clock(meal.at)}` : "You ate recently";
     },
   },
   {
@@ -112,7 +103,7 @@ const FEELINGS: FeelingSpec[] = [
     label: "Full",
     organ: "stomach",
     level: (c, at) => c.v("fullness", at),
-    cause: (c) => `Your stomach holds ${tens(c.v("stomachMl"))} ml`,
+    cause: () => "Your stomach is still well filled",
     when: fadesBelowNegligible("Fades"),
   },
   {
@@ -120,7 +111,7 @@ const FEELINGS: FeelingSpec[] = [
     label: "Warm",
     organ: "small_intestine",
     level: (c, at) => warmth(c.v("flowGut", at)),
-    cause: (c) => `Digesting makes heat, ${Math.round(c.v("flowGut") * 100)}% of blood at your gut`,
+    cause: () => "Digesting makes heat and pulls blood to your gut",
     when: fadesBelowNegligible("Fades"),
   },
   {
@@ -136,7 +127,7 @@ const FEELINGS: FeelingSpec[] = [
     label: "Out of breath",
     organ: "lungs",
     level: (c, at) => fromMoving(c, "breathing", at) / ACTIVITY.breaths.running,
-    cause: (c) => `You are breathing ${Math.round(c.v("breaths"))} times a minute`,
+    cause: () => "Your muscles are asking for more oxygen",
     when: fadesBelowNegligible("Eases"),
   },
   {
@@ -170,7 +161,7 @@ const FEELINGS: FeelingSpec[] = [
     label: "Jittery",
     organ: "brain",
     level: (c, at) => c.v("jitter", at),
-    cause: (c) => `Lots of caffeine, ${c.v("caffeine").toFixed(1)} mg/L in your blood`,
+    cause: () => "You have a lot of caffeine in your blood",
     when: fadesBelowNegligible("Eases"),
   },
   {
@@ -187,7 +178,7 @@ const FEELINGS: FeelingSpec[] = [
     label: "Low energy",
     organ: "liver",
     level: (c, at) => c.v("crash", at),
-    cause: (c) => `Blood sugar has dipped to ${toMmol(c.v("glucose")).toFixed(1)} mmol/L`,
+    cause: () => "Your blood sugar has dipped",
     when: fadesBelowNegligible("Recovers"),
   },
   {
@@ -207,7 +198,7 @@ const FEELINGS: FeelingSpec[] = [
     organ: "kidneys",
     level: (c, at) =>
       clamp01(-c.v("fluidBalance", at) / (c.tr.scenario.body.weightKg * REFERENCE.fluid.impairingShareOfWeight * 1000)),
-    cause: (c) => `You have lost about ${(-c.v("fluidBalance") / 1000).toFixed(1)} L of fluid`,
+    cause: () => "You have lost more fluid than you drank",
     when: () => null,
   },
 ];

@@ -39,11 +39,10 @@ function ofHundred(x: number) {
 function eventHeadline(event: ResolvedEvent, t: number): string {
   const end = event.ends;
   const running = end === null || t <= end;
-  const heart = Math.round(effectAt(event, "heartRate", t));
   switch (event.preset) {
     case "training": {
       const named = namesOf(event.muscles);
-      if (running) return `Working your ${named}, heart up ${heart} bpm`;
+      if (running) return `Working your ${named}, with your heart pumping hard`;
       const peak = (end ?? t) + PROCESS.sorenessPeakMin;
       return t < peak
         ? `Repairing your ${named}, soreness peaks ${whenWords(peak, t)}`
@@ -57,13 +56,13 @@ function eventHeadline(event: ResolvedEvent, t: number): string {
         : "Immune system fighting it, no fever";
     }
     case "sex":
-      return running
-        ? `Heart up about ${heart} bpm, pressure raised`
-        : "Heart rate back near baseline, prolactin stays raised";
+      return running ? "Heart and blood pressure up for now" : "Heart rate back near baseline, prolactin stays raised";
     case "stress":
-      return running ? `Stress hormones up, heart up ${heart} bpm` : `Easing off, heart still up ${heart} bpm`;
+      return running
+        ? "Stress hormones up, and your heart is beating faster"
+        : "Easing off, with your heart still a little fast";
     case "poor_sleep":
-      return `Insulin works ${Math.round(-effectAt(event, "insulinSensitivity", t) * 100)}% less, hunger up ${Math.round(effectAt(event, "appetite", t) * 100)}%`;
+      return "Insulin works less well today, and you may feel hungrier";
     case "custom":
       return running ? "Claude's estimate, still going on" : "Claude's estimate, fading";
     default: {

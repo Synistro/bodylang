@@ -8,7 +8,7 @@ import { openingReply, readout } from "./readout";
 import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 import { Trajectory, value } from "./engine/trajectory";
-import { formatClock, whenWords } from "./words";
+import { aboutClock, formatClock, howMuch, weighsSomething, whenWords } from "./words";
 import { SYSTEMS } from "./systems";
 import { threadsAt } from "./threads";
 import { hm } from "./testKit";
@@ -56,9 +56,42 @@ const CONTRAST = /\bnot just\b|\brather than\b|\bnot only\b|\bbut not\b|\binstea
 const FALSE_ALARM = /blood sugar is low|\b4[0-9] h\b/i;
 const FORBIDDEN_WORDS = Object.entries({ BROKEN, RETIRED, BAD_GRAMMAR, CONTRAST, FALSE_ALARM });
 
+describe("amounts in words", () => {
+  it("notices a sentence that weighs something, and leaves times and counts alone", () => {
+    for (const text of ["5.2 g of alcohol", "It holds 620 ml", "0.21 g/L left", "565 kcal", "4.7 mmol/L"])
+      expect(weighsSomething(text), text).toBe(true);
+    for (const text of ["Until about 01:15", "Half leaves every 5 hours", "Your heart is at 78 bpm", "1 in 4 goes"])
+      expect(weighsSomething(text), text).toBe(false);
+  });
+
+  it("says a share the way a person does", () => {
+    expect([0.95, 0.7, 0.5, 0.3, 0.1].map(howMuch)).toEqual(["nearly all", "most", "about half", "some", "a little"]);
+  });
+
+  it("rounds a time it can only estimate", () => {
+    expect(aboutClock(hm(1, 16))).toBe("01:15");
+  });
+});
+
 describe("the sweep from 06:00 to 26:00", () => {
   for (const name of Object.keys(SCENARIOS)) {
     const tr = trajectoryOf(name);
+
+    it(`says what is happening, with amounts in the column beside the words: ${name}`, () => {
+      const weighed: string[] = [];
+      for (const t of MINUTES) {
+        const a = assess(tr, t);
+        const sentences = [
+          ...Object.values(a.systems).map((s) => s.sentence),
+          ...a.feelings.map((f) => f.cause),
+          ...processesAt(tr, t).flatMap((p) => [p.headline, ...p.stops.map((s) => s.say)]),
+        ];
+        // Blood sugar when it is low, and alcohol against the crash risk, are limits a person would act on.
+        for (const text of sentences)
+          if (weighsSomething(text) && !/crash risk|sugar is low/i.test(text)) weighed.push(text);
+      }
+      expect([...new Set(weighed)]).toEqual([]);
+    });
 
     it(`shows no broken or retired words: ${name}`, () => {
       const problems: string[] = [];
@@ -252,7 +285,7 @@ describe("false reassurance", () => {
     expect(gut.value).toBeLessThan(10);
     expect(gut.why).toBe("Your working muscles are taking the blood");
     const line = processesAt(trajectoryOf("a run after breakfast"), hm(10, 40)).find((p) => p.id === "circulation");
-    expect(line?.stops.find((s) => s.id === "gut")?.say).toContain("Down from 25%");
+    expect(line?.stops.find((s) => s.id === "gut")?.say).toContain("Less than usual");
   });
 
   it("gives thirst its due on a day with nothing drunk", () => {
@@ -291,7 +324,7 @@ describe("contradictions", () => {
     const t = hm(17, 20);
     expect(reading(assess(tr, t), "absorbing").value).toBeGreaterThan(0);
     expect(processesAt(tr, t).find((p) => p.id === "intake:pizza")?.headline).toContain(
-      "only the first sugar has reached your blood",
+      "only the first sugar reaching your blood",
     );
   });
 

@@ -5,6 +5,7 @@ import { simulate } from "../engine/simulate";
 import { Body, Scenario } from "../scenario";
 import { SYSTEMS } from "../systems";
 import type { ExtensionState, ProcessExtension } from "./api";
+import { weighsSomething } from "../words";
 
 const SAY_WORDS_MOST = 25;
 const STEP_MIN = 15;
@@ -107,6 +108,10 @@ function checkState(state: ExtensionState, who: string, problem: (text: string) 
         `${name}: its reading "${stop.reading}" is a percentage. A 0 to 1 scale reads as levelWord from ./api, and a measurement as a number with its unit`,
       );
     if (stop.say.trim().split(/\s+/).length > SAY_WORDS_MOST) problem(`${name}: say is over ${SAY_WORDS_MOST} words`);
+    if (weighsSomething(`${stop.say} ${headline}`))
+      problem(
+        `${name}: its words state an amount: "${stop.say}". Say what is happening, and put the amount in reading`,
+      );
     if (stop.organ !== null && !ORGANS.includes(stop.organ)) problem(`${name}: there is no organ "${stop.organ}"`);
     for (const route of stop.routes)
       if (!(ROUTE_IDS as readonly string[]).includes(route)) problem(`${name}: there is no route "${route}"`);

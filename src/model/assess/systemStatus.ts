@@ -19,7 +19,6 @@ import {
   heartCauses,
   ownRestBpm,
   peakAhead,
-  tens,
   toMmol,
   minutesUntilSleep,
   sorenessPeak,
@@ -78,7 +77,7 @@ const mmolText = (c: Context) => toMmol(c.v("glucose")).toFixed(1);
 function digestionSentence(c: Context): string {
   const empties = stateForecast(c.tr, c.t).stomachEmpty;
   if (c.v("stomachKcal") > REFERENCE.stillDigestingKcal)
-    return `Your stomach holds ${tens(c.v("stomachMl"))} ml${empties === null ? "" : ` and empties near ${clock(empties)}`}.`;
+    return `Your stomach is busy${empties === null ? "" : `, and should finish near ${clock(empties)}`}.`;
   if (c.v("digestion") >= REFERENCE.digestion.finishingFrom) return "Your intestine is absorbing the last of the meal.";
   return c.v("stomachMl") > STOMACH.restingVolumeMl + REFERENCE.stomach.emptyAboveRestingMl
     ? "Liquid is passing through your stomach."
@@ -87,9 +86,7 @@ function digestionSentence(c: Context): string {
 
 function sugarRisingSentence(c: Context): string {
   const peak = peakAhead(c, "glucose", 2);
-  return peak
-    ? `Blood sugar is ${mmolText(c)} and rising, peaking at ${toMmol(peak.value).toFixed(1)} near ${clock(peak.at)}.`
-    : `Blood sugar is ${mmolText(c)} and rising.`;
+  return peak ? `Your blood sugar is rising, and should peak near ${clock(peak.at)}.` : "Your blood sugar is rising.";
 }
 
 function heartSentence(c: Context): string {
@@ -133,8 +130,10 @@ function sleepySentence(c: Context): string {
     : "You may feel sleepy.";
 }
 
-const caffeineSentence = (c: Context, r: (id: ReadingId) => Reading) =>
-  `Caffeine is ${r("caffeine").trend === "rising" ? "kicking in" : "fading"}, with ${Math.round(c.v("occupancy") * 100)}% of the tired signal blocked.`;
+const caffeineSentence = (_c: Context, r: (id: ReadingId) => Reading) =>
+  r("caffeine").trend === "rising"
+    ? "Caffeine is kicking in, so you may feel more awake."
+    : "Caffeine is fading, so your tiredness may start to show.";
 
 function immuneSentence(c: Context): string {
   const illness = fighting(c);
@@ -166,19 +165,15 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
   energy: {
     rows: [
       [(_c, r) => r("glucose").verdict === "low", "Sugar low", (c) => `Blood sugar is low at ${mmolText(c)}.`],
-      [
-        (c) => lowFuel(c),
-        "Liver fuel low",
-        (c) => `Liver fuel is low at ${Math.round(c.v("liverGlycogen"))} g, and blood sugar is ${mmolText(c)}.`,
-      ],
+      [(c) => lowFuel(c), "Liver fuel low", () => "Your liver's fuel reserve is running low."],
       [(_c, r) => r("glucose").trend === "rising", "Rising", sugarRisingSentence],
-      [(_c, r) => r("glucose").trend === "falling", "Falling", (c) => `Blood sugar is ${mmolText(c)} and coming down.`],
+      [(_c, r) => r("glucose").trend === "falling", "Falling", () => "Your blood sugar is coming down."],
       [
         (c) => c.v("tg") - c.tr.anthro.baselineTg >= REFERENCE.triglycerides.arrivedAboveRestMgDl,
         "Clearing fat",
-        (c) => `Blood fat is ${Math.round(c.v("tg"))} mg/dL and clearing.`,
+        () => "Meal fat is in your blood, and clearing.",
       ],
-      [always, "Steady", (c) => `Blood sugar is steady at ${mmolText(c)}.`],
+      [always, "Steady", () => "Your blood sugar is steady."],
     ],
     level: (c, r) =>
       Math.max(
@@ -231,7 +226,7 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
       [
         (c) => c.v("alcohol") >= REFERENCE.alcohol.slowsBrainFromGPerL,
         "Alcohol",
-        (c) => `Alcohol is slowing your brain, ${c.v("alcohol").toFixed(2)} g/L in your blood.`,
+        () => "Alcohol is slowing your brain, so reactions may dull.",
       ],
       [stressedNow, "Stressed", () => "Stress hormones are keeping your brain on alert."],
       [(c) => c.v("drowsy") >= PROCESS.sleepyNamedFrom, "Drowsy", sleepySentence],
@@ -260,14 +255,10 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
       [
         (c) => c.v("alcohol") >= REFERENCE.alcohol.clearingNamedFromGPerL,
         "Clearing alcohol",
-        (c) => `Your liver is clearing alcohol, ${c.v("alcohol").toFixed(2)} g/L left.`,
+        () => "Your liver is working through the alcohol.",
       ],
-      [isDry, "A little dry", (c) => `You are a little dry, down about ${(-c.v("fluidBalance") / 1000).toFixed(1)} L.`],
-      [
-        (c) => c.v("caffeine") >= 1,
-        "Clearing caffeine",
-        (c) => `Your liver is clearing caffeine, ${c.v("caffeine").toFixed(2)} mg/L left.`,
-      ],
+      [isDry, "A little dry", () => "You are a little dry, so some water would help."],
+      [(c) => c.v("caffeine") >= 1, "Clearing caffeine", () => "Your liver is working through the caffeine."],
       [
         (c) => activeSubstance(c) !== undefined,
         (c) => `Clearing ${inSentence(activeSubstance(c)?.substance.label ?? "")}`,
@@ -278,7 +269,7 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
         "Quiet",
         (c) =>
           c.v("bladderMl") >= REFERENCE.bladder.firstDesireMl
-            ? `Your bladder is filling, about ${tens(c.v("bladderMl"))} ml.`
+            ? "Your bladder is filling."
             : "Your liver and kidneys are ticking over.",
       ],
     ],

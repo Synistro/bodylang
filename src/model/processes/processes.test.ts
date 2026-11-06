@@ -165,13 +165,13 @@ describe("the lines at 17:00", () => {
   it("follows the sugar bar and pizza as one meal", () => {
     const meal = lineAt("meal:sugar_bar", hm(17));
     expect(readings(meal)).toMatchObject({ Stomach: "100%", "Small intestine": "", Liver: "", Muscle: "", Fat: "" });
-    expect(meal.headline).toBe("100% still in your stomach, just eaten");
+    expect(meal.headline).toBe("Just eaten, and all still in your stomach");
     expect(meal.substance).toBe("chyme");
     expect(meal.title).toBe("Ate sugar bar and pizza");
     expect(meal.active).toBe(true);
     expect(stopOf(meal, "stomach").state).toBe("here");
-    expect(lineAt("meal:sugar_bar", hm(17, 30)).headline).toMatch(
-      /^\d+% still in your stomach, only the first sugar has reached your blood$/,
+    expect(lineAt("meal:sugar_bar", hm(17, 30)).headline).toBe(
+      "Still in your stomach, with only the first sugar reaching your blood",
     );
   });
 
@@ -179,10 +179,10 @@ describe("the lines at 17:00", () => {
     const line = lineAt("intake:coffee", hm(17));
     expect(readings(line)).toMatchObject({ Blood: "32%", Brain: "4% blocked" });
     expect(line.title).toBe("Drank coffee");
-    expect(line.headline).toBe("32% still in your blood, 4% of the tired signal blocked");
+    expect(line.headline).toBe("In your blood, and hiding some of your tiredness");
     expect(line.substance).toBe("caffeine");
     expect(stopOf(line, "blood").state).toBe("here");
-    expect(stopOf(line, "brain").say).toContain("4 of every 100");
+    expect(stopOf(line, "brain").say).toContain("seats your tired signal uses");
     expect(stopOf(line, "stomach").reading).toBe("");
   });
 
@@ -213,17 +213,15 @@ describe("the lines at 17:00", () => {
     expect(line.substance).toBe("fat");
     expect(stopOf(line, "intestine").state).toBe("here");
     expect(stopOf(line, "lymph").routes).toEqual(["lymph"]);
-    expect(line.headline).toContain("still in your stomach");
+    expect(line.headline).toContain("Still in your stomach");
     expect(lineAt("fat-route", hm(20, 16)).headline).toContain("in your blood");
   });
 
   it("splits the heart's output, with share of blood as the amount", () => {
     const line = lineAt("circulation", hm(17));
     expect(line.active).toBe(true);
-    expect(line.headline).toMatch(/^3\d% of your blood is going to your gut, up from 25% at rest$/);
-    expect(lineAt("circulation", hm(18)).headline).toMatch(
-      /^3\d% of your blood is going to your gut, up from 25% at rest$/,
-    );
+    expect(line.headline).toBe("More blood than usual is going to your gut");
+    expect(lineAt("circulation", hm(18)).headline).toBe("More blood than usual is going to your gut");
     for (const id of ["gut", "muscle", "brain", "kidneys"]) expect(stopOf(line, id).from).toBe("heart");
     expect(stopOf(line, "gut").share).toBeCloseTo(value(tr, "flowGut", hm(17)), 5);
     expect(stopOf(line, "gut").state).toBe("here");
@@ -351,7 +349,7 @@ describe("where the action is", () => {
     const done = lineAt("meal:sugar_bar", hm(29));
     expect(done.active).toBe(false);
     expect(done.stops.every((s) => s.state === "passed")).toBe(true);
-    expect(done.headline).toMatch(/^Digested\. \d+% stored as fat/);
+    expect(done.headline).toMatch(/^Digested\. It mostly went to your fat stores and /);
     expect(done.stops.every((s) => s.reading === "")).toBe(true);
   });
 

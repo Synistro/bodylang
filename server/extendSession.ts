@@ -49,7 +49,7 @@ How it should be:
 - Put every tunable number in \`params\`, and read it from there. Use params defined above the extension as a const.
 - Follow what the model really computes. Use its curves where they relate, such as inflammation during an illness or the clock for a daily rhythm. Say plainly what the model doesn't capture.
 - Pick \`organ\` from the real organs where a stop sits on one, and otherwise null with a route, so it sits where the route ends. There are no meshes for anything else.
-- Every sentence is plain words for someone with no medical training. Say "you may feel", never "you should feel". Never diagnose, name a condition they have, or recommend a dose. Headlines are under 14 words, and each \`say\` is at most 25. Avoid "not just", "rather than" and "not only".
+- Every sentence is plain words for someone with no medical training, saying what is happening and why. Amounts belong in \`reading\`, so a \`say\` or headline with grams, kcal or a concentration fails the checks. Say "you may feel", never "you should feel". Never diagnose, name a condition they have, or recommend a dose. Headlines are under 14 words, and each \`say\` is at most 25. Avoid "not just", "rather than" and "not only".
 - Nothing random or stateful: the same minute always gives the same answer.
 - Only those two files can change, so if a test you didn't write fails, the fix is in your process, and the failure says what it wants.
 

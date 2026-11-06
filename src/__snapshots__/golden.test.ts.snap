@@ -2,8 +2,8 @@
 
 exports[`the model's output > 75 g of glucose 1`] = `
 {
-  "acting": "e24c0f958ae6d7c6",
-  "assess": "bf2f56aca3005b3e",
+  "acting": "3ce71004c4b90f5c",
+  "assess": "b7aa0f0662468170",
   "caffeine ledger glucose": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -30,8 +30,8 @@ exports[`the model's output > 75 g of glucose 1`] = `
   "origins": "8f7b85b37152c415",
   "process lanes 1080": "e7a570a339fd2d6c",
   "process lanes 720": "6325d8c95cafbd8a",
-  "processes": "0ea4b57443ed80e0",
-  "readout": "d88129304f6b4628",
+  "processes": "b3c63b234086b8ae",
+  "readout": "af24b07973a6873d",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "866290452a1bef2a",
   "series bladderMl": "4b177c99954c7790",
@@ -101,8 +101,8 @@ exports[`the model's output > 75 g of glucose 1`] = `
 
 exports[`the model's output > a beer, pizza and a pill 1`] = `
 {
-  "acting": "c6f23ee3b3d68302",
-  "assess": "338b947fd44aeadd",
+  "acting": "9b439b5061a7b8f0",
+  "assess": "652af286a975b0bb",
   "caffeine ledger beer": "8edf6e978fa8a642",
   "caffeine ledger pizza": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -132,8 +132,8 @@ exports[`the model's output > a beer, pizza and a pill 1`] = `
   "origins": "dc0d0b8bc00e0992",
   "process lanes 1080": "a8b19e0c8ce2452f",
   "process lanes 720": "98356ef32366a8a0",
-  "processes": "bb33b9c4439bafbc",
-  "readout": "65d02e142c93187f",
+  "processes": "16d6fa113f91e6c9",
+  "readout": "4aa636a387c095ca",
   "series alcohol": "ee34bc3a64ccea58",
   "series alertness": "4aa2ae1edc5fe32d",
   "series bladderMl": "a7b29651f7f87cb6",
@@ -204,8 +204,8 @@ exports[`the model's output > a beer, pizza and a pill 1`] = `
 
 exports[`the model's output > a cold 1`] = `
 {
-  "acting": "4f1f1516477a16a2",
-  "assess": "a74e1611c2cd6aab",
+  "acting": "52420302c59c9f08",
+  "assess": "fe7a6228faa242ff",
   "caffeine ledger coffee": "38557227c934cf9e",
   "caffeine ledger pizza": "8edf6e978fa8a642",
   "channel appetite": "5087a0f7f078a36e",
@@ -235,8 +235,8 @@ exports[`the model's output > a cold 1`] = `
   "origins": "fa6a421467f700d9",
   "process lanes 1080": "2a1bf4851a3383ba",
   "process lanes 720": "32ef0d1c238a250a",
-  "processes": "d9b5be2039aaa9ba",
-  "readout": "fb3c18cd02e306f5",
+  "processes": "914e0655b80b63c7",
+  "readout": "5a6b7423fee3dd4a",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "068cf4a68784929a",
   "series bladderMl": "b285792b01874c50",
@@ -307,7 +307,7 @@ exports[`the model's output > a cold 1`] = `
 exports[`the model's output > a fasted run 1`] = `
 {
   "acting": "b383e32a0a85b3cf",
-  "assess": "5632a32be228af0f",
+  "assess": "748bacef30785a7b",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "2449604a3295c470",
   "channel breathing": "f38e943195a68d75",
@@ -331,8 +331,8 @@ exports[`the model's output > a fasted run 1`] = `
   "origins": "ae2993228263994f",
   "process lanes 1080": "f7c4ddf0754b5c4f",
   "process lanes 720": "04c4a7fcb9a917a9",
-  "processes": "d83c6cff014b90c1",
-  "readout": "bb84ab054e780824",
+  "processes": "ac4c1ede1e6df5d0",
+  "readout": "e31008146551c4e1",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "8ff4de8957622dc7",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -402,8 +402,8 @@ exports[`the model's output > a fasted run 1`] = `
 
 exports[`the model's output > a latte 1`] = `
 {
-  "acting": "17c38ab80977f6ae",
-  "assess": "47a43d392f84167c",
+  "acting": "b0f00b4f8a25bf7e",
+  "assess": "2e3d323c806fcccd",
   "caffeine ledger latte": "be9c39b4ce8e3ffe",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -430,8 +430,8 @@ exports[`the model's output > a latte 1`] = `
   "origins": "c3c236860e45c809",
   "process lanes 1080": "0286e89c0aa91c30",
   "process lanes 720": "f9eb145abf729609",
-  "processes": "263099227cd8dde8",
-  "readout": "6ec1822b80fb2ae6",
+  "processes": "350f8a633ddda668",
+  "readout": "415e323475d80bca",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "6e4563d7884bf99a",
   "series bladderMl": "bd33d7be83c1663c",
@@ -501,8 +501,8 @@ exports[`the model's output > a latte 1`] = `
 
 exports[`the model's output > a period starting 1`] = `
 {
-  "acting": "c0543b76bba1878f",
-  "assess": "f957e8d30b24af26",
+  "acting": "17e311d0638d3803",
+  "assess": "cd416e68ec1e607f",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
   "caffeine ledger lunch": "8edf6e978fa8a642",
@@ -535,8 +535,8 @@ exports[`the model's output > a period starting 1`] = `
   "origins": "6da09175429f8644",
   "process lanes 1080": "55702167fc383ca0",
   "process lanes 720": "54cf9c356a8914be",
-  "processes": "fd879d1544ca06d7",
-  "readout": "1f7dabe52f5f79f1",
+  "processes": "8677a06cabb35e83",
+  "readout": "c2c0239e68e5b288",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "19f49507b43a419a",
   "series bladderMl": "38f378e01e00bd23",
@@ -606,8 +606,8 @@ exports[`the model's output > a period starting 1`] = `
 
 exports[`the model's output > a run after breakfast 1`] = `
 {
-  "acting": "7e329f2b44e535b7",
-  "assess": "39ba27545437f377",
+  "acting": "e6d9772dc15eaca1",
+  "assess": "381deffc7652e80d",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "2449604a3295c470",
@@ -634,8 +634,8 @@ exports[`the model's output > a run after breakfast 1`] = `
   "origins": "03c49c650eec74c4",
   "process lanes 1080": "328a915b9463caa0",
   "process lanes 720": "0d184f32461a33ed",
-  "processes": "d858cb97ed9f0d0b",
-  "readout": "b199c30374199d86",
+  "processes": "d98025b0526c842d",
+  "readout": "ad0a47f3a6ce2d68",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "f769c46515e0580f",
   "series bladderMl": "d907aa9bf133904d",
@@ -705,8 +705,8 @@ exports[`the model's output > a run after breakfast 1`] = `
 
 exports[`the model's output > a short night 1`] = `
 {
-  "acting": "19cc229db94f1f87",
-  "assess": "ae0aac6ece0f0206",
+  "acting": "f49f0c478149d30b",
+  "assess": "2bcd11f64b70cbc5",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
   "caffeine ledger lunch": "8edf6e978fa8a642",
@@ -739,8 +739,8 @@ exports[`the model's output > a short night 1`] = `
   "origins": "af8fe9cd03a82300",
   "process lanes 1080": "6371a184564b716b",
   "process lanes 720": "7e1e4f3c2471de99",
-  "processes": "60ffa868d12f45ba",
-  "readout": "163587436337c049",
+  "processes": "e13dc5c39defacc3",
+  "readout": "fdc4282e74a99293",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "bbf1abf02566af45",
   "series bladderMl": "38f378e01e00bd23",
@@ -810,8 +810,8 @@ exports[`the model's output > a short night 1`] = `
 
 exports[`the model's output > a short night, slept short 1`] = `
 {
-  "acting": "f5f07c2051673c56",
-  "assess": "a52121043c3c6679",
+  "acting": "9b922d6b21e113b5",
+  "assess": "6bacd434e9bfef56",
   "channel appetite": "af2d0db14b274341",
   "channel bloodPressure": "dc52a15473c2cbc3",
   "channel breathing": "dc52a15473c2cbc3",
@@ -835,8 +835,8 @@ exports[`the model's output > a short night, slept short 1`] = `
   "origins": "db33f03f142d44ad",
   "process lanes 1080": "9e69ff46ec63bccb",
   "process lanes 720": "46820cad90fb1b2c",
-  "processes": "2f1584f0a6472172",
-  "readout": "d802225035201cd4",
+  "processes": "c587d55363aa0608",
+  "readout": "6903c5034928b035",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "75a509a9bcf3fd9f",
   "series bladderMl": "9d838ba0882d6fa1",
@@ -906,8 +906,8 @@ exports[`the model's output > a short night, slept short 1`] = `
 
 exports[`the model's output > a walk after a meal 1`] = `
 {
-  "acting": "d491cb8ae24bd2ec",
-  "assess": "fd8ccb247a405691",
+  "acting": "cd1e86a5ab3dd875",
+  "assess": "943a31612331abc2",
   "caffeine ledger lunch": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "d16db86c54e6708b",
@@ -934,8 +934,8 @@ exports[`the model's output > a walk after a meal 1`] = `
   "origins": "e83443b94bf8ed2a",
   "process lanes 1080": "9037470f643b7f00",
   "process lanes 720": "29f3d639884cb452",
-  "processes": "dbf93e3d13207bfe",
-  "readout": "db06736927307289",
+  "processes": "e31e80ab4ab87b23",
+  "readout": "46aa0efe3a8d74c3",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "69b4f98fe5f01b35",
   "series bladderMl": "c2b10904c2a5d02d",
@@ -1005,8 +1005,8 @@ exports[`the model's output > a walk after a meal 1`] = `
 
 exports[`the model's output > after ovulation 1`] = `
 {
-  "acting": "f1122957e4ce3201",
-  "assess": "e2941b4220af8f49",
+  "acting": "196440b0b2e74ace",
+  "assess": "7c7ec1931fa80417",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
   "caffeine ledger lunch": "8edf6e978fa8a642",
@@ -1039,8 +1039,8 @@ exports[`the model's output > after ovulation 1`] = `
   "origins": "691a78425152a53b",
   "process lanes 1080": "71d8cb1fa671b97f",
   "process lanes 720": "65538e10221601e6",
-  "processes": "1948ff90ddfca1d9",
-  "readout": "b2e324e1d8dc3687",
+  "processes": "6a2f7332445165f1",
+  "readout": "73450f381bc951f6",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "19f49507b43a419a",
   "series bladderMl": "38f378e01e00bd23",
@@ -1110,8 +1110,8 @@ exports[`the model's output > after ovulation 1`] = `
 
 exports[`the model's output > an exam 1`] = `
 {
-  "acting": "9aa38a5e7b7d88a6",
-  "assess": "fe328eeeb3c5d5cb",
+  "acting": "11e33677ba676b1a",
+  "assess": "a8a20d9f4eaa07f1",
   "channel appetite": "cb5e18ae06148cdc",
   "channel bloodPressure": "9acbf8fad66b5c8a",
   "channel breathing": "5479a9a5bf5481fa",
@@ -1135,8 +1135,8 @@ exports[`the model's output > an exam 1`] = `
   "origins": "91afdd4884e3a54a",
   "process lanes 1080": "93082c32250d5095",
   "process lanes 720": "b2567a33cb5781a0",
-  "processes": "c32d5d13674dfc84",
-  "readout": "c72c53efe0207992",
+  "processes": "8dc49c5f9bb9359f",
+  "readout": "6c33b36632ad82e7",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "e43a7b822fa12db8",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -1206,8 +1206,8 @@ exports[`the model's output > an exam 1`] = `
 
 exports[`the model's output > another body 1`] = `
 {
-  "acting": "e79831662de0d88b",
-  "assess": "78c946d140daf43e",
+  "acting": "5c706c8670a27ab2",
+  "assess": "2fef7c87d1f6fc08",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
   "caffeine ledger lunch": "8edf6e978fa8a642",
@@ -1240,8 +1240,8 @@ exports[`the model's output > another body 1`] = `
   "origins": "00b2db9d554fc348",
   "process lanes 1080": "5bcb855a9031ecad",
   "process lanes 720": "85df428d77ec11fb",
-  "processes": "b5acc70dce4e2ec2",
-  "readout": "173e88ddda002f63",
+  "processes": "ef81cd61efca0bf3",
+  "readout": "81705489ed2c6524",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "19f49507b43a419a",
   "series bladderMl": "38f378e01e00bd23",
@@ -1311,8 +1311,8 @@ exports[`the model's output > another body 1`] = `
 
 exports[`the model's output > banana 1`] = `
 {
-  "acting": "2024916cb0b9b1e3",
-  "assess": "647729c0d01b3045",
+  "acting": "0cc70f74f21565c4",
+  "assess": "5a71eb6cab14d5ed",
   "caffeine ledger banana": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -1339,8 +1339,8 @@ exports[`the model's output > banana 1`] = `
   "origins": "5dd06218e165f3cd",
   "process lanes 1080": "92168419b7f92163",
   "process lanes 720": "88af5ab034ad69be",
-  "processes": "f5f1632eba007324",
-  "readout": "1d2a9240ac361b34",
+  "processes": "b5ec4d1de1f3dd7a",
+  "readout": "fbdd3074ceee2457",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "913b79ef87045c1b",
   "series bladderMl": "ab79635c179612f6",
@@ -1410,8 +1410,8 @@ exports[`the model's output > banana 1`] = `
 
 exports[`the model's output > burger 1`] = `
 {
-  "acting": "955b899cd520a40c",
-  "assess": "2a9fbdd836ea2d0d",
+  "acting": "35a76100c0f8406e",
+  "assess": "6d46cc1c8e9540c7",
   "caffeine ledger burger": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -1438,8 +1438,8 @@ exports[`the model's output > burger 1`] = `
   "origins": "912bc851cfe031db",
   "process lanes 1080": "bf5b2165622cdf63",
   "process lanes 720": "6c64c0d1dce0e7a8",
-  "processes": "d19517dbbde5f236",
-  "readout": "81b0715af2161205",
+  "processes": "14622d69c8875434",
+  "readout": "da34f9c9d0cc5753",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "69f005f0cedd7246",
   "series bladderMl": "8200f3ccd6707526",
@@ -1509,8 +1509,8 @@ exports[`the model's output > burger 1`] = `
 
 exports[`the model's output > chest and triceps 1`] = `
 {
-  "acting": "63cc410877ed9252",
-  "assess": "6fd5532059f33feb",
+  "acting": "80d7a5589c718ac3",
+  "assess": "11380f773263b208",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "225b643038703693",
   "channel breathing": "1946f927d731b306",
@@ -1534,8 +1534,8 @@ exports[`the model's output > chest and triceps 1`] = `
   "origins": "a8562d75438f5edf",
   "process lanes 1080": "a85c2bba8b84d0c3",
   "process lanes 720": "63c976353b029ed3",
-  "processes": "9b0b8785cf971a20",
-  "readout": "a4e0fd179a90bcd1",
+  "processes": "1427881438c07c90",
+  "readout": "48b3954338d0650c",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "9c1b41cba00570e1",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -1605,8 +1605,8 @@ exports[`the model's output > chest and triceps 1`] = `
 
 exports[`the model's output > cola 1`] = `
 {
-  "acting": "c13ab31c1a5e808a",
-  "assess": "a044ca75e916c6c9",
+  "acting": "6ec8d00c9dbaf321",
+  "assess": "4458c62617b1cf74",
   "caffeine ledger cola": "7ac806632418a871",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -1633,8 +1633,8 @@ exports[`the model's output > cola 1`] = `
   "origins": "bf8f999c49326de0",
   "process lanes 1080": "0ec84a7e06ae4719",
   "process lanes 720": "9a4ebdf892bab456",
-  "processes": "7b35b3c8b79e1081",
-  "readout": "a6ba23c4d257abb6",
+  "processes": "5c1d1b69198ebe5b",
+  "readout": "894837dcc65d4244",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "9c50b1f929fb4d4d",
   "series bladderMl": "e37bcccbdcf0e216",
@@ -1704,8 +1704,8 @@ exports[`the model's output > cola 1`] = `
 
 exports[`the model's output > everything at once 1`] = `
 {
-  "acting": "6772ed6b4be49222",
-  "assess": "13dfa6592721f397",
+  "acting": "24d2940c93c6a771",
+  "assess": "225eabcc00d2b879",
   "caffeine ledger coffee": "0a04b75a4ed38000",
   "caffeine ledger pizza": "8edf6e978fa8a642",
   "channel appetite": "55cd2ee51801d2b7",
@@ -1735,8 +1735,8 @@ exports[`the model's output > everything at once 1`] = `
   "origins": "2aa26cd605da6adf",
   "process lanes 1080": "399eca9d2765da0a",
   "process lanes 720": "8c280ee50eab3497",
-  "processes": "419c33bfe575c230",
-  "readout": "d7e7e13a4ae8bf25",
+  "processes": "da2f4d1725954970",
+  "readout": "cc81052ee466ffcb",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "5d110fdf0042a018",
   "series bladderMl": "d1f5d71226ff86e8",
@@ -1806,8 +1806,8 @@ exports[`the model's output > everything at once 1`] = `
 
 exports[`the model's output > far too much coffee 1`] = `
 {
-  "acting": "5f6bed7a70bdc76c",
-  "assess": "d6b6c5855c51e3f3",
+  "acting": "ab43de64531e8868",
+  "assess": "c2b8fd933254e953",
   "caffeine ledger coffee_1": "cf7969aa8bed2fd5",
   "caffeine ledger coffee_2": "6533032a0d1cc54e",
   "caffeine ledger coffee_3": "56d5f63ce8fd37b7",
@@ -1840,8 +1840,8 @@ exports[`the model's output > far too much coffee 1`] = `
   "origins": "a906082c497bc11a",
   "process lanes 1080": "93f602cbdebee3a3",
   "process lanes 720": "32242a3362cfbc20",
-  "processes": "d6479678c3d2e1f8",
-  "readout": "eba6045419850b48",
+  "processes": "5ae9921abe5cff9d",
+  "readout": "c02ca75983ad3012",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "21a4a67533a143c8",
   "series bladderMl": "697b29be57b25c34",
@@ -1911,8 +1911,8 @@ exports[`the model's output > far too much coffee 1`] = `
 
 exports[`the model's output > fat test 1`] = `
 {
-  "acting": "e9bed4d5a0a88779",
-  "assess": "8b350ebfee58e2f7",
+  "acting": "4090d2663f5c51af",
+  "assess": "7d064ac869a8f271",
   "caffeine ledger fat_test": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -1939,8 +1939,8 @@ exports[`the model's output > fat test 1`] = `
   "origins": "57b4dec65068a2a9",
   "process lanes 1080": "a44d5c990ca3c164",
   "process lanes 720": "f3c40bbdd255d486",
-  "processes": "5c85cfb174d51266",
-  "readout": "922332ef13f84a33",
+  "processes": "897fa313bd4b9115",
+  "readout": "aa8f5fe4a4122cb2",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "3356a7cd1015eb69",
   "series bladderMl": "bf284ca45710a298",
@@ -2011,7 +2011,7 @@ exports[`the model's output > fat test 1`] = `
 exports[`the model's output > flu 1`] = `
 {
   "acting": "28bd38eb57dd3dc0",
-  "assess": "e42e59aabe22b7b9",
+  "assess": "5b3c59f5bda8dc35",
   "channel appetite": "f215f88712c2649c",
   "channel bloodPressure": "dc52a15473c2cbc3",
   "channel breathing": "eae3e3f7c07fdc45",
@@ -2035,8 +2035,8 @@ exports[`the model's output > flu 1`] = `
   "origins": "97ea3e38b623c064",
   "process lanes 1080": "823447271b248a41",
   "process lanes 720": "e3af1475ae239dea",
-  "processes": "5af2700d13e41803",
-  "readout": "cd55c4bfaa875087",
+  "processes": "bdfb246f6beeeb38",
+  "readout": "9392bb3432e97021",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "69e303182c023d98",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -2106,8 +2106,8 @@ exports[`the model's output > flu 1`] = `
 
 exports[`the model's output > her run 1`] = `
 {
-  "acting": "b02c38a88863b529",
-  "assess": "9512c9ee050d900b",
+  "acting": "d29c7bd791e94509",
+  "assess": "eab928faef60d086",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "2449604a3295c470",
@@ -2134,8 +2134,8 @@ exports[`the model's output > her run 1`] = `
   "origins": "03c49c650eec74c4",
   "process lanes 1080": "acaef2471fa6096c",
   "process lanes 720": "90d77358f3707819",
-  "processes": "c30c023a8f3c31b5",
-  "readout": "d0fd16dae3c7bac4",
+  "processes": "2461cdea782e5c28",
+  "readout": "d7b34bdfa0251457",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "f769c46515e0580f",
   "series bladderMl": "d907aa9bf133904d",
@@ -2206,7 +2206,7 @@ exports[`the model's output > her run 1`] = `
 exports[`the model's output > legs yesterday 1`] = `
 {
   "acting": "09fe44e33a3220bc",
-  "assess": "a313fce108c145c1",
+  "assess": "2bc7027fd5479bec",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "3b999a8531062f85",
   "channel breathing": "4bafbca71a6614d4",
@@ -2230,8 +2230,8 @@ exports[`the model's output > legs yesterday 1`] = `
   "origins": "a8562d75438f5edf",
   "process lanes 1080": "f7fd9880d0517fbe",
   "process lanes 720": "aab5ee55a1ce0d44",
-  "processes": "9507c1d5a463f93b",
-  "readout": "330eedf3da9682e3",
+  "processes": "d413e9e325db186d",
+  "readout": "831a7bbc0c203dab",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "a47e985ff0e1c579",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -2302,7 +2302,7 @@ exports[`the model's output > legs yesterday 1`] = `
 exports[`the model's output > nothing logged 1`] = `
 {
   "acting": "b383e32a0a85b3cf",
-  "assess": "5dd35e3c62f66900",
+  "assess": "f5344128896d18bd",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
   "channel breathing": "dc52a15473c2cbc3",
@@ -2326,8 +2326,8 @@ exports[`the model's output > nothing logged 1`] = `
   "origins": "961a7a158ef1a3f0",
   "process lanes 1080": "74666ebfb991281f",
   "process lanes 720": "35c64f698e062d6d",
-  "processes": "521c880f82591247",
-  "readout": "7122d77bd8bf5dcd",
+  "processes": "39460b24b624a7ed",
+  "readout": "7ba4a3e0eec70e3f",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "8ff4de8957622dc7",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -2397,8 +2397,8 @@ exports[`the model's output > nothing logged 1`] = `
 
 exports[`the model's output > pure spirit 1`] = `
 {
-  "acting": "39b2e3fe34db76f8",
-  "assess": "2b975c88f0111d93",
+  "acting": "518cc190347af624",
+  "assess": "dc8fc400079f4b9f",
   "caffeine ledger vodka": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -2425,8 +2425,8 @@ exports[`the model's output > pure spirit 1`] = `
   "origins": "14d0b34f35efcf5d",
   "process lanes 1080": "ce35c8ae03fd9696",
   "process lanes 720": "5b2b8b062703fc10",
-  "processes": "3de2a5c6f24e4f6e",
-  "readout": "0844b2b362416ad0",
+  "processes": "0b9302420607fce1",
+  "readout": "2c9432b4f8704a35",
   "series alcohol": "41bf0d459bbbd48f",
   "series alertness": "ce722428ed10b60f",
   "series bladderMl": "902b54467527ba99",
@@ -2496,8 +2496,8 @@ exports[`the model's output > pure spirit 1`] = `
 
 exports[`the model's output > rice 1`] = `
 {
-  "acting": "3766c865b6f413b5",
-  "assess": "ff1188707bf35f74",
+  "acting": "1997d183e26c5d5e",
+  "assess": "bd631fc01fba41ac",
   "caffeine ledger rice": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -2524,8 +2524,8 @@ exports[`the model's output > rice 1`] = `
   "origins": "588312679353690b",
   "process lanes 1080": "ab2f9ff212b8aac7",
   "process lanes 720": "baf7a29de608e161",
-  "processes": "930f7e32c1f95b39",
-  "readout": "7e375a78ae5a840d",
+  "processes": "f7183084e34a8513",
+  "readout": "1ec05785561092bf",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "7e86c481567d9ee0",
   "series bladderMl": "e231fc89ea13b58f",
@@ -2596,7 +2596,7 @@ exports[`the model's output > rice 1`] = `
 exports[`the model's output > sauna 1`] = `
 {
   "acting": "c7e04ce07e9f7625",
-  "assess": "9e839293170f0f60",
+  "assess": "454069475a848c65",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
   "channel breathing": "dc52a15473c2cbc3",
@@ -2620,8 +2620,8 @@ exports[`the model's output > sauna 1`] = `
   "origins": "4f22f4c8c32298a7",
   "process lanes 1080": "61d1833436139cda",
   "process lanes 720": "84fc1b050baafc67",
-  "processes": "ecfb1d22b317e6ec",
-  "readout": "b1f00eb8bfc26c8f",
+  "processes": "0ece80309b18ed6a",
+  "readout": "bd4cb9b2f9fdd0e1",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "8ff4de8957622dc7",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -2692,7 +2692,7 @@ exports[`the model's output > sauna 1`] = `
 exports[`the model's output > sex 1`] = `
 {
   "acting": "a613acc50a293bac",
-  "assess": "aa9399e7bfaee527",
+  "assess": "5b544a388e2c131e",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "f5e2ef51b0b2d18b",
   "channel breathing": "cb79f9d3f74789df",
@@ -2716,8 +2716,8 @@ exports[`the model's output > sex 1`] = `
   "origins": "f45aef9473f5b02a",
   "process lanes 1080": "9bb86dd643540022",
   "process lanes 720": "ce8ac27091e65ae1",
-  "processes": "fd0d89e7734dd1e3",
-  "readout": "299987399da46c91",
+  "processes": "3f5925a13689087c",
+  "readout": "8a56a486e0f590e3",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "495d5511d21f51c0",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -2787,8 +2787,8 @@ exports[`the model's output > sex 1`] = `
 
 exports[`the model's output > stress 1`] = `
 {
-  "acting": "8705fdd083d9d65e",
-  "assess": "eb1e096ffbff62a6",
+  "acting": "40f6a534361a4245",
+  "assess": "cf8428ebce4e30f8",
   "channel appetite": "93ecc3b6b94630b6",
   "channel bloodPressure": "f4c87ad3f563d1ea",
   "channel breathing": "6f09bfac1ba0d7db",
@@ -2812,8 +2812,8 @@ exports[`the model's output > stress 1`] = `
   "origins": "77e30afab42c700e",
   "process lanes 1080": "df45067f443d8b1f",
   "process lanes 720": "12aedb84613b20a7",
-  "processes": "9754241f9e4aa032",
-  "readout": "41121600d4414d3b",
+  "processes": "645af8f2864bb011",
+  "readout": "92e9479eb2dbac6e",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "eaeb465565536bef",
   "series bladderMl": "14d9dd4ed59f9c0b",
@@ -2883,8 +2883,8 @@ exports[`the model's output > stress 1`] = `
 
 exports[`the model's output > the opening day 1`] = `
 {
-  "acting": "b1255943b059e2ac",
-  "assess": "262485721ee12187",
+  "acting": "048ba6ea1c71ef68",
+  "assess": "aba60a61d082e1a9",
   "caffeine ledger coffee": "d81fe9e10c87d569",
   "caffeine ledger pizza": "8edf6e978fa8a642",
   "caffeine ledger sugar_bar": "8edf6e978fa8a642",
@@ -2917,8 +2917,8 @@ exports[`the model's output > the opening day 1`] = `
   "origins": "8e8a50a8bbd90d85",
   "process lanes 1080": "01a85f6c53d4eaf1",
   "process lanes 720": "4cab4493169d944b",
-  "processes": "bbfbb56a00d93bd8",
-  "readout": "4a5e3804886a4ff3",
+  "processes": "43a18afcda92e89a",
+  "readout": "acc9b8b6e2a4ce49",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "2f846332de0de620",
   "series bladderMl": "b44a69bb27295825",
@@ -2988,8 +2988,8 @@ exports[`the model's output > the opening day 1`] = `
 
 exports[`the model's output > three meals 1`] = `
 {
-  "acting": "84641d2e71c16de5",
-  "assess": "9d24266f1ebc8ff9",
+  "acting": "54a16f4cdaa3112c",
+  "assess": "4071184f8667a99a",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
   "caffeine ledger lunch": "8edf6e978fa8a642",
@@ -3022,8 +3022,8 @@ exports[`the model's output > three meals 1`] = `
   "origins": "00b2db9d554fc348",
   "process lanes 1080": "11ac9360932d941b",
   "process lanes 720": "2efc2f718e7067ab",
-  "processes": "ad557a257e421430",
-  "readout": "0693e29f2252a8a6",
+  "processes": "cc98d4abb35b1fdd",
+  "readout": "4a5e830d19f31d30",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "19f49507b43a419a",
   "series bladderMl": "38f378e01e00bd23",
@@ -3093,8 +3093,8 @@ exports[`the model's output > three meals 1`] = `
 
 exports[`the model's output > two apples 1`] = `
 {
-  "acting": "96330f6a61787309",
-  "assess": "c863d25839e44f35",
+  "acting": "f2a275e29dce3d66",
+  "assess": "f7a67d75350f3688",
   "caffeine ledger apples": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -3121,8 +3121,8 @@ exports[`the model's output > two apples 1`] = `
   "origins": "acf23ff3885574dc",
   "process lanes 1080": "0956855989cf3e7b",
   "process lanes 720": "4d2b90a56fd248a9",
-  "processes": "1ef57d556a5f9e1f",
-  "readout": "aaea5aa216dfd2e5",
+  "processes": "fdbea589aff6327e",
+  "readout": "154a59e3e29e3d84",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "773f11cb055396af",
   "series bladderMl": "b9d085bd6f371d3c",
@@ -3193,7 +3193,7 @@ exports[`the model's output > two apples 1`] = `
 exports[`the model's output > water only 1`] = `
 {
   "acting": "b383e32a0a85b3cf",
-  "assess": "57922a6515096b5c",
+  "assess": "a308b9eeae38533d",
   "caffeine ledger water": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -3220,8 +3220,8 @@ exports[`the model's output > water only 1`] = `
   "origins": "56442fafa4cbc3f2",
   "process lanes 1080": "061fe9c4d4893435",
   "process lanes 720": "8879de4acb17f070",
-  "processes": "b9a6b43a5e55e640",
-  "readout": "df2aec0af218d73e",
+  "processes": "0a504ff398cdd0e2",
+  "readout": "b7b80b6e27df8816",
   "series alcohol": "dc52a15473c2cbc3",
   "series alertness": "8ff4de8957622dc7",
   "series bladderMl": "d32abf5ca7eede3c",

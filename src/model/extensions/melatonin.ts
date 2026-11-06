@@ -64,7 +64,6 @@ function at(view: BodyView, minute: number): ExtensionState {
   const active = pg >= params.activeAbovePgMl;
   const high = pg >= params.highAbovePgMl;
   const drowsy = clamp01(view.value("drowsy", minute) / params.drowsyScale);
-  const temp = view.value("temperature", minute);
   const asleep = !awake(view, minute);
   const pgText = `${Math.round(pg)} pg/mL`;
 
@@ -113,10 +112,10 @@ function at(view: BodyView, minute: number): ExtensionState {
       share,
       flow: signal,
       say: high
-        ? `Melatonin is near its night peak, about ${pgText}. It clears in under an hour, so it needs steady release.`
+        ? "Melatonin is near its night peak. It clears within an hour, so your pineal has to keep making it."
         : falling
-          ? `Melatonin is falling, now ${pgText}, as morning arrives. It leaves the blood within an hour.`
-          : `Melatonin is ${pgText}. Daytime levels stay close to zero.`,
+          ? "Melatonin is falling as morning arrives, and it leaves your blood within an hour."
+          : "Melatonin stays close to zero through the day.",
       routes: ["from_brain"],
     },
     {
@@ -128,7 +127,7 @@ function at(view: BodyView, minute: number): ExtensionState {
       flow: share,
       say: asleep
         ? active
-          ? `Melatonin tells the body clock it is night and helps cool you, now ${temp.toFixed(1)} °C. The model's temperature has its own rhythm.`
+          ? "Melatonin tells your body clock it is night and helps cool you. The model's temperature has its own rhythm."
           : "You are asleep while the body clock says it is day, so melatonin stays low."
         : active
           ? "Melatonin quiets the clock's wake signal, and you may feel sleepier. The model's sleepiness comes from time awake."
@@ -145,12 +144,12 @@ function at(view: BodyView, minute: number): ExtensionState {
       ? "Light while awake at night is holding melatonin down."
       : "Daytime: the pineal gland is resting, melatonin near zero."
     : lit
-      ? `Melatonin at ${pgText}, held lower by light while awake.`
+      ? "Melatonin is held lower by light while you are awake."
       : rising
-        ? `Darkness is here: melatonin is rising, now ${pgText}.`
+        ? "Darkness is here, so melatonin is rising."
         : falling
-          ? `Morning is near: melatonin is falling, now ${pgText}.`
-          : `Melatonin is high through the night, about ${pgText}.`;
+          ? "Morning is near, so melatonin is falling."
+          : "Melatonin stays high through the night.";
 
   return { active, headline, here, stops };
 }

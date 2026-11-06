@@ -49,6 +49,8 @@ export interface Draft {
   routes: RouteId[];
 }
 
+const END_SEARCH_STEP_MIN = 10;
+
 export const percent = (x: number) => `${Math.round(x * 100)}%`;
 export const clock = formatClock;
 export const shareOf = (part: number, total: number) => (total > 0 ? part / total : 0);
@@ -90,6 +92,12 @@ export function peakAfter(tr: Trajectory, name: SeriesName, t: number, horizon: 
   // A window can close mid-climb. Follow the curve until it turns so a reported peak is a real one.
   if (at === end) while (at < DAY.minutes && series[at + 1] > series[at]) at++;
   return { at, value: series[at], ahead: at > t + 2 };
+}
+
+// When something still going on is over, or null if it runs past the end of the day.
+export function endsAt(stillGoing: (minute: number) => boolean, from: number): number | null {
+  for (let minute = from; minute <= DAY.minutes; minute += END_SEARCH_STEP_MIN) if (!stillGoing(minute)) return minute;
+  return null;
 }
 
 export const postureAt = (tr: Trajectory, t: number) => POSTURES[Math.round(value(tr, "posture", t))];

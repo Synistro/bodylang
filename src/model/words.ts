@@ -5,6 +5,25 @@ export const formatClock = (minute: number) => {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 };
 
+// A time said the way a person says it, for what can't be known to the minute.
+export const aboutClock = (minute: number) => formatClock(Math.round(minute / 15) * 15);
+
+// How much of something, in words. The exact share sits beside the sentence that uses this.
+export const howMuch = (share: number) =>
+  share >= 0.9
+    ? "nearly all"
+    : share >= 0.6
+      ? "most"
+      : share >= 0.4
+        ? "about half"
+        : share >= 0.2
+          ? "some"
+          : "a little";
+
+// A sentence says what is happening and why. Grams and the like sit beside it, because they rarely change what it means.
+export const weighsSomething = (text: string) =>
+  /\b\d+(\.\d+)?\s?(g|mg|kcal|ml|L|g\/L|mg\/L|mmol\/L|mg\/dL|g\/h|mg\/h|kcal\/h|L\/min)(?![a-zA-Z])/.test(text);
+
 // A logged label as it reads inside a sentence: "Sugar bar" becomes "sugar bar", "IPA" stays.
 export const inSentence = (label: string) =>
   /^[A-Z][a-z]/.test(label) ? label[0].toLowerCase() + label.slice(1) : label;

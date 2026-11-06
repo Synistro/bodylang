@@ -36,7 +36,7 @@ export interface ExtensionStop {
   reading: string; // the number at this stop, with its unit, or a word. A 0 to 1 scale reads as levelWord, never a percentage. An empty string shows nothing
   share: number; // 0 to 1: how much of the thing is here, or how strongly this stop is working. Drawn across the day
   flow: number; // 0 to 1: how fast it is moving into this stop. Sets how thick the line is
-  say: string; // one or two plain sentences on what happens here now, at most 25 words
+  say: string; // one or two plain sentences on what happens here now and why, at most 25 words, with amounts left to reading
   routes: RouteId[]; // the vessels leading here from the previous stop. Empty for a jump
   from?: string; // the id of the stop this one branches from, if not the one before it
 }

@@ -40,6 +40,12 @@ The body, readings, sentences and day chart all read this one calculation. What 
 
 **Every food estimate can be corrected.** Foods along the top of the day chart have a dotted underline, because their portion is Claude's estimate. A click opens what you had at that moment: the portion in the units you ate it in, the time, what it holds, whether that comes from USDA or from Claude, and Remove. Each step redraws the curves straight away. Saying "only one slice" does the same through `correct_intake`.
 
+## How it explains things
+
+Explanations are for someone with no medical training. Whether 3 g or 3.5 g went somewhere rarely changes anything, so a sentence says what is happening, why, and what it means for you: "Most of it is still here. Fat makes your stomach let food out slowly, until about 01:15." The exact amount sits beside the sentence in its own column and in the reading rows.
+
+A number stays in the words only when it earns it: a time you can use, a limit you would act on, a comparison that surprises, something you can check on a watch, or something you asked for. Claude follows the same rule, and a test fails any sentence on screen that weighs something.
+
 ## Where each thing came from
 
 Sources, at the bottom right, opens a list of where everything on screen right now came from, when you click it. Nothing appears on hover, because hover notes covered the buttons underneath. Each source is one of five kinds:

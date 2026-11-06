@@ -292,9 +292,9 @@ describe("17:00, fifteen minutes after the sugar bar and pizza", () => {
     expect(a.feelings[0].id).toBe("full");
     const intensities = a.feelings.map((f) => f.intensity);
     expect([...intensities].sort((x, y) => y - x)).toEqual(intensities);
-    expect(a.feelings[0].cause).toMatch(/^Your stomach holds \d+ ml$/);
+    expect(a.feelings[0].cause).toBe("Your stomach is still well filled");
     const sleepy = feelingsOfDay.find((f) => f.id === "sleepy");
-    expect(sleepy?.cause).toContain("kcal at 16:45");
+    expect(sleepy?.cause).toContain("at 16:45");
   });
 
   it("describes each system in the rail", () => {
@@ -382,7 +382,7 @@ describe("other bodies and days", () => {
   it("blames the meal doing the work for sleepiness, even after a later drink", () => {
     const night = simulate(SCENARIOS["a beer and a pill"]);
     const sleepy = assess(night, hm(19, 30)).feelings.find((f) => f.id === "sleepy");
-    expect(sleepy?.cause).toBe("You ate 618 kcal at 16:45");
+    expect(sleepy?.cause).toBe("You ate a meal at 16:45");
   });
 
   it("expects a fast heart while moving and names the walk", () => {
