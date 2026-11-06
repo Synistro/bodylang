@@ -1,4 +1,5 @@
-import type { ActionName, BodyState } from "../src/actions/actions";
+import type { ActionName } from "../src/actions/schemas";
+import type { BodyState } from "../src/actions/reduce";
 import { closeupGuidance } from "../src/closeup/list";
 import type { Intake } from "../src/model/scenario";
 import { SYSTEMS } from "../src/model/systems";

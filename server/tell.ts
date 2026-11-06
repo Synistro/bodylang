@@ -1,7 +1,7 @@
 import { createSdkMcpServer, query } from "@anthropic-ai/claude-agent-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
-import type { BodyState } from "../src/actions/actions";
+import type { BodyState } from "../src/actions/reduce";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events/types";
 import { BuildStatus, TellEvent } from "../src/wire";

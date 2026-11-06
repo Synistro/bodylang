@@ -1,4 +1,4 @@
-import { Action } from "../actions/actions";
+import { Action } from "../actions/schemas";
 import { openingReply } from "../model/readout";
 import { beginExchange, dispatch, getState, setUi, updateExchange } from "../store";
 

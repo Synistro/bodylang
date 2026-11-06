@@ -1,6 +1,7 @@
 import { tool } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
-import { Action, ACTION_SCHEMAS, BodyState, reduce } from "../src/actions/actions";
+import { Action, ACTION_SCHEMAS } from "../src/actions/schemas";
+import { BodyState, reduce } from "../src/actions/reduce";
 import { simulate } from "../src/model/engine/simulate";
 import { ORGANS } from "../src/model/ids";
 import { processesAt } from "../src/model/processes/processes";

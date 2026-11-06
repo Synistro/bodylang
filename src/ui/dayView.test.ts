@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GuideStep } from "../actions/actions";
+import type { GuideStep } from "../actions/schemas";
 import type { BodyEvent } from "../model/events/types";
 import { isStill, Lane, systemLanes, threadLanes, workedMuscleLanes } from "../model/lanes";
 import { simulate } from "../model/engine/simulate";

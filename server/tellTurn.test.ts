@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Action, ACTION_SCHEMAS, BodyState, reduce } from "../src/actions/actions";
+import { Action, ACTION_SCHEMAS } from "../src/actions/schemas";
+import { BodyState, reduce } from "../src/actions/reduce";
 import type { TellEvent } from "../src/wire";
 import { searchFoods } from "./foods";
 import { actionToolsFor, planFor, systemPromptFor, TellPlan } from "./tellPrompt";

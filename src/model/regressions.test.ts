@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Action, BodyState, reduce } from "../actions/actions";
+import { Action } from "../actions/schemas";
+import { BodyState, reduce } from "../actions/reduce";
 import { assess } from "./assess/assess";
 import { followProcess, processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";

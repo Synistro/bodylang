@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reduce, BodyState } from "../actions/actions";
+import { reduce, BodyState } from "../actions/reduce";
 import { carryOver, clockAt, daysBetween, DayDoc, firstDay, parseDayDoc, stayAwake, typicalDayFromYesterday } from "./day";
 import { DAY } from "./params";
 import { processesAt } from "./processes/processes";

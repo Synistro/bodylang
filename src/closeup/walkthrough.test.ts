@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GuideStep } from "../actions/actions";
+import type { GuideStep } from "../actions/schemas";
 import { chartOffsetHours, closeGuide, closeupOnScreen, composedOnScreen, dispatch, enterAsk, getState, goToStep, leaveAsk, muscleMinute, processOnScreen, releaseMoment, stepMinute, trackOnScreen } from "../store";
 
 const step = (at: number | null): GuideStep => ({ title: "A step", say: "Something happens.", system: null, process: null, organ: "muscle", muscle: "quads", at, closeup: { organ: "muscle", light: ["tears"], set: {}, compare: null, basis: null } });

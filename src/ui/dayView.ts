@@ -1,4 +1,4 @@
-import type { GuideStep } from "../actions/actions";
+import type { GuideStep } from "../actions/schemas";
 import { closeupOf } from "../closeup/list";
 import { aheadOf, Ahead, DAY_SPAN, dayMoments, dayStops, fromSeverity, isStill, Lane, Moment, MuscleSubject, recoveryOf, Span } from "../model/lanes";
 import { LANES } from "../model/params";

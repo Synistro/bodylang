@@ -1,4 +1,4 @@
-import { ACTION_SCHEMAS, Action, ActionName } from "../actions/actions";
+import { ACTION_SCHEMAS, Action, ActionName } from "../actions/schemas";
 import { stayAwake } from "../model/day";
 import { beginExchange, clearWhatIf, dispatch, enterAsk, getState, leaveAsk, rememberAsked, setAskCancel, updateExchange } from "../store";
 import { nameReplySchema, readEvents, tellEventSchema } from "../wire";

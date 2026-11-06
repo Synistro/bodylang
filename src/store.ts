@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
-import { Action, BodyState, GuideStep, reduce, traceLine } from "./actions/actions";
+import { Action, GuideStep } from "./actions/schemas";
+import { BodyState, reduce } from "./actions/reduce";
+import { traceLine } from "./actions/trace";
 import { ORGAN_HOME, systemById } from "./model/systems";
 import { DayDoc } from "./model/day";
 import { LANES } from "./model/params";

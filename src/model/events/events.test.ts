@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { ACTION_SCHEMAS, BodyState, reduce, traceLine } from "../../actions/actions";
+import { ACTION_SCHEMAS } from "../../actions/schemas";
+import { BodyState, reduce } from "../../actions/reduce";
+import { traceLine } from "../../actions/trace";
 import { assess } from "../assess/assess";
 import { Assessment } from "../assess/types";
 import { heartVerdict } from "../assess/verdicts";
