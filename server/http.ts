@@ -1,5 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { encodeEvent, ExplainEvent, TellEvent } from "../src/wire";
+import { BuildStatus, encodeEvent, ExplainEvent, TellEvent } from "../src/wire";
+
+// What a route can tell every open page.
+export interface Notify {
+  buildChanged: (status: BuildStatus) => void;
+  dayChanged: (writer: string) => void;
+}
 
 // What a route's request is too big or too broken to read. It answers as a 400.
 export class BadRequest extends Error {}

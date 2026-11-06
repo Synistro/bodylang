@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { handleDay } from "./days";
-import type { Notify } from "./routes";
+import type { Notify } from "./http";
 
 const dayOn = (date: string) => ({ version: 1, date, body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [], activities: [{ from: 0, posture: "sleeping" }], substances: [], events: [], cycle: null, assumptions: {} });
 

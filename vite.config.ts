@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
-import type { Notify } from "./server/routes";
+import type { Notify } from "./server/http";
 import { configDefaults, defineConfig } from "vitest/config";
 
 // The bridge lives in the dev server so the page has one origin and no key ever reaches the browser.

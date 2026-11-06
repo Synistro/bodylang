@@ -7,7 +7,7 @@ import { PRESETS } from "../src/model/events/types";
 import { BuildStatus, TellEvent } from "../src/wire";
 import { claudeDefaults } from "./claude";
 import { openEventStream, readJson } from "./http";
-import type { Notify } from "./routes";
+import type { Notify } from "./http";
 import { planFor, TellPlan } from "./tellPrompt";
 import { startTurn, TellInput } from "./tellTurn";
 

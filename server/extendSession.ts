@@ -3,8 +3,7 @@ import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { z } from "zod";
 import { claudeDefaults } from "./claude";
-import { BuildRequest, EXTENSIONS_FOLDER, processPath, quickChecks, SessionContext, testPath } from "./extend";
-import { checkSource, PROCESS_IMPORTS, testImports } from "./extendCheck";
+import { BuildRequest, SessionContext, checkSource, EXTENSIONS_FOLDER, processPath, PROCESS_IMPORTS, quickChecks, testImports, testPath } from "./extendCheck";
 
 // A separate Claude Code session adds a process the model doesn't have. It works in a throwaway copy of
 // the repository and can write exactly two files there.

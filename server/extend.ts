@@ -1,38 +1,22 @@
 import { execFile } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, symlinkSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { BuildStage, BuildStatus, extendActionSchema } from "../src/wire";
 import { readJson } from "./http";
-import { checkShape, checkSource, PROCESS_IMPORTS, testImports } from "./extendCheck";
+import { BuildRequest, fullSuite, processPath, quickChecks, SessionContext, testPath } from "./extendCheck";
 
 const run = promisify(execFile);
 
 // Builds a process the model doesn't have, with extendSession.ts writing it. Its two files reach the real
 // repository only if every test passes, as one commit, and the running app then reloads them. The chat never
 // gets any of this: all it can do is ask for a build.
-const CHECK_TIMEOUT_MS = 180_000;
-const SUITE_TIMEOUT_MS = 420_000;
-const OUTPUT_KEPT_CHARS = 6000;
 const ACTION_MOST_BYTES = 1000;
-export const EXTENSIONS_FOLDER = "src/model/extensions";
 const RESERVED = new Set(["api", "index", "check", "contract"]);
 const ID = /^[a-z][a-z0-9_]{1,30}$/;
 const WORKTREE_NAME = /^[a-z][a-z0-9_]*-\d+-\d+$/;
-
-export interface BuildRequest {
-  id: string;
-  title: string;
-  what: string; // what the person wants to understand, in Claude's words
-}
-
-export interface SessionContext extends BuildRequest {
-  worktree: string;
-  stage: (stage: BuildStage) => void;
-  signal: AbortSignal;
-}
 
 // What a build is made of, so a test can stand in for the model and the long suite.
 export interface BuildParts {
@@ -42,43 +26,7 @@ export interface BuildParts {
   suite: (worktree: string, signal: AbortSignal) => Promise<string | null>;
 }
 
-export const processPath = (id: string) => `${EXTENSIONS_FOLDER}/${id}.ts`;
-export const testPath = (id: string) => `${EXTENSIONS_FOLDER}/${id}.test.ts`;
-
-// The checks run code Claude just wrote, so they get nothing from this process's environment but a way to run.
-const checkEnvironment = () => ({ PATH: process.env.PATH, HOME: process.env.HOME });
-
-async function shell(command: string, args: string[], cwd: string, timeout: number, signal: AbortSignal): Promise<string | null> {
-  try {
-    await run(command, args, { cwd, timeout, maxBuffer: 20_000_000, signal, env: checkEnvironment() });
-    return null;
-  } catch (e: unknown) {
-    const failure = e as { stdout?: string; stderr?: string; message?: string };
-    const text = `${failure.stdout ?? ""}\n${failure.stderr ?? ""}`.trim() || failure.message || "It failed with no output";
-    return text.slice(-OUTPUT_KEPT_CHARS);
-  }
-}
-
 const git = (cwd: string, ...args: string[]) => run("git", args, { cwd }).then((result) => result.stdout);
-
-// What the session can check while it works: the two files, the types, and the tests a new process can
-// affect. Each failure reads as what to fix.
-export async function quickChecks(worktree: string, id: string, signal: AbortSignal): Promise<string | null> {
-  const code = join(worktree, processPath(id));
-  const test = join(worktree, testPath(id));
-  if (!existsSync(code)) return "The process file hasn't been written yet.";
-  if (!existsSync(test)) return "The test file hasn't been written yet.";
-  const processCode = readFileSync(code, "utf8");
-  const testCode = readFileSync(test, "utf8");
-  const reasons = [...checkShape(processCode, testCode), ...checkSource(processCode, PROCESS_IMPORTS).map((p) => `Process file, ${p}`), ...checkSource(testCode, testImports(id)).map((p) => `Test file, ${p}`)];
-  if (reasons.length) return reasons.join("\n");
-  const types = await shell("node_modules/.bin/tsc", ["--noEmit", "-p", "."], worktree, CHECK_TIMEOUT_MS, signal);
-  if (types) return `Type check failed:\n${types}`;
-  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes/processes.test.ts", "src/model/events/events.test.ts"], worktree, CHECK_TIMEOUT_MS, signal);
-  return tests ? `Tests failed:\n${tests}` : null;
-}
-
-const fullSuite = (worktree: string, signal: AbortSignal) => shell("node_modules/.bin/vitest", ["run"], worktree, SUITE_TIMEOUT_MS, signal);
 
 function defaultParts(): BuildParts {
   return { repo: process.cwd(), buildsFolder: join(process.env.BODYLANG_DATA ?? join(homedir(), ".bodylang"), "builds"), session: async (context) => (await import("./extendSession")).claudeSession(context), suite: fullSuite };

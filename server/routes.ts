@@ -1,14 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { ZodError } from "zod";
-import type { BuildStatus } from "../src/wire";
-import { BadRequest, readJson } from "./http";
+import { BadRequest, Notify, readJson } from "./http";
 import { requestProblem } from "./requestGuard";
-
-// What a route can tell every open page.
-export interface Notify {
-  buildChanged: (status: BuildStatus) => void;
-  dayChanged: (writer: string) => void;
-}
 
 type Handler = (req: IncomingMessage, res: ServerResponse, notify: Notify) => Promise<void> | void;
 

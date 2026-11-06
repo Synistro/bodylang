@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { DATE_PATTERN, DayDoc, parseDayDoc } from "../src/model/day";
 import { dayPutSchema } from "../src/wire";
 import { readJson } from "./http";
-import type { Notify } from "./routes";
+import type { Notify } from "./http";
 
 const MAX_DAY_BYTES = 2_000_000;
 
