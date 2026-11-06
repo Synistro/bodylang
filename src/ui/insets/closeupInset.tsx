@@ -2,7 +2,7 @@ import type { ComponentType } from "react";
 import { Adjustment, Directions, FromModel, Levels, levelsAt, litLevels, Panel, panelsOf } from "../../closeup/define";
 import type { OrganId } from "../../model/ids";
 import { closeupOnScreen, useStore } from "../../store";
-import { sourced } from "../SourceTip";
+import { sourced } from "../sources";
 import "./closeup.css";
 import { easeToward } from "./draw";
 import { Frame, InsetProps, Painter, useInsetPainter } from "./loop";

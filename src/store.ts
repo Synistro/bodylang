@@ -4,7 +4,7 @@ import { ORGAN_HOME, systemById } from "./model/systems";
 import { DayDoc } from "./model/day";
 import { LANES } from "./model/params";
 import type { MuscleGroup } from "./model/muscleGroups";
-import { ReplyLine } from "./model/narrate";
+import { ReplyLine } from "./model/readout";
 import { followProcess, Process, processesAt } from "./model/processes";
 import { simulate } from "./model/simulate";
 import { Scenario } from "./model/scenario";

@@ -4,7 +4,7 @@ import { actingAt } from "./model/acting";
 import { ORGANS } from "./model/ids";
 import { assess } from "./model/assess";
 import { dayMoments, processLanes, systemLanes, threadLanes, workedMuscleLanes } from "./model/lanes";
-import { readout } from "./model/narrate";
+import { readout } from "./model/readout";
 import { feelingOrigin, processOrigin, readingOrigin } from "./model/origin";
 import { processesAt } from "./model/processes";
 import { simulate } from "./model/simulate";

@@ -6,7 +6,7 @@ import { ComposedInset } from "./ComposedInset";
 import { BrainInset } from "./BrainInset";
 import { FatInset } from "./FatInset";
 import { HeartInset } from "./HeartInset";
-import { ImmuneInset } from "./ImmuneInset";
+import { SpleenInset } from "./SpleenInset";
 import { KidneysInset } from "./KidneysInset";
 import { LargeIntestineInset } from "./LargeIntestineInset";
 import { LiverInset } from "./LiverInset";
@@ -29,7 +29,7 @@ const FIGURES: Record<OrganId, ComponentType<InsetProps>> = {
   pancreas: PancreasInset,
   muscle: MuscleInset,
   lungs: LungsInset,
-  spleen: ImmuneInset,
+  spleen: SpleenInset,
   kidneys: KidneysInset,
   bladder: BladderInset,
   small_intestine: SmallIntestineInset,

@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { Sex } from "../model/scenario";
 import type { OrganMeta } from "./assets";
 import { PALETTES } from "./materials";
-import { firstPartOfIntestine, Tract } from "./tract";
+import { firstPartOfIntestine, Stomach } from "./stomach";
 
 const items = [{ color: new THREE.Color("#c08040"), count: 90 }];
 
@@ -34,14 +34,14 @@ beforeAll(() => {
   vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
 });
 
-describe.each<Sex>(["male", "female"])("food in the tract of the %s body", (sex) => {
+describe.each<Sex>(["male", "female"])("food in the stomach of the %s body", (sex) => {
   const meta: OrganMeta = JSON.parse(readFileSync(`public/assets/organs-${sex}.json`, "utf8"));
   const file = readFileSync(`public/assets/organs-${sex}.bin`);
   const bin = file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength);
 
   it("keeps every piece and its outline inside the stomach as a meal empties", () => {
-    const tract = new Tract(meta, PALETTES.light, new THREE.Vector2(1000, 800));
-    const outlines = tract.group.children.find((child) => child instanceof THREE.InstancedMesh && child.material instanceof THREE.MeshBasicMaterial);
+    const stomach = new Stomach(meta, PALETTES.light, new THREE.Vector2(1000, 800));
+    const outlines = stomach.group.children.find((child) => child instanceof THREE.InstancedMesh && child.material instanceof THREE.MeshBasicMaterial);
     if (!(outlines instanceof THREE.InstancedMesh)) throw new Error("The stomach has no piece outlines");
     const matrix = new THREE.Matrix4();
     const at = new THREE.Vector3();
@@ -51,15 +51,15 @@ describe.each<Sex>(["male", "female"])("food in the tract of the %s body", (sex)
     for (const volume of [900, 600, 460, 300, 180, 90]) {
       // Enough frames to settle on this volume and pass through a whole wave at the outlet.
       for (let frame = 0; frame < 45; frame++) {
-        tract.update(0.1, volume, new THREE.Color("#c08040"), 3, items, 4);
+        stomach.update(0.1, volume, new THREE.Color("#c08040"), 3, items, 4);
         if (frame < 30 || frame % 3 !== 0) continue;
         for (let n = 0; n < outlines.count; n++) {
           outlines.getMatrixAt(n, matrix);
           matrix.decompose(at, spin, size);
           const reach = Math.max(size.x, size.y, size.z);
           if (reach < 1e-3) continue;
-          expect(isInside(tract.wall, at)).toBe(true);
-          expect(nearestVertex(tract.wall, at)).toBeGreaterThanOrEqual(reach * 0.99);
+          expect(isInside(stomach.wall, at)).toBe(true);
+          expect(nearestVertex(stomach.wall, at)).toBeGreaterThanOrEqual(reach * 0.99);
           checked++;
         }
       }

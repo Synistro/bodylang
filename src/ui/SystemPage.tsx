@@ -15,7 +15,7 @@ import { showMuscle, showOrgan } from "./navigation";
 import { feelingOrigin, modelOrigin, readingOrigin } from "../model/origin";
 import { FEELING_FROM_CLAUDE, FEELING_LOOK } from "./icons";
 import { ProcessDetail } from "./Processes";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 // What would wake up a system with nothing going on.
 const QUIET_HINT: Partial<Record<SystemId, string>> = {
@@ -264,7 +264,7 @@ function PanelContent({ system, processId }: { system: SystemId; processId: stri
 
 // The detail for the current level. It stays mounted behind an organ close-up, so coming back lands
 // exactly where you left.
-export function StatePanel() {
+export function SystemPage() {
   const system = useStore((s) => s.body.system);
   const processId = useStore((s) => s.body.process);
   const focused = useStore((s) => s.body.focus !== null);

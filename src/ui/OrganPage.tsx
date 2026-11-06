@@ -12,8 +12,8 @@ import { OrganInset } from "./insets/OrganInset";
 import { muscleStory, organStory } from "./insets/organStory";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle } from "./navigation";
-import { sourced } from "./SourceTip";
-import { BrainPage } from "./StatePanel";
+import { sourced } from "./sources";
+import { BrainPage } from "./SystemPage";
 import "./insets/insets.css";
 
 const WORKED_FROM = 0.05;
@@ -159,7 +159,7 @@ function OrganPlate({ organ, trajectory, minute }: { organ: OrganId; trajectory:
   );
 }
 
-export function OrganCard() {
+export function OrganPage() {
   const focus = useStore((s) => s.body.focus);
   const group = useStore((s) => s.body.focusMuscle);
   const trajectory = useStore((s) => s.trajectory);

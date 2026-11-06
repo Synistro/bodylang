@@ -4,7 +4,7 @@ import { kcalOf, Intake } from "../model/scenario";
 import { formatClock } from "../model/words";
 import { dispatch, setUi, useStore } from "../store";
 import { X } from "./icons";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 const SERVING_STEP = 0.5;
 const GRAM_STEP = { large: 25, small: 10, largeFrom: 100 };

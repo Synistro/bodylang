@@ -6,7 +6,7 @@ import type { Trajectory } from "../model/engine/trajectory";
 import { composedOnScreen, getState, selectedProcess, useStore, yourDayWhileAsking } from "../store";
 import { assessmentAt, useMinute, useMuscleMinute } from "./hooks";
 import { muscleStory, organStory } from "./insets/organStory";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 // The head of the page: the name of what you are looking at, and one sentence on how it is. The
 // overview has no name of its own, only the sentence.

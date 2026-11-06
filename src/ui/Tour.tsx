@@ -3,7 +3,7 @@ import { isTyping } from "./hooks";
 import { processOrigin } from "../model/origin";
 import { selectedProcess, setUi, useStore } from "../store";
 import { X } from "./icons";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 const AUTO_ADVANCE_MS = 6000;
 

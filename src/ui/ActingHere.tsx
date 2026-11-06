@@ -5,7 +5,7 @@ import type { OrganId } from "../model/ids";
 import { processIdsOf } from "../model/yourDay";
 import { processOnScreen, useStore, yourDayWhileAsking } from "../store";
 import { useMinute } from "./hooks";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 const MOST_ROWS = 4;
 

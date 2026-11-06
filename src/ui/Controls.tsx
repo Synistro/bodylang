@@ -4,7 +4,7 @@ import { value } from "../model/engine/trajectory";
 import { modelOrigin, Origin } from "../model/origin";
 import { formatClock } from "../model/words";
 import { getState, setBody, setPostureNow, setUi, useStore } from "../store";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 const SEXES: Sex[] = ["male", "female"];
 const POSTURE_CHOICES: Posture[] = ["sitting", "standing", "walking"];

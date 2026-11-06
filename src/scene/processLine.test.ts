@@ -5,7 +5,7 @@ import { Process, ProcessStop, processesAt } from "../model/processes";
 import { simulate } from "../model/simulate";
 import { Scenario, Sex } from "../model/scenario";
 import type { OrganMeta } from "./assets";
-import { RouteNetwork } from "./flows";
+import { RouteNetwork } from "./routes";
 import { PALETTES } from "./materials";
 import { ProcessLine } from "./processLine";
 import { NO_NUTRIENTS } from "../model/testKit";

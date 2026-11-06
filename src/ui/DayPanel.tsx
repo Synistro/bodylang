@@ -17,7 +17,7 @@ import { useFrame } from "./hooks";
 import { organStory } from "./insets/organStory";
 import { Pause, Play, SkipBack, SkipForward } from "./icons";
 import { showMuscle, showOrgan, showProcess } from "./navigation";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 const DAY_FROM = LANES.from;
 const DAY_TO = LANES.to;
@@ -115,7 +115,7 @@ function LaneRow({ lane, hot, origin }: { lane: Lane; hot: boolean; origin: Orig
 // Moving through it works like any player: skip between the moments that matter, play forward from
 // where you are, or drag along it. Back to now is always in the same place. The two words under the
 // names decide how much of the day is shown.
-export function Timeline({ stage }: { stage: Stage | null }) {
+export function DayPanel({ stage }: { stage: Stage | null }) {
   const theme = useStore((s) => s.theme);
   const tr = useStore((s) => s.trajectory);
   const now = useStore((s) => s.body.now);

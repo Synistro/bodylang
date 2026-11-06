@@ -3,11 +3,11 @@ import { Origin, processOrigin } from "../model/origin";
 import { ProcessStop, StopState } from "../model/processes";
 import { currentProcesses, getState, setUi, useStore } from "../store";
 import { organHover, scrollBehavior, useMinute } from "./hooks";
-import { removeAddedProcess } from "./Build";
+import { removeAddedProcess } from "./ProcessBuild";
 import { Play } from "./icons";
 import { isNumeric } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 // Shared with the scene through the store's cache, so both read one list per minute.
 function useProcesses() {

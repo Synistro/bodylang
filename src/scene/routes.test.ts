@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { RouteId } from "../model/ids";
 import type { Sex } from "../model/scenario";
 import type { OrganMeta } from "./assets";
-import { RouteNetwork, tracePath, traceStrands } from "./flows";
+import { RouteNetwork, tracePath, traceStrands } from "./routes";
 
 const ROUTE_IDS = [
   "esophagus", "stomach_out", "duodenum", "jejunum", "ileum", "colon", "portal_liver", "liver_out", "ivc", "svc", "to_lung_L", "to_lung_R", "from_lung_L", "from_lung_R", "arch", "carotid", "to_neck", "descending", "to_gut", "to_kidney_L", "to_kidney_R", "from_kidney_L", "from_kidney_R", "from_brain", "to_liver_art", "pancreas_portal", "lymph", "lymph_svc", "leg_L", "leg_R", "arm_L", "arm_R", "to_bladder_L", "to_bladder_R",

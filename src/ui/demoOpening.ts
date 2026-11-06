@@ -1,5 +1,5 @@
 import { Action } from "../actions/actions";
-import { openingReply } from "../model/narrate";
+import { openingReply } from "../model/readout";
 import { beginExchange, dispatch, getState, setUi, updateExchange } from "../store";
 
 const OPENING_MESSAGE =

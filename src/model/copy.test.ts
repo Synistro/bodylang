@@ -3,7 +3,7 @@ import { assess, Assessment, Reading } from "./assess";
 import { ReadingId } from "./ids";
 import { maxHeartRate } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
-import { openingReply, readout } from "./narrate";
+import { openingReply, readout } from "./readout";
 import { processesAt } from "./processes";
 import { simulate } from "./simulate";
 import { Trajectory, value } from "./engine/trajectory";

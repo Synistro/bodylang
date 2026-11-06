@@ -2,8 +2,8 @@ import { z } from "zod";
 import { carryOver, clockAt, DayDoc, firstDay, parseDayDoc } from "../model/day";
 import { dayDocOf, getState, restoreDay, setClock, setUi, subscribe } from "../store";
 import { WALL } from "../wall";
-import { followBuilds } from "./Build";
-import { playOpening } from "./opening";
+import { followBuilds } from "./ProcessBuild";
+import { playOpening } from "./demoOpening";
 
 const lookSchema = z.object({ theme: z.enum(["light", "dark"]), layers: z.object({ skin: z.boolean(), vessels: z.boolean() }) });
 

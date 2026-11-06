@@ -4,7 +4,7 @@ import { ACTION_SCHEMAS, BodyState, reduce, traceLine } from "../actions/actions
 import { assess, Assessment, heartVerdict } from "./assess";
 import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, resolveEvent } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
-import { openingReply, readout } from "./narrate";
+import { openingReply, readout } from "./readout";
 import { levelWord } from "./words";
 import { simulate } from "./simulate";
 import { anthropometrics } from "./engine/anthropometrics";

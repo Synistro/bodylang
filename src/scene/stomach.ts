@@ -338,7 +338,7 @@ interface PieceSlot {
   color: THREE.Color;
 }
 
-export class Tract {
+export class Stomach {
   readonly group = new THREE.Group();
   readonly stomachPath: THREE.CatmullRomCurve3;
   readonly esophagusPath: THREE.CatmullRomCurve3;

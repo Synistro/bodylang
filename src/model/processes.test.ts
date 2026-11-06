@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readout } from "./narrate";
+import { readout } from "./readout";
 import { Process, processesAt, processesFor, ProcessStop } from "./processes";
 import { simulate } from "./simulate";
 import { caffeineLedgerAt, ledgerAt, value } from "./engine/trajectory";

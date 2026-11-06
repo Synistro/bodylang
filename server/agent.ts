@@ -12,7 +12,7 @@ import { closeupGuidance } from "../src/closeup/list";
 import { traceTrack } from "./track";
 import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
-import { readout } from "../src/model/narrate";
+import { readout } from "../src/model/readout";
 import { processesAt } from "../src/model/processes";
 import { formatClock } from "../src/model/words";
 import { whereabouts } from "../src/model/whereabouts";

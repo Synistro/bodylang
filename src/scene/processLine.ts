@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { Process, ProcessStop, StopState } from "../model/processes";
-import { isLimbRoute, pointAlong, RouteNetwork, Strand, traceStrands } from "./flows";
+import { isLimbRoute, pointAlong, RouteNetwork, Strand, traceStrands } from "./routes";
 import { BeadUniforms, createBeadMaterial, createLineMaterial, LineUniforms, MAX_LINE_SEGMENTS, Palette } from "./materials";
 
 const LINE = {

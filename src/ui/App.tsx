@@ -16,13 +16,13 @@ import { assessmentAt } from "./hooks";
 import { applyHues } from "./marks";
 import { goUp, showMuscle, showOrgan, showSystem } from "./navigation";
 import { isOrganId } from "./organ";
-import { OrganCard } from "./OrganCard";
+import { OrganPage } from "./OrganPage";
 import { rememberLook, startDay } from "./day";
 import { PageHead } from "./PageHead";
 import { Rail } from "./Rail";
-import { SourceEntry, sourcesOnScreen } from "./SourceTip";
-import { StatePanel } from "./StatePanel";
-import { Timeline } from "./Timeline";
+import { SourceEntry, sourcesOnScreen } from "./sources";
+import { SystemPage } from "./SystemPage";
+import { DayPanel } from "./DayPanel";
 import { Tour } from "./Tour";
 
 const PLAY_MINUTES_PER_SECOND = 34;
@@ -288,14 +288,14 @@ export function App() {
               <Tour />
               <Guide />
             </div>
-            <Timeline stage={stage} />
+            <DayPanel stage={stage} />
           </div>
         </div>
         <main className="right">
           <PageHead />
           <div className="panel-stack">
-            <StatePanel />
-            <OrganCard />
+            <SystemPage />
+            <OrganPage />
           </div>
           <div className="right-foot">
             <ViewControls />

@@ -1,13 +1,13 @@
 import { FormEvent, ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Skeleton } from "skullet/react";
-import { ReplyLine } from "../model/narrate";
+import { ReplyLine } from "../model/readout";
 import { CLAUDE_WORDS, Origin, SENTENCE_ORIGIN } from "../model/origin";
 import { applyWhatIf, clearWhatIf, Depth, Exchange, goToStep, Mode, setMode, setUi, useStore } from "../store";
 import { organHover, useScrollFade } from "./hooks";
 import { ArrowUp, X } from "./icons";
 import { showOrgan } from "./navigation";
-import { BuildLine } from "./Build";
-import { sourced } from "./SourceTip";
+import { BuildLine } from "./ProcessBuild";
+import { sourced } from "./sources";
 import { tell } from "./tell";
 
 const SAMPLE_REPLY: ReplyLine[] = [{ text: "Working out what happened and running it through the model." }, { text: "The answer appears here, in a line or two." }, { text: "And what you may feel." }];

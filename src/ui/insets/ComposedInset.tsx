@@ -1,6 +1,6 @@
 import { ComponentType, memo, useMemo } from "react";
 import { ComposedSpec, compositionOf, layoutComposed, PlacedActor, PlacedLayer } from "../../closeup/composed";
-import { sourced } from "../SourceTip";
+import { sourced } from "../sources";
 import "./closeup.css";
 import { easeToward, lerp, part, parts, smoothstep, tenth } from "./draw";
 import { Frame, Painter, useInsetPainter } from "./loop";

@@ -10,7 +10,7 @@ import { currentProcesses, getState, useStore, yourDayWhileAsking } from "../sto
 import { assessmentAt, organHover, useMinute, isTyping } from "./hooks";
 import { SYSTEM_GLYPH } from "./icons";
 import { showProcess, showSystem } from "./navigation";
-import { sourced } from "./SourceTip";
+import { sourced } from "./sources";
 
 interface Leaf {
   id: string;

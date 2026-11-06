@@ -14,13 +14,13 @@ import { WALL, WALL_FPS, WALL_PIXEL_RATIO } from "../wall";
 import { OrganAsset, loadBody, loadOrgans } from "./assets";
 import { CameraRig, FramingSource, Insets } from "./camera";
 import { Figure } from "./figure";
-import { RouteNetwork } from "./flows";
+import { RouteNetwork } from "./routes";
 import { LYMPH_CLUSTERS, LymphCluster, LymphNodes } from "./lymph";
 import { PALETTES, Palette, setContourWeight, setMaterialClock } from "./materials";
 import { BodySide, MuscleLevel, Muscles, loadMuscles } from "./muscles";
-import { Anatomy, OrganPart, PartLook, PartName, PartStyle } from "./organs";
+import { Anatomy, OrganPart, PartLook, PartName, PartStyle } from "./anatomy";
 import { ProcessLine } from "./processLine";
-import { StomachItem, Tract } from "./tract";
+import { StomachItem, Stomach } from "./stomach";
 import type { Theme } from "../look";
 
 
@@ -338,7 +338,7 @@ const LYMPH_NAME: Record<LymphCluster, string> = { neck: "Neck nodes", armpit: "
 
 interface SexSet {
   anatomy: Anatomy;
-  tract: Tract;
+  stomach: Stomach;
   network: RouteNetwork;
   line: ProcessLine;
   torso: THREE.Group;
@@ -461,17 +461,17 @@ export class Stage {
     this.scene.add(this.lymph.points);
     const build = (asset: OrganAsset): SexSet => {
       const anatomy = new Anatomy(asset, palette, this.resolution);
-      const tract = new Tract(asset.meta, palette, this.resolution);
-      const network = new RouteNetwork(asset.meta, tract.stomachPath, tract.esophagusPath);
+      const stomach = new Stomach(asset.meta, palette, this.resolution);
+      const network = new RouteNetwork(asset.meta, stomach.stomachPath, stomach.esophagusPath);
       const torso = new THREE.Group();
       const set: SexSet = {
         anatomy,
-        tract,
+        stomach,
         network,
         torso,
         line: new ProcessLine(network, (stop, process, out) => torso.worldToLocal(this.locateStop(set, stop, process, out)), this.resolution, this.renderer.getPixelRatio()),
       };
-      torso.add(anatomy.group, tract.group, set.line.group);
+      torso.add(anatomy.group, stomach.group, set.line.group);
       this.figure.hips.add(torso);
       return set;
     };
@@ -539,7 +539,7 @@ export class Stage {
     this.muscleLook = null;
     for (const set of Object.values(this.sets)) {
       set.anatomy.setPalette(palette);
-      set.tract.setPalette(palette);
+      set.stomach.setPalette(palette);
       set.line.setPalette(palette);
     }
   }
@@ -784,25 +784,25 @@ export class Stage {
     const receding = !this.isFeatured("stomach", view);
     // What is inside only shows when the stomach is what you are looking at.
     const inside = look.opacity === 0 || receding ? 0 : onStop && !isLit ? LOOK.stomachOnStop : 1;
-    const { tract } = set;
-    const wall = tract.wallMaterial.uniforms;
+    const { stomach } = set;
+    const wall = stomach.wallMaterial.uniforms;
     easeTo(wall.uGhost, inFocus ? LOOK.stomachFocusGhost : look.ghost, k);
     easeTo(wall.uOpacity, look.opacity, k);
     easeTo(wall.uTintAmount, look.tintAmount, k);
     easeTo(wall.uFill, look.fill, k);
     easeTo(wall.uHighlight, input.hover === "stomach" ? 1 : 0, k);
     wall.uTint.value.lerp(look.tint, k);
-    easeTo(tract.contentsMaterial.uniforms.uOpacity, inside, k);
-    easeTo(tract.esophagusMaterial.uniforms.uOpacity, look.opacity === 0 ? 0 : receding ? LOOK.esophagus.context : LOOK.esophagus.subject, k);
+    easeTo(stomach.contentsMaterial.uniforms.uOpacity, inside, k);
+    easeTo(stomach.esophagusMaterial.uniforms.uOpacity, look.opacity === 0 ? 0 : receding ? LOOK.esophagus.context : LOOK.esophagus.subject, k);
     this.chunksShown += (inside - this.chunksShown) * k;
-    tract.setChunkOpacity(this.chunksShown);
+    stomach.setChunkOpacity(this.chunksShown);
     // A stomach that has fully gone costs nothing until it comes back.
-    tract.group.visible = wall.uOpacity.value > 0.01;
-    if (!tract.group.visible) return;
+    stomach.group.visible = wall.uOpacity.value > 0.01;
+    if (!stomach.group.visible) return;
     // Food keeps its own colours only when you are looking at it; otherwise the pieces stay in the warm ramp.
     this.foodCalm += ((inFocus ? 0 : FOOD_CALM) - this.foodCalm) * k;
     const tr = input.trajectory;
-    tract.update(dt, value(tr, "stomachMl", input.t), look.tint, STOMACH.slowWavesPerMin, this.stomachItems(tr, input.t), value(tr, "emptyingKcalPerMin", input.t));
+    stomach.update(dt, value(tr, "stomachMl", input.t), look.tint, STOMACH.slowWavesPerMin, this.stomachItems(tr, input.t), value(tr, "emptyingKcalPerMin", input.t));
   }
 
   private presentVessels(set: SexSet, input: SceneInput, view: View, motion: boolean) {
@@ -1000,7 +1000,7 @@ export class Stage {
   private organAnchor(set: SexSet, id: OrganId, out: THREE.Vector3, near: THREE.Vector3 | null = null): THREE.Vector3 {
     switch (id) {
       case "stomach":
-        return out.copy(set.tract.center).applyMatrix4(set.torso.matrixWorld);
+        return out.copy(set.stomach.center).applyMatrix4(set.torso.matrixWorld);
       case "muscle": {
         const f = this.figure;
         const site = (from: string, to: string, t: number, target: THREE.Vector3) => f.worldJoint(from, target).lerp(f.worldJoint(to, this.scratchB), t);
@@ -1179,11 +1179,11 @@ export class Stage {
     const rect = this.canvas.getBoundingClientRect();
     this.pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const candidates: THREE.Object3D[] = set.tract.group.visible ? [set.tract.wall] : [];
+    const candidates: THREE.Object3D[] = set.stomach.group.visible ? [set.stomach.wall] : [];
     for (const part of set.anatomy.parts.values()) {
       if (part.mesh.visible && part.style.organ && part.name !== "airway") candidates.push(part.mesh);
     }
-    const organOf = (object: THREE.Object3D): OrganId | null => (object === set.tract.wall ? "stomach" : set.anatomy.organOf(object));
+    const organOf = (object: THREE.Object3D): OrganId | null => (object === set.stomach.wall ? "stomach" : set.anatomy.organOf(object));
     const hits = this.raycaster.intersectObjects(candidates, false);
     const view = this.viewOf(input);
     const muscle = this.muscles.pick(this.raycaster);

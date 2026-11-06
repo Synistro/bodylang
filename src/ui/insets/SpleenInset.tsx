@@ -227,4 +227,4 @@ function useImmunePlate(_props: InsetProps, levels: Levels<Setting>): PlateWords
   return { caption, describe: `A thermometer with the typical band from ${REFERENCE.temperature.low} to ${REFERENCE.temperature.high} °C, beside immune cells that gather as the immune system works harder. ${caption}.` };
 }
 
-export const ImmuneInset = closeupInset(spleenCloseup, { Drawing, paint: paintImmune, usePlate: useImmunePlate });
+export const SpleenInset = closeupInset(spleenCloseup, { Drawing, paint: paintImmune, usePlate: useImmunePlate });
