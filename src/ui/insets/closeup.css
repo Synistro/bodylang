@@ -53,15 +53,14 @@
 .body-travel[data-kind="food"] path { stroke: var(--hue-digestion); }
 .body-travel[data-kind="food"] circle { fill: var(--hue-digestion); }
 
-/* What is acting on this organ now: a small stream for each, faster the more of it there is. */
+/* What is acting on this organ now, each with a still bar filled by how much of it is here. */
 .acting { display: grid; gap: 0.5rem; font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
 .acting-row { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); gap: 0.6rem; align-items: baseline; transition: opacity 240ms var(--ease); }
 .acting-row b { font-weight: 500; color: var(--ink); }
 .acting[data-pointed] .acting-row:not([data-about]) { opacity: 0.45; }
-.acting-flow { position: relative; display: block; height: 1px; align-self: center; background: var(--line-strong); overflow: visible; }
-.acting-flow::after { content: ""; position: absolute; top: -0.15rem; left: 0; width: 0.32rem; height: 0.32rem; border-radius: 50%; background: var(--view-hue); opacity: calc(0.4 + 0.6 * var(--strength)); animation: acting-along calc(2.6s - 1.6s * var(--strength)) linear infinite; }
-@keyframes acting-along { from { transform: translateX(-0.1rem); } to { transform: translateX(1.4rem); } }
-@media (prefers-reduced-motion: reduce) { .acting-flow::after { animation: none; left: 45%; } }
+.acting-amount { display: block; align-self: start; height: 2px; margin-top: calc(0.7em - 1px); background: var(--line-strong); }
+.acting-amount::after { content: ""; display: block; height: 100%; width: calc(var(--amount) * 100%); background: var(--view-hue); transition: width 400ms var(--ease); }
+@media (prefers-reduced-motion: reduce) { .acting-amount::after { transition: none; } }
 
 /* A drawing Claude composed. */
 .inset-art .composed-word { fill: var(--ink-2); }

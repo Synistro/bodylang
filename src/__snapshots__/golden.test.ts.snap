@@ -2,7 +2,7 @@
 
 exports[`the model's output > 75 g of glucose 1`] = `
 {
-  "acting": "74b7b3891e5c5302",
+  "acting": "e24c0f958ae6d7c6",
   "assess": "bf2f56aca3005b3e",
   "caffeine ledger glucose": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -101,7 +101,7 @@ exports[`the model's output > 75 g of glucose 1`] = `
 
 exports[`the model's output > a beer, pizza and a pill 1`] = `
 {
-  "acting": "c75c80f77400d102",
+  "acting": "c6f23ee3b3d68302",
   "assess": "338b947fd44aeadd",
   "caffeine ledger beer": "8edf6e978fa8a642",
   "caffeine ledger pizza": "8edf6e978fa8a642",
@@ -204,7 +204,7 @@ exports[`the model's output > a beer, pizza and a pill 1`] = `
 
 exports[`the model's output > a cold 1`] = `
 {
-  "acting": "9bfed0afb4d7672e",
+  "acting": "4f1f1516477a16a2",
   "assess": "a74e1611c2cd6aab",
   "caffeine ledger coffee": "38557227c934cf9e",
   "caffeine ledger pizza": "8edf6e978fa8a642",
@@ -402,7 +402,7 @@ exports[`the model's output > a fasted run 1`] = `
 
 exports[`the model's output > a latte 1`] = `
 {
-  "acting": "c4f87572ce4eb1d3",
+  "acting": "17c38ab80977f6ae",
   "assess": "47a43d392f84167c",
   "caffeine ledger latte": "be9c39b4ce8e3ffe",
   "channel appetite": "dc52a15473c2cbc3",
@@ -501,7 +501,7 @@ exports[`the model's output > a latte 1`] = `
 
 exports[`the model's output > a period starting 1`] = `
 {
-  "acting": "608260da40c30d10",
+  "acting": "c0543b76bba1878f",
   "assess": "f957e8d30b24af26",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
@@ -606,7 +606,7 @@ exports[`the model's output > a period starting 1`] = `
 
 exports[`the model's output > a run after breakfast 1`] = `
 {
-  "acting": "bd9cd7649f79c271",
+  "acting": "7e329f2b44e535b7",
   "assess": "39ba27545437f377",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -705,7 +705,7 @@ exports[`the model's output > a run after breakfast 1`] = `
 
 exports[`the model's output > a short night 1`] = `
 {
-  "acting": "b605c8f85c7d7f92",
+  "acting": "19cc229db94f1f87",
   "assess": "ae0aac6ece0f0206",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
@@ -810,7 +810,7 @@ exports[`the model's output > a short night 1`] = `
 
 exports[`the model's output > a short night, slept short 1`] = `
 {
-  "acting": "778dd0e64eea0645",
+  "acting": "f5f07c2051673c56",
   "assess": "a52121043c3c6679",
   "channel appetite": "af2d0db14b274341",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -906,7 +906,7 @@ exports[`the model's output > a short night, slept short 1`] = `
 
 exports[`the model's output > a walk after a meal 1`] = `
 {
-  "acting": "4d5bf9336230ba4c",
+  "acting": "d491cb8ae24bd2ec",
   "assess": "fd8ccb247a405691",
   "caffeine ledger lunch": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -1005,7 +1005,7 @@ exports[`the model's output > a walk after a meal 1`] = `
 
 exports[`the model's output > after ovulation 1`] = `
 {
-  "acting": "ab6316ea4ec9c338",
+  "acting": "f1122957e4ce3201",
   "assess": "e2941b4220af8f49",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
@@ -1110,7 +1110,7 @@ exports[`the model's output > after ovulation 1`] = `
 
 exports[`the model's output > an exam 1`] = `
 {
-  "acting": "d9a56cc9dd8b97fd",
+  "acting": "9aa38a5e7b7d88a6",
   "assess": "fe328eeeb3c5d5cb",
   "channel appetite": "cb5e18ae06148cdc",
   "channel bloodPressure": "9acbf8fad66b5c8a",
@@ -1206,7 +1206,7 @@ exports[`the model's output > an exam 1`] = `
 
 exports[`the model's output > another body 1`] = `
 {
-  "acting": "679c541a020981f1",
+  "acting": "e79831662de0d88b",
   "assess": "78c946d140daf43e",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
@@ -1311,7 +1311,7 @@ exports[`the model's output > another body 1`] = `
 
 exports[`the model's output > banana 1`] = `
 {
-  "acting": "4eef31eb360d8340",
+  "acting": "2024916cb0b9b1e3",
   "assess": "647729c0d01b3045",
   "caffeine ledger banana": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -1410,7 +1410,7 @@ exports[`the model's output > banana 1`] = `
 
 exports[`the model's output > burger 1`] = `
 {
-  "acting": "42bb37840db242f4",
+  "acting": "955b899cd520a40c",
   "assess": "2a9fbdd836ea2d0d",
   "caffeine ledger burger": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -1509,7 +1509,7 @@ exports[`the model's output > burger 1`] = `
 
 exports[`the model's output > chest and triceps 1`] = `
 {
-  "acting": "64696aa8fc3140d0",
+  "acting": "63cc410877ed9252",
   "assess": "6fd5532059f33feb",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "225b643038703693",
@@ -1605,7 +1605,7 @@ exports[`the model's output > chest and triceps 1`] = `
 
 exports[`the model's output > cola 1`] = `
 {
-  "acting": "ec9609c0435267ee",
+  "acting": "c13ab31c1a5e808a",
   "assess": "a044ca75e916c6c9",
   "caffeine ledger cola": "7ac806632418a871",
   "channel appetite": "dc52a15473c2cbc3",
@@ -1704,7 +1704,7 @@ exports[`the model's output > cola 1`] = `
 
 exports[`the model's output > everything at once 1`] = `
 {
-  "acting": "512ddc71dc849e89",
+  "acting": "6772ed6b4be49222",
   "assess": "13dfa6592721f397",
   "caffeine ledger coffee": "0a04b75a4ed38000",
   "caffeine ledger pizza": "8edf6e978fa8a642",
@@ -1806,7 +1806,7 @@ exports[`the model's output > everything at once 1`] = `
 
 exports[`the model's output > far too much coffee 1`] = `
 {
-  "acting": "25e2d8973a5b37b1",
+  "acting": "5f6bed7a70bdc76c",
   "assess": "d6b6c5855c51e3f3",
   "caffeine ledger coffee_1": "cf7969aa8bed2fd5",
   "caffeine ledger coffee_2": "6533032a0d1cc54e",
@@ -1911,7 +1911,7 @@ exports[`the model's output > far too much coffee 1`] = `
 
 exports[`the model's output > fat test 1`] = `
 {
-  "acting": "c7b6ee8ad70076e0",
+  "acting": "e9bed4d5a0a88779",
   "assess": "8b350ebfee58e2f7",
   "caffeine ledger fat_test": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -2010,7 +2010,7 @@ exports[`the model's output > fat test 1`] = `
 
 exports[`the model's output > flu 1`] = `
 {
-  "acting": "2d72490a9fa065eb",
+  "acting": "28bd38eb57dd3dc0",
   "assess": "e42e59aabe22b7b9",
   "channel appetite": "f215f88712c2649c",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -2106,7 +2106,7 @@ exports[`the model's output > flu 1`] = `
 
 exports[`the model's output > her run 1`] = `
 {
-  "acting": "c06868a37af414ce",
+  "acting": "b02c38a88863b529",
   "assess": "9512c9ee050d900b",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -2205,7 +2205,7 @@ exports[`the model's output > her run 1`] = `
 
 exports[`the model's output > legs yesterday 1`] = `
 {
-  "acting": "814768e1ae78a512",
+  "acting": "09fe44e33a3220bc",
   "assess": "a313fce108c145c1",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "3b999a8531062f85",
@@ -2397,7 +2397,7 @@ exports[`the model's output > nothing logged 1`] = `
 
 exports[`the model's output > pure spirit 1`] = `
 {
-  "acting": "8ea3139345067008",
+  "acting": "39b2e3fe34db76f8",
   "assess": "2b975c88f0111d93",
   "caffeine ledger vodka": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -2496,7 +2496,7 @@ exports[`the model's output > pure spirit 1`] = `
 
 exports[`the model's output > rice 1`] = `
 {
-  "acting": "3b55c6c8e09fef7a",
+  "acting": "3766c865b6f413b5",
   "assess": "ff1188707bf35f74",
   "caffeine ledger rice": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",
@@ -2595,7 +2595,7 @@ exports[`the model's output > rice 1`] = `
 
 exports[`the model's output > sauna 1`] = `
 {
-  "acting": "cd6ae4db19fa9344",
+  "acting": "c7e04ce07e9f7625",
   "assess": "9e839293170f0f60",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "dc52a15473c2cbc3",
@@ -2691,7 +2691,7 @@ exports[`the model's output > sauna 1`] = `
 
 exports[`the model's output > sex 1`] = `
 {
-  "acting": "932d15ea5980adde",
+  "acting": "a613acc50a293bac",
   "assess": "aa9399e7bfaee527",
   "channel appetite": "dc52a15473c2cbc3",
   "channel bloodPressure": "f5e2ef51b0b2d18b",
@@ -2787,7 +2787,7 @@ exports[`the model's output > sex 1`] = `
 
 exports[`the model's output > stress 1`] = `
 {
-  "acting": "4f112d0f02da0069",
+  "acting": "8705fdd083d9d65e",
   "assess": "eb1e096ffbff62a6",
   "channel appetite": "93ecc3b6b94630b6",
   "channel bloodPressure": "f4c87ad3f563d1ea",
@@ -2883,7 +2883,7 @@ exports[`the model's output > stress 1`] = `
 
 exports[`the model's output > the opening day 1`] = `
 {
-  "acting": "afdae3f7ac7ed3b6",
+  "acting": "b1255943b059e2ac",
   "assess": "262485721ee12187",
   "caffeine ledger coffee": "d81fe9e10c87d569",
   "caffeine ledger pizza": "8edf6e978fa8a642",
@@ -2988,7 +2988,7 @@ exports[`the model's output > the opening day 1`] = `
 
 exports[`the model's output > three meals 1`] = `
 {
-  "acting": "1011df2f2ad1d576",
+  "acting": "84641d2e71c16de5",
   "assess": "9d24266f1ebc8ff9",
   "caffeine ledger breakfast": "8edf6e978fa8a642",
   "caffeine ledger dinner": "8edf6e978fa8a642",
@@ -3093,7 +3093,7 @@ exports[`the model's output > three meals 1`] = `
 
 exports[`the model's output > two apples 1`] = `
 {
-  "acting": "96f30ab5eb590c13",
+  "acting": "96330f6a61787309",
   "assess": "c863d25839e44f35",
   "caffeine ledger apples": "8edf6e978fa8a642",
   "channel appetite": "dc52a15473c2cbc3",

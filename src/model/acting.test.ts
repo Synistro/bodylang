@@ -103,6 +103,17 @@ describe("what is acting on an organ", () => {
     ).toBeNull();
   });
 
+  it("gives each row its true amount, apart from what puts it first in the list", () => {
+    const tr = simulate(day({ intakes: [coffee] }));
+    const coffeeAt = (minute: number) => actingAt(tr, minute, "heart").find((one) => one.process.id.includes("coffee"));
+    const later = coffeeAt(coffee.at + 5 * 60);
+    const sooner = coffeeAt(coffee.at + 60);
+    if (!later || !sooner) throw new Error("Coffee should be at the heart for hours");
+    expect(later.strength).toBe(1);
+    expect(later.amount).toBeLessThan(0.7);
+    expect(sooner.amount).toBeGreaterThan(later.amount);
+  });
+
   it("leaves out what always runs", () => {
     expect(titles({ intakes: [lunch] }, 14 * 60, "heart")).not.toContain("circulation");
   });

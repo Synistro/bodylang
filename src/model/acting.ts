@@ -10,7 +10,8 @@ import { bodyLineFacts } from "./processes/bodyLines";
 export interface Acting {
   process: Process;
   say: string;
-  strength: number; // 0 to 1, how much of it is at this organ now
+  strength: number; // 0 to 1, for the order of the list: what is happening here right now counts as most
+  amount: number; // 0 to 1, how much of it is actually at this organ now
   from: OrganId | null; // the organ it reached this one from, when it travels
 }
 
@@ -20,7 +21,8 @@ const particularToToday = (process: Process) => (parseProcessId(process.id).kind
 
 const firstSentence = (text: string) => text.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? text;
 
-const strengthOf = (stop: ProcessStop) => (stop.state === "here" ? 1 : Math.max(stop.flow, stop.share));
+const amountOf = (stop: ProcessStop) => Math.max(stop.flow, stop.share);
+const strengthOf = (stop: ProcessStop) => (stop.state === "here" ? 1 : amountOf(stop));
 
 // The way it reached this organ, from the first time it gets here: something inhaled starts in the lungs,
 // however much it also acts on them later.
@@ -37,7 +39,15 @@ export function actingAt(tr: Trajectory, t: number, organ: OrganId): Acting[] {
       const stops = process.stops.filter((stop) => stop.organ === organ && strengthOf(stop) >= GOING_ON_FROM);
       if (!stops.length) return [];
       const stop = stops.reduce((best, other) => (strengthOf(other) > strengthOf(best) ? other : best));
-      return [{ process, say: firstSentence(stop.say), strength: strengthOf(stop), from: cameFrom(process, stops[0]) }];
+      return [
+        {
+          process,
+          say: firstSentence(stop.say),
+          strength: strengthOf(stop),
+          amount: amountOf(stop),
+          from: cameFrom(process, stops[0]),
+        },
+      ];
     })
     .sort((a, b) => particularToToday(b.process) - particularToToday(a.process) || b.strength - a.strength);
 }

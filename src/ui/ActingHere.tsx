@@ -38,15 +38,15 @@ export function ActingHere({ organ }: { organ: OrganId }) {
       aria-label="What is acting on it now"
       data-pointed={about !== null && rows.some((row) => row.process.id === about) ? true : undefined}
     >
-      {rows.map(({ process, say, strength }) => (
+      {rows.map(({ process, say, amount }) => (
         <li
           key={process.id}
           className="acting-row"
           data-about={process.id === about || undefined}
-          style={{ "--strength": strength.toFixed(2) }}
+          style={{ "--amount": amount.toFixed(2) }}
           {...sourced(processOrigin(trajectory, process))}
         >
-          <i className="acting-flow" aria-hidden="true" />
+          <i className="acting-amount" aria-hidden="true" />
           <span className="acting-words">
             <b>{process.title}</b> {say}
           </span>
