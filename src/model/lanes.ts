@@ -1,11 +1,12 @@
-import { assess, hasSomethingToSay, normalAgainAt, Reading, readingCurve, ReadingId } from "./assess";
+import { assess, hasSomethingToSay, normalAgainAt, Reading, readingCurve } from "./assess";
+import { ReadingId, OrganId } from "./ids";
 import { eventLevelAt, muscleStateAt, MuscleState, ResolvedEvent } from "./events";
 import { MuscleGroup } from "./muscleGroups";
 import { DAY, LANES, MUSCLE_RECOVERY, REFERENCE } from "./params";
 import { mealGroups, mealProcessId, Process, processesAt } from "./processes";
-import { alcoholLedgerAt, caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, OrganId, Trajectory } from "./simulate";
+import { alcoholLedgerAt, caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, Trajectory } from "./simulate";
 import { formatClock, levelWord, whenWords } from "./state";
-import type { SystemId } from "./systems";
+import type { SystemId } from "./ids";
 import { systemById } from "./systems";
 import { Thread, threadsAt } from "./threads";
 

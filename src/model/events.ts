@@ -1,8 +1,7 @@
 import { MUSCLE_LABEL, MuscleGroup } from "./muscleGroups";
 import { ACTIVITY, DAY, ENERGY, Evidence, HEART, ILLNESS, MUSCLE_MASS_SHARE, MUSCLE_RECOVERY, POOR_SLEEP, RESTING_SYSTOLIC_MMHG, SEX, STRESS, TRAINING } from "./params";
-import type { RouteId, Substance } from "./processes";
-import type { ActivitySpan, Anthropometrics, Body, OrganId } from "./simulate";
-import type { SystemId } from "./systems";
+import type { RouteId, Substance, SystemId, OrganId } from "./ids";
+import type { ActivitySpan, Anthropometrics, Body } from "./simulate";
 
 // Anything that can happen to a body acts on the model through these quantities, so the rest of the
 // model never needs to know whether a raised heart rate came from a fever or a workout.

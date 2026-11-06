@@ -3,7 +3,8 @@ import type { GuideStep } from "../agent/actions";
 import type { BodyEvent } from "../model/events";
 import { isStill, Lane, systemLanes, threadLanes, workedMuscleLanes } from "../model/lanes";
 import { Intake, Scenario, simulate } from "../model/simulate";
-import { systemById, SystemId } from "../model/systems";
+import { systemById } from "../model/systems";
+import { SystemId } from "../model/ids";
 import { dayViewOf, viewStops, Walkthrough } from "./dayView";
 import { hm } from "../model/testKit";
 

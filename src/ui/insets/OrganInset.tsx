@@ -1,5 +1,5 @@
 import { Component, type ComponentType, type ReactNode } from "react";
-import type { OrganId } from "../../model/simulate";
+import type { OrganId } from "../../model/ids";
 import { composedOnScreen, useStore } from "../../store";
 import { BladderInset } from "./BladderInset";
 import { ComposedInset } from "./ComposedInset";

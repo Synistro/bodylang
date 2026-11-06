@@ -4,9 +4,10 @@ import { curveStrength, EventTrack, illnessSites, MuscleState, muscleStateAt, Re
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import { LIVER, MUSCLE_RECOVERY, REFERENCE, STOMACH } from "../model/params";
 import type { Process, ProcessStop } from "../model/processes";
-import { Body, ledgerAt, OrganId, POSTURES, Posture, Sex, Trajectory, value } from "../model/simulate";
+import { Body, ledgerAt, POSTURES, Posture, Sex, Trajectory, value } from "../model/simulate";
+import { OrganId, SystemId } from "../model/ids";
 import { organStates } from "../model/state";
-import { ORGAN_NAME, SYSTEMS, SystemId, systemById } from "../model/systems";
+import { ORGAN_NAME, SYSTEMS, systemById } from "../model/systems";
 import { ACCENT_SYSTEM, organHue, viewSystemOf } from "../look";
 import { WALL, WALL_FPS, WALL_PIXEL_RATIO } from "../wall";
 import { OrganAsset, loadBody, loadOrgans } from "./assets";

@@ -1,6 +1,7 @@
 import { RefObject, useDeferredValue, useEffect, useRef } from "react";
 import { assess, Assessment, Reading } from "../model/assess";
-import { OrganId, Trajectory } from "../model/simulate";
+import { Trajectory } from "../model/simulate";
+import { OrganId } from "../model/ids";
 import type { Stage } from "../scene/stage";
 import { AppState, muscleMinute, setUi, useStore, yourDayWhileAsking } from "../store";
 

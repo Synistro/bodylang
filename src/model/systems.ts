@@ -1,11 +1,8 @@
 import { MUSCLE_GROUPS } from "./muscleGroups";
-import type { OrganId } from "./simulate";
-import type { ReadingId } from "./assess";
+import type { OrganId, ReadingId, SystemId } from "./ids";
 
 // How the app divides the body for navigation. Each entry says what lights up in 3D and which
 // readings the panel shows when you pick that system.
-export type SystemId = "overview" | "digestion" | "energy" | "circulation" | "muscles" | "brain" | "immune" | "clearing" | "reproductive";
-
 export interface SystemDef {
   id: SystemId;
   title: string;

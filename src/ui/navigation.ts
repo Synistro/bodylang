@@ -1,6 +1,5 @@
 import type { MuscleGroup } from "../model/muscleGroups";
-import type { OrganId } from "../model/simulate";
-import type { SystemId } from "../model/systems";
+import type { OrganId, SystemId } from "../model/ids";
 import { dispatch, getState, setUi } from "../store";
 
 // Four levels, each hidden until asked for: the whole body, one system, one process, one organ.

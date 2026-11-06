@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import type { RouteId } from "../model/processes";
+import type { RouteId } from "../model/ids";
 import type { Sex } from "../model/simulate";
 import type { OrganMeta } from "./assets";
 import { RouteNetwork, tracePath, traceStrands } from "./flows";

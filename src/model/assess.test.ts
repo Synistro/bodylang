@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Assessment, assess, glucoseVerdict, insulinVerdict, Reading, ReadingId, triglycerideVerdict } from "./assess";
+import { Assessment, assess, glucoseVerdict, insulinVerdict, Reading, triglycerideVerdict } from "./assess";
+import { ReadingId } from "./ids";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { CustomSubstance, Intake, Scenario, simulate } from "./simulate";
 import { SYSTEMS } from "./systems";

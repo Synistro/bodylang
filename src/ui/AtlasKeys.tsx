@@ -3,7 +3,7 @@ import { ORGAN_NAME } from "../model/systems";
 import * as THREE from "three";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { ProcessStop } from "../model/processes";
-import type { OrganId } from "../model/simulate";
+import type { OrganId } from "../model/ids";
 import type { AnchorId, Stage } from "../scene/stage";
 import { getState, selectedProcess, setUi, useStore } from "../store";
 import { freeArea } from "./freeArea";

@@ -1,6 +1,7 @@
 import { Cycle, cycleDay, hormonesAt, lutealShare } from "./cycle";
 import { activityBouts, BodyEvent, ChannelId, channelSeries, maxHeartRate, muscleWorkSeries, resolveEvent, ResolvedEvent, runSessions } from "./events";
 import { ALCOHOL, BLOOD_FLOW, BODY_COMPOSITION, BODY_TEMPERATURE, CAFFEINE, COUPLING, CYCLE, DAY, ENERGY, FASTING, FEEL, GLUCOSE, GUT, HEART, INSULIN, KIDNEY, LIPID, LIVER, MUSCLE, PROTEIN, RESTING_SYSTOLIC_MMHG, STOMACH, SUBSTANCE_STEP, TRAINING } from "./params";
+import type { OrganId } from "./ids";
 
 export type Sex = "male" | "female";
 export type Posture = "sleeping" | "sitting" | "standing" | "walking" | "running";
@@ -67,24 +68,6 @@ export interface CustomSubstance {
   targets: { organ: OrganId; effect: string }[];
   source: string;
 }
-
-export type OrganId =
-  | "brain"
-  | "heart"
-  | "lungs"
-  | "liver"
-  | "stomach"
-  | "pancreas"
-  | "spleen"
-  | "small_intestine"
-  | "large_intestine"
-  | "kidneys"
-  | "bladder"
-  | "muscle"
-  | "fat"
-  | "uterus"
-  | "ovaries"
-  | "prostate";
 
 export interface Scenario {
   body: Body;

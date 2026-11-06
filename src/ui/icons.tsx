@@ -1,6 +1,6 @@
 import { ArrowUp, Bandaids, Barbell, BatteryLow, Bed, BowlFood, Brain, Dna, Drop, Eye, Fire, ForkKnife, Heartbeat, Icon, IconProps, Leaf, Lightning, Moon, Pause, PersonSimple, Play, ShieldPlus, Sparkle, SkipBack, SkipForward, Thermometer, ThermometerSimple, Vibrate, Virus, Waves, Waveform, Wind, X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
-import type { SystemId } from "../model/systems";
+import type { SystemId } from "../model/ids";
 
 // Icons are for finding your way and for controls everybody already knows: the list of systems you
 // keep returning to, what you may feel, and play, skip, send, close. Other text stays in words.

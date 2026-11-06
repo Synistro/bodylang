@@ -1,10 +1,10 @@
 import { DAY, PROCESS } from "../params";
-import { ROUTE_IDS, viewOf } from "../processes";
-import { Body, OrganId, Scenario, simulate } from "../simulate";
+import { viewOf } from "../processes";
+import { ORGANS, ROUTE_IDS } from "../ids";
+import { Body, Scenario, simulate } from "../simulate";
 import { SYSTEMS } from "../systems";
 import type { ExtensionState, ProcessExtension } from "./api";
 
-const ORGANS: readonly OrganId[] = ["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"];
 const SAY_WORDS_MOST = 25;
 const STEP_MIN = 15;
 const STOPS = { least: 2, most: 6 };

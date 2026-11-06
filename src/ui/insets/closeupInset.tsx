@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { Adjustment, Directions, FromModel, Levels, levelsAt, litLevels, Panel, panelsOf } from "../../closeup/define";
-import type { OrganId } from "../../model/simulate";
+import type { OrganId } from "../../model/ids";
 import { closeupOnScreen, useStore } from "../../store";
 import { sourced } from "../SourceTip";
 import "./closeup.css";

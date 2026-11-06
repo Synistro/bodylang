@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { OrganId } from "../model/simulate";
+import type { OrganId } from "../model/ids";
 import { bladderCloseup } from "./bladder";
 import { brainCloseup } from "./brain";
 import type { Levels, Place, Travel } from "./define";

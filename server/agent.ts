@@ -2,7 +2,7 @@ import { createSdkMcpServer, query, tool } from "@anthropic-ai/claude-agent-sdk"
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import { Action, ACTION_SCHEMAS, ActionName, BodyState, reduce } from "../src/agent/actions";
-import { Intake } from "../src/model/simulate";
+import { Intake, simulate } from "../src/model/simulate";
 import { cleanEnvironment } from "./claudeEnv";
 import { BuildStatus, startBuild } from "./extend";
 import { combineIngredients, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
@@ -13,8 +13,8 @@ import { DATE_PATTERN } from "../src/model/day";
 import { PRESETS } from "../src/model/events";
 import { readout } from "../src/model/narrate";
 import { processesAt } from "../src/model/processes";
-import { simulate } from "../src/model/simulate";
 import { formatClock, whereabouts } from "../src/model/state";
+import { ORGANS } from "../src/model/ids";
 
 // Which model answers, and how. tools/speed-bench.mjs measured these, and PLAN.md has the results. In a
 // brief run the tools just record, and Claude reads the numbers once, when it needs them.
@@ -412,7 +412,7 @@ export async function runTell({ text, state: initial, mode, depth, history, date
             .array(
               z.object({
                 text: z.string().describe(`One line of plain words with no lead-in, under ${REPLY_WORDS_UNDER} words`),
-                organ: z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"]).optional().describe("The organ this line is about; hovering the line highlights it"),
+                organ: z.enum(ORGANS).optional().describe("The organ this line is about; hovering the line highlights it"),
               }),
             )
             .min(1)

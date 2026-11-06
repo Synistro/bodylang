@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { assess, Assessment, Reading, ReadingId } from "./assess";
+import { assess, Assessment, Reading } from "./assess";
+import { ReadingId } from "./ids";
 import { maxHeartRate } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./narrate";

@@ -2,43 +2,11 @@ import { crampLevel, cyclePhase, CyclePhase, lutealShare, minutesToNextPeriod } 
 import { BodyEvent, ChannelId, curveStrength, effectAt, endOf, maxHeartRate, muscleStateAt, MuscleState, MuscleWork, namesOf, ResolvedEvent } from "./events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "./muscleGroups";
 import { ACTIVITY, BLOOD_FLOW, CAFFEINE, CYCLE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
-import { caffeineLedgerAt, foodKcalOf, Intake, intakeFlowsAt, kcalOf, mealDipOf, OrganId, Posture, postureKcalPerHour, POSTURES, SeriesName, Trajectory, value } from "./simulate";
+import { caffeineLedgerAt, foodKcalOf, Intake, intakeFlowsAt, kcalOf, mealDipOf, Posture, postureKcalPerHour, POSTURES, SeriesName, Trajectory, value } from "./simulate";
+import { OrganId, SystemId } from "./ids";
 import { arrivingFoods, foodsInStomach, forecast as stateForecast, formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./state";
-import { SystemId, systemById } from "./systems";
-
-export type ReadingId =
-  | "glucose"
-  | "insulin"
-  | "tg"
-  | "hr"
-  | "output"
-  | "breaths"
-  | "flowGut"
-  | "flowMuscle"
-  | "flowBrain"
-  | "flowKidneys"
-  | "stomach"
-  | "absorbing"
-  | "glycogen"
-  | "muscleUptake"
-  | "burn"
-  | "fuel"
-  | "caffeine"
-  | "receptors"
-  | "alertness"
-  | "alcohol"
-  | "bladder"
-  | "bloodPressure"
-  | "temperature"
-  | "stressLevel"
-  | "inflammation"
-  | "immune"
-  | "reward"
-  | "fluid"
-  | "cycleDay"
-  | "estradiol"
-  | "progesterone"
-  | `muscle:${MuscleGroup}`;
+import { systemById } from "./systems";
+import type { ReadingId } from "./ids";
 
 // Readings read from a curve in the table below. Muscle summaries are built per group.
 type TableReadingId = Exclude<ReadingId, `muscle:${MuscleGroup}`>;

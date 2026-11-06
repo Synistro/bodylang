@@ -5,18 +5,18 @@ import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS, TRACK_F
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
 import type { Cycle } from "../model/cycle";
 import { CYCLE, DAY } from "../model/params";
-import { ROUTE_IDS } from "../model/processes";
+import { ROUTE_IDS, SystemId, OrganId, ORGANS } from "../model/ids";
 import { shortText } from "./shortText";
-import { ActivitySpan, Body, CustomSubstance, Intake, OrganId, Posture, postureAt, SUBSTANCE_ROUTES } from "../model/simulate";
+import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt, SUBSTANCE_ROUTES } from "../model/simulate";
 import { formatClock } from "../model/state";
-import { systemById, SystemId } from "../model/systems";
+import { systemById } from "../model/systems";
 import { ORGAN_HOME } from "../look";
 
 // The one vocabulary between language and the body: Claude calls these as tools, the scripted
 // opening replays them, and the browser and server share the same reducer.
 
 const minute = z.number().int().min(-1440).max(1799).describe("Minutes since 00:00 today, for example 16:45 is 1005. Yesterday is negative: 23:00 yesterday is -60");
-const organ = z.enum(["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"]);
+const organ = z.enum(ORGANS);
 const posture = z.enum(["sleeping", "sitting", "standing", "walking", "running"]);
 const system = z.enum(["overview", "digestion", "energy", "circulation", "muscles", "brain", "immune", "clearing", "reproductive"]);
 const eventMinute = z.number().int().min(-14 * 1440).max(1799).describe("Minutes since 00:00 today. Negative for earlier days: 18:00 yesterday is -360");

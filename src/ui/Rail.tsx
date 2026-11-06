@@ -1,7 +1,8 @@
 import { ReactNode, useEffect, useMemo, useRef } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
-import type { OrganId } from "../model/simulate";
-import { ORGAN_NAME, SYSTEMS, SystemId } from "../model/systems";
+import type { OrganId } from "../model/ids";
+import { ORGAN_NAME, SYSTEMS } from "../model/systems";
+import { SystemId } from "../model/ids";
 import { Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { threadsAt } from "../model/threads";
 import { processIdsOf } from "../model/yourDay";

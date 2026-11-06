@@ -4,7 +4,7 @@ import { MUSCLE_GROUPS } from "./muscleGroups";
 import { processesAt } from "./processes";
 import { Trajectory, value } from "./simulate";
 import { threadsAt } from "./threads";
-import type { OrganId } from "./simulate";
+import type { OrganId } from "./ids";
 import { forecast, formatClock, inSentence, levelWord } from "./state";
 
 export interface ReplyLine {

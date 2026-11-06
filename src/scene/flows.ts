@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { RouteId } from "../model/processes";
+import type { RouteId } from "../model/ids";
 import type { OrganMeta } from "./assets";
 
 export type Line = THREE.Vector3[];

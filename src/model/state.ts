@@ -1,8 +1,7 @@
 import { cycleDay, cyclePhase, liningShare } from "./cycle";
 import { CAFFEINE, DAY, PROCESS, STOMACH } from "./params";
-import { caffeineLedgerAt, foodKcalOf, Intake, intakeFlowsAt, ledgerAt, OrganId, Trajectory, value } from "./simulate";
-
-export type Tint = "chyme" | "glucose" | "fat" | "caffeine" | "insulin" | "alcohol" | "other" | null;
+import { caffeineLedgerAt, foodKcalOf, Intake, intakeFlowsAt, ledgerAt, Trajectory, value } from "./simulate";
+import type { OrganId, Tint } from "./ids";
 
 // What one organ is doing at one instant. Scene and labels both draw from this.
 export interface OrganState {

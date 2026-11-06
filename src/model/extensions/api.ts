@@ -1,7 +1,6 @@
 import type { Evidence } from "../params";
-import type { RouteId } from "../processes";
-import type { Body, OrganId, SeriesName } from "../simulate";
-import type { SystemId } from "../systems";
+import type { RouteId, SystemId, OrganId } from "../ids";
+import type { Body, SeriesName } from "../simulate";
 
 // The contract for adding a process the model doesn't have. One file in this folder exports `extension`,
 // and the app finds it, lists it, and draws it through the body like any other process.

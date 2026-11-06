@@ -4,17 +4,13 @@ import { EXTENSIONS } from "./extensions";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
 import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
-import { alcoholLedgerAt, alcoholVolumeL, caffeineLedgerAt, CustomSubstance, foodKcalOf, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
-import type { Tint } from "./state";
+import { alcoholLedgerAt, alcoholVolumeL, caffeineLedgerAt, CustomSubstance, foodKcalOf, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
+import { OrganId } from "./ids";
 import { formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
-import type { SystemId } from "./systems";
+import type { SystemId, RouteId, Substance } from "./ids";
 
-export type Substance = NonNullable<Tint>;
 
 // Named paths through the body, defined in src/scene/flows.ts. A stop lists the ones leading to it.
-export const ROUTE_IDS = ["esophagus", "stomach_out", "duodenum", "jejunum", "ileum", "colon", "portal_liver", "liver_out", "ivc", "svc", "to_lung_L", "to_lung_R", "from_lung_L", "from_lung_R", "arch", "carotid", "to_neck", "descending", "to_gut", "to_kidney_L", "to_kidney_R", "from_kidney_L", "from_kidney_R", "from_brain", "to_liver_art", "pancreas_portal", "lymph", "lymph_svc", "leg_L", "leg_R", "arm_L", "arm_R", "to_bladder_L", "to_bladder_R"] as const;
-
-export type RouteId = (typeof ROUTE_IDS)[number];
 
 export type StopState = "passed" | "here" | "ahead";
 

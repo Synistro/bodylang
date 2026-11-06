@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { actingAt } from "./model/acting";
+import { ORGANS } from "./model/ids";
 import { assess } from "./model/assess";
 import { dayMoments, processLanes, systemLanes, threadLanes, workedMuscleLanes } from "./model/lanes";
 import { readout } from "./model/narrate";
 import { feelingOrigin, processOrigin, readingOrigin } from "./model/origin";
 import { processesAt } from "./model/processes";
-import { OrganId, SERIES, simulate, Trajectory } from "./model/simulate";
+import { SERIES, simulate, Trajectory } from "./model/simulate";
 import { forecast, organStates, whereabouts } from "./model/state";
 import { SYSTEMS } from "./model/systems";
 import { SCENARIOS } from "./model/testScenarios";
@@ -17,7 +18,6 @@ vi.mock("./model/extensions/index", () => ({ EXTENSIONS: [] }));
 
 const SAMPLE_EVERY_MIN = 30;
 const LANES_AT = [12 * 60, 18 * 60];
-const ORGANS: OrganId[] = ["brain", "heart", "lungs", "liver", "stomach", "pancreas", "spleen", "small_intestine", "large_intestine", "kidneys", "bladder", "muscle", "fat", "uterus", "ovaries", "prostate"];
 
 const hashOf = (data: Uint8Array | string) => createHash("sha256").update(data).digest("hex").slice(0, 16);
 

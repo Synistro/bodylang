@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ACTION_SCHEMAS } from "../agent/actions";
 import type { BodyEvent } from "../model/events";
-import type { OrganId, Trajectory } from "../model/simulate";
+import type { Trajectory } from "../model/simulate";
+import type { OrganId } from "../model/ids";
 import { AS_THE_MODEL_SAYS, levelsAt, litLevels, panelsOf } from "./define";
 import { closeupGuidance, closeupOf } from "./list";
 import { muscleCloseup } from "./muscle";

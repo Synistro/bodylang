@@ -1,5 +1,4 @@
-import type { OrganId } from "./model/simulate";
-import type { SystemId } from "./model/systems";
+import type { OrganId, SystemId } from "./model/ids";
 
 // Colour is rare here, the way syntax colour is in a code block. The overview has one quiet accent.
 // Focus on a system or something in it, and its one colour appears on the organs, the line and the

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { actingAt } from "../model/acting";
 import { processOrigin } from "../model/origin";
-import type { OrganId } from "../model/simulate";
+import type { OrganId } from "../model/ids";
 import { processIdsOf } from "../model/yourDay";
 import { processOnScreen, useStore, yourDayWhileAsking } from "../store";
 import { useMinute } from "./hooks";

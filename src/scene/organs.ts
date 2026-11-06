@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { OrganId } from "../model/simulate";
+import type { OrganId } from "../model/ids";
 import type { OrganAsset, OrganMeshMeta } from "./assets";
 import { createOrganMaterial, createOutlineMaterial, createVesselMaterial, Palette } from "./materials";
 
