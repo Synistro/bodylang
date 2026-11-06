@@ -64,7 +64,7 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
 
 describe("what the build session is told", () => {
   it("names only files that exist", () => {
-    const told = readFileSync("server/extend.ts", "utf8") + readFileSync("src/model/extensions/api.ts", "utf8");
+    const told = readFileSync("server/extendSession.ts", "utf8") + readFileSync("server/extend.ts", "utf8") + readFileSync("src/model/extensions/api.ts", "utf8");
     const named = told.match(/src\/[\w/.]+\.ts/g) ?? [];
     expect(named.length).toBeGreaterThan(2);
     expect(named.filter((path) => !existsSync(path))).toEqual([]);
