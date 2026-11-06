@@ -196,7 +196,7 @@ const RESTING: MuscleState = { work: 0, fatigue: 0, soreness: 0, repair: 0, glyc
 
 const worked = (events: BodyEvent[], muscle: MuscleGroup | null, t: number) => events.some((event) => event.from <= t && event.muscles.some((m) => m.group === muscle));
 
-// Says what the drawing shows, so the caption and the fibres always agree.
+// Says what the drawing shows from the model, so the caption and the fibres agree unless a step sets levels.
 function fibreWord(state: MuscleState, wasWorked: boolean) {
   const r = REFERENCE.muscleState;
   if (state.work >= r.workingFrom) return "working";
@@ -220,4 +220,4 @@ function useMusclePlate({ trajectory, t, muscle }: InsetProps): PlateWords {
   return { caption, note: away === null ? undefined : { text: awayWords(away) }, describe: `Muscle fibres with a blood vessel above them and a nerve below. ${caption}.` };
 }
 
-export const MuscleInset = closeupInset(muscleCloseup, { Drawing, paint: paintMuscle, usePlate: useMusclePlate });
+export const MuscleInset = closeupInset(muscleCloseup, { Drawing, paint: paintMuscle, usePlate: useMusclePlate, captionFromModel: true });

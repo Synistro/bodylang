@@ -1,4 +1,5 @@
 import { CheckedWords } from "./Conversation";
+import { isTyping } from "./hooks";
 import { useEffect, useState } from "react";
 import { closeGuide, getState, goToStep, isOnChart, leaveAsk, setUi, stepMinute, useStore } from "../store";
 import { X } from "./icons";
@@ -64,7 +65,7 @@ export function Guide() {
   useEffect(() => {
     if (!guide) return;
     const key = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLTextAreaElement) return;
+      if (isTyping(e.target)) return;
       if (e.key === "ArrowRight") goToStep(Math.min(guide.length - 1, index + 1));
       else if (e.key === "ArrowLeft") goToStep(Math.max(0, index - 1));
       else return;

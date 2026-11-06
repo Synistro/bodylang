@@ -84,4 +84,4 @@ function useIntestinePlate({ trajectory: tr, t }: InsetProps, _levels: Levels<Se
   return { caption, describe: `The fingers lining the small intestine, passing sugar and protein into the blood and fat into the lymph. ${caption}.` };
 }
 
-export const SmallIntestineInset = closeupInset(smallIntestineCloseup, { Drawing, paint: paintIntestine, usePlate: useIntestinePlate });
+export const SmallIntestineInset = closeupInset(smallIntestineCloseup, { Drawing, paint: paintIntestine, usePlate: useIntestinePlate, captionFromModel: true });

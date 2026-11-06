@@ -1,19 +1,15 @@
 import { ReactNode, useEffect, useMemo, useRef } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
 import type { OrganId } from "../model/simulate";
-import { SYSTEMS, SystemId } from "../model/systems";
+import { ORGAN_NAME, SYSTEMS, SystemId } from "../model/systems";
 import { Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { threadsAt } from "../model/threads";
 import { processIdsOf } from "../model/yourDay";
 import { currentProcesses, getState, useStore, yourDayWhileAsking } from "../store";
-import { assessmentAt, organHover, useMinute } from "./hooks";
+import { assessmentAt, organHover, useMinute, isTyping } from "./hooks";
 import { SYSTEM_GLYPH } from "./icons";
 import { showProcess, showSystem } from "./navigation";
-import { ORGAN_NAME } from "./organ";
 import { sourced } from "./SourceTip";
-
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLTextAreaElement || (target instanceof HTMLInputElement && target.type !== "range") || (target instanceof HTMLElement && target.isContentEditable);
 
 interface Leaf {
   id: string;

@@ -94,7 +94,7 @@ const LOOK_KEY = "bodylang.look";
 
 // How you like the figure drawn belongs to this browser. Losing it costs nothing, so a browser that
 // won't store it just starts from the default.
-function rememberLook() {
+export function rememberLook() {
   try {
     const raw = localStorage.getItem(LOOK_KEY);
     if (raw) {
@@ -119,7 +119,6 @@ function rememberLook() {
 }
 
 export function startDay() {
-  rememberLook();
   followBuilds();
   if (DEMO) {
     playOpening();

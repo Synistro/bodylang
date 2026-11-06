@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isTyping } from "./hooks";
 import { processOrigin } from "../model/origin";
 import { selectedProcess, setUi, useStore } from "../store";
 import { X } from "./icons";
@@ -40,7 +41,7 @@ export function Tour() {
   useEffect(() => {
     if (!touring) return;
     const key = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLTextAreaElement) return;
+      if (isTyping(e.target)) return;
       if (e.key === "ArrowRight") goTo(index + 1);
       else if (e.key === "ArrowLeft") goTo(index - 1);
       else return;

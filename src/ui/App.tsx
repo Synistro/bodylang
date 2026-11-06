@@ -17,7 +17,7 @@ import { applyHues } from "./marks";
 import { goUp, showMuscle, showOrgan, showSystem } from "./navigation";
 import { isOrganId } from "./organ";
 import { OrganCard } from "./OrganCard";
-import { startDay } from "./day";
+import { rememberLook, startDay } from "./day";
 import { PageHead } from "./PageHead";
 import { Rail } from "./Rail";
 import { SourceEntry, sourcesOnScreen } from "./SourceTip";
@@ -30,6 +30,7 @@ const WALL_IDLE_BEFORE_CYCLE_MS = 3 * 60 * 1000;
 const WALL_SYSTEM_DWELL_MS = 40 * 1000;
 const CREDITS = "Food composition: USDA FoodData Central, public domain. Organs and vessels: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Muscles and bones: BodyParts3D, © The Database Center for Life Science, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
 
+rememberLook();
 if (WALL) document.documentElement.dataset.wall = "";
 document.documentElement.dataset.theme = getState().theme === "xray" ? "dark" : "light";
 applyHues(getState().theme);

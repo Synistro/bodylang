@@ -86,4 +86,4 @@ function useOvariesPlate({ trajectory: { cycle }, t }: InsetProps, _levels: Leve
   return { caption, note: { text: note }, describe: `An ovary. A follicle grows through the first half of a cycle, releases an egg, and then makes progesterone. ${caption}.` };
 }
 
-export const OvariesInset = closeupInset(ovariesCloseup, { Drawing, paint: paintOvaries, usePlate: useOvariesPlate });
+export const OvariesInset = closeupInset(ovariesCloseup, { Drawing, paint: paintOvaries, usePlate: useOvariesPlate, captionFromModel: true });

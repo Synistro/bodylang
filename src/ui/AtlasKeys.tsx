@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ORGAN_NAME } from "../model/systems";
 import * as THREE from "three";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { ProcessStop } from "../model/processes";
@@ -8,7 +9,7 @@ import { getState, selectedProcess, setUi, useStore } from "../store";
 import { freeArea } from "./freeArea";
 import { organHover, rootRem, useFrame, useMinute } from "./hooks";
 import { showMuscle, showOrgan } from "./navigation";
-import { isOrganId, ORGAN_NAME } from "./organ";
+import { isOrganId } from "./organ";
 
 const MOST_NAMES = 6;
 const LIT_CHECK_EVERY_FRAMES = 10;

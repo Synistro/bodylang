@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { ORGAN_NAME } from "../model/systems";
 import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
 import { modelOrigin, readingOrigin } from "../model/origin";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
@@ -10,7 +11,6 @@ import { OrganInset } from "./insets/OrganInset";
 import { muscleStory, organStory } from "./insets/organStory";
 import { isNumeric, outsideTypical, RangeBar, TrendMark } from "./marks";
 import { showMuscle } from "./navigation";
-import { ORGAN_NAME } from "./organ";
 import { sourced } from "./SourceTip";
 import { BrainPage } from "./StatePanel";
 import "./insets/insets.css";

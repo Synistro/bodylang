@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
 import { modelOrigin, Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
-import { systemById } from "../model/systems";
+import { ORGAN_NAME, systemById } from "../model/systems";
 import type { Trajectory } from "../model/simulate";
 import { composedOnScreen, getState, selectedProcess, useStore, yourDayWhileAsking } from "../store";
 import { assessmentAt, useMinute, useMuscleMinute } from "./hooks";
 import { muscleStory, organStory } from "./insets/organStory";
-import { ORGAN_NAME } from "./organ";
 import { sourced } from "./SourceTip";
 
 // The head of the page: the name of what you are looking at, and one sentence on how it is. The

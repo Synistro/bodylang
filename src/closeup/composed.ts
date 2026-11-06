@@ -62,7 +62,7 @@ export type ComposedLayer = ComposedSpec["layers"][number];
 export type ComposedActor = ComposedSpec["actors"][number];
 
 // Two steps with the same parts are one picture changing. Anything else is a new picture.
-export const compositionOf = ({ layers, actors }: ComposedSpec) => JSON.stringify([layers.map((l) => [l.id, l.kind]), actors.map((a) => [a.id, a.look, a.tone, a.from, a.to, a.settles])]);
+export const compositionOf = ({ layers, actors }: ComposedSpec) => JSON.stringify([layers.map((l) => [l.id, l.kind, l.label]), actors.map((a) => [a.id, a.label, a.look, a.tone, a.from, a.to, a.settles])]);
 
 export interface Box {
   x: number;

@@ -86,5 +86,6 @@ describe("how code lays it out", () => {
     const later = { ...airSac, actors: airSac.actors.map((a) => ({ ...a, amount: 0.1 })), caption: "Later" };
     expect(compositionOf(later)).toBe(compositionOf(airSac));
     expect(compositionOf({ ...airSac, actors: [] })).not.toBe(compositionOf(airSac));
+    expect(compositionOf({ ...airSac, layers: airSac.layers.map((layer) => ({ ...layer, label: "Renamed" })) })).not.toBe(compositionOf(airSac));
   });
 });

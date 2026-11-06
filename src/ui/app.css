@@ -317,7 +317,6 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .build-line[data-failed] { color: var(--ink); }
 .build-line .link { font-size: var(--t-small); }
 .remove-process { display: block; margin-top: 1rem; font-size: var(--t-tiny); color: var(--ink-3); }
-@keyframes breathe { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .build-line[data-working] > span { animation: none; } }
 
 /* Correcting what you had, opened from a name along the top of the chart. */

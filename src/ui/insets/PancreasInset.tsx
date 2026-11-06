@@ -106,4 +106,4 @@ function usePancreasPlate({ trajectory, t }: InsetProps, _levels: Levels<Setting
   return { caption, describe: `A cluster of islet cells releasing insulin into a blood vessel. ${caption}.` };
 }
 
-export const PancreasInset = closeupInset(pancreasCloseup, { Drawing, paint: paintPancreas, usePlate: usePancreasPlate });
+export const PancreasInset = closeupInset(pancreasCloseup, { Drawing, paint: paintPancreas, usePlate: usePancreasPlate, captionFromModel: true });

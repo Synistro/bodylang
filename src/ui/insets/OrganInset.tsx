@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { Component, type ComponentType, type ReactNode } from "react";
 import type { OrganId } from "../../model/simulate";
 import { composedOnScreen, useStore } from "../../store";
 import { BladderInset } from "./BladderInset";
@@ -40,9 +40,21 @@ const FIGURES: Record<OrganId, ComponentType<InsetProps>> = {
   prostate: ProstateInset,
 };
 
+// A drawing that fails says so in its own panel, and the rest of the app keeps working.
+class DrawingBoundary extends Component<{ children: ReactNode }, { failed: string | null }> {
+  state = { failed: null };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { failed: error instanceof Error ? error.message : String(error) };
+  }
+
+  render() {
+    return this.state.failed ? <p className="hint">This drawing failed. {this.state.failed}</p> : this.props.children;
+  }
+}
+
 export function OrganInset({ organ, trajectory, t, muscle }: InsetProps & { organ: OrganId }) {
   const composed = useStore(composedOnScreen);
-  if (composed) return <ComposedInset spec={composed} />;
   const Figure = FIGURES[organ];
-  return <Figure trajectory={trajectory} t={t} muscle={muscle} />;
+  return <DrawingBoundary key={organ}>{composed ? <ComposedInset spec={composed} /> : <Figure trajectory={trajectory} t={t} muscle={muscle} />}</DrawingBoundary>;
 }

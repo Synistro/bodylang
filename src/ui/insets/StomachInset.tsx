@@ -330,4 +330,4 @@ function useStomachPlate({ trajectory, t }: InsetProps, _levels: Levels<Setting>
   return { caption, note: { text: `Shown ${WAVE_SPEEDUP}× faster` }, describe: `A cross-section of the lower stomach and its outlet. ${caption}.` };
 }
 
-export const StomachInset = closeupInset(stomachCloseup, { Drawing, paint: paintStomach, usePlate: useStomachPlate });
+export const StomachInset = closeupInset(stomachCloseup, { Drawing, paint: paintStomach, usePlate: useStomachPlate, captionFromModel: true });

@@ -54,6 +54,9 @@ export const rootRem = () => parseFloat(getComputedStyle(document.documentElemen
 
 export const scrollBehavior = (): ScrollBehavior => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
 
+export const isTyping = (target: EventTarget | null) =>
+  target instanceof HTMLTextAreaElement || (target instanceof HTMLInputElement && target.type !== "range") || (target instanceof HTMLElement && target.isContentEditable);
+
 export function organHover(organ: OrganId | null) {
   return {
     onPointerEnter: () => setUi({ hover: organ }),

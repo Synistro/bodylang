@@ -84,4 +84,4 @@ function useUterusPlate({ trajectory: { cycle }, t }: InsetProps, _levels: Level
   return { caption, note: days !== null ? { text: `Next period in about ${days} ${days === 1 ? "day" : "days"}` } : undefined, describe: `The uterus and its lining, which thickens through a cycle and sheds in a period. ${caption}.` };
 }
 
-export const UterusInset = closeupInset(uterusCloseup, { Drawing, paint: paintUterus, usePlate: useUterusPlate });
+export const UterusInset = closeupInset(uterusCloseup, { Drawing, paint: paintUterus, usePlate: useUterusPlate, captionFromModel: true });

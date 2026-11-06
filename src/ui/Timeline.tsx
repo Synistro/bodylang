@@ -211,7 +211,7 @@ export function Timeline({ stage }: { stage: Stage | null }) {
   const key = (e: KeyboardEvent) => {
     const s = getState();
     // A walkthrough owns the arrow keys while it runs.
-    if (s.touring) return;
+    if (s.touring || s.asking?.guideOpen) return;
     const steps = overDays ? KEY_STEP.days : KEY_STEP.today;
     const step = e.shiftKey ? steps.large : steps.small;
     const { from, to } = view.span;

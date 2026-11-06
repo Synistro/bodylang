@@ -28,6 +28,25 @@ export const SYSTEMS: SystemDef[] = [
   { id: "reproductive", title: "Reproductive", organs: ["uterus", "ovaries", "prostate"], readings: ["cycleDay", "estradiol", "progesterone"], more: [] },
 ];
 
+export const ORGAN_NAME: Record<OrganId, string> = {
+  brain: "Brain",
+  heart: "Heart",
+  lungs: "Lungs",
+  liver: "Liver",
+  stomach: "Stomach",
+  pancreas: "Pancreas",
+  spleen: "Spleen",
+  small_intestine: "Small intestine",
+  large_intestine: "Large intestine",
+  kidneys: "Kidneys",
+  bladder: "Bladder",
+  muscle: "Muscles",
+  fat: "Fat tissue",
+  uterus: "Uterus",
+  ovaries: "Ovaries",
+  prostate: "Prostate",
+};
+
 export const systemById = (id: SystemId) => {
   const found = SYSTEMS.find((s) => s.id === id);
   if (!found) throw new Error(`Unknown system ${id}`);
