@@ -26,7 +26,7 @@ Claude Code ── calls functions ──► find_foods(pizza) ──► rows of
 
 The default body is a 30-year-old man, 180 cm and 80 kg. You change it from the line under the clock, or by saying so. http://localhost:5183/?demo replays a scripted day without calling Claude or saving anything: "It's 5 pm. 15 minutes ago I ate a sugar bar with pizza, and I had coffee this morning. I'm sitting." For that body, it gives these results at 17:00. Blood sugar is 4.7 mmol/L and peaks at 6.9 near 17:53. The stomach holds 540 ml and empties near 22:37. Meal fat peaks later, near 19:50, because it reaches the blood through the lymph. The morning coffee has 0.59 mg/L of caffeine left, which blocks about 4 of every 100 tired signals in the brain. A 15 minute walk now would lower the sugar peak by 0.2 mmol/L, which is the kind of alternative Claude can offer under an answer.
 
-The body, readings, sentences and day chart all read this one calculation, and nothing is animated by hand. This rule comes from the [Teardown](https://x.com/elvar_official/status/2116174609355571402) article you sent. Once the day is calculated, the state of the body at any moment depends only on the time of day, so dragging across the day chart replays it.
+The body, readings, sentences and day chart all read this one calculation. What the scene shows is a pure function of that result: targets come from the model, values ease toward them, and ambient phases such as the heartbeat and walking run on their own clocks. This rule comes from the [Teardown](https://x.com/elvar_official/status/2116174609355571402) article you sent. Once the day is calculated, the state of the body at any moment depends only on the time of day, so dragging across the day chart replays it.
 
 ## Your day
 

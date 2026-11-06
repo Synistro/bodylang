@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
@@ -22,6 +23,20 @@ const routes = {
   "/broken": { methods: ["POST"], load: async () => () => Promise.reject(new Error("boom")) },
   "/bad": { methods: ["POST"], load: async () => () => Promise.reject(new BadRequest("nope")) },
 };
+
+describe("what loads a server file by its path", () => {
+  it("names files that exist, which no compiler checks in a string", () => {
+    const loaded = ["vite.config.ts", "tools/speed-bench.mjs"].flatMap((file) =>
+      [...readFileSync(file, "utf8").matchAll(/ssrLoadModule\(\s*"\/([^"]+)"/g)].map((match) => match[1]),
+    );
+    expect(loaded).toEqual(expect.arrayContaining(["server/routes.ts", "server/tell.ts"]));
+    expect(loaded.filter((path) => !existsSync(path))).toEqual([]);
+  });
+
+  it("still offers the bench what it takes from the module", async () => {
+    expect((await import("./tell")).runTell).toBeTypeOf("function");
+  });
+});
 
 describe("the API routes", () => {
   it("runs a route that is asked for properly", async () => {

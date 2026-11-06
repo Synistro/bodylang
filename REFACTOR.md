@@ -13,7 +13,43 @@ The owner approved this plan on 2026-11-06 with these changes:
 - Phase 8 becomes the agentic development phase: `AGENTS.md`, formatter and docs, so other agents can work here easily.
 - Where this plan says to stop for a choice, the executor takes the recommended option and reports it: B1 and decisions 2, 3, 4, 7, 8.
 
-Progress: see the phase list below. A phase is finished when its commits are in `git log` and `pnpm check` passes.
+## What was done
+
+Phases 0 to 4 and the agentic development phase are finished: commits `efde15f` onward on `main`. The sections below this one are the plan as written at commit `9de7357`, so their line numbers and file names are from before the work. `AGENTS.md` is the current guide. Phases 5, 6 and 7 did not run, and their steps stay as notes for later.
+
+Proof that nothing moved by accident: the golden test held through every refactor commit, and changed only where a listed bug meant to change a number. A scene digest, since deleted, did the same for the 3D scene. At the end, four views of `?demo` photographed in WebKit before and after the refactor had identical side panels and day charts; the body area and the close-up particles differ only by animation frame.
+
+The plan left these for the owner, and the executor took the recommended option:
+
+| Item | What was picked |
+|---|---|
+| B1 | Alcohol stays out of the "% left" total (`foodKcalOf`), and `alcoholLedgerAt` tracks it in grams |
+| B10 | The bladder warning rows that could never appear were removed, with a comment at `voidAtMl`. Thresholds did not change, so nothing changes on screen |
+| C4 | The first `breathe` keyframes were dead and were removed, which leaves the look as it was |
+| C9 | Left as it is |
+| Decisions 2, 3, 4, 7 | Yes, as recommended |
+| Decision 8 | `/api/snapshot` deleted. It can be restored from git |
+| Decision 1 | Never answered. A heads-up went to the session that was running, with no reply |
+
+The work differs from the plan in these places:
+
+- **A3** rolls back after a failed commit (`landFiles` in `server/extend.ts`) where the plan wanted a private git index.
+- **B7** stops a clock vouching for its parts. The rule that integers match within 0.5 stays.
+- **B13** leaves `read_body` at today only, with a line in the prompt that says so.
+- **B15** hides the model's caption when a step sets levels (`captionFromModel`). The lungs' cough word under reduced motion stays, because it still says what the drawing means.
+- **C2** gives the walkthrough the arrow keys whenever it is open (`s.touring || s.asking?.guideOpen`).
+- **C8** fixes the leaked listener. Geometries are still not disposed on a Fast Refresh remount.
+- **C10** adds `DrawingBoundary` around a drawing. `parts()` still returns empty for a misnamed part.
+- **C11** pins the pipeline's packages in `pipeline/requirements.txt`. No assets were rebuilt, so `anny` and `torch` at those versions have not been run.
+- **Theme rename** resets a stored theme once, because `plate` and `xray` became `light` and `dark`. `rememberLook` ignores anything it can't read.
+- **Left where they were:** display thresholds stay beside their sentences in the spec tables, `organStates` keeps its 60 numbers because phase 5 did not run, `lanes.ts` stays in `model/`, and the overlapping test sweeps were not merged.
+
+Found at the end and fixed:
+
+- The 30 golden days had no menstrual cycle and no jittery amount of caffeine, so `cycleDay`, `estradiol`, `progesterone`, `lh` and `jitter` were not pinned during the refactor. A direct comparison with the pre-refactor code on three cycle days and one heavy-caffeine day showed every series bit-identical, and the set now has 33 days.
+- `remove_intake` left the food's assumption behind in the saved day.
+
+Seen once and not fixed: in one live Tell out of seven, Claude logged an empty entry called `dummy`, removed it, and apologised in its reply. The other six runs of the same sentence were clean, and the cause is unknown.
 
 | Phase | Goal | Commits (estimate) | Changes what you see |
 |---|---|---:|---|

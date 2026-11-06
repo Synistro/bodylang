@@ -19,7 +19,7 @@ Then open http://localhost:5183. It opens on today at the real time. Anything yo
 Your days are saved as one file per date in `~/.bodylang/days/`. Set `BODYLANG_DATA` to keep them somewhere else, `BODYLANG_EXPLAIN_MODEL` to explain selected words with something other than `claude-haiku-5-5`, and `BODYLANG_MODEL` to use a model other than `claude-sonnet-5-5`, such as `claude-opus-5-5`.
 
 ```bash
-pnpm test
+pnpm check
 ```
 
 ## Run it as your wallpaper
@@ -38,26 +38,37 @@ open "plash:reload"
 
 ## Where things are
 
+`AGENTS.md` explains how the code fits together and how to change it.
+
 | Path | What it holds |
 |---|---|
-| `src/model/` | Physiology model, events, readings and verdicts, processes, threads, day chart rows (`lanes.ts`), all tunable numbers (`params.ts`), tests |
+| `src/model/engine/` | The loop: `simulate.ts` runs a day minute by minute through the gut, glucose, fluids, heart and feel steps, and gives a `Trajectory` |
+| `src/model/assess/` | Readings, verdicts, feelings, muscles and each system's status |
+| `src/model/processes/` | The numbered lines through the body, for food, doses, events and what runs all day |
+| `src/model/events/` | Event presets, their effect curves, and muscle recovery |
+| `src/model/params.ts` | Every tunable physiology number, with its source |
+| `src/model/ids.ts`, `scenario.ts` | The shared names, and what a day is made of |
+| `src/model/day.ts` | The real clock, the day file, and what carries over to the next day |
+| `src/model/lanes.ts`, `threads.ts`, `forecast.ts`, `whereabouts.ts`, `readout.ts` | The day chart's rows, the rows of things you told it, what's ahead, where a food is, and what Claude reads |
+| `src/model/origin.ts`, `src/ui/sources.ts` | Where each number and sentence came from, and the list that says so |
+| `src/model/acting.ts`, `src/ui/ActingHere.tsx` | Everything acting on an organ right now, read from the model's processes |
+| `src/model/cycle.ts` | The menstrual cycle |
+| `src/model/extensions/` | Processes Claude has added, and the contract they follow (`api.ts`) |
+| `src/actions/` | The function schemas, the reducer that Claude, the demo and the browser share, and trace lines |
+| `src/wire.ts` | Everything that crosses between the browser and the dev server |
+| `src/store.ts` | The page's state, and what it derives from the day |
 | `src/look.ts` | The colours of the systems, shared by the interface and the 3D scene |
-| `src/agent/actions.ts` | The function schemas and the reducer that Claude, the demo and the browser share |
 | `src/scene/` | Three.js: body, organs, muscles, stomach, process line, shaders, camera |
 | `src/ui/` | Rail, page, day chart, message box, labels and stop numbers on the figure |
 | `src/ui/insets/` | The organ and muscle close-up figures, and the anatomy they share (`parts/`) |
 | `src/closeup/` | What Claude can direct in an organ's close-up during an Ask walkthrough, and the drawings it can compose: levels in words, how the model sets them, and the layout rules |
-| `src/model/acting.ts`, `src/ui/ActingHere.tsx` | Everything acting on an organ right now, read from the model's processes |
-| `server/track.ts` | What an injury's straight line really crosses, tested against the atlas meshes |
 | `src/wall.ts` | Wallpaper mode |
-| `src/model/day.ts` | The real clock, the day file, and what carries over to the next day |
-| `src/model/origin.ts`, `src/ui/SourceTip.tsx` | Where each number and sentence came from, and the list that says so |
-| `src/model/cycle.ts` | The menstrual cycle |
-| `server/agent.ts` | The Claude Code bridge, its system prompt and its tools |
-| `server/explain.ts`, `src/ui/Explain.tsx` | What selected words mean, from Haiku, in a panel above them |
+| `server/routes.ts`, `server/http.ts`, `server/requestGuard.ts` | The one table of routes, reading requests and streaming events, and which requests are turned away |
+| `server/tell.ts`, `tellTurn.ts`, `tellPrompt.ts`, `claude.ts` | The Claude Code bridge: running a turn, its tools, its prompts, and its settings |
 | `server/numberCheck.ts` | Checks every number in Claude's replies against what the model returned |
-| `server/extend.ts`, `server/extendCheck.ts` | The separate session that adds a process, and the checks before it lands |
-| `src/model/extensions/` | Processes Claude has added, and the contract they follow (`api.ts`) |
+| `server/explain.ts`, `src/ui/Explain.tsx` | What selected words mean, from Haiku, in a panel above them |
+| `server/extend.ts`, `extendSession.ts`, `extendCheck.ts` | Adding a process: the steps that land it, the session that writes it, and the checks before it lands |
+| `server/track.ts` | What an injury's straight line really crosses, tested against the atlas meshes |
 | `server/days.ts` | Reads and writes the day files |
 | `server/foods.ts`, `server/foods.json` | The USDA food table and its search |
 | `pipeline/` | Python that builds `public/assets/` from the source meshes, and `server/foods.json` from USDA's files |

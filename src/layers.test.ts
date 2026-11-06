@@ -50,9 +50,40 @@ function wrongImports() {
   return wrong;
 }
 
+function importCycles() {
+  const root = process.cwd();
+  const files = [...sourceFiles("src"), ...sourceFiles("server")];
+  const known = new Set(files);
+  const importsOf = (file: string) =>
+    [...readFileSync(file, "utf8").matchAll(IMPORT)]
+      .map((match) => match[1] ?? match[2])
+      .filter((spec) => spec.startsWith("."))
+      .flatMap((spec) => {
+        const target = relative(root, resolve(dirname(file), spec));
+        return [`${target}.ts`, `${target}.tsx`, `${target}/index.ts`].filter((path) => known.has(path));
+      });
+  const finished = new Set<string>();
+  const found: string[] = [];
+  const visit = (file: string, path: string[]) => {
+    if (path.includes(file)) {
+      found.push([...path.slice(path.indexOf(file)), file].join(" -> "));
+      return;
+    }
+    if (finished.has(file)) return;
+    for (const next of importsOf(file)) visit(next, [...path, file]);
+    finished.add(file);
+  };
+  for (const file of files) visit(file, []);
+  return found;
+}
+
 describe("the layers", () => {
   it("only import downward", () => {
     expect(wrongImports()).toEqual([]);
+  });
+
+  it("have no import cycles, counting type imports", () => {
+    expect(importCycles()).toEqual([]);
   });
 
   it("know every part of the code", () => {
