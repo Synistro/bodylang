@@ -41,6 +41,14 @@ describe("checking Claude's numbers against the model's", () => {
     expect(unverifiedNumbers("It reached 6.3. Then it fell.", readout)).toEqual([]);
   });
 
+  it("passes a whole number said to its nearest hundred, and nothing further away", () => {
+    const told = book("fluid_balance_ml: -385");
+    expect(unverifiedNumbers("About 400 ml short.", told)).toEqual([]);
+    expect(unverifiedNumbers("About 500 ml short.", told)).toEqual(["500"]);
+    expect(unverifiedNumbers("About 390 ml short.", told)).toEqual([]);
+    expect(unverifiedNumbers("About 380 ml short.", book("reads 395"))).toEqual(["380"]);
+  });
+
   it("passes a time rounded to the quarter hour, and nothing further away", () => {
     const told = book("empties near 01:16, peak 23:53");
     expect(unverifiedNumbers("Done around 01:15.", told)).toEqual([]);

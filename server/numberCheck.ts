@@ -5,7 +5,17 @@ const LOOSE_NUMBER = /\d+(?:\.\d+)?/g;
 const CLOCK = /\b\d{1,2}:\d{2}\b/g;
 const SAID_NUMBER = /(?<![\w.:,])(\d{1,2}:\d{2}|\d+(?:\.\d+)?)(%?)(?![\w:]|\.\d)/g;
 
+const ROUNDED_WITHIN_SHARE = 0.05;
+
 const minuteOf = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3));
+
+// A whole number said to its nearest ten or hundred is how a person says it, so 385 backs up "about 400". The cap keeps
+// a round number from being backed up by anything nearby.
+function roundedWithin(token: string, said: number): number {
+  if (token.includes(".") || said < 10) return 0;
+  const zeros = token.match(/0+$/)?.[0].length ?? 0;
+  return zeros ? Math.min(0.5 * 10 ** zeros, said * ROUNDED_WITHIN_SHARE) : 0;
+}
 
 export class NumberBook {
   private readonly values = new Set<number>();
@@ -34,7 +44,7 @@ export class NumberBook {
     if (token.includes(":")) return this.knowsClock(token.padStart(5, "0"));
     const said = Number(token);
     const decimals = token.split(".")[1]?.length ?? 0;
-    const within = 0.5 * 10 ** -decimals + 1e-9;
+    const within = Math.max(0.5 * 10 ** -decimals + 1e-9, roundedWithin(token, said));
     for (const value of this.values) {
       if (Math.abs(value - said) <= within) return true;
       if (percent && Math.abs(value * 100 - said) <= within) return true;

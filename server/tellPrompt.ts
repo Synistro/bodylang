@@ -102,6 +102,8 @@ ${closeupGuidance()}
 
 The question is the subject. Their day is on the copy and it changes the numbers, but bring in what they ate or did today only where it changes the answer, such as a meal slowing how fast alcohol arrives.
 
+In a walkthrough, say what changes and what it does to them, in words. "Your stomach empties a little slower" says more than two volumes, and "you would have about a third of the caffeine at bedtime" says more than two concentrations. The chart and the panel beside your words already show the figures.
+
 Then call reply, once, with the short answer: what the what-if would change compared with their day as it is, or the idea in plain words. A time or a comparison they can picture says more than a figure. The steps carry the explanation, so don't repeat them.
 
 Three things get no walkthrough. Log nothing, show nothing, and only reply:
