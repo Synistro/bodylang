@@ -8,6 +8,7 @@ import { Play } from "./icons";
 import { isNumeric } from "./marks";
 import { showMuscle, showOrgan } from "./navigation";
 import { sourced } from "./sources";
+import { parseProcessId } from "../model/ids";
 
 // Shared with the scene through the store's cache, so both read one list per minute.
 function useProcesses() {
@@ -138,7 +139,7 @@ export function ProcessDetail({ processId }: { processId: string }) {
           Walk me through it
         </button>
       ) : null}
-      {process.id.startsWith("ext:") ? (
+      {parseProcessId(process.id).kind === "ext" ? (
         <button type="button" className="link remove-process" onClick={() => void removeAddedProcess(process.id)}>
           Remove this process
         </button>

@@ -1,7 +1,8 @@
 import { Process, ProcessStop } from "./processes/line";
 import { processesAt } from "./processes/processes";
 import type { Trajectory } from "./engine/trajectory";
-import type { OrganId } from "./ids";
+import { OrganId, parseProcessId } from "./ids";
+import { bodyLineFacts } from "./processes/bodyLines";
 
 // Everything going on at one organ right now, whatever set it off: a meal, a coffee, a cigarette, an illness,
 // or a process Claude added. Processes already say which organs they stop at, so an organ's page never has to
@@ -14,12 +15,8 @@ export interface Acting {
 }
 
 const GOING_ON_FROM = 0.04;
-// Blood reaches everything all the time, and the liver's and kidneys' round-up repeats what each thing already
-// says for itself, so neither earns a row of its own.
-const LEFT_OUT = new Set(["circulation", "clearing"]);
-
 // What Claude added runs all day, so what is particular to today comes first.
-const particularToToday = (process: Process) => (process.id.startsWith("ext:") ? 0 : 1);
+const particularToToday = (process: Process) => (parseProcessId(process.id).kind === "ext" ? 0 : 1);
 
 const firstSentence = (text: string) => text.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? text;
 
@@ -35,7 +32,7 @@ function cameFrom(process: Process, stop: ProcessStop): OrganId | null {
 
 export function actingAt(tr: Trajectory, t: number, organ: OrganId): Acting[] {
   return processesAt(tr, t)
-    .filter((process) => process.active && !LEFT_OUT.has(process.id))
+    .filter((process) => process.active && (bodyLineFacts(process.id)?.actsOnOrgans ?? true))
     .flatMap((process): Acting[] => {
       const stops = process.stops.filter((stop) => stop.organ === organ && strengthOf(stop) >= GOING_ON_FROM);
       if (!stops.length) return [];

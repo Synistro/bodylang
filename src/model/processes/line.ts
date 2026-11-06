@@ -2,7 +2,7 @@ import type { MuscleGroup } from "../muscleGroups";
 import { DAY, PROCESS, REFERENCE } from "../params";
 import { SeriesName, Trajectory, value } from "../engine/trajectory";
 import { foodKcalOf, Intake, POSTURES } from "../scenario";
-import { OrganId } from "../ids";
+import { OrganId, processIds } from "../ids";
 import { formatClock, inSentence, joinAnd } from "../words";
 import type { SystemId, RouteId, Substance } from "../ids";
 import { clamp01 } from "../curve";
@@ -108,7 +108,7 @@ export function mealGroups(intakes: Intake[]): Intake[][] {
   return groups;
 }
 
-export const mealProcessId = (group: Intake[]) => (group.length > 1 ? `meal:${group[0].id}` : `intake:${group[0].id}`);
+export const mealProcessId = (group: Intake[]) => (group.length > 1 ? processIds.meal(group[0].id) : processIds.intake(group[0].id));
 
 export function mealTitle(group: Intake[]): string {
   const names = joinAnd(group.map((intake) => inSentence(intake.label)));

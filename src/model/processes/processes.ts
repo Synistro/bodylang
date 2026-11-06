@@ -7,6 +7,7 @@ import { alcoholLine, caffeineLine, doseProcess, substanceLine } from "./dose";
 import { eventProcess } from "./event";
 import { foodProcess } from "./food";
 import { Process, mealGroups, mealProcessId, numbered } from "./line";
+import { processIds } from "../ids";
 
 // Each builder adds the lines it knows about. A new kind of thing happening to the body is a new
 // entry here, and none of them may assume another has anything to show.
@@ -33,7 +34,7 @@ function extensionLines(tr: Trajectory, t: number): Process[] {
   return EXTENSIONS.flatMap((extension) => {
     try {
       const { active, headline, here, stops } = extension.at(view, t);
-      return [{ id: `ext:${extension.id}`, title: extension.title, system: extension.system, substance: "other" as const, active, headline, stops: numbered(stops, here, "ahead", true) }];
+      return [{ id: processIds.added(extension.id), title: extension.title, system: extension.system, substance: "other" as const, active, headline, stops: numbered(stops, here, "ahead", true) }];
     } catch (e: unknown) {
       if (!broken.has(extension.id)) console.error(`The process ${extension.id} failed`, e);
       broken.add(extension.id);

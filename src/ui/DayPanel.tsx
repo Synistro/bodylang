@@ -18,6 +18,7 @@ import { organStory } from "./insets/organStory";
 import { Pause, Play, SkipBack, SkipForward } from "./icons";
 import { showMuscle, showOrgan, showProcess } from "./navigation";
 import { sourced } from "./sources";
+import { processIds } from "../model/ids";
 
 const DAY_FROM = LANES.from;
 const DAY_TO = LANES.to;
@@ -48,7 +49,7 @@ function useDayView(): DayView {
       return dayViewOf({ ...page, lanes: readingLanes(tr, now, organStory(focus, tr, now).rows, hue, real), muscles: null, readings: new Set() });
     }
     if (processId) {
-      const training = tr.events.find((e) => e.preset === "training" && `event:${e.id}` === processId);
+      const training = tr.events.find((e) => e.preset === "training" && processIds.event(e.id) === processId);
       const muscles: MuscleSubject | null = training ? { kind: "worked", groups: training.muscles.map((m) => m.group) } : null;
       return dayViewOf({ ...page, lanes: processLanes(tr, now, processId, real), muscles, readings: new Set() });
     }
@@ -72,7 +73,7 @@ function laneOrigin(tr: Trajectory, lane: Lane, minute: number, selected: string
   if (process) return processOrigin(tr, process);
   const reading = assess(tr, minute).readings.find((r) => r.id === lane.id);
   if (reading) return readingOrigin(reading, tr, minute);
-  const food = tr.scenario.intakes.find((intake) => lane.id === `intake:${intake.id}`);
+  const food = tr.scenario.intakes.find((intake) => lane.id === processIds.intake(intake.id));
   return food ? foodOrigin(food) : SENTENCE_ORIGIN;
 }
 

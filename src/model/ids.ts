@@ -45,3 +45,23 @@ export type ReadingId =
 
 export type Tint = "chyme" | "glucose" | "fat" | "caffeine" | "insulin" | "alcohol" | "other" | null;
 export type Substance = NonNullable<Tint>;
+
+export type BodyLineId = "insulin" | "fat-route" | "circulation" | "alertness" | "clearing" | "cycle";
+
+// A line that follows one thing has its kind and that thing's id in its own id.
+export const processIds = {
+  intake: (id: string) => `intake:${id}`,
+  meal: (id: string) => `meal:${id}`,
+  caffeine: (id: string) => `caffeine:${id}`,
+  alcohol: (id: string) => `alcohol:${id}`,
+  substance: (id: string) => `substance:${id}`,
+  event: (id: string) => `event:${id}`,
+  added: (id: string) => `ext:${id}`,
+} as const;
+
+export function parseProcessId(id: string): { kind: string; ref: string } {
+  const at = id.indexOf(":");
+  return at < 0 ? { kind: id, ref: "" } : { kind: id.slice(0, at), ref: id.slice(at + 1) };
+}
+
+export type ThreadKind = "food" | "drink" | "substance" | "training" | "illness" | "other";

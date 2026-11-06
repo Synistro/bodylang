@@ -1,12 +1,14 @@
-import type { Feeling, Reading } from "./assess/types";
+import type { Feeling, Reading, TableReadingId } from "./assess/types";
 import type { ReadingId } from "./ids";
 import { ChannelId } from "./events/types";
 import { curveStrength } from "./events/curves";
 import { EXTENSIONS } from "./extensions";
-import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
+import { Evidence, PROCESS } from "./params";
 import { mealGroups, mealProcessId, Process } from "./processes/line";
 import { caffeineLedgerAt, ledgerAt, Trajectory } from "./engine/trajectory";
 import { foodKcalOf, Intake } from "./scenario";
+import { bodyLineFacts } from "./processes/bodyLines";
+import { parseProcessId } from "./ids";
 
 // Where something on screen came from. The model computing it is the ordinary case. What Claude adds
 // from its own knowledge, and what the model computed from Claude's numbers, are told apart from that.
@@ -39,27 +41,44 @@ export const SENTENCE_ORIGIN: Origin = { kind: "model", detail: "Worked out by t
 
 export const CLAUDE_WORDS: Origin = { kind: "claude", detail: "Claude wrote this. Any number in it that the model returned is plain, and one it didn't is underlined." };
 
-// Which channels of an event can move each reading, so a sauna only marks what a sauna touches.
-const READING_CHANNELS: Partial<Record<ReadingId, ChannelId[]>> = {
-  hr: ["heartRate"],
-  output: ["heartRate"],
-  breaths: ["breathing"],
-  temperature: ["temperature"],
-  bloodPressure: ["bloodPressure"],
-  stressLevel: ["stress"],
-  reward: ["reward"],
-  inflammation: ["inflammation"],
-  immune: ["immune"],
-  burn: ["metabolism"],
-  glucose: ["insulinSensitivity", "liverOutput"],
-  insulin: ["insulinSensitivity"],
-  fluid: ["fluidLoss"],
-  flowMuscle: ["muscleFlow"],
-  alertness: ["drowsiness", "stress", "reward"],
+// What can move each reading: which channels of an event, so a sauna only marks what a sauna touches, and whether
+// it follows from what was eaten.
+const READING_INPUTS: Record<TableReadingId, { channels: readonly ChannelId[]; food: boolean }> = {
+  temperature: { channels: ["temperature"], food: false },
+  glucose: { channels: ["insulinSensitivity", "liverOutput"], food: true },
+  insulin: { channels: ["insulinSensitivity"], food: true },
+  tg: { channels: [], food: true },
+  hr: { channels: ["heartRate"], food: false },
+  output: { channels: ["heartRate"], food: false },
+  bloodPressure: { channels: ["bloodPressure"], food: false },
+  breaths: { channels: ["breathing"], food: false },
+  flowGut: { channels: [], food: true },
+  flowMuscle: { channels: ["muscleFlow"], food: false },
+  flowBrain: { channels: [], food: false },
+  flowKidneys: { channels: [], food: false },
+  stomach: { channels: [], food: true },
+  absorbing: { channels: [], food: true },
+  glycogen: { channels: [], food: true },
+  muscleUptake: { channels: [], food: true },
+  burn: { channels: ["metabolism"], food: false },
+  fuel: { channels: [], food: true },
+  caffeine: { channels: [], food: true },
+  receptors: { channels: [], food: true },
+  alertness: { channels: ["drowsiness", "stress", "reward"], food: true },
+  stressLevel: { channels: ["stress"], food: false },
+  reward: { channels: ["reward"], food: false },
+  inflammation: { channels: ["inflammation"], food: false },
+  immune: { channels: ["immune"], food: false },
+  alcohol: { channels: [], food: true },
+  bladder: { channels: [], food: true },
+  fluid: { channels: ["fluidLoss"], food: false },
+  cycleDay: { channels: [], food: false },
+  estradiol: { channels: [], food: false },
+  progesterone: { channels: [], food: false },
 };
 
-// The readings that follow from what was eaten.
-const FOOD_READINGS: ReadonlySet<ReadingId> = new Set<ReadingId>(["glucose", "insulin", "tg", "stomach", "absorbing", "glycogen", "muscleUptake", "fuel", "flowGut", "caffeine", "receptors", "alertness", "alcohol", "bladder"]);
+const inputsOf = (id: ReadingId) => (id.startsWith("muscle:") ? { channels: [], food: false } : READING_INPUTS[id as TableReadingId]);
+
 
 const NOTICEABLE_SHARE_OF_PEAK = 0.05;
 
@@ -78,9 +97,9 @@ const composedByClaude = (intake: Intake) => intake.source?.kind !== "table";
 
 export function readingOrigin(reading: Reading, tr: Trajectory, t: number): Origin {
   const base = `Typical range, evidence ${reading.evidence}: ${reading.source}`;
-  const channels = READING_CHANNELS[reading.id] ?? [];
+  const { channels, food } = inputsOf(reading.id);
   const events = tr.events.filter((event) => event.preset === "custom" && event.effects.some((effect) => channels.includes(effect.channel) && curveStrength(effect, event.from, event.ends, t) >= NOTICEABLE_SHARE_OF_PEAK));
-  const foods = FOOD_READINGS.has(reading.id) ? tr.scenario.intakes.filter((intake) => stillAtWork(tr, intake, t)) : [];
+  const foods = food ? tr.scenario.intakes.filter((intake) => stillAtWork(tr, intake, t)) : [];
   const estimatedFoods = foods.filter(composedByClaude);
   const named = [...events.map((event) => event.label), ...estimatedFoods.map((intake) => intake.label)];
   if (named.length) return { kind: "claude-input", detail: `${[...new Set(named)].join(", ")}: Claude's estimate. ${base}` };
@@ -99,20 +118,11 @@ export function foodOrigin(intake: Intake): Origin {
   return { kind: "claude-input", detail: `Claude estimated what this contains. ${portion} The model computes what happens to it.` };
 }
 
-const LINE_SOURCES: Record<string, { evidence: Evidence; source: string }> = {
-  insulin: { evidence: "B", source: SOURCES.minimalModel },
-  "fat-route": { evidence: "B", source: SOURCES.lipemia },
-  circulation: { evidence: "B", source: SOURCES.flow },
-  alertness: { evidence: "B", source: SOURCES.adenosine },
-  clearing: { evidence: "A", source: SOURCES.caffeine },
-  cycle: { evidence: CYCLE.evidence, source: CYCLE.source },
-};
-
 // A line through the body takes after what it is a line of.
 export function processOrigin(tr: Trajectory, process: Process): Origin {
-  const known = LINE_SOURCES[process.id];
+  const known = bodyLineFacts(process.id);
   if (known) return modelOrigin(known.evidence, known.source);
-  const [kind, id] = process.id.split(/:(.*)/s);
+  const { kind, ref: id } = parseProcessId(process.id);
   if (kind === "ext") {
     const extension = EXTENSIONS.find((e) => e.id === id);
     return { kind: "claude", detail: `A separate Claude session wrote this process, and its tests passed. It reads the model and can't change it. ${extension ? `${EVIDENCE_WORDS[extension.evidence]} ${extension.source}` : ""}` };

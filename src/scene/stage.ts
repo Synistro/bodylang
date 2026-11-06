@@ -8,7 +8,7 @@ import { LIVER, MUSCLE_RECOVERY, REFERENCE, STOMACH } from "../model/params";
 import type { Process, ProcessStop } from "../model/processes/line";
 import { Body, POSTURES, Posture, Sex } from "../model/scenario";
 import { ledgerAt, Trajectory, value } from "../model/engine/trajectory";
-import { OrganId, SystemId } from "../model/ids";
+import { OrganId, SystemId, processIds } from "../model/ids";
 import { organStates } from "./organStates";
 import { ORGAN_NAME, SYSTEMS, systemById } from "../model/systems";
 import { ACCENT_SYSTEM, organHue, viewSystemOf } from "../look";
@@ -641,7 +641,7 @@ export class Stage {
   }
 
   private eventOf(process: Process): ResolvedEvent | undefined {
-    return this.input?.trajectory.events.find((event) => `event:${event.id}` === process.id);
+    return this.input?.trajectory.events.find((event) => processIds.event(event.id) === process.id);
   }
 
   private refreshWork(tr: Trajectory, t: number) {

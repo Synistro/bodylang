@@ -4,6 +4,8 @@ import type { ActivitySpan, Body } from "../scenario";
 import type { Anthropometrics } from "../engine/anthropometrics";
 import { endOf, hours, maxHeartRate, namesOf } from "./muscles";
 import { ActivityBout, BodyEvent, Effect, EventFeeling, EventStop, ResolvedEvent, SEX_LABEL, Symptom } from "./types";
+import type { ReadingId, ThreadKind } from "../ids";
+import type { Preset } from "./types";
 
 // One muscle anchors each of the first stops, so the line visits what actually worked.
 const WORK_STOPS_MAX = 3;
@@ -279,3 +281,13 @@ export function resolveEvent(event: BodyEvent, who: EventBody): ResolvedEvent {
     }
   }
 }
+
+// What the rest of the model needs to know about each preset, in one place.
+export const PRESET_FACTS: Record<Preset, { threadKind: ThreadKind; chartReadings: readonly ReadingId[] | null }> = {
+  training: { threadKind: "training", chartReadings: null }, // its chart is the muscles it worked
+  illness: { threadKind: "illness", chartReadings: ["temperature", "inflammation", "immune"] },
+  sex: { threadKind: "other", chartReadings: ["hr", "reward"] },
+  stress: { threadKind: "other", chartReadings: ["stressLevel", "hr", "bloodPressure"] },
+  poor_sleep: { threadKind: "other", chartReadings: ["alertness"] },
+  custom: { threadKind: "other", chartReadings: null },
+};

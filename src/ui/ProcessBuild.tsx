@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Build, setUi, useStore } from "../store";
 import { showProcess } from "./navigation";
+import { parseProcessId, processIds } from "../model/ids";
 
 const buildSchema = z.object({ id: z.string(), title: z.string(), stage: z.enum(["writing", "testing", "final", "ready", "failed", "stopped"]), message: z.string().nullable() });
 
@@ -16,7 +17,7 @@ export function followBuilds() {
 }
 
 export async function removeAddedProcess(processId: string) {
-  const response = await tellServer({ action: "remove", id: processId.replace(/^ext:/, "") }).catch(() => null);
+  const response = await tellServer({ action: "remove", id: parseProcessId(processId).ref }).catch(() => null);
   if (!response?.ok) setUi({ dayProblem: `That process could not be removed. ${(await response?.text()) ?? "Is the dev server running?"}` });
 }
 
@@ -58,7 +59,7 @@ export function BuildLine() {
           className="link"
           onClick={() => {
             dismiss();
-            showProcess(`ext:${id}`);
+            showProcess(processIds.added(id));
           }}
         >
           Show it

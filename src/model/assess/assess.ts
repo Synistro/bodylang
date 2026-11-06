@@ -13,12 +13,15 @@ import { bladderSpec, cycleDaySpec, estradiolSpec, fluidSpec, immuneSpec, inflam
 import { systemsOf } from "./systemStatus";
 import { Assessment, Reading, TableReadingId } from "./types";
 
+// In the order they are built. A fever comes first, so it leads the notable list when it ties with something else.
 const READINGS: Record<TableReadingId, ReadingSpec> = {
+  temperature: temperatureSpec,
   glucose: glucoseSpec,
   insulin: insulinSpec,
   tg: triglycerideSpec,
   hr: heartSpec,
   output: outputSpec,
+  bloodPressure: bloodPressureSpec,
   breaths: breathingSpec,
   flowGut: gutShareSpec,
   flowMuscle: bloodShareSpec("flowMuscle", "Blood to muscle", "muscle", REFERENCE.bloodFlow.muscle, [
@@ -36,22 +39,19 @@ const READINGS: Record<TableReadingId, ReadingSpec> = {
   caffeine: caffeineSpec,
   receptors: receptorsSpec,
   alertness: alertnessSpec,
-  alcohol: alcoholSpec,
-  bladder: bladderSpec,
-  bloodPressure: bloodPressureSpec,
-  temperature: temperatureSpec,
   stressLevel: stressSpec,
+  reward: rewardSpec,
   inflammation: inflammationSpec,
   immune: immuneSpec,
-  reward: rewardSpec,
+  alcohol: alcoholSpec,
+  bladder: bladderSpec,
   fluid: fluidSpec,
   cycleDay: cycleDaySpec,
   estradiol: estradiolSpec,
   progesterone: progesteroneSpec,
 };
 
-// A fever comes first, so it leads the notable list when it ties with something else.
-const READING_ORDER: TableReadingId[] = ["temperature", "glucose", "insulin", "tg", "hr", "output", "bloodPressure", "breaths", "flowGut", "flowMuscle", "flowBrain", "flowKidneys", "stomach", "absorbing", "glycogen", "muscleUptake", "burn", "fuel", "caffeine", "receptors", "alertness", "stressLevel", "reward", "inflammation", "immune", "alcohol", "bladder", "fluid", "cycleDay", "estradiol", "progesterone"];
+const READING_ORDER = Object.keys(READINGS) as TableReadingId[];
 
 function firstReason(rows: readonly ReasonRow[], c: Context, s: Sample): string {
   for (const [test, text] of rows) if (test(c, s)) return text(c, s);

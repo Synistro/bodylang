@@ -4,6 +4,7 @@ import { muscleStateFromEvent, namesOf } from "../events/muscles";
 import { PROCESS } from "../params";
 import { levelWord, whenWords } from "../words";
 import { Draft, Process, clock, hasStarted, numbered, shareOf } from "./line";
+import { processIds } from "../ids";
 
 const CHANNEL_TEXT: Record<ChannelId, (x: number) => string> = {
   heartRate: (x) => `${signed(x)} bpm`,
@@ -109,7 +110,7 @@ export function eventProcess(event: ResolvedEvent, t: number): Process {
   const level = eventLevelAt(event, t);
   const drafts = event.stops.map((stop, index) => eventStop(event, stop, index, here, t, level));
   return {
-    id: `event:${event.id}`,
+    id: processIds.event(event.id),
     title: event.label,
     system: event.systems[0],
     alsoIn: event.systems.slice(1),

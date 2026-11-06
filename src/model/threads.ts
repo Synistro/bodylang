@@ -7,13 +7,15 @@ import { processesAt } from "./processes/processes";
 import { foodKcalOf } from "./scenario";
 import { Trajectory, value } from "./engine/trajectory";
 import { formatClock, inSentence } from "./words";
+import { PRESET_FACTS } from "./events/presets";
+import { processIds, ThreadKind } from "./ids";
 
 // One thing the person told the body about, shown on the top level as one line.
 export interface Thread {
   id: string; // "meal:sugar_bar", "intake:coffee", "event:cold", "substance:ibuprofen"
   title: string; // "Ate sugar bar and pizza", "Drank coffee", "Chest and triceps workout", "Cold"
   name: string; // what it is, without the verb, where room is short: "Sugar bar + Pizza", "Coffee", "Cold"
-  kind: "food" | "drink" | "substance" | "training" | "illness" | "other";
+  kind: ThreadKind;
   since: string; // "15 min ago"
   status: string; // one or two plain words: "stomach", "repairing", "fading", "fighting it"
   active: boolean;
@@ -90,7 +92,6 @@ function eventStatus(event: ResolvedEvent, t: number): string {
   }
 }
 
-const EVENT_KIND: Record<ResolvedEvent["preset"], Thread["kind"]> = { training: "training", illness: "illness", sex: "other", stress: "other", poor_sleep: "other", custom: "other" };
 
 // Being ill outranks everything, then anything else that needs attention right now.
 const IMPORTANCE = { illness: 2, attention: 1, ordinary: 0 } as const;
@@ -114,24 +115,24 @@ export function threadsAt(tr: Trajectory, t: number): Thread[] {
     });
   const fromDrinks = tr.scenario.intakes.flatMap((intake) => {
     const started = intake.at <= t;
-    const id = `intake:${intake.id}`;
+    const id = processIds.intake(intake.id);
     const title = `Drank ${inSentence(intake.label)}`;
-    if (intake.alcoholG > 0) return thread(id, title, intake.label, "drink", intake.at, `alcohol:${intake.id}`, overAlcoholLimit ? IMPORTANCE.attention : IMPORTANCE.ordinary, (p) => doseStatus(p, started, risingAt("alcohol"), "clearing"));
+    if (intake.alcoholG > 0) return thread(id, title, intake.label, "drink", intake.at, processIds.alcohol(intake.id), overAlcoholLimit ? IMPORTANCE.attention : IMPORTANCE.ordinary, (p) => doseStatus(p, started, risingAt("alcohol"), "clearing"));
     if (intake.caffeineMg > 0 && !hasFoodLine(intake) && foodKcalOf(intake) < PROCESS.drinkOnlyBelowKcal) return thread(id, title, intake.label, "drink", intake.at, id, IMPORTANCE.ordinary, (p) => doseStatus(p, started, risingAt("caffeineFelt"), "fading"));
     return [];
   });
   const fromSubstances = tr.scenario.substances.flatMap((substance) => {
     const started = substance.at <= t;
-    const id = `substance:${substance.id}`;
+    const id = processIds.substance(substance.id);
     const series = tr.substances.get(substance.id)?.series;
     const rising = series ? series[Math.min(series.length - 1, Math.max(0, Math.round(t) + PROCESS.flowWindowMin))] > series[Math.min(series.length - 1, Math.max(0, Math.round(t) - PROCESS.flowWindowMin))] : false;
     return thread(id, `Took ${inSentence(substance.label)}`, substance.label, "substance", substance.at, id, IMPORTANCE.ordinary, (p) => doseStatus(p, started, rising, "fading"));
   });
   const fromEvents = tr.events.flatMap((event) => {
-    const id = `event:${event.id}`;
+    const id = processIds.event(event.id);
     const stressed = event.preset === "stress" && value(tr, "stressLevel", t) >= PROCESS.stressAttentionFrom;
     const importance = event.preset === "illness" ? IMPORTANCE.illness : stressed ? IMPORTANCE.attention : IMPORTANCE.ordinary;
-    return thread(id, event.label, event.label, EVENT_KIND[event.preset], event.from, id, importance, () => eventStatus(event, t));
+    return thread(id, event.label, event.label, PRESET_FACTS[event.preset].threadKind, event.from, id, importance, () => eventStatus(event, t));
   });
 
   // What matters most comes first, then what is still going on, then the most recent.

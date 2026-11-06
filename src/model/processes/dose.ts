@@ -1,7 +1,7 @@
 import { ALCOHOL, DAY, PROCESS, REFERENCE } from "../params";
 import { alcoholLedgerAt, caffeineLedgerAt, substanceLedgerAt, Trajectory, value } from "../engine/trajectory";
 import { CustomSubstance, SubstanceRoute, Intake } from "../scenario";
-import { OrganId } from "../ids";
+import { OrganId, processIds } from "../ids";
 import { inSentence, startCase } from "../words";
 import type { SystemId, RouteId, Substance } from "../ids";
 import { clamp01 } from "../curve";
@@ -179,7 +179,7 @@ export function caffeineLine(tr: Trajectory, intake: Intake, t: number): DoseLin
   const feltFrom = (d: DoseView) => value(tr, "caffeineFelt", t) * ownShare(d);
   const blocked = (d: DoseView) => `${blockedPerHundred(d)}% of the tired signal blocked`;
   return {
-    id: hasFoodLine(intake) ? `caffeine:${intake.id}` : `intake:${intake.id}`,
+    id: hasFoodLine(intake) ? processIds.caffeine(intake.id) : processIds.intake(intake.id),
     title: hasFoodLine(intake) ? `Caffeine in the ${name}` : `Drank ${name}`,
     system: "brain",
     substance: "caffeine",
@@ -226,7 +226,7 @@ export function alcoholLine(tr: Trajectory, intake: Intake, t: number): DoseLine
     return found;
   };
   return {
-    id: `alcohol:${intake.id}`,
+    id: processIds.alcohol(intake.id),
     title: hasFoodLine(intake) ? `Alcohol in the ${name}` : `Drank ${name}`,
     system: "clearing",
     substance: "alcohol",
@@ -341,7 +341,7 @@ export function substanceLine(tr: Trajectory, substance: CustomSubstance, t: num
       routes: TARGET_ROUTES[target.organ],
     }));
   return {
-    id: `substance:${substance.id}`,
+    id: processIds.substance(substance.id),
     title: `${way.verb} ${name}`,
     system: substance.targets.length ? TARGET_SYSTEM[substance.targets[0].organ] : "clearing",
     substance: "other",

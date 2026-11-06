@@ -1,7 +1,7 @@
 import { assess, readingCurve } from "./assess/assess";
 import { hasSomethingToSay, Reading } from "./assess/types";
 import { normalAgainAt } from "./assess/muscles";
-import { ReadingId, OrganId } from "./ids";
+import { ReadingId, OrganId, processIds } from "./ids";
 import { eventLevelAt } from "./events/curves";
 import { muscleStateAt } from "./events/muscles";
 import { MuscleState, ResolvedEvent } from "./events/types";
@@ -15,6 +15,8 @@ import { formatClock, levelWord, whenWords } from "./words";
 import type { SystemId } from "./ids";
 import { systemById } from "./systems";
 import { Thread, threadsAt } from "./threads";
+import { PRESET_FACTS } from "./events/presets";
+import { bodyLineFacts } from "./processes/bodyLines";
 
 // One row of the day chart. At every level the chart answers the same question about what that level
 // is showing: what is going on, how much, and when does it end?
@@ -144,7 +146,7 @@ function eventShape(event: ResolvedEvent, now: number): ThreadShape {
 // out by bedtime, alcohol clears, a dose wears off, an event settles.
 function threadShape(tr: Trajectory, thread: Thread, now: number): ThreadShape {
   const { processId } = thread;
-  const event = tr.events.find((e) => `event:${e.id}` === processId);
+  const event = tr.events.find((e) => processIds.event(e.id) === processId);
   if (event) return eventShape(event, now);
 
   const group = mealGroups(tr.scenario.intakes).find((g) => mealProcessId(g) === processId);
@@ -188,7 +190,7 @@ function threadShape(tr: Trajectory, thread: Thread, now: number): ThreadShape {
     };
   }
 
-  const substance = tr.scenario.substances.find((s) => `substance:${s.id}` === processId);
+  const substance = tr.scenario.substances.find((s) => processIds.substance(s.id) === processId);
   const series = substance ? tr.substances.get(substance.id)?.series : undefined;
   if (substance && series) {
     const level = (minute: number) => seriesAt(series, minute);
@@ -362,32 +364,18 @@ export function muscleStateLanes(tr: Trajectory, now: number, group: MuscleGroup
 
 // Processes that aren't one thing moving through the body have no "how much is where". What they have
 // is readings, so that is what they draw.
-const PROCESS_READINGS: Partial<Record<string, ReadingId[]>> = {
-  insulin: ["glucose", "insulin", "muscleUptake", "glycogen"],
-  "fat-route": ["tg", "fuel"],
-  circulation: ["hr", "output", "flowGut", "flowMuscle"],
-  alertness: ["alertness", "caffeine", "receptors"],
-  clearing: ["caffeine", "alcohol", "bladder", "fluid"],
-  cycle: ["cycleDay", "estradiol", "progesterone"],
-};
-const EVENT_READINGS: Partial<Record<ResolvedEvent["preset"], ReadingId[]>> = {
-  illness: ["temperature", "inflammation", "immune"],
-  stress: ["stressLevel", "hr", "bloodPressure"],
-  sex: ["hr", "reward"],
-  poor_sleep: ["alertness"],
-};
 
 // Level 2: for one thing moving through the body, how much of it is at each stop across the day, with
 // the same numbers as the line. Anything else draws what describes it.
 export function processLanes(tr: Trajectory, now: number, processId: string, real: Trajectory | null = null): Lane[] {
   const process: Process | undefined = processesAt(tr, now).find((p) => p.id === processId);
   if (!process) return [];
-  const readings = PROCESS_READINGS[processId];
-  if (readings) return storyLanes(tr, now, readings, process.system, real);
-  const event = tr.events.find((e) => `event:${e.id}` === processId);
+  const line = bodyLineFacts(processId);
+  if (line) return storyLanes(tr, now, line.readings, process.system, real);
+  const event = tr.events.find((e) => processIds.event(e.id) === processId);
   if (event) {
     if (event.preset === "training") return workedMuscleLanes(tr, now).filter((lane) => event.muscles.some((m) => m.group === lane.id));
-    const ids = EVENT_READINGS[event.preset];
+    const ids = PRESET_FACTS[event.preset].chartReadings;
     if (ids) return storyLanes(tr, now, ids, process.system, real);
     return threadLanes(tr, now).filter((lane) => lane.id === processId).map((lane) => ({ ...lane, system: process.system }));
   }
@@ -444,7 +432,7 @@ export function dayMoments(tr: Trajectory, now: number): Moment[] {
   const intakesOf = (threadId: string) => {
     const meal = meals.find((group) => mealProcessId(group) === threadId);
     if (meal) return meal.map((intake) => intake.id);
-    return tr.scenario.intakes.filter((intake) => threadId === `intake:${intake.id}`).map((intake) => intake.id);
+    return tr.scenario.intakes.filter((intake) => threadId === processIds.intake(intake.id)).map((intake) => intake.id);
   };
   return threadsAt(tr, now)
     .filter((thread) => thread.at >= LANES.from && thread.at <= LANES.to)
