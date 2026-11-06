@@ -2,7 +2,7 @@ import type { Feeling, Reading, ReadingId } from "./assess";
 import { ChannelId, curveStrength } from "./events";
 import { EXTENSIONS } from "./extensions";
 import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
-import type { Process } from "./processes";
+import { mealGroups, mealProcessId, Process } from "./processes";
 import { caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, Trajectory } from "./simulate";
 
 // Where something on screen came from. The model computing it is the ordinary case. What Claude adds
@@ -123,9 +123,7 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
     const substance = tr.substances.get(id)?.substance;
     return { kind: "claude-input", detail: `The model moves this through the body, using the half-life and dose Claude supplied. Its source: ${substance?.source || "its own knowledge"}.` };
   }
-  const named = tr.scenario.intakes.filter((intake) => intake.id === id);
-  const meal = kind === "meal" ? tr.scenario.intakes.filter((intake) => process.title.toLowerCase().includes(intake.label.toLowerCase())) : [];
-  const foods = named.length ? named : meal;
+  const foods = kind === "meal" ? (mealGroups(tr.scenario.intakes).find((group) => mealProcessId(group) === process.id) ?? []) : tr.scenario.intakes.filter((intake) => intake.id === id);
   if (foods.some(composedByClaude)) return { kind: "claude-input", detail: `Claude estimated what ${foods.filter(composedByClaude).map((intake) => intake.label).join(" and ")} contains. The model computes where it goes.` };
   if (foods.length) return { kind: "usda", detail: `${foods.map((intake) => (intake.source?.kind === "table" ? intake.source.name : intake.label)).join(" and ")}. Claude estimated the portion unless you corrected it. The model computes where it goes.` };
   return SENTENCE_ORIGIN;

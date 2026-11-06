@@ -4,7 +4,7 @@ import { EXTENSIONS } from "./extensions";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
 import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
-import { alcoholLedgerAt, caffeineLedgerAt, CustomSubstance, foodKcalOf, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
+import { alcoholLedgerAt, alcoholVolumeL, caffeineLedgerAt, CustomSubstance, foodKcalOf, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
 import type { Tint } from "./state";
 import { formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
 import type { SystemId } from "./systems";
@@ -1012,7 +1012,7 @@ function clearingProcess(tr: Trajectory, t: number): Process {
       label: "Liver",
       reading: hasAlcohol ? `${alcohol.toFixed(2)} g/L` : hasCaffeine ? `${caffeinePerHour.toFixed(1)} mg/h` : "Quiet",
       share: shareOf(totals.cleared, totals.dose),
-      flow: hasAlcohol ? flowRate(ALCOHOL.eliminationGPerLPerH / 60, full.alcoholGPerMin) : flowRate(caffeinePerHour / 60, full.clearedMgPerMin),
+      flow: hasAlcohol ? flowRate((ALCOHOL.eliminationGPerLPerH * alcoholVolumeL(tr.scenario.body)) / 60, full.alcoholGPerMin) : flowRate(caffeinePerHour / 60, full.clearedMgPerMin),
       say: hasAlcohol ? `Your liver is clearing alcohol first, ${alcohol.toFixed(2)} g/L left.` : hasCaffeine ? `Your liver clears about ${caffeinePerHour.toFixed(1)} mg of caffeine an hour, ${caffeine.toFixed(2)} mg/L left.` : "Your liver has little to clear right now.",
       routes: ["to_liver_art"],
     },

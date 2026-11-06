@@ -67,6 +67,17 @@ describe("glucose", () => {
   });
 });
 
+describe("absorbing sugar", () => {
+  it("adds up to everything digestible in the food, liver's share included", () => {
+    const rice = { ...NO_NUTRIENTS, id: "rice", label: "White rice", at: 720, grams: 250, waterMl: 170, carbsG: 70, fatG: 0.7, proteinG: 7, fiberG: 1 };
+    const tr = simulate({ body, activities: awake, substances: [], intakes: [rice] });
+    let grams = 0;
+    for (let t = 720; t < 1800; t++) grams += tr.series.carbAbsorbMgMin[t] / 1000;
+    expect(grams).toBeGreaterThan(60);
+    expect(grams).toBeLessThanOrEqual(69);
+  });
+});
+
 describe("a 900 kcal mixed meal", () => {
   const meal = { ...NO_NUTRIENTS, id: "p", label: "pizza", at: 1000, grams: 300, waterMl: 110, carbsG: 100, sugarG: 30, fatG: 38, proteinG: 32, fiberG: 5 };
   const tr = simulate({ body, activities: awake, substances: [], intakes: [meal] });

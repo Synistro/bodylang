@@ -785,7 +785,7 @@ const fatCrossing = (c: Context) => perHour(c.v("fatAbsorbGMin")) >= REFERENCE.a
 const absorbingSpec: ReadingSpec = {
   label: "Absorbing sugar",
   organ: "small_intestine",
-  series: "glucoseAbsorbMgMin",
+  series: "carbAbsorbMgMin",
   unit: "g/h",
   toValue: gramsPerHourFromMg,
   format: rounded,
@@ -1108,8 +1108,6 @@ const bladderSpec: ReadingSpec = {
   judge: (c, s) => {
     const r = REFERENCE.bladder;
     if (c.asleep && s.raw >= r.strongDesireMl) return { ...EXPECTED, word: "Full by morning" };
-    if (s.raw >= r.capacityMl) return HIGH;
-    if (s.raw >= r.strongDesireMl) return { verdict: "raised", word: "Full", tone: "note" };
     return s.raw >= r.firstDesireMl ? quiet("Filling") : NORMAL;
   },
   why: [
@@ -1933,7 +1931,6 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
       [isDry, "A little dry"],
       [(c) => c.v("caffeine") >= 1, "Clearing caffeine"],
       [(c) => activeSubstance(c) !== undefined, (c) => `Clearing ${inSentence(activeSubstance(c)?.substance.label ?? "")}`],
-      [(c) => c.v("bladderMl") >= REFERENCE.bladder.strongDesireMl && !c.asleep, "Bladder full"],
       [always, "Quiet"],
     ],
     level: (c) => Math.max(c.v("alcohol") * 2, c.v("caffeine") / CAFFEINE.feltAboveMgL / 3, (c.v("bladderMl") / REFERENCE.bladder.capacityMl) * 0.3),

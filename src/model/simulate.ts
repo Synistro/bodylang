@@ -155,7 +155,8 @@ export const SERIES = [
   "stomachKcal",
   "gutKcal",
   "emptyingKcalPerMin",
-  "glucoseAbsorbMgMin",
+  "glucoseAbsorbMgMin", // past the liver, which is what moves blood sugar
+  "carbAbsorbMgMin", // all of it crossing the gut wall, which is what the gut's limit is about
   "fatAbsorbGMin",
   "proteinAbsorbGMin",
   "insulinSecretion",
@@ -316,6 +317,9 @@ export function postureAt(activities: ActivitySpan[], minute: number): Posture {
   return minute >= DAY.sleepMin && currentFrom < DAY.sleepMin ? "sleeping" : current;
 }
 
+// The water alcohol spreads through, in litres.
+export const alcoholVolumeL = (body: Body) => (body.sex === "male" ? ALCOHOL.widmarkMale : ALCOHOL.widmarkFemale) * body.weightKg;
+
 // Fiber is not digested as carbohydrate. What reaches the colon is counted there.
 export const availableCarbsG = (n: Nutrients) => Math.max(0, n.carbsG - n.fiberG);
 
@@ -432,7 +436,7 @@ export function simulate(scenario: Scenario): Trajectory {
   const Vtg = LIPID.plasmaDlPerKg * body.weightKg;
   const hepaticBase = GLUCOSE.hepaticOutputGPerMinPerKg * body.weightKg;
   const caffeineVolume = CAFFEINE.volumeLPerKg * body.weightKg;
-  const widmark = (body.sex === "male" ? ALCOHOL.widmarkMale : ALCOHOL.widmarkFemale) * body.weightKg;
+  const widmark = alcoholVolumeL(body);
   const alcoholElimGPerMin = (ALCOHOL.eliminationGPerLPerH * widmark) / 60;
 
   for (let i = 0; i < n; i++) {
@@ -779,6 +783,7 @@ export function simulate(scenario: Scenario): Trajectory {
     series.gutKcal[i] = gutKcal;
     series.emptyingKcalPerMin[i] = energyRate;
     series.glucoseAbsorbMgMin[i] = absorbedGlucoseSystemicMg;
+    series.carbAbsorbMgMin[i] = absorbedCarbsG * 1000;
     series.fatAbsorbGMin[i] = absorbedFatG;
     series.proteinAbsorbGMin[i] = absorbedProteinG;
     series.insulinSecretion[i] = secretion;
@@ -924,8 +929,7 @@ export function alcoholLedgerAt(tr: Trajectory, intakeId: string, minute: number
   if (!l || !own || l.alcoholG <= 0) return null;
   let absorbedByAll = 0;
   for (const id of tr.intakeLedgers.keys()) absorbedByAll += intakeFlowsAt(tr, id, minute)?.alcoholAbsorbed ?? 0;
-  const widmark = (tr.scenario.body.sex === "male" ? ALCOHOL.widmarkMale : ALCOHOL.widmarkFemale) * tr.scenario.body.weightKg;
-  const inBody = value(tr, "alcohol", Math.floor(minute)) * widmark;
+  const inBody = value(tr, "alcohol", Math.floor(minute)) * alcoholVolumeL(tr.scenario.body);
   const blood = absorbedByAll > 0 ? own.alcoholAbsorbed * Math.min(1, inBody / absorbedByAll) : 0;
   return { stomach: own.stomachAlcohol, intestine: own.gutAlcohol, blood, cleared: own.alcoholAbsorbed - blood, dose: l.alcoholG };
 }

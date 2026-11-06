@@ -399,3 +399,12 @@ it("handles a fractional minute and the ends of the day", () => {
     }
   }
 });
+
+describe("the liver clearing alcohol", () => {
+  it("draws a line as thick as the grams it clears", () => {
+    const beers = { ...NO_NUTRIENTS, id: "beers", label: "Three beers", at: hm(19), grams: 1500, waterMl: 1380, carbsG: 54, alcoholG: 60, liquid: true };
+    const tr = simulate({ body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [beers], activities: [{ from: 0, posture: "sleeping" }, { from: hm(7), posture: "sitting" }], substances: [], events: [] });
+    const liver = processesAt(tr, hm(21)).find((p) => p.id === "clearing")?.stops.find((stop) => stop.label === "Liver");
+    expect(liver?.flow).toBeGreaterThan(0.2);
+  });
+});

@@ -5,6 +5,7 @@ import { assess, Assessment, heartVerdict } from "./assess";
 import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, resolveEvent } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./narrate";
+import { levelWord } from "./state";
 import { anthropometrics, Intake, postureAt, Scenario, simulate, Trajectory, value } from "./simulate";
 import { CAFFEINE, ENERGY, FEEL, KIDNEY, MUSCLE_RECOVERY, REFERENCE, TRAINING } from "./params";
 import { processesAt, processesFor } from "./processes";
@@ -771,7 +772,8 @@ describe("the tools", () => {
     expect(r.threads.map((t) => t.id)).toContain("event:flu");
     expect(r.processes.map((p) => p.id)).toContain("event:chest");
     expect(r.blood.temperature_c).toBeGreaterThan(37.5);
-    expect(["moderate", "strong", "very strong"]).toContain(r.blood.immune_activity);
+    expect(["moderate", "strong"]).toContain(r.blood.immune_activity);
+    expect(r.blood.inflammation).toBe(levelWord(value(tr, "inflammation", hm(12))).toLowerCase());
     expect(Object.keys(r.muscles)).toEqual(expect.arrayContaining(["chest", "triceps"]));
     expect(JSON.stringify(r)).not.toMatch(/NaN|null,"until"/);
   });

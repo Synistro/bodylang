@@ -213,7 +213,7 @@ export const KIDNEY = {
   // third of the day spent asleep, which is half the waking rate.
   sleepingUrineFactor: 0.5,
   waterExcretionRatePerMin: 0.012,
-  voidAtMl: 380,
+  voidAtMl: 380, // awake, you go before it turns urgent, which is why strongDesireMl only shows overnight
   // A healthy bladder holds some urine at the start of the simulated day.
   bladderStartMl: 160,
 } as const;

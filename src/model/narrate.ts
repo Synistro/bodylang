@@ -5,7 +5,7 @@ import { processesAt } from "./processes";
 import { Trajectory, value } from "./simulate";
 import { threadsAt } from "./threads";
 import type { OrganId } from "./simulate";
-import { forecast, formatClock, inSentence } from "./state";
+import { forecast, formatClock, inSentence, levelWord } from "./state";
 
 export interface ReplyLine {
   text: string;
@@ -28,7 +28,7 @@ export function openingReply(tr: Trajectory, now: number): ReplyLine[] {
   return [{ text: `${first}${second}`, organ: inStomach ? "stomach" : undefined }];
 }
 
-const level = (x: number) => (x < 0.05 ? "none" : x < 0.25 ? "mild" : x < 0.55 ? "moderate" : x < 0.8 ? "strong" : "very strong");
+const level = (x: number) => levelWord(x).toLowerCase();
 
 export function readout(tr: Trajectory, now: number) {
   const f = forecast(tr, now);
@@ -58,7 +58,7 @@ export function readout(tr: Trajectory, now: number) {
       stomach_kcal: round(v("stomachKcal"), 0),
       emptying_kcal_per_min: round(v("emptyingKcalPerMin")),
       intestine_kcal: round(v("gutKcal"), 0),
-      absorbing_glucose_g_per_h: round((v("glucoseAbsorbMgMin") / 1000) * 60, 0),
+      absorbing_sugar_g_per_h: round((v("carbAbsorbMgMin") / 1000) * 60, 0),
       liver_glycogen_g: round(v("liverGlycogen"), 0),
       heart_bpm: round(v("hr"), 0),
       blood_to_gut: pct(v("flowGut")),

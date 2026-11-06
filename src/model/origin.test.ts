@@ -71,6 +71,27 @@ describe("where a food comes from", () => {
   });
 });
 
+describe("where a meal comes from", () => {
+  const rice = (source: Intake["source"]) => ({ ...meal({ source }), id: "rice", label: "Rice" });
+  const sauce = (source: Intake["source"]) => ({ ...meal({ source }), id: "sauce", label: "Sauce", at: 782 });
+  const origin = (...foods: Intake[]) => {
+    const tr = run(foods);
+    const line = processesAt(tr, 800).find((p) => p.id === "meal:rice");
+    if (!line) throw new Error("no meal line");
+    return processOrigin(tr, line);
+  };
+
+  it("reports its weakest source, wherever that food comes in the meal", () => {
+    expect(origin(rice(TABLE), sauce({ kind: "estimate" })).kind).toBe("claude-input");
+    expect(origin(rice({ kind: "estimate" }), sauce(TABLE)).kind).toBe("claude-input");
+    expect(origin(rice(TABLE), sauce({ kind: "estimate" })).detail).toMatch(/Sauce/);
+  });
+
+  it("is the table when all of it is", () => {
+    expect(origin(rice(TABLE), sauce(TABLE)).kind).toBe("usda");
+  });
+});
+
 describe("where a line through the body comes from", () => {
   const line = (tr: ReturnType<typeof run>, id: string, t: number) => {
     const process = processesAt(tr, t).find((p) => p.id === id);

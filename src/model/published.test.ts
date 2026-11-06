@@ -66,7 +66,6 @@ describe("how fast food leaves, against Tougas 2000 and Benini 1995", () => {
   });
 
   it("does not count fibre as food", () => {
-    const tr = simulate(scenario([apples]));
     const available = (apples.carbsG - apples.fiberG) * 4 + apples.fatG * 9 + apples.proteinG * 4;
     expect(foodKcalOf(apples)).toBeCloseTo(available, 5);
   });
