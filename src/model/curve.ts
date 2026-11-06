@@ -14,3 +14,6 @@ export function firstIndexBelow(curve: Float32Array, from: number, level: number
   for (let i = from; i < curve.length; i++) if (curve[i] < level) return i;
   return null;
 }
+
+// What is left after some minutes, for something that halves at a steady rate.
+export const decay = (minutes: number, halfLifeMin: number) => 0.5 ** (minutes / halfLifeMin);

@@ -1,7 +1,8 @@
-import { MUSCLE_MASS_SHARE, MUSCLE_RECOVERY } from "../params";
+import { MUSCLE_RECOVERY } from "../params";
 import type { OrganId } from "../ids";
 import { muscleStateFromEvent } from "./muscles";
 import { ActivityBout, ChannelId, Curve, Effect, MuscleState, ResolvedEvent, StopShows } from "./types";
+import { decay } from "../curve";
 
 // Where something being fought actually is, read from the first stop of its story.
 export function illnessSites(events: ResolvedEvent[], t: number, from: number): OrganId[] {
@@ -11,7 +12,6 @@ export function illnessSites(events: ResolvedEvent[], t: number, from: number): 
   });
 }
 
-export const decay = (minutes: number, halfLifeMin: number) => 0.5 ** (minutes / halfLifeMin);
 
 // How far along a curve is at minute t, 0 to 1.
 export function curveStrength(curve: Curve, from: number, end: number | null, t: number): number {
@@ -68,20 +68,6 @@ export function channelSeries(events: ResolvedEvent[], minutes: number, bouts: A
   return series;
 }
 
-// Share of the body's muscle working at each minute, weighted by how much muscle each group holds.
-export function muscleWorkSeries(events: ResolvedEvent[], minutes: number, start = 0): Float32Array {
-  const out = new Float32Array(minutes);
-  for (const event of events) {
-    if (event.ends === null || !event.muscles.length) continue;
-    const share = event.muscles.reduce((sum, m) => sum + m.load * MUSCLE_MASS_SHARE[m.group], 0) * event.intensity;
-    const fall = MUSCLE_RECOVERY.workFallHalfLifeMin;
-    for (let i = Math.max(0, event.from - start); i < minutes; i++) {
-      const t = i + start;
-      out[i] += t <= event.ends ? share : share * decay(t - event.ends, fall);
-    }
-  }
-  return out;
-}
 
 // How much is still going on from this event, 0 to 1. Below the active floor it counts as over.
 export function eventLevelAt(event: ResolvedEvent, t: number): number {

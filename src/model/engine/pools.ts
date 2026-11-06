@@ -1,8 +1,8 @@
 import { Cycle, lutealShare } from "../cycle";
 import { activityBouts, resolveEvent } from "../events/presets";
 import { ChannelId, ResolvedEvent } from "../events/types";
-import { channelSeries, muscleWorkSeries } from "../events/curves";
-import { maxHeartRate } from "../events/muscles";
+import { channelSeries } from "../events/curves";
+import { muscleWorkSeries, maxHeartRate } from "../events/muscles";
 import { ALCOHOL, CAFFEINE, CYCLE, DAY, FASTING, FEEL, GLUCOSE, INSULIN, KIDNEY, LIPID, LIVER, MUSCLE, STOMACH } from "../params";
 import { ActivitySpan, Body, Posture, postureAt, Scenario } from "../scenario";
 import { alcoholVolumeL, Anthropometrics, anthropometrics } from "./anthropometrics";

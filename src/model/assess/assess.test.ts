@@ -8,6 +8,7 @@ import { simulate } from "../engine/simulate";
 import { CustomSubstance, Intake, Scenario } from "../scenario";
 import { SYSTEMS } from "../systems";
 import { hm, NO_NUTRIENTS } from "../testKit";
+import { SCENARIOS as EVERY_DAY } from "../testScenarios";
 
 
 const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };
@@ -417,4 +418,21 @@ it("handles a fractional minute and the ends of the day", () => {
   for (const t of [0, 0.5, 1020.4, 1800]) {
     for (const text of stringsIn(assess(tr, t))) expect(text).not.toMatch(/NaN|undefined/);
   }
+});
+
+describe("a system's word and its sentence", () => {
+  const days = Object.values(EVERY_DAY).map((scenario) => simulate(scenario));
+  const everyTenMinutes = Array.from({ length: 180 }, (_, i) => i * 10);
+
+  it("say the same thing", () => {
+    for (const tr of days) {
+      for (const t of everyTenMinutes) {
+        const { brain, clearing, energy } = assess(tr, t).systems;
+        if (brain.word === "Drowsy") expect(brain.sentence).toMatch(/sleepy/);
+        if (brain.word === "Lifted") expect(brain.sentence).toMatch(/Feel-good/);
+        if (clearing.word === "Quiet") expect(clearing.sentence).not.toMatch(/clearing/);
+        if (energy.word === "Steady") expect(energy.sentence).toMatch(/steady/);
+      }
+    }
+  });
 });

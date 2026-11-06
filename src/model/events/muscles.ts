@@ -1,8 +1,7 @@
 import { MUSCLE_LABEL, MuscleGroup } from "../muscleGroups";
-import { DAY, MUSCLE_RECOVERY, SEX, TRAINING } from "../params";
-import { clamp01 } from "../curve";
-import { decay } from "./curves";
-import { BodyEvent, MuscleState, MuscleWork } from "./types";
+import { MUSCLE_MASS_SHARE, DAY, MUSCLE_RECOVERY, SEX, TRAINING } from "../params";
+import { clamp01, decay } from "../curve";
+import { BodyEvent, MuscleState, MuscleWork, ResolvedEvent } from "./types";
 
 export const hours = (x: number) => x * 60;
 
@@ -93,3 +92,18 @@ export const namesOf = (muscles: MuscleWork[]) => {
   const names = [...muscles].sort((a, b) => b.load - a.load).map((m) => MUSCLE_LABEL[m.group].toLowerCase());
   return names.length > 2 ? `${names.slice(0, 2).join(", ")} and more` : names.join(" and ");
 };
+
+// Share of the body's muscle working at each minute, weighted by how much muscle each group holds.
+export function muscleWorkSeries(events: ResolvedEvent[], minutes: number, start = 0): Float32Array {
+  const out = new Float32Array(minutes);
+  for (const event of events) {
+    if (event.ends === null || !event.muscles.length) continue;
+    const share = event.muscles.reduce((sum, m) => sum + m.load * MUSCLE_MASS_SHARE[m.group], 0) * event.intensity;
+    const fall = MUSCLE_RECOVERY.workFallHalfLifeMin;
+    for (let i = Math.max(0, event.from - start); i < minutes; i++) {
+      const t = i + start;
+      out[i] += t <= event.ends ? share : share * decay(t - event.ends, fall);
+    }
+  }
+  return out;
+}

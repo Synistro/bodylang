@@ -20,11 +20,13 @@ function worstTone(tones: Tone[]): Tone {
 }
 
 type WordRow = readonly [test: (c: Context, reading: (id: ReadingId) => Reading) => boolean, word: string | ((c: Context) => string)];
+type Says = (c: Context, reading: (id: ReadingId) => Reading) => string;
+// One row holds a word and its sentence, so the two can never say different things.
+type StatusRow = readonly [...WordRow, Says];
 
 interface SystemSpec {
-  words: readonly WordRow[]; // first passing row wins; the last row always passes and means quiet
+  rows: readonly StatusRow[]; // the first row that passes speaks. The last always passes, and means nothing is going on
   level: (c: Context, reading: (id: ReadingId) => Reading) => number;
-  sentence: (c: Context, reading: (id: ReadingId) => Reading) => string; // under 14 words, about this system only
 }
 
 function activeSubstance(c: Context) {
@@ -58,13 +60,9 @@ function digestionSentence(c: Context): string {
   return c.v("stomachMl") > STOMACH.restingVolumeMl + REFERENCE.stomach.emptyAboveRestingMl ? "Liquid is passing through your stomach." : "Your stomach and gut are resting.";
 }
 
-function energySentence(c: Context, r: (id: ReadingId) => Reading): string {
+function sugarRisingSentence(c: Context): string {
   const peak = peakAhead(c, "glucose", 2);
-  if (lowFuel(c)) return `Liver fuel is low at ${Math.round(c.v("liverGlycogen"))} g, and blood sugar is ${mmolText(c)}.`;
-  if (r("glucose").trend === "rising") return peak ? `Blood sugar is ${mmolText(c)} and rising, peaking at ${toMmol(peak.value).toFixed(1)} near ${clock(peak.at)}.` : `Blood sugar is ${mmolText(c)} and rising.`;
-  if (r("glucose").trend === "falling") return `Blood sugar is ${mmolText(c)} and coming down.`;
-  if (c.v("tg") - c.tr.anthro.baselineTg >= REFERENCE.triglycerides.arrivedAboveRestMgDl) return `Blood fat is ${Math.round(c.v("tg"))} mg/dL and clearing.`;
-  return `Blood sugar is steady at ${mmolText(c)}.`;
+  return peak ? `Blood sugar is ${mmolText(c)} and rising, peaking at ${toMmol(peak.value).toFixed(1)} near ${clock(peak.at)}.` : `Blood sugar is ${mmolText(c)} and rising.`;
 }
 
 function heartSentence(c: Context): string {
@@ -91,18 +89,12 @@ function muscleSentence(c: Context): string {
   return "Your muscles are rested.";
 }
 
-function brainSentence(c: Context, r: (id: ReadingId) => Reading): string {
-  if (c.asleep) return "You are asleep, and sleep is clearing the day's tiredness.";
-  if (c.v("jitter") >= FEELING_DISPLAY.negligibleBelow) return "Lots of caffeine, so you may feel jittery.";
-  if (c.v("alcohol") >= REFERENCE.alcohol.slowsBrainFromGPerL) return `Alcohol is slowing your brain, ${c.v("alcohol").toFixed(2)} g/L in your blood.`;
-  if (stressedNow(c)) return "Stress hormones are keeping your brain on alert.";
-  if (c.v("reward") >= PROCESS.liftedFrom) return "Feel-good chemicals are up.";
+function sleepySentence(c: Context): string {
   const sleepiest = peakAhead(c, "drowsy", 0.02, FEELING_DISPLAY.peakHorizonMin);
-  if (c.v("drowsy") >= PROCESS.sleepyNamedFrom) return sleepiest && sleepiest.at <= minutesUntilSleep(c) ? `You may feel sleepy, most near ${clock(sleepiest.at)}.` : "You may feel sleepy.";
-  const blocked = Math.round(c.v("occupancy") * 100);
-  if (c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt) return `Caffeine is ${r("caffeine").trend === "rising" ? "kicking in" : "fading"}, with ${blocked}% of the tired signal blocked.`;
-  return "Your brain is clear, with no caffeine at work.";
+  return sleepiest && sleepiest.at <= minutesUntilSleep(c) ? `You may feel sleepy, most near ${clock(sleepiest.at)}.` : "You may feel sleepy.";
 }
+
+const caffeineSentence = (c: Context, r: (id: ReadingId) => Reading) => `Caffeine is ${r("caffeine").trend === "rising" ? "kicking in" : "fading"}, with ${Math.round(c.v("occupancy") * 100)}% of the tired signal blocked.`;
 
 function immuneSentence(c: Context): string {
   const illness = fighting(c);
@@ -115,123 +107,105 @@ function immuneSentence(c: Context): string {
   return c.v("immune") >= REFERENCE.immune.high / 100 ? "Your immune system is winding down." : "Nothing to fight right now.";
 }
 
-function clearingSentence(c: Context): string {
-  if (c.v("alcohol") >= REFERENCE.alcohol.clearingNamedFromGPerL) return `Your liver is clearing alcohol, ${c.v("alcohol").toFixed(2)} g/L left.`;
-  if (isDry(c)) return `You are a little dry, down about ${(-c.v("fluidBalance") / 1000).toFixed(1)} L.`;
-  if (c.v("caffeine") >= PROCESS.clearingActiveAboveMgL) return `Your liver is clearing caffeine, ${c.v("caffeine").toFixed(2)} mg/L left.`;
-  const substance = activeSubstance(c);
-  if (substance) return `Your body is clearing ${inSentence(substance.substance.label)}.`;
-  return c.v("bladderMl") >= REFERENCE.bladder.firstDesireMl ? `Your bladder is filling, about ${tens(c.v("bladderMl"))} ml.` : "Your liver and kidneys are ticking over.";
-}
-
 const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
   digestion: {
-    words: [
-      [(c) => c.v("digestion") >= REFERENCE.digestion.workingHardFrom, "Working hard"],
-      [(c) => c.v("digestion") >= REFERENCE.digestion.workingFrom || c.v("stomachKcal") > REFERENCE.stillDigestingKcal, "Working"],
-      [(c) => c.v("digestion") >= REFERENCE.digestion.finishingFrom, "Finishing"],
-      [always, "Quiet"],
+    rows: [
+      [(c) => c.v("digestion") >= REFERENCE.digestion.workingHardFrom, "Working hard", digestionSentence],
+      [(c) => c.v("digestion") >= REFERENCE.digestion.workingFrom || c.v("stomachKcal") > REFERENCE.stillDigestingKcal, "Working", digestionSentence],
+      [(c) => c.v("digestion") >= REFERENCE.digestion.finishingFrom, "Finishing", digestionSentence],
+      [always, "Quiet", digestionSentence],
     ],
     level: (c) => c.v("digestion"),
-    sentence: digestionSentence,
   },
   energy: {
-    words: [
-      [(_c, r) => r("glucose").verdict === "low", "Sugar low"],
-      [(c) => lowFuel(c), "Liver fuel low"],
-      [(_c, r) => r("glucose").trend === "rising", "Rising"],
-      [(_c, r) => r("glucose").trend === "falling", "Falling"],
-      [(c) => c.v("tg") - c.tr.anthro.baselineTg >= REFERENCE.triglycerides.arrivedAboveRestMgDl, "Clearing fat"],
-      [always, "Steady"],
+    rows: [
+      [(_c, r) => r("glucose").verdict === "low", "Sugar low", (c) => `Blood sugar is low at ${mmolText(c)}.`],
+      [(c) => lowFuel(c), "Liver fuel low", (c) => `Liver fuel is low at ${Math.round(c.v("liverGlycogen"))} g, and blood sugar is ${mmolText(c)}.`],
+      [(_c, r) => r("glucose").trend === "rising", "Rising", sugarRisingSentence],
+      [(_c, r) => r("glucose").trend === "falling", "Falling", (c) => `Blood sugar is ${mmolText(c)} and coming down.`],
+      [(c) => c.v("tg") - c.tr.anthro.baselineTg >= REFERENCE.triglycerides.arrivedAboveRestMgDl, "Clearing fat", (c) => `Blood fat is ${Math.round(c.v("tg"))} mg/dL and clearing.`],
+      [always, "Steady", (c) => `Blood sugar is steady at ${mmolText(c)}.`],
     ],
     level: (c, r) => Math.max((r("insulin").value - 1) / REFERENCE.systemFullAt.insulinFold, (c.v("tg") - c.tr.anthro.baselineTg) / LIPID.baselineMgDl, c.v("muscleUptakeGMin") / REFERENCE.systemFullAt.muscleUptakeGPerMin),
-    sentence: energySentence,
   },
   circulation: {
-    words: [
-      [(c) => c.moving || c.exerting, "Working"],
-      [(_c, r) => r("hr").verdict === "high", "Heart high"],
-      [(c) => c.v("systolic") >= REFERENCE.bloodPressure.raised, "Pressure up"],
-      [(c) => !c.moving && fromMoving(c, "heartRate") >= REFERENCE.heart.raisedAboveOwnRestBpm, "Recovering"],
-      [(c, r) => r("hr").verdict === "raised" || eventHeartBpm(c) >= REFERENCE.heart.raisedAboveOwnRestBpm, "Raised"],
-      [always, "Steady"],
+    rows: [
+      [(c) => c.moving || c.exerting, "Working", heartSentence],
+      [(_c, r) => r("hr").verdict === "high", "Heart high", heartSentence],
+      [(c) => c.v("systolic") >= REFERENCE.bloodPressure.raised, "Pressure up", heartSentence],
+      [(c) => !c.moving && fromMoving(c, "heartRate") >= REFERENCE.heart.raisedAboveOwnRestBpm, "Recovering", heartSentence],
+      [(c, r) => r("hr").verdict === "raised" || eventHeartBpm(c) >= REFERENCE.heart.raisedAboveOwnRestBpm, "Raised", heartSentence],
+      [always, "Steady", heartSentence],
     ],
     level: (c) => (c.v("hr") - ownRestBpm(c, "sitting")) / REFERENCE.systemFullAt.heartBpm,
-    sentence: heartSentence,
   },
   muscles: {
-    words: [
-      [(c) => anyMuscle(c, (s) => s.work >= REFERENCE.muscleState.workingFrom), "Working"],
-      [(c) => anyMuscle(c, (s) => s.soreness >= REFERENCE.muscleState.soreFrom), "Sore"],
-      [(c) => anyMuscle(c, (s) => s.fatigue >= REFERENCE.muscleState.tiredFrom), "Tired"],
-      [(c) => anyMuscle(c, (s) => s.repair >= REFERENCE.muscleState.repairingFrom), "Repairing"],
-      [always, "Quiet"],
+    rows: [
+      [(c) => anyMuscle(c, (s) => s.work >= REFERENCE.muscleState.workingFrom), "Working", muscleSentence],
+      [(c) => anyMuscle(c, (s) => s.soreness >= REFERENCE.muscleState.soreFrom), "Sore", muscleSentence],
+      [(c) => anyMuscle(c, (s) => s.fatigue >= REFERENCE.muscleState.tiredFrom), "Tired", muscleSentence],
+      [(c) => anyMuscle(c, (s) => s.repair >= REFERENCE.muscleState.repairingFrom), "Repairing", muscleSentence],
+      [always, "Quiet", muscleSentence],
     ],
     level: (c) => MUSCLE_GROUPS.reduce((most, group) => Math.max(most, muscleLevel(muscleStateAt(c.tr.muscleEvents, group, c.t))), 0),
-    sentence: muscleSentence,
   },
   brain: {
-    words: [
-      [(c) => c.asleep, "Asleep"],
-      [(c) => c.v("jitter") >= FEELING_DISPLAY.negligibleBelow, "Jittery"],
-      [(c) => c.v("alcohol") >= REFERENCE.alcohol.slowsBrainFromGPerL, "Alcohol"],
-      [stressedNow, "Stressed"],
-      [(c) => c.v("drowsy") >= PROCESS.sleepyNamedFrom, "Drowsy"],
-      [(c) => c.v("reward") >= PROCESS.liftedFrom, "Lifted"],
-      [(c, r) => c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt && r("caffeine").trend === "rising", "Caffeine rising"],
-      [(c) => c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt, "Caffeine fading"],
-      [always, "Clear"],
+    rows: [
+      [(c) => c.asleep, "Asleep", () => "You are asleep, and sleep is clearing the day's tiredness."],
+      [(c) => c.v("jitter") >= FEELING_DISPLAY.negligibleBelow, "Jittery", () => "Lots of caffeine, so you may feel jittery."],
+      [(c) => c.v("alcohol") >= REFERENCE.alcohol.slowsBrainFromGPerL, "Alcohol", (c) => `Alcohol is slowing your brain, ${c.v("alcohol").toFixed(2)} g/L in your blood.`],
+      [stressedNow, "Stressed", () => "Stress hormones are keeping your brain on alert."],
+      [(c) => c.v("drowsy") >= PROCESS.sleepyNamedFrom, "Drowsy", sleepySentence],
+      [(c) => c.v("reward") >= PROCESS.liftedFrom, "Lifted", () => "Feel-good chemicals are up."],
+      [(c, r) => c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt && r("caffeine").trend === "rising", "Caffeine rising", caffeineSentence],
+      [(c) => c.v("caffeineFelt") >= PROCESS.caffeineWorkingAboveFelt, "Caffeine fading", caffeineSentence],
+      [always, "Clear", () => "Your brain is clear, with no caffeine at work."],
     ],
     level: (c) => Math.max(c.v("caffeineFelt"), c.v("drowsy"), c.v("stressLevel"), c.v("reward")),
-    sentence: brainSentence,
   },
   immune: {
-    words: [
-      [hasFever, (c) => `Fever ${c.v("temperature").toFixed(1)}`],
-      [(c) => fighting(c) !== null, "Fighting it"],
-      [(c) => c.v("immune") >= REFERENCE.immune.high / 100, "Recovering"],
-      [always, "Quiet"],
+    rows: [
+      [hasFever, (c) => `Fever ${c.v("temperature").toFixed(1)}`, immuneSentence],
+      [(c) => fighting(c) !== null, "Fighting it", immuneSentence],
+      [(c) => c.v("immune") >= REFERENCE.immune.high / 100, "Recovering", immuneSentence],
+      [always, "Quiet", immuneSentence],
     ],
     level: (c) => c.v("immune"),
-    sentence: immuneSentence,
   },
   clearing: {
-    words: [
-      [(c) => c.v("alcohol") >= REFERENCE.alcohol.clearingNamedFromGPerL, "Clearing alcohol"],
-      [isDry, "A little dry"],
-      [(c) => c.v("caffeine") >= 1, "Clearing caffeine"],
-      [(c) => activeSubstance(c) !== undefined, (c) => `Clearing ${inSentence(activeSubstance(c)?.substance.label ?? "")}`],
-      [always, "Quiet"],
+    rows: [
+      [(c) => c.v("alcohol") >= REFERENCE.alcohol.clearingNamedFromGPerL, "Clearing alcohol", (c) => `Your liver is clearing alcohol, ${c.v("alcohol").toFixed(2)} g/L left.`],
+      [isDry, "A little dry", (c) => `You are a little dry, down about ${(-c.v("fluidBalance") / 1000).toFixed(1)} L.`],
+      [(c) => c.v("caffeine") >= 1, "Clearing caffeine", (c) => `Your liver is clearing caffeine, ${c.v("caffeine").toFixed(2)} mg/L left.`],
+      [(c) => activeSubstance(c) !== undefined, (c) => `Clearing ${inSentence(activeSubstance(c)?.substance.label ?? "")}`, (c) => `Your body is clearing ${inSentence(activeSubstance(c)?.substance.label ?? "")}.`],
+      [always, "Quiet", (c) => (c.v("bladderMl") >= REFERENCE.bladder.firstDesireMl ? `Your bladder is filling, about ${tens(c.v("bladderMl"))} ml.` : "Your liver and kidneys are ticking over.")],
     ],
     level: (c) => Math.max(c.v("alcohol") * 2, c.v("caffeine") / CAFFEINE.feltAboveMgL / REFERENCE.systemFullAt.caffeineFelt, (c.v("bladderMl") / REFERENCE.bladder.capacityMl) * REFERENCE.systemFullAt.bladderShare),
-    sentence: clearingSentence,
   },
   reproductive: {
-    words: [
-      [(c) => phaseOf(c) !== null, (c) => PHASE_WORD[phaseOf(c) ?? "follicular"]],
-      [always, "Quiet"],
+    rows: [
+      [(c) => phaseOf(c) !== null, (c) => PHASE_WORD[phaseOf(c) ?? "follicular"], (c) => `${PHASE_SAYS[phaseOf(c) ?? "follicular"].day}.`],
+      [always, "Quiet", (c) => (c.tr.scenario.body.sex === "female" ? "No cycle logged." : "Nothing here is changing today.")],
     ],
     level: (c) => (c.tr.cycle ? CYCLE.cramps.amount * REFERENCE.systemFullAt.crampsShare : 0),
-    sentence: (c) => {
-      const phase = phaseOf(c);
-      if (phase) return `${PHASE_SAYS[phase].day}.`;
-      return c.tr.scenario.body.sex === "female" ? "No cycle logged." : "Nothing here is changing today.";
-    },
   },
 };
 
-function firstWord(rows: readonly WordRow[], c: Context, reading: (id: ReadingId) => Reading) {
+function firstRow<Row extends WordRow | StatusRow>(rows: readonly Row[], c: Context, reading: (id: ReadingId) => Reading): Row {
   const row = rows.find(([test]) => test(c, reading));
   if (!row) throw new Error("A word table must end with a row that always passes");
-  return { word: typeof row[1] === "string" ? row[1] : row[1](c), quiet: row === rows[rows.length - 1] };
+  return row;
 }
+
+const wordOf = (row: WordRow | StatusRow, c: Context) => (typeof row[1] === "string" ? row[1] : row[1](c));
 
 type RailEntry = Omit<SystemStatus, "emphasis">;
 
 function systemStatus(id: Exclude<SystemId, "overview">, c: Context, reading: (id: ReadingId) => Reading): RailEntry {
   const spec = SYSTEM_STATUS[id];
   const def = systemById(id);
-  return { ...firstWord(spec.words, c, reading), level: clamp01(spec.level(c, reading)), tone: worstTone([...def.readings, ...def.more].map((r) => reading(r).tone)), sentence: spec.sentence(c, reading) };
+  const row = firstRow(spec.rows, c, reading);
+  return { word: wordOf(row, c), quiet: row === spec.rows.at(-1), level: clamp01(spec.level(c, reading)), tone: worstTone([...def.readings, ...def.more].map((r) => reading(r).tone)), sentence: row[2](c, reading) };
 }
 
 // What matters most right now: what needs attention first, then how busy each system is.
@@ -254,6 +228,7 @@ export function systemsOf(c: Context, reading: (id: ReadingId) => Reading, headl
   const shown = new Set(all.filter((p) => !p.quiet).sort((a, b) => rank(b) - rank(a)).slice(0, FEELING_DISPLAY.mostEmphasised));
   const marked = (part: RailEntry): SystemStatus => ({ ...part, emphasis: shown.has(part) });
   // The whole body is as busy as its busiest part and as loud as its loudest. Its sentence is the headline.
-  const overview: SystemStatus = { ...firstWord(OVERVIEW_WORDS, c, reading), level: Math.max(...all.map((p) => p.level)), tone: worstTone(all.map((p) => p.tone)), sentence: headline, emphasis: false };
+  const overviewRow = firstRow(OVERVIEW_WORDS, c, reading);
+  const overview: SystemStatus = { word: wordOf(overviewRow, c), quiet: overviewRow === OVERVIEW_WORDS.at(-1), level: Math.max(...all.map((p) => p.level)), tone: worstTone(all.map((p) => p.tone)), sentence: headline, emphasis: false };
   return { overview, digestion: marked(parts.digestion), energy: marked(parts.energy), circulation: marked(parts.circulation), muscles: marked(parts.muscles), brain: marked(parts.brain), immune: marked(parts.immune), clearing: marked(parts.clearing), reproductive: marked(parts.reproductive) };
 }
