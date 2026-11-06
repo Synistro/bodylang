@@ -25,6 +25,7 @@ const READ_MOST_CHARS = 60_000;
 const EXTENSIONS_FOLDER = "src/model/extensions";
 const RESERVED = new Set(["api", "index", "check", "contract"]);
 const ID = /^[a-z][a-z0-9_]{1,30}$/;
+const WORKTREE_NAME = /^[a-z][a-z0-9_]*-\d+-\d+$/;
 
 export type BuildStage = "writing" | "testing" | "final" | "ready" | "failed" | "stopped";
 
@@ -52,15 +53,18 @@ export interface BuildParts {
   repo: string;
   buildsFolder: string;
   session: (context: SessionContext) => Promise<void>;
-  suite: (worktree: string) => Promise<string | null>;
+  suite: (worktree: string, signal: AbortSignal) => Promise<string | null>;
 }
 
 const processPath = (id: string) => `${EXTENSIONS_FOLDER}/${id}.ts`;
 const testPath = (id: string) => `${EXTENSIONS_FOLDER}/${id}.test.ts`;
 
-async function shell(command: string, args: string[], cwd: string, timeout: number): Promise<string | null> {
+// The checks run code Claude just wrote, so they get nothing from this process's environment but a way to run.
+const checkEnvironment = () => ({ PATH: process.env.PATH, HOME: process.env.HOME });
+
+async function shell(command: string, args: string[], cwd: string, timeout: number, signal: AbortSignal): Promise<string | null> {
   try {
-    await run(command, args, { cwd, timeout, maxBuffer: 20_000_000 });
+    await run(command, args, { cwd, timeout, maxBuffer: 20_000_000, signal, env: checkEnvironment() });
     return null;
   } catch (e: unknown) {
     const failure = e as { stdout?: string; stderr?: string; message?: string };
@@ -73,7 +77,7 @@ const git = (cwd: string, ...args: string[]) => run("git", args, { cwd }).then((
 
 // What the session can check while it works: the two files, the types, and the tests a new process can
 // affect. Each failure reads as what to fix.
-export async function quickChecks(worktree: string, id: string): Promise<string | null> {
+export async function quickChecks(worktree: string, id: string, signal: AbortSignal): Promise<string | null> {
   const code = join(worktree, processPath(id));
   const test = join(worktree, testPath(id));
   if (!existsSync(code)) return "The process file hasn't been written yet.";
@@ -82,13 +86,13 @@ export async function quickChecks(worktree: string, id: string): Promise<string 
   const testCode = readFileSync(test, "utf8");
   const reasons = [...checkShape(processCode, testCode), ...checkSource(processCode, PROCESS_IMPORTS).map((p) => `Process file, ${p}`), ...checkSource(testCode, testImports(id)).map((p) => `Test file, ${p}`)];
   if (reasons.length) return reasons.join("\n");
-  const types = await shell("node_modules/.bin/tsc", ["--noEmit", "-p", "."], worktree, CHECK_TIMEOUT_MS);
+  const types = await shell("node_modules/.bin/tsc", ["--noEmit", "-p", "."], worktree, CHECK_TIMEOUT_MS, signal);
   if (types) return `Type check failed:\n${types}`;
-  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes.test.ts", "src/model/events.test.ts"], worktree, CHECK_TIMEOUT_MS);
+  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes.test.ts", "src/model/events.test.ts"], worktree, CHECK_TIMEOUT_MS, signal);
   return tests ? `Tests failed:\n${tests}` : null;
 }
 
-const fullSuite = (worktree: string) => shell("node_modules/.bin/vitest", ["run"], worktree, SUITE_TIMEOUT_MS);
+const fullSuite = (worktree: string, signal: AbortSignal) => shell("node_modules/.bin/vitest", ["run"], worktree, SUITE_TIMEOUT_MS, signal);
 
 function buildPrompt({ id, title, what }: BuildRequest): string {
   return `You are adding one process to Bodylang, a 3D simulation of a person's body. The chat session found that someone asked about something the model doesn't have, and you are writing it, so it can appear on the body.
@@ -122,7 +126,7 @@ Call run_checks after writing, fix whatever it reports, and call finish once it 
 
 // The session's whole world: read the repository, write its two files, and run the checks.
 function createClaudeSession(context: SessionContext) {
-  const { worktree, id, stage } = context;
+  const { worktree, id, stage, signal } = context;
   const inside = (path: string) => {
     const full = resolve(worktree, path);
     const rel = relative(worktree, full);
@@ -158,7 +162,7 @@ function createClaudeSession(context: SessionContext) {
       tool("write_test", `Writes the whole of ${testPath(id)}, replacing what was there.`, { code: z.string().min(1) }, async ({ code }) => write(testPath(id), code, testImports(id))),
       tool("run_checks", "Checks both files, the types, and the tests a new process can affect. Returns what to fix, or that it passed.", {}, async () => {
         stage("testing");
-        const problem = await quickChecks(worktree, id);
+        const problem = await quickChecks(worktree, id, signal);
         stage("writing");
         return text(problem ?? "Passed. Call finish.", problem !== null);
       }),
@@ -209,6 +213,30 @@ export function dismissBuild() {
   if (!building) latest = null;
 }
 
+// A dev server that restarts mid-build leaves its copy behind. A running build of this server is left alone.
+async function removeLeftovers({ repo, buildsFolder }: BuildParts) {
+  const left = readdirSync(buildsFolder).filter((name) => WORKTREE_NAME.test(name) && !name.includes(`-${process.pid}-`));
+  for (const name of left) await removeWorktree(repo, join(buildsFolder, name));
+}
+
+async function removeWorktree(repo: string, worktree: string) {
+  await git(repo, "worktree", "remove", "--force", worktree).catch(() => rmSync(worktree, { recursive: true, force: true }));
+  await git(repo, "worktree", "prune").catch(() => undefined);
+}
+
+// A commit can fail, such as when another session holds the index. Then nothing stays behind for the app to load.
+async function landFiles(repo: string, worktree: string, paths: string[], message: string) {
+  for (const path of paths) copyFileSync(join(worktree, path), join(repo, path));
+  try {
+    await git(repo, "add", "--", ...paths);
+    await git(repo, "commit", "-m", message, "--", ...paths);
+  } catch (e: unknown) {
+    await git(repo, "reset", "-q", "--", ...paths).catch(() => undefined);
+    for (const path of paths) rmSync(join(repo, path), { force: true });
+    throw e;
+  }
+}
+
 // Everything between the request and the commit. Whatever happens, the copy is removed, and the only
 // thing that ever reaches the real repository is the two files of a build that passed.
 export async function runBuild(request: BuildRequest, parts: BuildParts, notify: (status: BuildStatus) => void, signal: AbortSignal): Promise<BuildStatus> {
@@ -223,6 +251,7 @@ export async function runBuild(request: BuildRequest, parts: BuildParts, notify:
   mkdirSync(parts.buildsFolder, { recursive: true });
   say("writing");
   try {
+    await removeLeftovers(parts);
     await git(parts.repo, "worktree", "add", "--detach", worktree, "HEAD");
     const modules = join(parts.repo, "node_modules");
     if (existsSync(modules)) symlinkSync(modules, join(worktree, "node_modules"));
@@ -234,22 +263,20 @@ export async function runBuild(request: BuildRequest, parts: BuildParts, notify:
     const expected = [processPath(id), testPath(id)];
     const extra = changed.filter((path) => !expected.includes(path));
     if (extra.length) return say("failed", `It changed files it shouldn't have: ${extra.join(", ")}.`);
-    const quick = await quickChecks(worktree, id);
+    const quick = await quickChecks(worktree, id, signal);
+    if (signal.aborted) return say("stopped");
     if (quick) return say("failed", firstLine(quick));
-    const suite = await parts.suite(worktree);
+    const suite = await parts.suite(worktree, signal);
     if (signal.aborted) return say("stopped");
     if (suite) return say("failed", `It broke other tests. ${firstLine(suite)}`);
 
-    for (const path of expected) copyFileSync(join(worktree, path), join(parts.repo, path));
-    await git(parts.repo, "add", "--", ...expected);
-    await git(parts.repo, "commit", "-m", `Add process: ${title}`, "--", ...expected);
+    await landFiles(parts.repo, worktree, expected, `Add process: ${title}`);
     return say("ready");
   } catch (e: unknown) {
     if (signal.aborted) return say("stopped");
     return say("failed", e instanceof Error ? e.message : String(e));
   } finally {
-    await git(parts.repo, "worktree", "remove", "--force", worktree).catch(() => rmSync(worktree, { recursive: true, force: true }));
-    await git(parts.repo, "worktree", "prune").catch(() => undefined);
+    await removeWorktree(parts.repo, worktree);
   }
 }
 

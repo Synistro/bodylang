@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { checkShape, checkSource, PROCESS_IMPORTS, testImports } from "./extendCheck";
 
@@ -25,8 +26,17 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
     ['localStorage.setItem("a", "b");', /can't use localStorage/],
     ['const u = import.meta.url;', /can't use import.meta/],
     ['setTimeout(() => 0, 1);', /can't use setTimeout/],
+    ['const f = []["con" + "structor"];', /property name from strings/],
+    ['const f = [][`constructor`];', /property name from strings/],
+    ['new Image().src = "https://example.com/";', /can't use Image/],
+    ['location.href = "https://example.com";', /can't use location/],
+    ['top.postMessage("x", "*");', /can't use top/],
   ])("rejects %s", (code, message) => {
     expect(check(code)).toMatch(message);
+  });
+
+  it("still lets arithmetic pick an item", () => {
+    expect(check("const stops = [1, 2]; const i = 0; const next = stops[i + 1]; const named = stops[0];")).toBe("");
   });
 
   it("says which line", () => {
@@ -36,6 +46,19 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
   it("lets a test import the model, and nothing else", () => {
     expect(checkSource('import { it } from "vitest"; import { simulate } from "../simulate"; import { extension } from "./thyroid";', testImports("thyroid"))).toEqual([]);
     expect(checkSource('import { execSync } from "node:child_process";', testImports("thyroid")).join()).toMatch(/can't import/);
+  });
+
+  it("passes the process that is already in the repository", () => {
+    expect(checkSource(readFileSync("src/model/extensions/thyroid.ts", "utf8"), PROCESS_IMPORTS)).toEqual([]);
+    expect(checkSource(readFileSync("src/model/extensions/thyroid.test.ts", "utf8"), testImports("thyroid"))).toEqual([]);
+  });
+
+  it("keeps a test away from what vitest can load", () => {
+    const check = (code: string) => checkSource(code, testImports("thyroid")).join();
+    expect(check('import { describe, expect, it } from "vitest";')).toBe("");
+    expect(check('import { vi } from "vitest";')).toMatch(/from vitest it can import only/);
+    expect(check('import * as v from "vitest";')).toMatch(/from vitest it can import only/);
+    expect(check('import { it as vi } from "vitest"; vi;')).toMatch(/can't use vi/);
   });
 });
 

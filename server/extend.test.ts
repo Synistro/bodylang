@@ -114,6 +114,37 @@ describe("building a process", () => {
     expect(added()).toBe(false);
   });
 
+  it("leaves nothing behind when the commit itself fails", async () => {
+    writeFileSync(join(repo, ".git/hooks/pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+    const result = await go({ session: writes() });
+    expect(result.stage).toBe("failed");
+    expect(added()).toBe(false);
+    expect(commits()).toEqual(["Start"]);
+    expect(git(repo, "status", "--porcelain").trim()).toBe("");
+  });
+
+  it("stops when told to during the long suite", async () => {
+    const stopper = new AbortController();
+    const result = await go({
+      session: writes(),
+      suite: async () => {
+        stopper.abort();
+        return "killed";
+      },
+    }, stopper.signal);
+    expect(result.stage).toBe("stopped");
+    expect(added()).toBe(false);
+  });
+
+  it("clears out a copy left by a dev server that restarted", async () => {
+    const left = join(builds, "melatonin-1-1");
+    git(repo, "worktree", "add", "--detach", left, "HEAD");
+    expect(leftovers()).toBe(2);
+    await go({ session: writes() });
+    expect(leftovers()).toBe(1);
+    expect(existsSync(left)).toBe(false);
+  });
+
   it("removes its copy of the repository however it ends", async () => {
     await go({ session: writes() });
     await go({ session: async () => Promise.reject(new Error("x")) });
