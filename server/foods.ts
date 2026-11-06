@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
-import type { FoodSource, Nutrients } from "../src/model/simulate";
+import type { FoodSource, Nutrients } from "../src/model/scenario";
 
 const RESULTS_PER_QUERY = 6;
 const PORTIONS_SHOWN = 4;

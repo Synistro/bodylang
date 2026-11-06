@@ -2,7 +2,7 @@ import { memo } from "react";
 import type { Levels } from "../../closeup/define";
 import { KIDNEY_FULL, kidneysCloseup, urineMlPerMin } from "../../closeup/kidneys";
 import { REFERENCE } from "../../model/params";
-import { value } from "../../model/simulate";
+import { value } from "../../model/engine/trajectory";
 import { closeupInset, Look } from "./closeupInset";
 import { lerp, part, parts, pointAlong } from "./draw";
 import type { Frame, InsetProps } from "./loop";

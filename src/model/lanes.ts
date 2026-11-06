@@ -4,7 +4,8 @@ import { eventLevelAt, muscleStateAt, MuscleState, ResolvedEvent } from "./event
 import { MuscleGroup } from "./muscleGroups";
 import { DAY, LANES, MUSCLE_RECOVERY, REFERENCE } from "./params";
 import { mealGroups, mealProcessId, Process, processesAt } from "./processes";
-import { alcoholLedgerAt, caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, Trajectory } from "./simulate";
+import { alcoholLedgerAt, caffeineLedgerAt, ledgerAt, Trajectory } from "./engine/trajectory";
+import { foodKcalOf, Intake } from "./scenario";
 import { formatClock, levelWord, whenWords } from "./state";
 import type { SystemId } from "./ids";
 import { systemById } from "./systems";

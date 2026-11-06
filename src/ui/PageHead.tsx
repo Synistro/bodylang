@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { MUSCLE_LABEL } from "../model/muscleGroups";
 import { modelOrigin, Origin, processOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { ORGAN_NAME, systemById } from "../model/systems";
-import type { Trajectory } from "../model/simulate";
+import type { Trajectory } from "../model/engine/trajectory";
 import { composedOnScreen, getState, selectedProcess, useStore, yourDayWhileAsking } from "../store";
 import { assessmentAt, useMinute, useMuscleMinute } from "./hooks";
 import { muscleStory, organStory } from "./insets/organStory";

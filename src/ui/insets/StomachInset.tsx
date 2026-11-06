@@ -2,7 +2,7 @@ import { memo, useId } from "react";
 import type { Levels } from "../../closeup/define";
 import { STOMACH_FULL, stomachCloseup } from "../../closeup/stomach";
 import { REFERENCE, STOMACH } from "../../model/params";
-import { value } from "../../model/simulate";
+import { value } from "../../model/engine/trajectory";
 import { WAVE_SPEEDUP } from "../../scene/tract";
 import { closeupInset, Look } from "./closeupInset";
 import { bump, easeToward, lerp, part, parts, pointAlong, polyline, tenth, sampleTube, seededRandom, smoothstep, TubeSample } from "./draw";

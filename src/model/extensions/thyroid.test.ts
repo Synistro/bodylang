@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { viewOf } from "../processes";
-import { simulate, type Scenario } from "../simulate";
+import { simulate } from "../simulate";
+import { type Scenario } from "../scenario";
 import { checkExtension } from "./check";
 import { extension } from "./thyroid";
 

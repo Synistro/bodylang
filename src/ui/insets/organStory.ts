@@ -3,7 +3,8 @@ import { cyclePhase } from "../../model/cycle";
 import { effectAt, eventActiveAt, eventLevelAt, curveStrength, isMuscleState, MuscleState, muscleStateAt, namesOf, ResolvedEvent } from "../../model/events";
 import { MUSCLE_GROUPS, MuscleGroup } from "../../model/muscleGroups";
 import { BLOOD_FLOW, CYCLE, Evidence, INSULIN, MUSCLE_RECOVERY, REFERENCE, SOURCES, STOMACH } from "../../model/params";
-import { ledgerAt, POSTURES, SeriesName, Trajectory, value } from "../../model/simulate";
+import { ledgerAt, SeriesName, Trajectory, value } from "../../model/engine/trajectory";
+import { POSTURES } from "../../model/scenario";
 import { OrganId } from "../../model/ids";
 import { recoverySentence } from "./muscleRecovery";
 

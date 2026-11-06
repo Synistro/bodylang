@@ -1,6 +1,6 @@
 import { curveStrength } from "../model/events";
 import { REFERENCE } from "../model/params";
-import { Trajectory, value } from "../model/simulate";
+import { Trajectory, value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Intake, Scenario, simulate } from "./simulate";
+import { simulate } from "./simulate";
+import { Intake, Scenario } from "./scenario";
 import { processIdsOf } from "./yourDay";
 
 const nothing = { waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };

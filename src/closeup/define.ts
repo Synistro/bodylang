@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { shortText } from "../agent/shortText";
 import type { MuscleGroup } from "../model/muscleGroups";
-import type { Trajectory } from "../model/simulate";
+import type { Trajectory } from "../model/engine/trajectory";
 import type { OrganId } from "../model/ids";
 
 // A close-up is the one drawing of what happens inside an organ, shown beside the body all the time. The

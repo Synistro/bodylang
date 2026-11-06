@@ -1,6 +1,7 @@
 import type { Evidence } from "../params";
 import type { RouteId, SystemId, OrganId } from "../ids";
-import type { Body, SeriesName } from "../simulate";
+import type { Body } from "../scenario";
+import type { SeriesName } from "../engine/trajectory";
 
 // The contract for adding a process the model doesn't have. One file in this folder exports `extension`,
 // and the app finds it, lists it, and draws it through the body like any other process.
@@ -13,7 +14,7 @@ import type { Body, SeriesName } from "../simulate";
 export interface BodyView {
   readonly body: Readonly<Body>;
   readonly restingBpm: number;
-  // Any curve of the model at any minute of today. The names are in SERIES in ../simulate.ts.
+  // Any curve of the model at any minute of today. The names are in SERIES in ../engine/trajectory.ts.
   value(name: SeriesName, minute: number): number;
   // What the person logged, such as an illness or a workout. `until` is null while it is still going on.
   readonly events: readonly { readonly label: string; readonly preset: string; readonly from: number; readonly until: number | null }[];

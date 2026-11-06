@@ -3,7 +3,8 @@ import { reduce, BodyState } from "../agent/actions";
 import { carryOver, clockAt, daysBetween, DayDoc, firstDay, parseDayDoc, stayAwake, typicalDayFromYesterday } from "./day";
 import { DAY } from "./params";
 import { processesAt } from "./processes";
-import { postureAt, Scenario, simulate } from "./simulate";
+import { simulate } from "./simulate";
+import { postureAt, Scenario } from "./scenario";
 import { threadsAt } from "./threads";
 
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;

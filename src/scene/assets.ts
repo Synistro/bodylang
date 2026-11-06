@@ -1,4 +1,4 @@
-import type { Sex } from "../model/simulate";
+import type { Sex } from "../model/scenario";
 
 export interface BodyDelta {
   offset: number;

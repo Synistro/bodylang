@@ -2,7 +2,7 @@ import type { GuideStep } from "../agent/actions";
 import { closeupOf } from "../closeup/list";
 import { aheadOf, Ahead, DAY_SPAN, dayMoments, dayStops, fromSeverity, isStill, Lane, Moment, MuscleSubject, recoveryOf, Span } from "../model/lanes";
 import { LANES } from "../model/params";
-import type { Trajectory } from "../model/simulate";
+import type { Trajectory } from "../model/engine/trajectory";
 import { levelWord } from "../model/state";
 import { processIdsOf } from "../model/yourDay";
 import { isOnChart, stepMinute } from "../store";

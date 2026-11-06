@@ -1,5 +1,5 @@
 import { Process, processesAt, ProcessStop } from "./processes";
-import type { Trajectory } from "./simulate";
+import type { Trajectory } from "./engine/trajectory";
 import type { OrganId } from "./ids";
 
 // Everything going on at one organ right now, whatever set it off: a meal, a coffee, a cigarette, an illness,

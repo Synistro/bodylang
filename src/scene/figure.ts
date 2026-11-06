@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Body, Sex } from "../model/simulate";
+import type { Body, Sex } from "../model/scenario";
 import type { BodyAsset, BodyDeltaName } from "./assets";
 import { createShellMaterial, Palette } from "./materials";
 

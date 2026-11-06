@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CAFFEINE } from "./params";
-import { foodKcalOf, caffeineLedgerAt, ledgerAt, LEDGER_KEYS, Scenario, simulate, value } from "./simulate";
+import { simulate } from "./simulate";
+import { foodKcalOf, Scenario } from "./scenario";
+import { caffeineLedgerAt, ledgerAt, LEDGER_KEYS, value } from "./engine/trajectory";
 import { NO_NUTRIENTS } from "./testKit";
 
 const body = { sex: "male" as const, age: 30, heightCm: 178, weightKg: 75 };

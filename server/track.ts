@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { CrossedPart, TrackFrom } from "../src/model/events";
-import type { Sex } from "../src/model/simulate";
+import type { Sex } from "../src/model/scenario";
 import type { OrganId } from "../src/model/ids";
 
 // Which real organs and vessels a straight line crosses, tested against the atlas meshes the body is drawn

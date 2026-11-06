@@ -8,7 +8,9 @@ const CANT_TOUCH = new Set(["fetch", "XMLHttpRequest", "WebSocket", "EventSource
 const FROM_VITEST = new Set(["it", "expect", "describe"]);
 
 export const PROCESS_IMPORTS = ["./api"];
-export const testImports = (id: string) => ["vitest", "./api", "./check", `./${id}`, "../simulate", "../params", "../cycle", "../processes"];
+// What a test of a new process needs to run the real model. Paths are from src/model/extensions.
+const MODEL_FOR_TESTS = ["../simulate", "../scenario", "../engine/trajectory", "../params", "../cycle", "../processes"];
+export const testImports = (id: string) => ["vitest", "./api", "./check", `./${id}`, ...MODEL_FOR_TESTS];
 
 interface Node {
   type: string;

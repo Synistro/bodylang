@@ -6,7 +6,10 @@ import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, r
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./narrate";
 import { levelWord } from "./state";
-import { anthropometrics, Intake, postureAt, Scenario, simulate, Trajectory, value } from "./simulate";
+import { simulate } from "./simulate";
+import { anthropometrics } from "./engine/anthropometrics";
+import { Intake, postureAt, Scenario } from "./scenario";
+import { Trajectory, value } from "./engine/trajectory";
 import { CAFFEINE, ENERGY, FEEL, KIDNEY, MUSCLE_RECOVERY, REFERENCE, TRAINING } from "./params";
 import { processesAt, processesFor } from "./processes";
 import { SYSTEMS, systemById } from "./systems";

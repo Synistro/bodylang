@@ -1,6 +1,7 @@
 import { cycleDay, cyclePhase, liningShare } from "./cycle";
 import { CAFFEINE, DAY, PROCESS, STOMACH } from "./params";
-import { caffeineLedgerAt, foodKcalOf, Intake, intakeFlowsAt, ledgerAt, Trajectory, value } from "./simulate";
+import { caffeineLedgerAt, intakeFlowsAt, ledgerAt, Trajectory, value } from "./engine/trajectory";
+import { foodKcalOf, Intake } from "./scenario";
 import type { OrganId, Tint } from "./ids";
 
 // What one organ is doing at one instant. Scene and labels both draw from this.

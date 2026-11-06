@@ -1,5 +1,5 @@
 import { REFERENCE } from "../model/params";
-import { value } from "../model/simulate";
+import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 import { urineMlPerMin } from "./kidneys";
 

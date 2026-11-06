@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { checkShape, checkSource, PROCESS_IMPORTS, testImports } from "./extendCheck";
 
@@ -59,6 +59,20 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
     expect(check('import { vi } from "vitest";')).toMatch(/from vitest it can import only/);
     expect(check('import * as v from "vitest";')).toMatch(/from vitest it can import only/);
     expect(check('import { it as vi } from "vitest"; vi;')).toMatch(/can't use vi/);
+  });
+});
+
+describe("what the build session is told", () => {
+  it("names only files that exist", () => {
+    const told = readFileSync("server/extend.ts", "utf8") + readFileSync("src/model/extensions/api.ts", "utf8");
+    const named = told.match(/src\/[\w/.]+\.ts/g) ?? [];
+    expect(named.length).toBeGreaterThan(2);
+    expect(named.filter((path) => !existsSync(path))).toEqual([]);
+  });
+
+  it("lets a test import modules that exist", () => {
+    const modules = testImports("thyroid").filter((path) => path.startsWith("../"));
+    expect(modules.filter((path) => !existsSync(`src/model/extensions/${path}.ts`))).toEqual([]);
   });
 });
 

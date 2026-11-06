@@ -4,7 +4,8 @@ import { ChannelId, curveStrength } from "./events";
 import { EXTENSIONS } from "./extensions";
 import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
 import { mealGroups, mealProcessId, Process } from "./processes";
-import { caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, Trajectory } from "./simulate";
+import { caffeineLedgerAt, ledgerAt, Trajectory } from "./engine/trajectory";
+import { foodKcalOf, Intake } from "./scenario";
 
 // Where something on screen came from. The model computing it is the ordinary case. What Claude adds
 // from its own knowledge, and what the model computed from Claude's numbers, are told apart from that.

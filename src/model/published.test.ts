@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { BodyEvent, maxHeartRate, muscleStateAt } from "./events";
 import { ACTIVITY, ALCOHOL, FASTING, FEEL, GLUCOSE, REFERENCE } from "./params";
-import { foodKcalOf, ActivitySpan, Body, Intake, intakeFlowsAt, ledgerAt, Scenario, simulate, Trajectory, value } from "./simulate";
+import { simulate } from "./simulate";
+import { foodKcalOf, ActivitySpan, Body, Intake, Scenario } from "./scenario";
+import { intakeFlowsAt, ledgerAt, Trajectory, value } from "./engine/trajectory";
 import { hm, NO_NUTRIENTS } from "./testKit";
 
 const mmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;

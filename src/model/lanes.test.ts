@@ -3,7 +3,8 @@ import { assess } from "./assess";
 import { BodyEvent } from "./events";
 import { LANES } from "./params";
 import { dayMoments, dayStops, fitWindow, muscleStateLanes, processLanes, readingLanes, systemLanes, threadLanes, workedMuscleLanes } from "./lanes";
-import { Intake, Scenario, simulate } from "./simulate";
+import { simulate } from "./simulate";
+import { Intake, Scenario } from "./scenario";
 import { hm, NO_NUTRIENTS } from "./testKit";
 
 

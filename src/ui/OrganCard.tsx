@@ -3,7 +3,7 @@ import { ORGAN_NAME } from "../model/systems";
 import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
 import { modelOrigin, readingOrigin } from "../model/origin";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
-import type { Trajectory } from "../model/simulate";
+import type { Trajectory } from "../model/engine/trajectory";
 import type { OrganId } from "../model/ids";
 import { chartOffsetHours, setUi, useStore } from "../store";
 import { ActingHere } from "./ActingHere";

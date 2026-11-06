@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { Action, BodyState, reduce } from "../agent/actions";
 import { assess } from "./assess";
 import { followProcess, processesAt } from "./processes";
-import { anthropometrics, Intake, postureAt, Scenario, simulate } from "./simulate";
+import { simulate } from "./simulate";
+import { anthropometrics } from "./engine/anthropometrics";
+import { Intake, postureAt, Scenario } from "./scenario";
 import { threadsAt } from "./threads";
 
 const BODY = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;

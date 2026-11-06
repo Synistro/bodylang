@@ -2,7 +2,7 @@ import { memo, useId } from "react";
 import { BLADDER_FULL, bladderCloseup } from "../../closeup/bladder";
 import type { Levels } from "../../closeup/define";
 import { REFERENCE } from "../../model/params";
-import { value } from "../../model/simulate";
+import { value } from "../../model/engine/trajectory";
 import { closeupInset, Look } from "./closeupInset";
 import { lerp, part, parts, tenth } from "./draw";
 import type { Frame, InsetProps } from "./loop";

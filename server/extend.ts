@@ -105,11 +105,11 @@ A deterministic physiology model computes the day minute by minute. You are addi
 Write two files, with write_process and write_test:
 
 1. ${processPath(id)}, which exports \`extension\` as a ProcessExtension. Read ${EXTENSIONS_FOLDER}/api.ts first: it is the whole contract. Its only import may be from "./api".
-2. ${testPath(id)}, with at least three tests that run the real model with simulate() and check behaviour you can trace to your source, such as when a daily rhythm peaks or how a hormone responds to a logged illness. Don't test your own arithmetic back at itself. It may import from "vitest", "./api", "./check", "./${id}", "../simulate", "../params", "../cycle" and "../processes".
+2. ${testPath(id)}, with at least three tests that run the real model with simulate() and check behaviour you can trace to your source, such as when a daily rhythm peaks or how a hormone responds to a logged illness. Don't test your own arithmetic back at itself. It may import from ${testImports(id).map((path) => `"${path}"`).join(", ")}.
 
 Also read these, for what you can use:
-- SERIES in src/model/simulate.ts: every curve \`view.value\` can read, such as "temperature", "hoursAwake", "stressLevel", "inflammation", "glucose".
-- ROUTE_IDS and an example such as alertnessProcess in src/model/processes.ts: the vessels a line can follow, and how a good process reads. "to_neck" ends at the throat, for something in the neck.
+- SERIES in src/model/engine/trajectory.ts: every curve \`view.value\` can read, such as "temperature", "hoursAwake", "stressLevel", "inflammation", "glucose".
+- ROUTE_IDS in src/model/ids.ts and an example such as alertnessProcess in src/model/processes.ts: the vessels a line can follow, and how a good process reads. "to_neck" ends at the throat, for something in the neck.
 - src/model/extensions/contract.test.ts: a small working sample, and everything the contract checks.
 
 How it should be:

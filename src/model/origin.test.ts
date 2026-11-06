@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { assess } from "./assess";
 import { foodOrigin, processOrigin, readingOrigin } from "./origin";
 import { processesAt } from "./processes";
-import { Intake, simulate } from "./simulate";
+import { simulate } from "./simulate";
+import { Intake } from "./scenario";
 import type { BodyEvent } from "./events";
 
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;

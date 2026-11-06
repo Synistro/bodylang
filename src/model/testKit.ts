@@ -1,4 +1,4 @@
-import type { Nutrients } from "./simulate";
+import type { Nutrients } from "./scenario";
 
 export const hm = (h: number, m = 0) => h * 60 + m;
 

@@ -1,5 +1,5 @@
 import { eventLevelAt } from "../model/events";
-import { value } from "../model/simulate";
+import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 
 const VOIDS_WHEN_FALLS_MORE_THAN_ML = 1; // the bladder only drops when it empties

@@ -1,4 +1,4 @@
-import { value } from "../model/simulate";
+import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 
 const BEATS = { least: 30, most: 220 };

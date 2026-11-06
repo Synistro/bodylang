@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { Levels } from "../../closeup/define";
 import { smallIntestineCloseup } from "../../closeup/smallIntestine";
-import { value } from "../../model/simulate";
+import { value } from "../../model/engine/trajectory";
 import { closeupInset, Look } from "./closeupInset";
 import { part, parts, pointAlong, Polyline, tenth } from "./draw";
 import type { Frame, InsetProps } from "./loop";

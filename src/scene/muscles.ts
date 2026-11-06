@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
-import type { Sex } from "../model/simulate";
+import type { Sex } from "../model/scenario";
 import type { Figure } from "./figure";
 import { hullCssPixels, Palette } from "./materials";
 

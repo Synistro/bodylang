@@ -1,11 +1,10 @@
 import { KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Lane, muscleStateLanes, MuscleSubject, processLanes, readingLanes, systemLanes, workedMuscleLanes } from "../model/lanes";
-import { LANES } from "../model/params";
+import { LANES, REFERENCE } from "../model/params";
 import { assess } from "../model/assess";
 import { foodOrigin, modelOrigin, Origin, processOrigin, readingOrigin, SENTENCE_ORIGIN } from "../model/origin";
-import { REFERENCE } from "../model/params";
 import { processesAt } from "../model/processes";
-import type { Trajectory } from "../model/simulate";
+import type { Trajectory } from "../model/engine/trajectory";
 import { formatClock } from "../model/state";
 import type { Stage } from "../scene/stage";
 import { systemById } from "../model/systems";

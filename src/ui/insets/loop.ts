@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { MuscleGroup } from "../../model/muscleGroups";
-import type { Trajectory } from "../../model/simulate";
+import type { Trajectory } from "../../model/engine/trajectory";
 
 export interface InsetProps {
   trajectory: Trajectory;

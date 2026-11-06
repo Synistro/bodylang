@@ -1,4 +1,4 @@
-import { ledgerAt, Trajectory } from "../model/simulate";
+import { ledgerAt, Trajectory } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));

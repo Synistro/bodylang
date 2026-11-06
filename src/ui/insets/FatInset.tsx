@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { Levels } from "../../closeup/define";
 import { FAT_OVER, fatCloseup } from "../../closeup/fat";
-import { value } from "../../model/simulate";
+import { value } from "../../model/engine/trajectory";
 import { closeupInset, Look } from "./closeupInset";
 import { lerp, part, parts, seededRandom, tenth } from "./draw";
 import type { Frame, InsetProps } from "./loop";

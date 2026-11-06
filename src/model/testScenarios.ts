@@ -1,5 +1,5 @@
 import type { BodyEvent } from "./events";
-import type { ActivitySpan, Body, CustomSubstance, Intake, Scenario } from "./simulate";
+import type { ActivitySpan, Body, CustomSubstance, Intake, Scenario } from "./scenario";
 import { hm, NO_NUTRIENTS } from "./testKit";
 
 const man: Body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 };

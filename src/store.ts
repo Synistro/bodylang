@@ -6,7 +6,9 @@ import { LANES } from "./model/params";
 import type { MuscleGroup } from "./model/muscleGroups";
 import { ReplyLine } from "./model/narrate";
 import { followProcess, Process, processesAt } from "./model/processes";
-import { Scenario, simulate, Trajectory } from "./model/simulate";
+import { simulate } from "./model/simulate";
+import { Scenario } from "./model/scenario";
+import { Trajectory } from "./model/engine/trajectory";
 import { systemById } from "./model/systems";
 import type { Theme } from "./scene/stage";
 

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { Sex } from "../model/simulate";
+import type { Sex } from "../model/scenario";
 import type { OrganMeta } from "./assets";
 import { PALETTES } from "./materials";
 import { firstPartOfIntestine, Tract } from "./tract";

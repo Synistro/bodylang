@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Cycle } from "./cycle";
 import type { BodyEvent } from "./events";
 import { DAY } from "./params";
-import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt } from "./simulate";
+import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt } from "./scenario";
 
 // What is written to disk for one date. It holds everything still acting on the body that day, so
 // yesterday's late coffee is in today's file, with a negative minute.

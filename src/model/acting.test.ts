@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { actingAt } from "./acting";
-import { CustomSubstance, Intake, Scenario, simulate } from "./simulate";
+import { simulate } from "./simulate";
+import { CustomSubstance, Intake, Scenario } from "./scenario";
 
 const nothing = { waterMl: 0, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 0, alcoholG: 0 };
 const lunch: Intake = { ...nothing, id: "lunch", label: "Lunch", at: 13 * 60, grams: 400, waterMl: 200, carbsG: 90, sugarG: 15, fatG: 25, proteinG: 30, fiberG: 6 };
