@@ -28,6 +28,28 @@ export interface OrganMeshMeta {
   min: number[];
   max: number[];
   along?: number; // a tube's distance along itself at each vertex
+  tiers?: { leastRadius: number; indexCount: number }[]; // a vessel mesh's triangles run largest vessel first
+  skinIndex?: number;
+  skinWeight?: number;
+}
+
+// The stomach as sections from its lesser to its greater curvature, in its own tilted plane.
+export interface StomachMeta {
+  origin: number[];
+  across: number[];
+  down: number[];
+  lift: number[];
+  sections: { inner: [number, number]; outer: [number, number]; lift: number }[];
+  center: [number, number];
+  esophagus: number[][];
+}
+
+export type LimbRouteId = "leg_L" | "leg_R" | "arm_L" | "arm_R";
+
+export interface LimbRoute {
+  points: number[][];
+  skinIndex: number[][];
+  skinWeight: number[][]; // out of 255
 }
 
 export interface OrganMeta {
@@ -35,6 +57,8 @@ export interface OrganMeta {
   organs: Record<string, OrganMeshMeta>;
   landmarks: Record<string, number[]>;
   centerlines: Record<string, number[][]>;
+  stomach: StomachMeta;
+  limbRoutes: Record<LimbRouteId, LimbRoute>;
 }
 
 export interface BodyAsset {

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { OrganId } from "../model/ids";
-import type { OrganAsset, OrganMeshMeta } from "./assets";
+import type { LimbRouteId, OrganAsset, OrganMeshMeta } from "./assets";
 import { createOrganMaterial, createOutlineMaterial, createVesselMaterial, Palette } from "./materials";
 
 export interface PartStyle {
@@ -266,13 +266,16 @@ function buildGeometry(asset: OrganAsset, meta: OrganMeshMeta) {
 
 export class Anatomy {
   readonly group = new THREE.Group();
+  readonly vesselGroup = new THREE.Group(); // in world space, since the skeleton poses its vessels
   readonly parts = new Map<PartName, OrganPart>();
-  readonly arteries: THREE.Mesh;
-  readonly veins: THREE.Mesh;
+  readonly arteries: THREE.SkinnedMesh;
+  readonly veins: THREE.SkinnedMesh;
   readonly arterial: VesselLook;
   readonly venous: VesselLook;
   private readonly arteryMaterial: THREE.ShaderMaterial;
   private readonly veinMaterial: THREE.ShaderMaterial;
+  private readonly vesselSkeleton: THREE.Skeleton;
+  private readonly vesselOffsets: THREE.Matrix4[];
   private readonly matrix = new THREE.Matrix4();
   private readonly organByMesh = new Map<THREE.Object3D, OrganId | null>();
   private glycogenLevel = 0;
@@ -282,7 +285,13 @@ export class Anatomy {
     readonly asset: OrganAsset,
     palette: Palette,
     resolution: THREE.Vector2,
+    bones: THREE.Bone[],
   ) {
+    this.vesselSkeleton = new THREE.Skeleton(
+      bones,
+      bones.map(() => new THREE.Matrix4()),
+    );
+    this.vesselOffsets = bones.map(() => new THREE.Matrix4());
     for (const name of PART_NAMES) {
       const style: PartStyle = PARTS[name];
       const meta = asset.meta.organs[name];
@@ -336,9 +345,23 @@ export class Anatomy {
 
     const vessel = (name: string, material: THREE.ShaderMaterial) => {
       material.uniforms.uHeart.value.copy(this.part("heart").center);
-      const mesh = new THREE.Mesh(buildGeometry(asset, asset.meta.organs[name]), material);
+      const meta = asset.meta.organs[name];
+      if (meta.skinIndex === undefined || meta.skinWeight === undefined) throw new Error(`Vessel ${name} has no skin`);
+      const geometry = buildGeometry(asset, meta);
+      geometry.setAttribute(
+        "skinIndex",
+        new THREE.Uint8BufferAttribute(new Uint8Array(asset.bin, meta.skinIndex, meta.vertexCount * 4), 4),
+      );
+      geometry.setAttribute(
+        "skinWeight",
+        new THREE.Uint8BufferAttribute(new Uint8Array(asset.bin, meta.skinWeight, meta.vertexCount * 4), 4, true),
+      );
+      const mesh = new THREE.SkinnedMesh(geometry, material);
+      mesh.frustumCulled = false;
+      mesh.raycast = () => {};
+      mesh.bind(this.vesselSkeleton, new THREE.Matrix4());
       mesh.renderOrder = 3;
-      this.group.add(mesh);
+      this.vesselGroup.add(mesh);
       return mesh;
     };
     this.arteryMaterial = createVesselMaterial(palette.ink, 0.2);
@@ -347,6 +370,42 @@ export class Anatomy {
     this.veins = vessel("veins", this.veinMaterial);
     this.arterial = { color: new THREE.Color(palette.ink), opacity: 0.2, body: 0, wave: 0 };
     this.venous = { color: new THREE.Color(palette.ink), opacity: 0.12, body: 0, wave: 0 };
+  }
+
+  // How far down the vessels a view draws: 0 is only the great trunks.
+  setVesselTier(tier: number) {
+    for (const [mesh, name] of [
+      [this.arteries, "arteries"],
+      [this.veins, "veins"],
+    ] as const) {
+      const tiers = this.asset.meta.organs[name].tiers;
+      if (!tiers) throw new Error(`Vessel ${name} has no tiers`);
+      mesh.geometry.setDrawRange(0, tiers[tier].indexCount);
+    }
+  }
+
+  // Limb bones carry the reference body onto the figure as the muscles do. The trunk's vessels ride on the hips with
+  // the organs, whose group is what the hips' slot holds, so nothing drifts apart when the body changes.
+  setVesselBones(limbInverses: readonly THREE.Matrix4[], hips: number, torso: THREE.Matrix4) {
+    this.vesselSkeleton.boneInverses.forEach((inverse, i) => inverse.copy(i === hips ? torso : limbInverses[i]));
+  }
+
+  // A limb's artery as it lies under the current pose, in the space of `toLocal`.
+  posedLimbRoute(id: LimbRouteId, toLocal: THREE.Matrix4): THREE.Vector3[] {
+    const { bones, boneInverses } = this.vesselSkeleton;
+    bones.forEach((bone, j) => this.vesselOffsets[j].multiplyMatrices(bone.matrixWorld, boneInverses[j]));
+    const route = this.asset.meta.limbRoutes[id];
+    const rest = new THREE.Vector3();
+    const moved = new THREE.Vector3();
+    return route.points.map((point, i) => {
+      rest.fromArray(point);
+      const out = new THREE.Vector3();
+      route.skinIndex[i].forEach((joint, k) => {
+        const weight = route.skinWeight[i][k];
+        if (weight > 0) out.addScaledVector(moved.copy(rest).applyMatrix4(this.vesselOffsets[joint]), weight / 255);
+      });
+      return out.applyMatrix4(toLocal);
+    });
   }
 
   has(name: string): name is PartName {

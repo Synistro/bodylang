@@ -129,12 +129,13 @@ type VesselMood = "hidden" | "rest" | "faded" | "subject";
 
 const VESSEL_MOODS: Record<
   VesselMood,
-  { artery: number; vein: number; body: number; wave: number; coloured: boolean }
+  { artery: number; vein: number; body: number; wave: number; coloured: boolean; tier: number }
 > = {
-  hidden: { artery: 0, vein: 0, body: 0, wave: 0, coloured: false },
-  rest: { artery: 0.2, vein: 0.12, body: 0, wave: 0, coloured: false },
-  faded: { artery: 0.05, vein: 0.03, body: 0, wave: 0, coloured: false },
-  subject: { artery: 0.92, vein: 0.62, body: 1, wave: 1, coloured: true },
+  hidden: { artery: 0, vein: 0, body: 0, wave: 0, coloured: false, tier: 0 },
+  rest: { artery: 0.2, vein: 0.12, body: 0, wave: 0, coloured: false, tier: 0 },
+  faded: { artery: 0.05, vein: 0.03, body: 0, wave: 0, coloured: false, tier: 0 },
+  // Thinner branches read as hair anywhere but on their own page.
+  subject: { artery: 0.92, vein: 0.62, body: 1, wave: 1, coloured: true, tier: 1 },
 };
 
 // Named places a framing can aim at. They stay correct as the body changes height or sits down.
@@ -441,6 +442,8 @@ export class Stage {
   private hipsWorld = new THREE.Vector3();
   private framedHipsY: number | null = null;
   private limbsDirty = true;
+  private boneList: THREE.Bone[] = [];
+  private hipsBone = 0;
   private sexMix = 0;
   private lastBodyKey = "";
   private sit = 0;
@@ -573,11 +576,18 @@ export class Stage {
     this.figure = new Figure(bodyAsset, palette);
     this.scene.add(this.figure.group);
     this.muscles = new Muscles(muscleAsset, this.figure, palette, this.resolution);
+    this.boneList = muscleAsset.meta.joints.map((name) => {
+      const bone = this.figure.bones.get(name);
+      if (!bone) throw new Error(`Figure has no joint ${name}`);
+      return bone;
+    });
+    this.hipsBone = muscleAsset.meta.joints.indexOf("hips");
     this.scene.add(this.muscles.group);
     this.lymph = new LymphNodes(this.figure, this.renderer.getPixelRatio());
     this.scene.add(this.lymph.points);
     const build = (asset: OrganAsset): SexSet => {
-      const anatomy = new Anatomy(asset, palette, this.resolution);
+      const anatomy = new Anatomy(asset, palette, this.resolution, this.boneList);
+      this.scene.add(anatomy.vesselGroup);
       const stomach = new Stomach(asset.meta, palette, this.resolution);
       const network = new RouteNetwork(asset.meta, stomach.stomachPath, stomach.esophagusPath);
       const torso = new THREE.Group();
@@ -687,82 +697,23 @@ export class Stage {
     set.torso.position.copy(ref.hips).multiplyScalar(-scale);
     // Sideways drift of the reference hips is tiny, but keep the midline honest.
     set.torso.position.x = 0;
-    for (const s of ["male", "female"] as const) this.sets[s].torso.visible = s === sex;
+    for (const s of ["male", "female"] as const) {
+      this.sets[s].torso.visible = s === sex;
+      this.sets[s].anatomy.vesselGroup.visible = s === sex;
+    }
     this.figure.group.updateMatrixWorld(true);
     this.limbsDirty = true;
   }
 
   private rebuildLimbs(set: SexSet) {
-    const f = this.figure;
-    const tmp = new THREE.Vector3();
     set.torso.updateMatrixWorld(true);
-    const inv = set.torso.matrixWorld.clone().invert();
-    const toLocal = (world: THREE.Vector3) => world.clone().applyMatrix4(inv);
-    const meta = set.anatomy.asset.meta;
-    const extreme = (name: string, pick: "high" | "low") => {
-      const p = meta.centerlines[name].reduce((a, b) => ((pick === "low" ? b[1] < a[1] : b[1] > a[1]) ? b : a));
-      return new THREE.Vector3(p[0], p[1], p[2]);
-    };
-    const bifurcation = extreme("descending_aorta_b", "low");
-    const shoulderL = extreme("left_subclavian_artery_b", "high");
-    const shoulderR = extreme("brachiocephalic_artery_b", "high");
-
-    const smooth = (points: THREE.Vector3[], samples: number) => {
-      const curve = new THREE.CatmullRomCurve3(points, false, "centripetal");
-      return curve.getPoints(samples);
-    };
-    const inward = (side: 1 | -1, dx: number, dz: number) => new THREE.Vector3(-side * dx, 0, dz);
-    const leg = (side: "L" | "R") => {
-      const s = side === "L" ? 1 : -1;
-      const hip = toLocal(f.worldJoint(`thigh.${side}`, tmp));
-      const knee = toLocal(f.worldJoint(`shin.${side}`, tmp));
-      const ankle = toLocal(f.worldJoint(`foot.${side}`, tmp));
-      const toe = ankle.clone().add(new THREE.Vector3(0, -0.04, 0.12));
-      const mid = hip
-        .clone()
-        .lerp(knee, 0.5)
-        .add(inward(s, 0.012, 0.012));
-      const calf = knee
-        .clone()
-        .lerp(ankle, 0.5)
-        .add(new THREE.Vector3(0, 0, -0.012));
-      return smooth(
-        [
-          bifurcation,
-          hip.clone().add(inward(s, 0.012, 0.03)),
-          mid,
-          knee.clone().add(new THREE.Vector3(0, 0, -0.018)),
-          calf,
-          ankle,
-          toe,
-        ],
-        46,
-      );
-    };
-    const arm = (side: "L" | "R", base: THREE.Vector3) => {
-      const s = side === "L" ? 1 : -1;
-      const shoulder = toLocal(f.worldJoint(`arm.${side}`, tmp));
-      const elbow = toLocal(f.worldJoint(`forearm.${side}`, tmp));
-      const wrist = toLocal(f.worldJoint(`hand.${side}`, tmp));
-      const hand = wrist.clone().add(wrist.clone().sub(elbow).normalize().multiplyScalar(0.08));
-      return smooth(
-        [
-          base,
-          shoulder.clone().add(inward(s, 0.01, 0.005)),
-          shoulder
-            .clone()
-            .lerp(elbow, 0.5)
-            .add(inward(s, 0.012, 0.004)),
-          elbow,
-          elbow.clone().lerp(wrist, 0.5),
-          wrist,
-          hand,
-        ],
-        32,
-      );
-    };
-    const limbs = { legL: leg("L"), legR: leg("R"), armL: arm("L", shoulderL), armR: arm("R", shoulderR) };
-    set.network.setLimbs(limbs);
+    const toLocal = set.torso.matrixWorld.clone().invert();
+    set.network.setLimbs({
+      legL: set.anatomy.posedLimbRoute("leg_L", toLocal),
+      legR: set.anatomy.posedLimbRoute("leg_R", toLocal),
+      armL: set.anatomy.posedLimbRoute("arm_L", toLocal),
+      armR: set.anatomy.posedLimbRoute("arm_R", toLocal),
+    });
   }
 
   private viewOf(input: SceneInput): View {
@@ -1017,6 +968,7 @@ export class Stage {
     const mood = VESSEL_MOODS[moodName];
     const on = input.layers.vessels ? 1 : 0;
     const { arterial, venous } = set.anatomy;
+    set.anatomy.setVesselTier(mood.tier);
     arterial.color.copy(mood.coloured ? this.colors.artery : this.colors.ink);
     arterial.opacity = mood.artery * on;
     arterial.body = mood.body;
@@ -1620,6 +1572,8 @@ export class Stage {
     if (motion) this.walkPhase += dt * (posture === "running" ? 8.5 : 4.6);
     const poseMoving = Math.abs(this.sit - previousSit) > 1e-4 || this.walk > 0.002;
     this.figure.setPose(this.sit, this.walk, this.walkPhase);
+    set.torso.updateMatrix();
+    set.anatomy.setVesselBones(this.muscles.boneInverses, this.hipsBone, set.torso.matrix);
     if (poseMoving || this.limbsDirty) {
       this.rebuildLimbs(set);
       this.limbsDirty = false;

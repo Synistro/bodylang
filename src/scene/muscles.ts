@@ -798,6 +798,10 @@ export class Muscles {
     return mask !== 0;
   }
 
+  get boneInverses(): readonly THREE.Matrix4[] {
+    return this.skeleton.boneInverses;
+  }
+
   // World position of a group under the current pose. Paired groups sit on one side.
   anchorOf(group: MuscleGroup, out: THREE.Vector3, side: BodySide = "left"): THREE.Vector3 {
     const anchor = this.asset.meta.anchors[group];

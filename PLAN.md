@@ -203,10 +203,11 @@ Known limits:
 | Part | What it is |
 |---|---|
 | Body shape | [Anny](https://github.com/naver/anny), a parametric human model. The browser solves sex, age, height and weight against the mesh's real volume |
-| Organs and vessels | Real meshes from the [HuBMAP Human Reference Atlas](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html), one set per sex, fitted to the body. Each body has its own reproductive organs: a uterus, ovaries and tubes, or a prostate |
-| Muscles and bones | Real meshes from [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html), warped to the body. Each worked group flushes in the Muscles colour, and the body turns to show it |
-| Stomach | Generated in code, because the atlas has none and a stomach changes shape. Its size follows the model's millilitres |
-| Small intestine | One generated tube filling the atlas's volume, because the atlas walls can't be recovered as a tube |
+| Anatomy | One body, [Z-Anatomy](https://github.com/Z-Anatomy/Models-of-human-anatomy), warped into both Anny bodies by one warp: bones, muscles, organs and vessels stay in register. Each worked muscle group flushes in the Muscles colour, and the body turns to show it |
+| Reproductive organs | Z-Anatomy is a male body, so each body takes its own: a prostate from it, or a uterus, ovaries and tubes from the [HuBMAP Human Reference Atlas](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html). Everything else in the female body is the male shape warped to her |
+| Vessels | Z-Anatomy's named curves with their real calibres, swept into tubes that follow the skeleton. Views draw the great trunks, and the Heart & lungs page adds branches down to 2 mm |
+| Stomach | Lofted live from the real stomach's sections, because a stomach changes shape. Its size follows the model's millilitres |
+| Small intestine | Z-Anatomy's own course, relaxed so the coils no longer run through each other |
 | Process line | One line through real vessel paths, coloured as far as the thing has got, with a few slow beads on the current stretch |
 | Posture | An invisible rig: the body sits, stands, walks, runs or lies down according to the day |
 
@@ -333,8 +334,7 @@ Voice input is left out, because Mac dictation already works.
 |---|---|
 | Three.js with custom shaders | The look depends on hand-written shaders and a per-frame loop, and Three.js stays out of the way of both |
 | Anny for the body | Age, sex, weight and height parameters with an Apache 2.0 licence. The SMPL family of body models restricts commercial use |
-| HuBMAP for organs | Male and female sets in one shared frame, with named vessels, under CC BY 4.0 |
-| BodyParts3D for muscles | A full set of named muscles and bones with an open licence. See decision 3 |
+| Z-Anatomy for the anatomy | One consistent body with every system in it, and vessels as centrelines with real calibres. Its share-alike licence suits an open-source app, and mixing sources left lungs through the ribs |
 | Own small model | Reruns in milliseconds and tracks each food. [Pulse](https://pulse.kitware.com/_about_pulse.html) is broader, but it is C++ at a 20 ms step and I found no browser build |
 | Channels and effect curves | A differential equation for everything that can happen to a body would never finish |
 
@@ -342,7 +342,7 @@ Voice input is left out, because Mac dictation already works.
 
 1. **A personal tool or a product?** Your local Claude Code is right for a personal tool. A product needs a hosted API backend and accounts. It would also make health claims and hold health data, which brings regulation I haven't looked into. I'd keep it personal for now.
 2. **What comes next?** I'd use it on your own days for a while, because that will show which gaps matter better than more planning.
-3. **The BodyParts3D licence, before any public release.** The project's website says CC BY 4.0, while the headers inside its OBJ files still say CC BY-SA 2.1 Japan, and the latissimus, rectus abdominis and internal oblique come from its older version 3.0 files, because version 4.0 lacks them. The Credits link at the bottom of the page states CC BY 4.0. Share-alike could affect how those assets can be distributed. Nothing needs settling while this stays on your machine.
+3. **The kidney before anyone sells a build.** Z-Anatomy lists a CC BY-NC kidney among the models it adapted, without saying which meshes it became. That doesn't matter for an open-source app, and it would for a paid one.
 
 ## Limits
 
@@ -354,7 +354,7 @@ Voice input is left out, because Mac dictation already works.
 - Some sources were read only as a secondary reference or search snippet, including the running core temperature and the 10 mmHg per MET figure. `src/model/params.ts` keeps a source note beside each value.
 - Organs and muscles are warped from other bodies onto the Anny shape, so the fit is approximate and gets less accurate at extreme sizes. At very low or high BMI, a plain girth scale makes up the remaining weight, so those bodies look less natural.
 - A process Claude adds has no mesh of its own, so the thyroid is a numbered stop at the throat with no gland drawn. It also can't change other numbers: a thyroid process can't raise your heart rate on screen.
-- The small intestine's loops are generated, so its shape is plausible and its exact course is invented.
+- The female body's organs are male shapes warped to her, apart from the uterus, ovaries and tubes, and she has no uterine vessels drawn, because no view asks for vessels that thin.
 - Under 820 px wide, the layout stacks and hides the organ name labels and the lines from stop numbers to the body.
 - Inside an exploration, changing the body's measurements with the sliders changes the copy, so it goes when you leave.
 - Sliders stay live while Claude is answering, and Claude keeps the state it started with, so moving one mid-answer can leave its numbers out of step with the screen until the next message.

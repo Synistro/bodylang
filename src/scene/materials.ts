@@ -368,9 +368,31 @@ const VESSEL_FRAG = /* glsl */ `
   }
 `;
 
+// Vessels follow the skeleton, so one in a limb stays in the limb. vLocal keeps the unposed position, which the wave
+// measures its distance from the heart in.
+const VESSEL_VERT = /* glsl */ `
+  #include <common>
+  #include <skinning_pars_vertex>
+  varying vec3 vNormalV;
+  varying vec3 vViewDir;
+  varying vec3 vLocal;
+  void main() {
+    vLocal = position;
+    #include <skinbase_vertex>
+    #include <beginnormal_vertex>
+    #include <skinnormal_vertex>
+    #include <begin_vertex>
+    #include <skinning_vertex>
+    vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
+    vNormalV = normalize(normalMatrix * objectNormal);
+    vViewDir = normalize(-mvPosition.xyz);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
 export function createVesselMaterial(color: string, opacity: number): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
-    vertexShader: ORGAN_VERT,
+    vertexShader: VESSEL_VERT,
     fragmentShader: VESSEL_FRAG,
     transparent: true,
     depthWrite: false,

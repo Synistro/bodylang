@@ -135,7 +135,7 @@ A tool that leaves the day and the view alone, such as `find_foods`, `read_body`
 1. Add it to `ORGANS` in `src/model/ids.ts`.
 2. The compiler then asks for `ORGAN_NAME` and `ORGAN_HOME` in `model/systems.ts`, `TARGET_ROUTES` and `TARGET_SYSTEM` in `processes/dose.ts`, `FOCUS_VIEWS` and the anchor `switch` in `scene/stage.ts`, `FIGURES` in `ui/insets/OrganInset.tsx`, `STORIES` in `ui/insets/organStory.ts`, and `EVERY_ORGAN` in `closeup/organs.test.ts`.
 3. `closeup/organs.test.ts` then fails until the organ has a close-up. Follow the next recipe.
-4. Nothing asks for these: the mesh (`src/scene/anatomy.ts`, `pipeline/build_organs.py`, `public/assets/`), `MESHES` in `server/track.ts` so an injury's path can cross it, the `organs` of a system in `SYSTEMS` in `model/systems.ts`, the `ORGANS` list in `scene/stage.ts`, and how brightly it lights on the body in `scene/organStates.ts`.
+4. Nothing asks for these: the mesh (`src/scene/anatomy.ts`, `ORGANS` in `pipeline/build_atlas.py`, `public/assets/`), `MESHES` in `server/track.ts` so an injury's path can cross it, the `organs` of a system in `SYSTEMS` in `model/systems.ts`, the `ORGANS` list in `scene/stage.ts`, and how brightly it lights on the body in `scene/organStates.ts`.
 
 ### A close-up
 

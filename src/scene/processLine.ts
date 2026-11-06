@@ -71,10 +71,10 @@ function structureKey(process: Process) {
   return `${process.id}#${process.stops.map((s) => `${s.id}<${s.from ?? ""}<${s.organ ?? ""}<${s.routes.join(",")}`).join("|")}`;
 }
 
-// Muscle and fat have no vessel of their own in the anatomy, and the limbs have no real arteries, so a
-// line out to them would be a long straight stroke pretending to be one. It goes as a quiet bow instead.
+// Muscle and fat have no vessel of their own, so a line out to them would be a long straight stroke pretending to be
+// one. It goes as a quiet bow instead, unless its way runs down a limb's real artery.
 const isOffVessels = (stop: ProcessStop) =>
-  stop.muscle !== null || stop.organ === "muscle" || stop.organ === "fat" || stop.routes.some(isLimbRoute);
+  stop.muscle !== null || ((stop.organ === "muscle" || stop.organ === "fat") && !stop.routes.some(isLimbRoute));
 
 const weightOf = (jump: boolean) => (jump ? LINE.jumpWeightPx : LINE.weightPx);
 const alphaOf = (stop: ProcessStop, jump: boolean) => LINE.alpha[stop.state] * (jump ? LINE.jumpAlpha : 1);

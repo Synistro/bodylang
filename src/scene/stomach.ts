@@ -9,37 +9,9 @@ export interface StomachItem {
   count: number;
 }
 
-// Visible Human has no stomach mesh, and a stomach has to change shape with what's in it anyway, so
-// it is lofted here. Each section runs from the lesser curvature, the short inner bend that stays
-// put, to the greater curvature, the long outer bend that stretches as the stomach fills. Positions
-// are on the male reference body, in the organ's own tilted plane; other bodies get them through an
-// affine fit on three landmarks the stomach actually touches.
-const PLANE = {
-  origin: new THREE.Vector3(0, 1.44, 0.103),
-  across: new THREE.Vector3(1, 0, 0),
-  down: new THREE.Vector3(0, -0.882, 0.47),
-  lift: new THREE.Vector3(0, 0.47, 0.882),
-};
-const SECTIONS: { inner: [number, number]; outer: [number, number]; lift: number }[] = [
-  { inner: [0.03, 0.021], outer: [0.041, 0.011], lift: -0.0165 }, // cardia, where the esophagus joins
-  { inner: [0.033, 0.032], outer: [0.06, -0.02], lift: -0.012 },
-  { inner: [0.037, 0.045], outer: [0.1, -0.044], lift: -0.006 }, // fundus, the dome above the entry
-  { inner: [0.042, 0.06], outer: [0.148, -0.012], lift: -0.001 },
-  { inner: [0.046, 0.078], outer: [0.172, 0.052], lift: 0.002 }, // body
-  { inner: [0.047, 0.093], outer: [0.17, 0.125], lift: 0.003 },
-  { inner: [0.043, 0.105], outer: [0.132, 0.19], lift: 0.003 },
-  { inner: [0.035, 0.11], outer: [0.086, 0.212], lift: 0.002 }, // antrum, the grinding end
-  { inner: [0.027, 0.108], outer: [0.053, 0.182], lift: 0 },
-  { inner: [0.019, 0.103], outer: [0.031, 0.14], lift: -0.002 },
-  { inner: [0.012, 0.098], outer: [0.018, 0.114], lift: -0.004 }, // pyloric canal
-  { inner: [0.0075, 0.097], outer: [0.0105, 0.106], lift: -0.0058 }, // pylorus, the outlet
-];
-const CENTER_IN_PLANE = [0.082, 0.092, 0] as const;
-const STOMACH_REFERENCE_ANCHORS = {
-  esophageal_impression_of_liver: [0.0311, 1.3912, 0.1209],
-  gastric_surface_of_spleen: [0.0772, 1.3859, 0.0719],
-  duodenum_superior: [0.0029, 1.3462, 0.1393],
-} as const;
+// A stomach has to change shape with what's in it, so it is lofted here and never a fixed mesh. Each section runs from
+// the lesser curvature, the short inner bend that stays put, to the greater curvature, the long outer bend that
+// stretches as the stomach fills. The pipeline takes the sections from the real anatomy, one set per body.
 
 const RINGS = 96;
 const RADIAL = 28;
@@ -91,53 +63,6 @@ const bump = (x: number, center: number, width: number) => Math.exp(-(((x - cent
 function waveSqueeze(u: number, crest: number, strength: number) {
   const amplitude = WAVE.amplitudeBody + (WAVE.amplitudeAntrum - WAVE.amplitudeBody) * smoothstep(u, 0.38, 0.85);
   return 1 - amplitude * strength * bump(u, crest, WAVE.width);
-}
-
-const inPlane = (a: number, b: number, lift: number) =>
-  PLANE.origin
-    .clone()
-    .addScaledVector(PLANE.across, a)
-    .addScaledVector(PLANE.down, b)
-    .addScaledVector(PLANE.lift, lift);
-
-function anchorTransform(meta: OrganMeta) {
-  const names = Object.keys(STOMACH_REFERENCE_ANCHORS) as (keyof typeof STOMACH_REFERENCE_ANCHORS)[];
-  const src = names.map((n) => new THREE.Vector3().fromArray(STOMACH_REFERENCE_ANCHORS[n]));
-  const dst = names.map((n) => new THREE.Vector3().fromArray(meta.landmarks[n]));
-  const basis = (p: THREE.Vector3[]) => {
-    const a = p[1].clone().sub(p[0]);
-    const b = p[2].clone().sub(p[0]);
-    const c = a
-      .clone()
-      .cross(b)
-      .normalize()
-      .multiplyScalar((a.length() + b.length()) / 2);
-    return new THREE.Matrix4().makeBasis(a, b, c);
-  };
-  const m = basis(dst).multiply(basis(src).invert());
-  const place = (v: THREE.Vector3) => v.clone().sub(src[0]).applyMatrix4(m).add(dst[0]);
-
-  // The landmarks decide where the two fixed ends go. Between them a full affine fit would shear the
-  // organ out of shape on a body whose landmarks sit differently, so the shape only turns, stretches
-  // along the line from end to end, and takes its girth from how far apart the liver and spleen sit.
-  const ends = [SECTIONS[0], SECTIONS[SECTIONS.length - 1]].map((s) =>
-    inPlane((s.inner[0] + s.outer[0]) / 2, (s.inner[1] + s.outer[1]) / 2, s.lift),
-  );
-  const [from, to] = [place(ends[0]), place(ends[1])];
-  const axis = ends[1].clone().sub(ends[0]);
-  const stretch = to.distanceTo(from) / axis.length();
-  axis.normalize();
-  const turn = new THREE.Quaternion().setFromUnitVectors(axis, to.clone().sub(from).normalize());
-  const girth = dst[1].distanceTo(dst[0]) / src[1].distanceTo(src[0]);
-  return (v: THREE.Vector3) => {
-    const offset = v.clone().sub(ends[0]);
-    const along = offset.dot(axis);
-    const across = offset.addScaledVector(axis, -along).multiplyScalar(girth);
-    return across
-      .addScaledVector(axis, along * stretch)
-      .applyQuaternion(turn)
-      .add(from);
-  };
 }
 
 // A soft, irregular lump: a sphere with a few broad swellings, with a largest radius of 1.
@@ -411,9 +336,15 @@ export class Stomach {
   private closeUp = 0;
 
   constructor(meta: OrganMeta, palette: Palette, resolution: THREE.Vector2) {
-    const fit = anchorTransform(meta);
-    const inner = SECTIONS.map((s) => fit(inPlane(s.inner[0], s.inner[1], s.lift)));
-    const outer = SECTIONS.map((s) => fit(inPlane(s.outer[0], s.outer[1], s.lift)));
+    const shape = meta.stomach;
+    const origin = new THREE.Vector3().fromArray(shape.origin);
+    const across = new THREE.Vector3().fromArray(shape.across);
+    const down = new THREE.Vector3().fromArray(shape.down);
+    const lift = new THREE.Vector3().fromArray(shape.lift);
+    const inPlane = (a: number, b: number, up: number) =>
+      origin.clone().addScaledVector(across, a).addScaledVector(down, b).addScaledVector(lift, up);
+    const inner = shape.sections.map((s) => inPlane(s.inner[0], s.inner[1], s.lift));
+    const outer = shape.sections.map((s) => inPlane(s.outer[0], s.outer[1], s.lift));
     const innerCurve = new THREE.CatmullRomCurve3(inner, false, "centripetal");
     const outerCurve = new THREE.CatmullRomCurve3(outer, false, "centripetal");
     for (let j = 0; j <= RINGS; j++) {
@@ -422,17 +353,14 @@ export class Stomach {
       a.toArray(this.ringInner, j * 3);
       b.toArray(this.ringSpan, j * 3);
     }
-    this.depthAxis
-      .copy(fit(PLANE.origin.clone().add(PLANE.lift)))
-      .sub(fit(PLANE.origin))
-      .normalize();
+    this.depthAxis.copy(lift).normalize();
     this.fullVolumeMl = this.volumeAtFullStretch();
 
     // The route food takes through the middle of a part-filled stomach.
-    const last = SECTIONS.length - 1;
+    const last = shape.sections.length - 1;
     const middle = inner.map((p, k) => p.clone().lerp(outer[k], k === 0 || k === last ? 0.5 : 0.28));
     this.stomachPath = new THREE.CatmullRomCurve3(middle, false, "centripetal");
-    this.center = fit(inPlane(CENTER_IN_PLANE[0], CENTER_IN_PLANE[1], CENTER_IN_PLANE[2]));
+    this.center = inPlane(shape.center[0], shape.center[1], 0);
 
     this.wallMaterial = createOrganMaterial(palette);
     this.wallMaterial.uniforms.uGhost.value = 1;
@@ -482,21 +410,8 @@ export class Stomach {
     this.placeSlots();
     this.leavingRoute = this.buildLeavingRoute(meta);
 
-    // The esophagus runs behind the trachea and in front of the spine, down to where the stomach starts.
-    const trachea = new THREE.Vector3().fromArray(meta.landmarks.trachea);
-    const cord = new THREE.Vector3().fromArray(meta.organs.spinal_cord.center);
-    const top = meta.organs.airway.max[1];
-    const cardia = middle[0];
-    const behindTrachea = (trachea.z + cord.z) / 2 + 0.01;
     this.esophagusPath = new THREE.CatmullRomCurve3(
-      [
-        new THREE.Vector3(0, top + 0.03, behindTrachea + 0.012),
-        new THREE.Vector3(0, top - 0.06, behindTrachea),
-        new THREE.Vector3(0.002, (top + cardia.y) / 2 + 0.03, behindTrachea - 0.004),
-        new THREE.Vector3(cardia.x * 0.28, (top + cardia.y) / 2 - 0.04, (behindTrachea + cardia.z) / 2 - 0.006),
-        new THREE.Vector3(cardia.x * 0.7, cardia.y + 0.03, cardia.z - 0.004),
-        cardia.clone(),
-      ],
+      [...shape.esophagus.slice(0, -1).map((p) => new THREE.Vector3().fromArray(p)), middle[0].clone()],
       false,
       "centripetal",
     );

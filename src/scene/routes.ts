@@ -25,7 +25,7 @@ export interface Strand {
 const SMOOTHING = {
   spacing: 0.005, // metres between samples on a finished line
   vesselPasses: 10,
-  gutPasses: 60,
+  gutPasses: 4,
   bowelPasses: 2, // the small intestine's path already runs down the middle of its tube
   pathPasses: 6,
 } as const;
@@ -97,46 +97,10 @@ function smoothLine(line: Line, passes: number): Line {
   return even;
 }
 
-// Skeletons of a short vessel piece often run down one wall and back up the other. Keeps the longer run.
-function unfold(line: Line): Line {
-  if (line.length < 4) return line;
-  const first = line[0];
-  const last = line[line.length - 1];
-  if (first.distanceTo(last) > lineLength(line) * 0.6) return line;
-  let tip = 0;
-  let farthest = -1;
-  for (let i = 0; i < line.length; i++) {
-    const d = line[i].distanceToSquared(first) + line[i].distanceToSquared(last);
-    if (d > farthest) {
-      farthest = d;
-      tip = i;
-    }
-  }
-  const before = line.slice(0, tip + 1);
-  const after = line.slice(tip);
-  return lineLength(before) >= lineLength(after) ? before : after;
-}
-
-// Stops at the point farthest from the start, dropping any curl at the far end.
-function trimCurl(line: Line): Line {
-  let far = 0;
-  let farthest = -1;
-  for (let i = 0; i < line.length; i++) {
-    const d = line[i].distanceToSquared(line[0]);
-    if (d >= farthest) {
-      farthest = d;
-      far = i;
-    }
-  }
-  return line.slice(0, far + 1);
-}
-
 type Step = string | THREE.Vector3 | Line;
 
 // Walks steps end to end, turning each named centerline to continue from where the walk stands.
-// Each reference body annotates a slightly different set of small vessels, so a name one body
-// lacks drops out and the walk carries straight on to its next step.
-function walker(meta: OrganMeta, tidy: boolean) {
+function walker(meta: OrganMeta) {
   return (start: THREE.Vector3, steps: Step[]): Line => {
     const out: Line = [start];
     for (const step of steps) {
@@ -148,13 +112,11 @@ function walker(meta: OrganMeta, tidy: boolean) {
         out.push(...step);
         continue;
       }
-      const raw = meta.centerlines[step];
-      if (!raw) continue;
-      const line = tidy ? unfold(toLine(raw)) : toLine(raw);
+      const line = toLine(meta.centerlines[step]);
       const from = out[out.length - 1];
       const facing =
         from.distanceToSquared(line[0]) > from.distanceToSquared(line[line.length - 1]) ? [...line].reverse() : line;
-      out.push(...(tidy ? trimCurl(facing) : facing));
+      out.push(...facing);
     }
     return out;
   };
@@ -165,23 +127,6 @@ function endpointNearest(raw: number[][], to: THREE.Vector3) {
   const a = line[0];
   const b = line[line.length - 1];
   return a.distanceToSquared(to) < b.distanceToSquared(to) ? a : b;
-}
-
-// Which of several named centerlines reaches closest to a point. The male reference body swaps the
-// labels on its renal arteries, so the side has to come from where the vessel actually goes.
-function closestByReach(meta: OrganMeta, names: string[], to: THREE.Vector3): string {
-  let best = names[0];
-  let bestDistance = Infinity;
-  for (const name of names) {
-    const raw = meta.centerlines[name];
-    if (!raw) continue;
-    const d = endpointNearest(raw, to).distanceToSquared(to);
-    if (d < bestDistance) {
-      bestDistance = d;
-      best = name;
-    }
-  }
-  return best;
 }
 
 // The point on a trunk where a named branch comes off it.
@@ -204,8 +149,7 @@ function buildRoutes(
 ): Record<RouteId, Route> {
   const lm = (name: string) => new THREE.Vector3().fromArray(meta.landmarks[name]);
   const center = (name: string) => new THREE.Vector3().fromArray(meta.organs[name].center);
-  const vessel = walker(meta, true);
-  const gut = walker(meta, false);
+  const vessel = walker(meta);
 
   const rightAtrium = lm("right_cardiac_atrium");
   const rightVentricle = lm("heart_right_ventricle");
@@ -242,59 +186,30 @@ function buildRoutes(
     rightAtrium,
   ]);
   const svc = vessel(extreme(meta.centerlines.superior_vena_cava, "highest"), ["superior_vena_cava", rightAtrium]);
-  const portalVein = meta.centerlines.portal_vein ? "portal_vein" : "hepatic_portal_vein";
+  const portalVein = "portal_vein";
 
   // Blood going out. The aorta's skeleton has a gap across the diaphragm; the walk bridges it.
   const arch = vessel(leftVentricle, [lm("aortic_valve"), "ascending_aorta", "aortic_arch"]);
   const aorta = vessel(arch[arch.length - 1], ["descending_aorta_a", "descending_aorta_b"]);
 
-  const renalArtery = (kidney: THREE.Vector3) => {
-    const name = closestByReach(meta, ["renal_artery_L", "renal_artery_R"], kidney);
-    return { name, root: rootOn(aorta, meta.centerlines[name]) };
-  };
-  const renalVein = (kidney: THREE.Vector3) => closestByReach(meta, ["renal_vein_L", "renal_vein_R"], kidney);
-  const arteryL = renalArtery(kidneyL);
-  const arteryR = renalArtery(kidneyR);
-  const fromKidney = (kidney: THREE.Vector3, hilum: THREE.Vector3) => {
-    const toCava = vessel(kidney, [hilum, renalVein(kidney)]);
+  const fromKidney = (kidney: THREE.Vector3, hilum: THREE.Vector3, renalVein: string) => {
+    const toCava = vessel(kidney, [hilum, renalVein]);
     return [...toCava, ...ivc.slice(nearestIndex(ivc, toCava[toCava.length - 1]))];
   };
-  // Down the back wall of the abdomen, over the pelvic brim, then forward into the back of the bladder.
-  const ureter = (kidney: THREE.Vector3, hilum: THREE.Vector3, orifice: THREE.Vector3): Line => {
-    const drop = hilum.y - orifice.y;
-    const side = Math.sign(hilum.x);
-    return [
-      kidney,
-      hilum,
-      new THREE.Vector3(hilum.x * 0.78, hilum.y - drop * 0.38, hilum.z + 0.004),
-      new THREE.Vector3((hilum.x + orifice.x) * 0.55, hilum.y - drop * 0.72, hilum.z - 0.002),
-      new THREE.Vector3(orifice.x + side * 0.018, orifice.y + drop * 0.06, orifice.z - 0.012),
-      orifice,
-      bladder,
-    ];
-  };
-
   // The thoracic duct lies against the aorta all the way up, then joins the left venous angle.
   const svcTop = svc[0];
-  const leftBrachiocephalic = meta.centerlines.brachiocephalic_vein_L;
-  const venousAngle = leftBrachiocephalic
-    ? toLine(leftBrachiocephalic).reduce((a, b) => (b.x > a.x ? b : a))
-    : svcTop.clone().add(new THREE.Vector3(0.045, 0.03, 0.01));
+  const venousAngle = toLine(meta.centerlines.brachiocephalic_vein_L).reduce((a, b) => (b.x > a.x ? b : a));
   const ductOffset = new THREE.Vector3(-0.012, 0, -0.01);
   const duct = [...aorta].reverse().map((p) => p.clone().add(ductOffset));
 
-  const jugular = new THREE.Vector3(svcTop.x - 0.015, (brain.y + svcTop.y) / 2, svcTop.z + 0.01);
-  const carotidRoot = rootOn(
-    arch,
-    meta.centerlines.left_common_carotid_artery_a ?? meta.centerlines.left_common_carotid_artery_b,
-  );
+  const carotidRoot = rootOn(arch, meta.centerlines.left_common_carotid_artery_a);
 
   // Limb vessels come from the skeleton through setLimbs, since they follow height and posture.
   const bifurcation = aorta[aorta.length - 1];
   const stomachOut = Array.from({ length: 40 }, (_, i) => stomachPath.getPointAt(0.45 + (0.55 * i) / 39));
-  const duodenum = gut(stomachOut[stomachOut.length - 1], ["duodenum_inside"]);
-  const jejunum = gut(duodenum[duodenum.length - 1], ["jejunum"]);
-  const ileum = gut(jejunum[jejunum.length - 1], ["ileum", ileocecal]);
+  const duodenum = vessel(stomachOut[stomachOut.length - 1], ["duodenum_inside"]);
+  const jejunum = vessel(duodenum[duodenum.length - 1], ["jejunum"]);
+  const ileum = vessel(jejunum[jejunum.length - 1], ["ileum", ileocecal]);
 
   return {
     esophagus: route(
@@ -306,22 +221,7 @@ function buildRoutes(
     duodenum: route("duodenum", duodenum, SMOOTHING.vesselPasses),
     jejunum: route("jejunum", jejunum, SMOOTHING.bowelPasses),
     ileum: route("ileum", ileum, SMOOTHING.bowelPasses),
-    // The colon's skeletons fold over themselves, so its route follows the part centres, which frame the belly cleanly.
-    colon: route(
-      "colon",
-      [
-        ileocecal,
-        lm("ascending_colon"),
-        lm("hepatic_flexure_of_colon"),
-        lm("transverse_colon"),
-        lm("splenic_flexure_of_colon"),
-        lm("descending_colon"),
-        lm("sigmoid_colon"),
-        lm("rectum"),
-      ],
-      SMOOTHING.gutPasses,
-      true,
-    ),
+    colon: route("colon", vessel(ileocecal, ["colon_inside"]), SMOOTHING.gutPasses, true),
 
     portal_liver: asVessel(
       "portal_liver",
@@ -335,7 +235,7 @@ function buildRoutes(
     ),
     liver_out: asVessel("liver_out", [
       liver,
-      ...ivc.slice(nearestIndex(ivc, endpointNearest(meta.centerlines.middle_hepatic_vein, rightAtrium))),
+      ...ivc.slice(nearestIndex(ivc, endpointNearest(meta.centerlines.hepatic_veins, rightAtrium))),
     ]),
     ivc: asVessel("ivc", ivc, { trunk: true }),
     svc: asVessel("svc", svc, { trunk: true }),
@@ -354,7 +254,7 @@ function buildRoutes(
     arch: asVessel("arch", arch, { trunk: true }),
     carotid: asVessel(
       "carotid",
-      vessel(carotidRoot, ["left_common_carotid_artery_a", "left_common_carotid_artery_b", brain]),
+      vessel(carotidRoot, ["left_common_carotid_artery_a", "internal_carotid_artery_L", brain]),
       { feeders: ["arch"] },
     ),
     to_neck: asVessel("to_neck", vessel(carotidRoot, ["left_common_carotid_artery_a", lm("thyroid_cartilage")]), {
@@ -366,15 +266,23 @@ function buildRoutes(
       vessel(rootOn(aorta, meta.centerlines.superior_mesenteric_artery), ["superior_mesenteric_artery"]),
       { feeders: offAorta },
     ),
-    to_kidney_L: asVessel("to_kidney_L", vessel(arteryL.root, [arteryL.name, lm("hilum_of_kidney_L"), kidneyL]), {
-      feeders: offAorta,
-    }),
-    to_kidney_R: asVessel("to_kidney_R", vessel(arteryR.root, [arteryR.name, lm("hilum_of_kidney_R"), kidneyR]), {
-      feeders: offAorta,
-    }),
-    from_kidney_L: asVessel("from_kidney_L", fromKidney(kidneyL, lm("hilum_of_kidney_L"))),
-    from_kidney_R: asVessel("from_kidney_R", fromKidney(kidneyR, lm("hilum_of_kidney_R"))),
-    from_brain: asVessel("from_brain", vessel(brain, [jugular, "brachiocephalic_vein_R", svc])),
+    to_kidney_L: asVessel(
+      "to_kidney_L",
+      vessel(rootOn(aorta, meta.centerlines.renal_artery_L), ["renal_artery_L", lm("hilum_of_kidney_L"), kidneyL]),
+      {
+        feeders: offAorta,
+      },
+    ),
+    to_kidney_R: asVessel(
+      "to_kidney_R",
+      vessel(rootOn(aorta, meta.centerlines.renal_artery_R), ["renal_artery_R", lm("hilum_of_kidney_R"), kidneyR]),
+      {
+        feeders: offAorta,
+      },
+    ),
+    from_kidney_L: asVessel("from_kidney_L", fromKidney(kidneyL, lm("hilum_of_kidney_L"), "renal_vein_L")),
+    from_kidney_R: asVessel("from_kidney_R", fromKidney(kidneyR, lm("hilum_of_kidney_R"), "renal_vein_R")),
+    from_brain: asVessel("from_brain", vessel(brain, ["internal_jugular_vein_R", "brachiocephalic_vein_R", svc])),
     to_liver_art: asVessel(
       "to_liver_art",
       vessel(rootOn(aorta, meta.centerlines.celiac_trunk), [
@@ -394,8 +302,8 @@ function buildRoutes(
     lymph: asVessel("lymph", [...duct, venousAngle], { trunk: true }),
     lymph_svc: asVessel("lymph_svc", vessel(venousAngle, ["brachiocephalic_vein_L", svc])),
 
-    to_bladder_L: asVessel("to_bladder_L", ureter(kidneyL, lm("hilum_of_kidney_L"), lm("ureteral_orifice_L"))),
-    to_bladder_R: asVessel("to_bladder_R", ureter(kidneyR, lm("hilum_of_kidney_R"), lm("ureteral_orifice_R"))),
+    to_bladder_L: asVessel("to_bladder_L", vessel(kidneyL, [lm("hilum_of_kidney_L"), "ureter_L", bladder])),
+    to_bladder_R: asVessel("to_bladder_R", vessel(kidneyR, [lm("hilum_of_kidney_R"), "ureter_R", bladder])),
 
     leg_L: { id: "leg_L", points: [bifurcation, bifurcation], trunk: true, feeders: offAorta },
     leg_R: { id: "leg_R", points: [bifurcation, bifurcation], trunk: true, feeders: offAorta },

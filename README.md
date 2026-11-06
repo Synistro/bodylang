@@ -87,7 +87,7 @@ swiftc tools/webkitshot.swift -o /tmp/webkitshot
 
 ## Rebuild the assets
 
-The built files in `public/assets/` are enough to run the app. Rebuild them only to change the meshes. This downloads about 110 MB of organ meshes, plus PyTorch for the body export. BodyParts3D is a separate download of about 600 MB.
+The built files in `public/assets/` are enough to run the app. Rebuild them only to change the meshes. This needs Blender, downloads about 110 MB of meshes, and takes about 20 minutes.
 
 ```bash
 uv venv --python 3.12 .venv-pipeline
@@ -101,27 +101,33 @@ uv pip install --python .venv-pipeline/bin/python -r pipeline/requirements.txt
 .venv-pipeline/bin/python pipeline/build_body.py
 ```
 
+Download Z-Anatomy at its pinned commit and export it. Blender runs with the file's own scripts turned off:
+
 ```bash
-pipeline/fetch_organs.sh /tmp/hubmap-organs
+pipeline/fetch_zanatomy.sh pipeline/cache/zanatomy
 ```
 
 ```bash
-.venv-pipeline/bin/python pipeline/build_organs.py /tmp/hubmap-organs
+.venv-pipeline/bin/python pipeline/build_muscles.py pipeline/cache/zanatomy pipeline/cache/muscles
 ```
-
-The muscles need two BodyParts3D folders you [download](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/download.html) yourself: the version 4.0 `is_a` OBJ set, and the version 3.0 STL files for FMA13358, FMA13359, FMA13377, FMA13378, FMA13892 and FMA13893.
 
 ```bash
-.venv-pipeline/bin/python pipeline/build_muscles.py <4.0 is_a obj folder> <3.0 stl folder> <cache folder>
+.venv-pipeline/bin/python pipeline/build_female_organs.py pipeline/cache/female
 ```
+
+```bash
+.venv-pipeline/bin/python pipeline/build_atlas.py pipeline/cache/zanatomy pipeline/cache/atlas pipeline/cache/female
+```
+
+`pipeline/body_warp.py` moves anything from Z-Anatomy's frame into the Anny bodies, and every build uses it, so bones, muscles, organs and vessels stay in register. `build_atlas.py` stops if an organ comes out hollow or spiked, or if it or a vessel lands outside the skin. A structure ships only if the model drives it or an explanation names it, so the part lists at the top of `build_muscles.py` and `build_atlas.py` are short on purpose.
 
 The food table comes from two public USDA downloads, which need no account. `pipeline/build_foods.py` lists them at the top.
 
 ## Credits
 
 - Food composition: [USDA FoodData Central](https://fdc.nal.usda.gov/), public domain.
-- Organs and vessels: [HuBMAP CCF 3D Reference Object Library](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html), built from the NLM Visible Human data, CC BY 4.0. The meshes here are rewrapped, decimated and warped.
-- Muscles and bones: [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html), © The Database Center for Life Science, CC BY 4.0 according to the project's website. The OBJ file headers still say CC BY-SA 2.1 Japan, so check this before any public release. The meshes here are rewrapped, decimated and warped.
+- Anatomy: [Z-Anatomy](https://github.com/Z-Anatomy/Models-of-human-anatomy), CC BY-SA 4.0, derived from [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html), © The Database Center for Life Science. The bones, muscles, organs and vessels here are rewrapped, decimated and warped, and `public/assets/CREDITS.md` says what that means for reusing them.
+- Uterus, ovaries and tubes: [HuBMAP CCF 3D Reference Object Library](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html), built from the NLM Visible Human data, CC BY 4.0.
 - Body: [Anny](https://github.com/naver/anny) by NAVER Labs Europe, Apache 2.0, using MakeHuman/MPFB2 data, CC0.
 - Colours: [Flexoki](https://stephango.com/flexoki) by Steph Ango.
 

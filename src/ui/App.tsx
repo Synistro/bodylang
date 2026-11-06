@@ -42,7 +42,7 @@ const PLAY_MINUTES_PER_SECOND = 34;
 const WALL_IDLE_BEFORE_CYCLE_MS = 3 * 60 * 1000;
 const WALL_SYSTEM_DWELL_MS = 40 * 1000;
 const CREDITS =
-  "Food composition: USDA FoodData Central, public domain. Organs and vessels: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Muscles and bones: BodyParts3D, © The Database Center for Life Science, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
+  "Food composition: USDA FoodData Central, public domain. Anatomy: Z-Anatomy, CC BY-SA 4.0, derived from BodyParts3D, © The Database Center for Life Science. Rewrapped, decimated and warped. Uterus, ovaries and tubes: HuBMAP Human Reference Atlas, built from the NLM Visible Human data, CC BY 4.0. Body: Anny by NAVER Labs Europe, Apache 2.0, with MakeHuman data, CC0.";
 
 rememberLook();
 if (WALL) document.documentElement.dataset.wall = "";
