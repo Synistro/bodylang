@@ -9,6 +9,17 @@ function bodyAgent(): Plugin {
   return {
     name: "bodylang-agent",
     configureServer(server) {
+      server.middlewares.use("/api", (req, res, next) => {
+        server
+          .ssrLoadModule("/server/requestGuard.ts")
+          .then((guard) => {
+            const problem = (guard as typeof import("./server/requestGuard")).requestProblem(req.method, req.headers);
+            if (!problem) return next();
+            res.statusCode = problem.status;
+            res.end(problem.message);
+          })
+          .catch(next);
+      });
       server.middlewares.use("/api/beacon", (req, res) => {
         const chunks: Buffer[] = [];
         req.on("data", (c: Buffer) => chunks.push(c));
