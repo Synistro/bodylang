@@ -1,7 +1,7 @@
 import { DAY, PROCESS } from "../params";
 import { viewOf } from "../processes";
 import { ORGANS, ROUTE_IDS } from "../ids";
-import { simulate } from "../simulate";
+import { simulate } from "../engine/simulate";
 import { Body, Scenario } from "../scenario";
 import { SYSTEMS } from "../systems";
 import type { ExtensionState, ProcessExtension } from "./api";

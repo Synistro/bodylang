@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { GuideStep } from "../actions/actions";
 import type { BodyEvent } from "../model/events";
 import { isStill, Lane, systemLanes, threadLanes, workedMuscleLanes } from "../model/lanes";
-import { simulate } from "../model/simulate";
+import { simulate } from "../model/engine/simulate";
 import { Intake, Scenario } from "../model/scenario";
 import { systemById } from "../model/systems";
 import { SystemId } from "../model/ids";

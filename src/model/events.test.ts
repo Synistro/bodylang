@@ -6,7 +6,7 @@ import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, r
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./readout";
 import { levelWord } from "./words";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { anthropometrics } from "./engine/anthropometrics";
 import { Intake, postureAt, Scenario } from "./scenario";
 import { Trajectory, value } from "./engine/trajectory";

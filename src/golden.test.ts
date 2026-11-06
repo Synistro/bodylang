@@ -7,7 +7,7 @@ import { dayMoments, processLanes, systemLanes, threadLanes, workedMuscleLanes }
 import { readout } from "./model/readout";
 import { feelingOrigin, processOrigin, readingOrigin } from "./model/origin";
 import { processesAt } from "./model/processes";
-import { simulate } from "./model/simulate";
+import { simulate } from "./model/engine/simulate";
 import { SERIES, Trajectory } from "./model/engine/trajectory";
 import { forecast } from "./model/forecast";
 import { organStates } from "./scene/organStates";

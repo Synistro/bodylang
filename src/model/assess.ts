@@ -2,7 +2,7 @@ import { crampLevel, cyclePhase, CyclePhase, lutealShare, minutesToNextPeriod } 
 import { BodyEvent, ChannelId, curveStrength, effectAt, endOf, maxHeartRate, muscleStateAt, MuscleState, MuscleWork, namesOf, ResolvedEvent } from "./events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "./muscleGroups";
 import { FEEL, ACTIVITY, BLOOD_FLOW, CAFFEINE, CYCLE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
-import { mealDipOf } from "./simulate";
+import { mealDipOf } from "./engine/feel";
 import { caffeineLedgerAt, intakeFlowsAt, SeriesName, Trajectory, value } from "./engine/trajectory";
 import { foodKcalOf, Intake, kcalOf, Posture, POSTURES } from "./scenario";
 import { postureKcalPerHour } from "./engine/anthropometrics";

@@ -11,7 +11,7 @@ import { BuildParts, BuildStatus, removeProcess, runBuild } from "./extend";
 
 const git = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, encoding: "utf8" });
 const GOOD_PROCESS = 'import type { ProcessExtension } from "./api";\nexport const extension: ProcessExtension = {} as ProcessExtension;\n';
-const GOOD_TEST = 'import { it } from "vitest";\nimport { simulate } from "../simulate";\nit("a", () => { simulate; });\nit("b", () => {});\nit("c", () => { simulate(0 as never); });\n';
+const GOOD_TEST = 'import { it } from "vitest";\nimport { simulate } from "../engine/simulate";\nit("a", () => { simulate; });\nit("b", () => {});\nit("c", () => { simulate(0 as never); });\n';
 
 describe("building a process", () => {
   let repo: string;

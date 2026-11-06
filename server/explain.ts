@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import { dayContentSchema, DayContent } from "../src/model/day";
 import { readout } from "../src/model/readout";
-import { simulate } from "../src/model/simulate";
+import { simulate } from "../src/model/engine/simulate";
 import { formatClock } from "../src/model/words";
 import { cleanEnvironment } from "./claudeEnv";
 

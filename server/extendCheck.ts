@@ -9,7 +9,7 @@ const FROM_VITEST = new Set(["it", "expect", "describe"]);
 
 export const PROCESS_IMPORTS = ["./api"];
 // What a test of a new process needs to run the real model. Paths are from src/model/extensions.
-const MODEL_FOR_TESTS = ["../simulate", "../scenario", "../engine/trajectory", "../params", "../cycle", "../processes"];
+const MODEL_FOR_TESTS = ["../engine/simulate", "../scenario", "../engine/trajectory", "../params", "../cycle", "../processes"];
 export const testImports = (id: string) => ["vitest", "./api", "./check", `./${id}`, ...MODEL_FOR_TESTS];
 
 interface Node {

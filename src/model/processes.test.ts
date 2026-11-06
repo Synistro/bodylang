@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readout } from "./readout";
 import { Process, processesAt, processesFor, ProcessStop } from "./processes";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { caffeineLedgerAt, ledgerAt, value } from "./engine/trajectory";
 import { CustomSubstance, Intake, Scenario } from "./scenario";
 import { hm, NO_NUTRIENTS } from "./testKit";

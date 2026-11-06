@@ -21,7 +21,11 @@ export const SOURCES = {
   flow: "Matheson et al., J Surg Res 2000: review of intestinal blood flow when fasted and fed. Sidery et al., Am J Physiol 1991: gut artery flow up 87 to 122% within 45 min of a meal",
 } as const;
 
+export const KCAL_PER_G = { carb: 4, protein: 4, fat: 9, alcohol: 7 } as const;
+
 export const STOMACH = {
+  solidCountsFromKcal: 0.5, // less than this left of a food no longer holds the outlet shut
+  solidsSlowLiquidsFromKcal: 20,
   fedAboveKcal: 25, // below this, what is left in the gut no longer counts as still being fed
   liquidHalfLifeMin: 12, // water alone
   liquidHalfLifeWithSolidsMin: 42,

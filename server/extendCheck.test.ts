@@ -44,7 +44,7 @@ export const extension: ProcessExtension = { id: "x", title: "X", system: "brain
   });
 
   it("lets a test import the model, and nothing else", () => {
-    expect(checkSource('import { it } from "vitest"; import { simulate } from "../simulate"; import { extension } from "./thyroid";', testImports("thyroid"))).toEqual([]);
+    expect(checkSource('import { it } from "vitest"; import { simulate } from "../engine/simulate"; import { extension } from "./thyroid";', testImports("thyroid"))).toEqual([]);
     expect(checkSource('import { execSync } from "node:child_process";', testImports("thyroid")).join()).toMatch(/can't import/);
   });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { processOrigin } from "../origin";
 import { processesAt } from "../processes";
-import { simulate } from "../simulate";
+import { simulate } from "../engine/simulate";
 import type { ExtensionState, ProcessExtension } from "./api";
 import { checkExtension } from "./check";
 import { EXTENSIONS } from "./index";

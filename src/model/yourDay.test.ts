@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { Intake, Scenario } from "./scenario";
 import { processIdsOf } from "./yourDay";
 

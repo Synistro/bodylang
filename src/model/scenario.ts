@@ -1,7 +1,7 @@
 import type { Cycle } from "./cycle";
 import type { BodyEvent } from "./events";
 import type { OrganId } from "./ids";
-import { DAY } from "./params";
+import { DAY, KCAL_PER_G } from "./params";
 
 export type Sex = "male" | "female";
 export type Posture = "sleeping" | "sitting" | "standing" | "walking" | "running";
@@ -98,6 +98,6 @@ export function postureAt(activities: ActivitySpan[], minute: number): Posture {
 export const availableCarbsG = (n: Nutrients) => Math.max(0, n.carbsG - n.fiberG);
 
 // What a ledger tracks. Alcohol has a ledger of its own, in grams.
-export const foodKcalOf = (n: Nutrients) => availableCarbsG(n) * 4 + n.proteinG * 4 + n.fatG * 9;
+export const foodKcalOf = (n: Nutrients) => availableCarbsG(n) * KCAL_PER_G.carb + n.proteinG * KCAL_PER_G.protein + n.fatG * KCAL_PER_G.fat;
 
-export const kcalOf = (n: Nutrients) => foodKcalOf(n) + n.alcoholG * 7;
+export const kcalOf = (n: Nutrients) => foodKcalOf(n) + n.alcoholG * KCAL_PER_G.alcohol;

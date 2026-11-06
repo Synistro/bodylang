@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Assessment, assess, glucoseVerdict, insulinVerdict, Reading, triglycerideVerdict } from "./assess";
 import { ReadingId } from "./ids";
 import { MUSCLE_GROUPS } from "./muscleGroups";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { CustomSubstance, Intake, Scenario } from "./scenario";
 import { SYSTEMS } from "./systems";
 import { hm, NO_NUTRIENTS } from "./testKit";

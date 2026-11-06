@@ -3,7 +3,7 @@ import { reduce, BodyState } from "../actions/actions";
 import { carryOver, clockAt, daysBetween, DayDoc, firstDay, parseDayDoc, stayAwake, typicalDayFromYesterday } from "./day";
 import { DAY } from "./params";
 import { processesAt } from "./processes";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { postureAt, Scenario } from "./scenario";
 import { threadsAt } from "./threads";
 

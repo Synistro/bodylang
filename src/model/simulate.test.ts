@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAFFEINE } from "./params";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { foodKcalOf, Scenario } from "./scenario";
 import { caffeineLedgerAt, ledgerAt, LEDGER_KEYS, value } from "./engine/trajectory";
 import { NO_NUTRIENTS } from "./testKit";

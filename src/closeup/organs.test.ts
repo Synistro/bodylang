@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { BodyEvent } from "../model/events";
 import { REFERENCE } from "../model/params";
-import { simulate } from "../model/simulate";
+import { simulate } from "../model/engine/simulate";
 import { Intake, Scenario } from "../model/scenario";
 import { Trajectory } from "../model/engine/trajectory";
 import { OrganId } from "../model/ids";

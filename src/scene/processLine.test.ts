@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { Process, ProcessStop, processesAt } from "../model/processes";
-import { simulate } from "../model/simulate";
+import { simulate } from "../model/engine/simulate";
 import { Scenario, Sex } from "../model/scenario";
 import type { OrganMeta } from "./assets";
 import { RouteNetwork } from "./routes";

@@ -41,7 +41,8 @@ export const SERIES = [
   "jitter",
   "hunger",
   "crash",
-  "muscleUptakeGMin",
+  "muscleUptakeGMin", // all of it, whatever moved it
+  "insulinUptakeGMin", // what insulin moved out of the blood, wherever it went
   "hepaticOutputGMin",
   "liverUptakeGMin",
   "posture",

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { assess } from "./assess";
 import { foodOrigin, processOrigin, readingOrigin } from "./origin";
 import { processesAt } from "./processes";
-import { simulate } from "./simulate";
+import { simulate } from "./engine/simulate";
 import { Intake } from "./scenario";
 import type { BodyEvent } from "./events";
 
