@@ -23,7 +23,8 @@ export const along =
 // the body is how many dots there are, and a still picture shows those in flight at that rate.
 export function createStream(dots: (SVGCircleElement | SVGEllipseElement)[], lifeSeconds: number, seed: number) {
   const random = seededRandom(seed);
-  const born = new Float32Array(dots.length).fill(-Infinity);
+  // Float64, because Float32 rounds the clock, often upward, and that gives a new dot a negative age.
+  const born = new Float64Array(dots.length).fill(-Infinity);
   const seats = new Float32Array(dots.length);
   let due = 0;
   let next = 0;
