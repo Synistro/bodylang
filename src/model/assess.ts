@@ -2,8 +2,8 @@ import { crampLevel, cyclePhase, CyclePhase, lutealShare, minutesToNextPeriod } 
 import { BodyEvent, ChannelId, curveStrength, effectAt, endOf, maxHeartRate, muscleStateAt, MuscleState, MuscleWork, namesOf, ResolvedEvent } from "./events";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "./muscleGroups";
 import { ACTIVITY, BLOOD_FLOW, CAFFEINE, CYCLE, DAY, ENERGY, Evidence, FEELING_DISPLAY, HEART, INSULIN, KIDNEY, LIPID, MUSCLE_RECOVERY, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG, STOMACH } from "./params";
-import { caffeineLedgerAt, Intake, intakeFlowsAt, kcalOf, mealDipOf, OrganId, Posture, postureKcalPerHour, POSTURES, SeriesName, Trajectory, value } from "./simulate";
-import { arrivingFoods, foodKcalOf, foodsInStomach, forecast as stateForecast, formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./state";
+import { caffeineLedgerAt, foodKcalOf, Intake, intakeFlowsAt, kcalOf, mealDipOf, OrganId, Posture, postureKcalPerHour, POSTURES, SeriesName, Trajectory, value } from "./simulate";
+import { arrivingFoods, foodsInStomach, forecast as stateForecast, formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./state";
 import { SystemId, systemById } from "./systems";
 
 export type ReadingId =

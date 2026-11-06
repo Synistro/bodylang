@@ -3,7 +3,7 @@ import { ChannelId, curveStrength } from "./events";
 import { EXTENSIONS } from "./extensions";
 import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
 import type { Process } from "./processes";
-import { caffeineLedgerAt, Intake, kcalOf, ledgerAt, Trajectory } from "./simulate";
+import { caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, Trajectory } from "./simulate";
 
 // Where something on screen came from. The model computing it is the ordinary case. What Claude adds
 // from its own knowledge, and what the model computed from Claude's numbers, are told apart from that.
@@ -65,7 +65,7 @@ function stillAtWork(tr: Trajectory, intake: Intake, t: number): boolean {
   const food = ledgerAt(tr, intake.id, t);
   const caffeine = caffeineLedgerAt(tr, intake.id, t);
   const moving = food ? food.stomach + food.intestine + food.blood : 0;
-  return moving > kcalOf(intake) * PROCESS.heldInStomachShare || (caffeine ? caffeine.blood : 0) > intake.caffeineMg * PROCESS.heldInStomachShare;
+  return moving > foodKcalOf(intake) * PROCESS.heldInStomachShare || (caffeine ? caffeine.blood : 0) > intake.caffeineMg * PROCESS.heldInStomachShare;
 }
 
 const recipeWords = (ingredients: { name: string; grams: number }[]) => ingredients.map((part) => `${Math.round(part.grams)} g ${part.name}`).join(", ");

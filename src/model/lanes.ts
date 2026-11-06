@@ -3,7 +3,7 @@ import { eventLevelAt, muscleStateAt, MuscleState, ResolvedEvent } from "./event
 import { MuscleGroup } from "./muscleGroups";
 import { DAY, LANES, MUSCLE_RECOVERY, REFERENCE } from "./params";
 import { mealGroups, mealProcessId, Process, processesAt } from "./processes";
-import { alcoholLedgerAt, caffeineLedgerAt, Intake, ledgerAt, OrganId, Trajectory } from "./simulate";
+import { alcoholLedgerAt, caffeineLedgerAt, foodKcalOf, Intake, ledgerAt, OrganId, Trajectory } from "./simulate";
 import { formatClock, levelWord, whenWords } from "./state";
 import type { SystemId } from "./systems";
 import { systemById } from "./systems";
@@ -105,7 +105,7 @@ function foodLevel(tr: Trajectory, group: Intake[]) {
     for (const intake of group) {
       if (intake.at > minute) continue;
       const ledger = ledgerAt(tr, intake.id, minute);
-      const kcal = tr.intakeLedgers.get(intake.id)?.kcal ?? 0;
+      const kcal = foodKcalOf(intake);
       if (ledger && kcal > 0) {
         inGut += ledger.stomach + ledger.intestine;
         total += kcal;

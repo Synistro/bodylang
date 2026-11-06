@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BodyEvent, maxHeartRate, muscleStateAt } from "./events";
 import { ACTIVITY, ALCOHOL, FASTING, FEEL, GLUCOSE, REFERENCE } from "./params";
-import { ActivitySpan, Body, Intake, intakeFlowsAt, ledgerAt, Scenario, simulate, Trajectory, value } from "./simulate";
+import { foodKcalOf, ActivitySpan, Body, Intake, intakeFlowsAt, ledgerAt, Scenario, simulate, Trajectory, value } from "./simulate";
 import { hm, NO_NUTRIENTS } from "./testKit";
 
 const mmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
@@ -23,13 +23,15 @@ const lowestOf = (series: Float32Array, from: number, to: number) => {
   for (let t = from; t <= to; t++) if (series[t] < series[at]) at = t;
   return { at, value: series[at] };
 };
+const eatenKcal = (tr: Trajectory, id: string) => foodKcalOf(tr.scenario.intakes.find((intake) => intake.id === id) ?? NO_NUTRIENTS);
+
 // Minutes until the stomach holds under a share of what was eaten.
 const stomachBelow = (tr: Trajectory, id: string, at: number, share: number) => {
-  const kcal = tr.intakeLedgers.get(id)?.kcal ?? 0;
+  const kcal = eatenKcal(tr, id);
   for (let m = 0; m < 900; m++) if ((ledgerAt(tr, id, at + m)?.stomach ?? 0) < kcal * share) return m;
   throw new Error("Never emptied");
 };
-const retained = (tr: Trajectory, id: string, at: number, minutes: number) => (ledgerAt(tr, id, at + minutes)?.stomach ?? 0) / (tr.intakeLedgers.get(id)?.kcal ?? 1);
+const retained = (tr: Trajectory, id: string, at: number, minutes: number) => (ledgerAt(tr, id, at + minutes)?.stomach ?? 0) / eatenKcal(tr, id);
 
 const AT = hm(8, 30);
 const apples = food("apples", AT, { grams: 364, waterMl: 310, carbsG: 50, sugarG: 38, fatG: 0.6, proteinG: 1, fiberG: 9, fructoseShare: 0.6 });
@@ -66,7 +68,7 @@ describe("how fast food leaves, against Tougas 2000 and Benini 1995", () => {
   it("does not count fibre as food", () => {
     const tr = simulate(scenario([apples]));
     const available = (apples.carbsG - apples.fiberG) * 4 + apples.fatG * 9 + apples.proteinG * 4;
-    expect(tr.intakeLedgers.get("apples")?.kcal).toBeCloseTo(available, 5);
+    expect(foodKcalOf(apples)).toBeCloseTo(available, 5);
   });
 
   it("leaves half of two apples in the stomach for a bit over an hour", () => {

@@ -271,7 +271,7 @@ export interface Trajectory {
   scenario: Scenario;
   anthro: Anthropometrics;
   series: Record<SeriesName, Float32Array>;
-  intakeLedgers: Map<string, { kcal: number; ledger: Float32Array; caffeineMg: number; caffeineLedger: Float32Array; flows: Float32Array; alcoholG: number }>;
+  intakeLedgers: Map<string, { ledger: Float32Array; caffeineMg: number; caffeineLedger: Float32Array; flows: Float32Array; alcoholG: number }>;
   substances: Map<string, { series: Float32Array; ledger: Float32Array; substance: CustomSubstance }>;
   events: ResolvedEvent[];
   channels: Record<ChannelId, Float32Array>;
@@ -319,9 +319,10 @@ export function postureAt(activities: ActivitySpan[], minute: number): Posture {
 // Fiber is not digested as carbohydrate. What reaches the colon is counted there.
 export const availableCarbsG = (n: Nutrients) => Math.max(0, n.carbsG - n.fiberG);
 
-export function kcalOf(n: Nutrients): number {
-  return availableCarbsG(n) * 4 + n.proteinG * 4 + n.fatG * 9 + n.alcoholG * 7;
-}
+// What a ledger tracks. Alcohol has a ledger of its own, in grams.
+export const foodKcalOf = (n: Nutrients) => availableCarbsG(n) * 4 + n.proteinG * 4 + n.fatG * 9;
+
+export const kcalOf = (n: Nutrients) => foodKcalOf(n) + n.alcoholG * 7;
 
 // One MET is about 1 kcal per kg per hour, on top of resting burn for anything above rest.
 export const postureKcalPerHour = (bmrKcalPerDay: number, weightKg: number, met: number) => bmrKcalPerDay / 24 + (met - 1) * weightKg;
@@ -842,7 +843,7 @@ export function simulate(scenario: Scenario): Trajectory {
     scenario,
     anthro,
     series: Object.fromEntries(SERIES.map((name) => [name, series[name].subarray(leadIn)])) as Record<SeriesName, Float32Array>,
-    intakeLedgers: new Map(tracks.map((k) => [k.intake.id, { kcal: k.kcal, ledger: k.ledger.subarray(leadIn * LEDGER_SIZE), caffeineMg: k.intake.caffeineMg, caffeineLedger: k.caffeineLedger.subarray(leadIn * 4), flows: k.flows.subarray(leadIn * FLOW_SIZE), alcoholG: k.intake.alcoholG }])),
+    intakeLedgers: new Map(tracks.map((k) => [k.intake.id, { ledger: k.ledger.subarray(leadIn * LEDGER_SIZE), caffeineMg: k.intake.caffeineMg, caffeineLedger: k.caffeineLedger.subarray(leadIn * 4), flows: k.flows.subarray(leadIn * FLOW_SIZE), alcoholG: k.intake.alcoholG }])),
     substances: new Map(substanceTracks.map((s) => [s.substance.id, { series: s.series.subarray(leadIn), ledger: s.ledger.subarray(leadIn * 3), substance: s.substance }])),
     events,
     channels: Object.fromEntries((Object.keys(channels) as ChannelId[]).map((id) => [id, channels[id].subarray(leadIn)])) as Record<ChannelId, Float32Array>,

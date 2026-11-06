@@ -196,7 +196,7 @@ exports[`the model's output > a beer, pizza and a pill 1`] = `
   "thread lanes 1080": "0eb0c8c9e834006b",
   "thread lanes 720": "524c91f79132f88d",
   "threads": "58b7d71b8ccf8999",
-  "whereabouts": "fb4b2baf8d218324",
+  "whereabouts": "e018a701bfdf6f67",
   "worked muscle lanes 1080": "4f53cda18c2baa0c",
   "worked muscle lanes 720": "4f53cda18c2baa0c",
 }
@@ -2173,7 +2173,7 @@ exports[`the model's output > pure spirit 1`] = `
   "thread lanes 1080": "d8086281ac1c8e78",
   "thread lanes 720": "d8086281ac1c8e78",
   "threads": "a0e119ccd8546a5c",
-  "whereabouts": "34a727f9112153ae",
+  "whereabouts": "a7c6138a20b0e5af",
   "worked muscle lanes 1080": "4f53cda18c2baa0c",
   "worked muscle lanes 720": "4f53cda18c2baa0c",
 }

@@ -1,8 +1,8 @@
 import { eventLevelAt, muscleStateFromEvent, ResolvedEvent } from "./events";
 import { PROCESS, REFERENCE } from "./params";
 import { hasFoodLine, mealGroups, mealProcessId, mealTitle, Process, processesAt, ProcessStop } from "./processes";
-import { Trajectory, value } from "./simulate";
-import { foodKcalOf, formatClock, inSentence } from "./state";
+import { foodKcalOf, Trajectory, value } from "./simulate";
+import { formatClock, inSentence } from "./state";
 
 // One thing the person told the body about, shown on the top level as one line.
 export interface Thread {

@@ -4,9 +4,9 @@ import { EXTENSIONS } from "./extensions";
 import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "./events";
 import type { MuscleGroup } from "./muscleGroups";
 import { ALCOHOL, BLOOD_FLOW, CYCLE, DAY, FEEL, GLUCOSE, INSULIN, KIDNEY, MUSCLE, PROCESS, REFERENCE, STOMACH } from "./params";
-import { alcoholLedgerAt, caffeineLedgerAt, CustomSubstance, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
+import { alcoholLedgerAt, caffeineLedgerAt, CustomSubstance, foodKcalOf, SubstanceRoute, Intake, intakeFlowsAt, Ledger, ledgerAt, OrganId, POSTURES, SeriesName, substanceLedgerAt, Trajectory, value } from "./simulate";
 import type { Tint } from "./state";
-import { foodKcalOf, formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
+import { formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./state";
 import type { SystemId } from "./systems";
 
 export type Substance = NonNullable<Tint>;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAFFEINE } from "./params";
-import { caffeineLedgerAt, ledgerAt, LEDGER_KEYS, Scenario, simulate, value } from "./simulate";
+import { foodKcalOf, caffeineLedgerAt, ledgerAt, LEDGER_KEYS, Scenario, simulate, value } from "./simulate";
 import { NO_NUTRIENTS } from "./testKit";
 
 const body = { sex: "male" as const, age: 30, heightCm: 178, weightKg: 75 };
@@ -73,7 +73,7 @@ describe("a 900 kcal mixed meal", () => {
 
   it("stays in the stomach for hours, in line with an energy-limited rate", () => {
     const l15 = ledgerAt(tr, "p", 1015)!;
-    expect(l15.stomach / tr.intakeLedgers.get("p")!.kcal).toBeGreaterThan(0.9);
+    expect(l15.stomach / foodKcalOf(meal)).toBeGreaterThan(0.9);
     const l5h = ledgerAt(tr, "p", 1000 + 300)!;
     expect(l5h.stomach).toBeLessThan(250);
     const l8h = ledgerAt(tr, "p", 1000 + 480)!;
@@ -92,7 +92,7 @@ describe("a 900 kcal mixed meal", () => {
     for (const t of [1010, 1100, 1300, 1700]) {
       const l = ledgerAt(tr, "p", t)!;
       const total = LEDGER_KEYS.reduce((s, k) => s + l[k], 0);
-      const kcal = tr.intakeLedgers.get("p")!.kcal;
+      const kcal = foodKcalOf(meal);
       // Fiber adds to the colon column without being counted as digestible energy.
       expect(total).toBeGreaterThan(kcal * 0.97);
       expect(total).toBeLessThan(kcal * 1.03);

@@ -4,7 +4,7 @@ import { BodyEvent } from "./events";
 import { LANES } from "./params";
 import { dayMoments, dayStops, fitWindow, muscleStateLanes, processLanes, readingLanes, systemLanes, threadLanes, workedMuscleLanes } from "./lanes";
 import { Intake, Scenario, simulate } from "./simulate";
-import { hm } from "./testKit";
+import { hm, NO_NUTRIENTS } from "./testKit";
 
 
 const COFFEE: Intake = { id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 245, carbsG: 0, sugarG: 0, fatG: 0, proteinG: 0, fiberG: 0, caffeineMg: 95, alcoholG: 0, liquid: true };
@@ -17,6 +17,17 @@ const day = (intakes: Intake[], events: BodyEvent[] = []) => {
 };
 
 const LEG_DAY: BodyEvent = { id: "legs", label: "Leg day", preset: "training", from: hm(10), until: hm(11), intensity: 0.8, muscles: [{ group: "quads", load: 0.9 }, { group: "glutes", load: 0.7 }], symptoms: [], custom: null, source: "test" };
+
+describe("how much of a meal is left", () => {
+  const beer: Intake = { ...NO_NUTRIENTS, id: "beer", label: "Beer", at: hm(13), grams: 355, waterMl: 330, carbsG: 13, proteinG: 1.6, alcoholG: 14, liquid: true };
+  const pizza: Intake = { ...NO_NUTRIENTS, id: "pizza", label: "Pizza", at: hm(13), grams: 240, waterMl: 110, carbsG: 72, fatG: 26, proteinG: 28, fiberG: 4 };
+
+  it("starts from all of it, with alcohol counted apart", () => {
+    const tr = simulate({ body: { sex: "male", age: 30, heightCm: 180, weightKg: 80 }, intakes: [beer, pizza], activities: [{ from: 0, posture: "sleeping" }, { from: hm(7), posture: "sitting" }], substances: [], events: [] });
+    const lane = threadLanes(tr, hm(13, 5)).find((l) => l.label.startsWith("Beer") || l.label.includes("Pizza"));
+    expect(lane?.read(hm(13, 5))).toMatch(/^(100|99|98)% left$/);
+  });
+});
 
 describe("the day chart's lanes", () => {
   it("draws each thing logged, newest on top, in plain ink", () => {
