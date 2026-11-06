@@ -1,7 +1,7 @@
 import { KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Lane, muscleStateLanes, MuscleSubject, processLanes, readingLanes, systemLanes, workedMuscleLanes } from "../model/lanes";
 import { LANES, REFERENCE } from "../model/params";
-import { assess } from "../model/assess";
+import { assess } from "../model/assess/assess";
 import { foodOrigin, modelOrigin, Origin, processOrigin, readingOrigin, SENTENCE_ORIGIN } from "../model/origin";
 import { processesAt } from "../model/processes";
 import type { Trajectory } from "../model/engine/trajectory";

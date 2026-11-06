@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assess } from "./assess";
+import { assess } from "./assess/assess";
 import { foodOrigin, processOrigin, readingOrigin } from "./origin";
 import { processesAt } from "./processes";
 import { simulate } from "./engine/simulate";

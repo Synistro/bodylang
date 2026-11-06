@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { Assessment, assess, glucoseVerdict, insulinVerdict, Reading, triglycerideVerdict } from "./assess";
-import { ReadingId } from "./ids";
-import { MUSCLE_GROUPS } from "./muscleGroups";
-import { simulate } from "./engine/simulate";
-import { CustomSubstance, Intake, Scenario } from "./scenario";
-import { SYSTEMS } from "./systems";
-import { hm, NO_NUTRIENTS } from "./testKit";
+import { Assessment, Reading } from "./types";
+import { assess } from "./assess";
+import { glucoseVerdict, insulinVerdict, triglycerideVerdict } from "./verdicts";
+import { ReadingId } from "../ids";
+import { MUSCLE_GROUPS } from "../muscleGroups";
+import { simulate } from "../engine/simulate";
+import { CustomSubstance, Intake, Scenario } from "../scenario";
+import { SYSTEMS } from "../systems";
+import { hm, NO_NUTRIENTS } from "../testKit";
 
 
 const coffee: Intake = { ...NO_NUTRIENTS, id: "coffee", label: "Coffee", at: hm(8, 30), grams: 250, waterMl: 250, caffeineMg: 95, liquid: true };

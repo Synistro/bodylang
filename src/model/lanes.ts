@@ -1,4 +1,6 @@
-import { assess, hasSomethingToSay, normalAgainAt, Reading, readingCurve } from "./assess";
+import { assess, readingCurve } from "./assess/assess";
+import { hasSomethingToSay, Reading } from "./assess/types";
+import { normalAgainAt } from "./assess/muscles";
 import { ReadingId, OrganId } from "./ids";
 import { eventLevelAt, muscleStateAt, MuscleState, ResolvedEvent } from "./events";
 import { MuscleGroup } from "./muscleGroups";

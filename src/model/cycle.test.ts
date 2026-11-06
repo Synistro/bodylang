@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { reduce, BodyState } from "../actions/actions";
-import { assess, hasSomethingToSay } from "./assess";
+import { assess } from "./assess/assess";
+import { hasSomethingToSay } from "./assess/types";
 import { crampLevel, Cycle, cycleDay, cyclePhase, daysIntoCycle, hormonesAt, liningShare, minutesToNextPeriod } from "./cycle";
 import { carryOver, firstDay } from "./day";
 import { CYCLE, DAY } from "./params";

@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { ORGAN_NAME } from "../model/systems";
-import { hasSomethingToSay, MuscleSummary, Reading, shortUnit } from "../model/assess";
+import { hasSomethingToSay, MuscleSummary, Reading } from "../model/assess/types";
+import { shortUnit } from "../model/assess/assess";
 import { modelOrigin, readingOrigin } from "../model/origin";
 import { MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import type { Trajectory } from "../model/engine/trajectory";

@@ -1,4 +1,4 @@
-import type { Feeling, Reading } from "./assess";
+import type { Feeling, Reading } from "./assess/types";
 import type { ReadingId } from "./ids";
 import { ChannelId, curveStrength } from "./events";
 import { EXTENSIONS } from "./extensions";

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { actingAt } from "./model/acting";
 import { ORGANS } from "./model/ids";
-import { assess } from "./model/assess";
+import { assess } from "./model/assess/assess";
 import { dayMoments, processLanes, systemLanes, threadLanes, workedMuscleLanes } from "./model/lanes";
 import { readout } from "./model/readout";
 import { feelingOrigin, processOrigin, readingOrigin } from "./model/origin";

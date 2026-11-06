@@ -1,4 +1,4 @@
-import type { ReadingScale, Tone, Trend } from "../model/assess";
+import type { ReadingScale, Tone, Trend } from "../model/assess/types";
 import { SYSTEM_HUE, Theme } from "../look";
 import { clamp01 } from "../model/curve";
 

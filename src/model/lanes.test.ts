@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assess } from "./assess";
+import { assess } from "./assess/assess";
 import { BodyEvent } from "./events";
 import { LANES } from "./params";
 import { dayMoments, dayStops, fitWindow, muscleStateLanes, processLanes, readingLanes, systemLanes, threadLanes, workedMuscleLanes } from "./lanes";

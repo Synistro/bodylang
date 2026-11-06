@@ -1,5 +1,6 @@
 import { RefObject, useDeferredValue, useEffect, useRef } from "react";
-import { assess, Assessment, Reading } from "../model/assess";
+import { assess } from "../model/assess/assess";
+import { Assessment, Reading } from "../model/assess/types";
 import { Trajectory } from "../model/engine/trajectory";
 import { OrganId } from "../model/ids";
 import type { Stage } from "../scene/stage";

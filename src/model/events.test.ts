@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { ACTION_SCHEMAS, BodyState, reduce, traceLine } from "../actions/actions";
-import { assess, Assessment, heartVerdict } from "./assess";
+import { assess } from "./assess/assess";
+import { Assessment } from "./assess/types";
+import { heartVerdict } from "./assess/verdicts";
 import { BodyEvent, channelSeries, curveStrength, maxHeartRate, muscleStateAt, resolveEvent } from "./events";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./readout";
