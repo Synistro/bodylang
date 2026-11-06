@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { composedSpec } from "../closeup/composed";
 import { closeupOf, closeupSpec } from "../closeup/list";
-import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS, TRACK_FROM } from "../model/events";
+import { BodyEvent, CHANNELS, CustomStory, PRESETS, SEX_LABEL, SYMPTOMS, TRACK_FROM } from "../model/events/types";
 import { MUSCLE_GROUPS, MuscleGroup } from "../model/muscleGroups";
 import type { Cycle } from "../model/cycle";
 import { CYCLE, DAY } from "../model/params";

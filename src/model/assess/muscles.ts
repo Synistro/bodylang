@@ -1,4 +1,5 @@
-import { muscleStateAt, MuscleState } from "../events";
+import { muscleStateAt } from "../events/muscles";
+import { MuscleState } from "../events/types";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../muscleGroups";
 import { MUSCLE_RECOVERY, REFERENCE } from "../params";
 import { Trajectory } from "../engine/trajectory";

@@ -1,5 +1,5 @@
 import type { Cycle } from "../cycle";
-import type { BodyEvent, ChannelId, ResolvedEvent } from "../events";
+import type { BodyEvent, ChannelId, ResolvedEvent } from "../events/types";
 import { DAY } from "../params";
 import type { CustomSubstance, Scenario } from "../scenario";
 import { alcoholVolumeL, type Anthropometrics } from "./anthropometrics";

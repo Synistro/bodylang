@@ -1,4 +1,6 @@
-import { eventLevelAt, muscleStateFromEvent, ResolvedEvent } from "./events";
+import { eventLevelAt } from "./events/curves";
+import { muscleStateFromEvent } from "./events/muscles";
+import { ResolvedEvent } from "./events/types";
 import { PROCESS, REFERENCE } from "./params";
 import { hasFoodLine, mealGroups, mealProcessId, mealTitle, Process, ProcessStop } from "./processes/line";
 import { processesAt } from "./processes/processes";

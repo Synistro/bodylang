@@ -1,4 +1,4 @@
-import { muscleStoryAt } from "../model/events";
+import { muscleStoryAt } from "../model/events/muscles";
 import { defineCloseup } from "./define";
 
 const QUIET = { work: 0, tears: 0, immune: 0, swelling: 0, pain: 0, rebuilt: 0 };

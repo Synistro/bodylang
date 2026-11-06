@@ -4,7 +4,7 @@ import { foodOrigin, processOrigin, readingOrigin } from "./origin";
 import { processesAt } from "./processes/processes";
 import { simulate } from "./engine/simulate";
 import { Intake } from "./scenario";
-import type { BodyEvent } from "./events";
+import type { BodyEvent } from "./events/types";
 
 const body = { sex: "male", age: 30, heightCm: 180, weightKg: 80 } as const;
 const wake = [{ from: 0, posture: "sleeping" }, { from: 450, posture: "standing" }] as const;

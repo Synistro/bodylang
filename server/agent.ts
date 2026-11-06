@@ -11,7 +11,7 @@ import { NumberBook, unverifiedNumbers } from "./numberCheck";
 import { closeupGuidance } from "../src/closeup/list";
 import { traceTrack } from "./track";
 import { DATE_PATTERN } from "../src/model/day";
-import { PRESETS } from "../src/model/events";
+import { PRESETS } from "../src/model/events/types";
 import { readout } from "../src/model/readout";
 import { processesAt } from "../src/model/processes/processes";
 import { formatClock } from "../src/model/words";

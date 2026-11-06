@@ -1,4 +1,4 @@
-import { maxHeartRate } from "../../events";
+import { maxHeartRate } from "../../events/muscles";
 import { BLOOD_FLOW, HEART, PROCESS, REFERENCE, RESTING_SYSTOLIC_MMHG } from "../../params";
 import { POSTURES } from "../../scenario";
 import { OrganId } from "../../ids";

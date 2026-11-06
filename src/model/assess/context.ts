@@ -1,5 +1,7 @@
 import { lutealShare } from "../cycle";
-import { ChannelId, effectAt, ResolvedEvent, endOf, muscleStateAt, MuscleState, MuscleWork, BodyEvent } from "../events";
+import { ChannelId, ResolvedEvent, MuscleState, MuscleWork, BodyEvent } from "../events/types";
+import { effectAt } from "../events/curves";
+import { endOf, muscleStateAt } from "../events/muscles";
 import { CAFFEINE, CYCLE, DAY, Evidence, HEART, KIDNEY, PROCESS, REFERENCE, STOMACH, MUSCLE_RECOVERY } from "../params";
 import { heartFromCaffeine, heartFromDigestion } from "../engine/heart";
 import { caffeineLedgerAt, SeriesName, Trajectory, value } from "../engine/trajectory";

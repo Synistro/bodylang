@@ -1,6 +1,8 @@
 import type { ReadingId } from "../../model/ids";
 import { cyclePhase } from "../../model/cycle";
-import { effectAt, eventActiveAt, eventLevelAt, curveStrength, isMuscleState, MuscleState, muscleStateAt, namesOf, ResolvedEvent } from "../../model/events";
+import { effectAt, eventActiveAt, eventLevelAt, curveStrength, isMuscleState } from "../../model/events/curves";
+import { MuscleState, ResolvedEvent } from "../../model/events/types";
+import { muscleStateAt, namesOf } from "../../model/events/muscles";
 import { MUSCLE_GROUPS, MuscleGroup } from "../../model/muscleGroups";
 import { BLOOD_FLOW, CYCLE, Evidence, INSULIN, MUSCLE_RECOVERY, REFERENCE, SOURCES, STOMACH } from "../../model/params";
 import { ledgerAt, SeriesName, Trajectory, value } from "../../model/engine/trajectory";

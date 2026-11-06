@@ -1,5 +1,5 @@
 import type { Cycle } from "./cycle";
-import type { BodyEvent } from "./events";
+import type { BodyEvent } from "./events/types";
 import type { OrganId } from "./ids";
 import { DAY, KCAL_PER_G } from "./params";
 

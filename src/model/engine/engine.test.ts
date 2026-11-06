@@ -4,7 +4,7 @@ import { processesAt } from "../processes/processes";
 import { foodKcalOf, POSTURES } from "../scenario";
 import { hm, NO_NUTRIENTS } from "../testKit";
 import { SCENARIOS } from "../testScenarios";
-import { maxHeartRate } from "../events";
+import { maxHeartRate } from "../events/muscles";
 import { heartFromCaffeine, heartFromDigestion } from "./heart";
 import { simulate } from "./simulate";
 import { LEDGER_KEYS, ledgerAt, value } from "./trajectory";

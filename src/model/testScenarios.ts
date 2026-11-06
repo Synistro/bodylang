@@ -1,4 +1,4 @@
-import type { BodyEvent } from "./events";
+import type { BodyEvent } from "./events/types";
 import type { ActivitySpan, Body, CustomSubstance, Intake, Scenario } from "./scenario";
 import { hm, NO_NUTRIENTS } from "./testKit";
 

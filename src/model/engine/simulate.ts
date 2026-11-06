@@ -1,4 +1,5 @@
-import { ChannelId, runSessions } from "../events";
+import { ChannelId } from "../events/types";
+import { runSessions } from "../events/presets";
 import { hormonesAt, cycleDay } from "../cycle";
 import { BLOOD_FLOW, BODY_TEMPERATURE, CAFFEINE, HEART, RESTING_SYSTOLIC_MMHG } from "../params";
 import { POSTURES, Posture, Scenario } from "../scenario";

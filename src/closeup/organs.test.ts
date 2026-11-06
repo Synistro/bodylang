@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { BodyEvent } from "../model/events";
+import type { BodyEvent } from "../model/events/types";
 import { REFERENCE } from "../model/params";
 import { simulate } from "../model/engine/simulate";
 import { Intake, Scenario } from "../model/scenario";

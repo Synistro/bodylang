@@ -1,4 +1,6 @@
-import { effectAt, muscleStateAt, MuscleWork, namesOf } from "../events";
+import { effectAt } from "../events/curves";
+import { muscleStateAt, namesOf } from "../events/muscles";
+import { MuscleWork } from "../events/types";
 import { MUSCLE_GROUPS } from "../muscleGroups";
 import { CAFFEINE, CYCLE, DAY, FEELING_DISPLAY, LIPID, PROCESS, REFERENCE, STOMACH } from "../params";
 import { SystemId } from "../ids";

@@ -1,6 +1,7 @@
 import type { Feeling, Reading } from "./assess/types";
 import type { ReadingId } from "./ids";
-import { ChannelId, curveStrength } from "./events";
+import { ChannelId } from "./events/types";
+import { curveStrength } from "./events/curves";
 import { EXTENSIONS } from "./extensions";
 import { CYCLE, Evidence, PROCESS, SOURCES } from "./params";
 import { mealGroups, mealProcessId, Process } from "./processes/line";

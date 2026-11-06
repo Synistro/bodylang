@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { muscleCloseup } from "../../closeup/muscle";
-import { BodyEvent, muscleStateAt, MuscleState } from "../../model/events";
+import { BodyEvent, MuscleState } from "../../model/events/types";
+import { muscleStateAt } from "../../model/events/muscles";
 import type { MuscleGroup } from "../../model/muscleGroups";
 import { MUSCLE_RECOVERY, REFERENCE } from "../../model/params";
 import { chartOffsetHours, useStore } from "../../store";

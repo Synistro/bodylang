@@ -1,5 +1,5 @@
 import { CAFFEINE } from "./params";
-import { muscleStateAt } from "./events";
+import { muscleStateAt } from "./events/muscles";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { processesAt } from "./processes/processes";
 import { Trajectory, value } from "./engine/trajectory";

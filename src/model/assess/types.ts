@@ -1,4 +1,4 @@
-import { MuscleState } from "../events";
+import { MuscleState } from "../events/types";
 import { MuscleGroup } from "../muscleGroups";
 import { Evidence } from "../params";
 import { SeriesName } from "../engine/trajectory";

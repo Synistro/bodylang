@@ -1,4 +1,4 @@
-import { eventLevelAt } from "../model/events";
+import { eventLevelAt } from "../model/events/curves";
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 

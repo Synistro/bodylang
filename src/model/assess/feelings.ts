@@ -1,5 +1,6 @@
 import { crampLevel } from "../cycle";
-import { curveStrength, muscleStateAt, namesOf } from "../events";
+import { curveStrength } from "../events/curves";
+import { muscleStateAt, namesOf } from "../events/muscles";
 import { MUSCLE_GROUPS } from "../muscleGroups";
 import { ACTIVITY, FEELING_DISPLAY, PROCESS, REFERENCE } from "../params";
 import { drowsyFromMeal, drowsyFromSleepPressure, mealDipOf } from "../engine/feel";

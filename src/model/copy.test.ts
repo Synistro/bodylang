@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { assess } from "./assess/assess";
 import { Assessment, Reading } from "./assess/types";
 import { ReadingId } from "./ids";
-import { maxHeartRate } from "./events";
+import { maxHeartRate } from "./events/muscles";
 import { MUSCLE_GROUPS } from "./muscleGroups";
 import { openingReply, readout } from "./readout";
 import { processesAt } from "./processes/processes";

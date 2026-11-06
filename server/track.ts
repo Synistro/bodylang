@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { CrossedPart, TrackFrom } from "../src/model/events";
+import type { CrossedPart, TrackFrom } from "../src/model/events/types";
 import type { Sex } from "../src/model/scenario";
 import type { OrganId } from "../src/model/ids";
 

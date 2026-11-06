@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BodyEvent, maxHeartRate, muscleStateAt } from "./events";
+import { BodyEvent } from "./events/types";
+import { maxHeartRate, muscleStateAt } from "./events/muscles";
 import { ACTIVITY, ALCOHOL, FASTING, FEEL, GLUCOSE, REFERENCE } from "./params";
 import { simulate } from "./engine/simulate";
 import { foodKcalOf, ActivitySpan, Body, Intake, Scenario } from "./scenario";

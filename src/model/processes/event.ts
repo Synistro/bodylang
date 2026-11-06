@@ -1,4 +1,6 @@
-import { ChannelId, currentStopIndex, effectAt, eventActiveAt, eventLevelAt, EventStop, isMuscleState, muscleStateFromEvent, namesOf, ResolvedEvent } from "../events";
+import { ChannelId, EventStop, ResolvedEvent } from "../events/types";
+import { currentStopIndex, effectAt, eventActiveAt, eventLevelAt, isMuscleState } from "../events/curves";
+import { muscleStateFromEvent, namesOf } from "../events/muscles";
 import { PROCESS } from "../params";
 import { levelWord, whenWords } from "../words";
 import { Draft, Process, clock, hasStarted, numbered, shareOf } from "./line";

@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { Levels, levelsAt, Travel } from "../closeup/define";
 import { closeupOf } from "../closeup/list";
 import { actingAt } from "../model/acting";
-import type { EventTrack, TrackFrom } from "../model/events";
+import type { EventTrack, TrackFrom } from "../model/events/types";
 import type { OrganId } from "../model/ids";
 import type { AnchorId, Stage } from "../scene/stage";
 import { stepOnScreen, trackOnScreen, useStore } from "../store";

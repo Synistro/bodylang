@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACTION_SCHEMAS } from "../actions/actions";
-import type { BodyEvent } from "../model/events";
+import type { BodyEvent } from "../model/events/types";
 import type { Trajectory } from "../model/engine/trajectory";
 import type { OrganId } from "../model/ids";
 import { AS_THE_MODEL_SAYS, levelsAt, litLevels, panelsOf } from "./define";

@@ -1,4 +1,4 @@
-import type { MuscleState } from "../../model/events";
+import type { MuscleState } from "../../model/events/types";
 import { MUSCLE_RECOVERY, REFERENCE } from "../../model/params";
 
 // Where a muscle is in recovery, in one plain sentence. `peakAhead` says soreness is still to come.

@@ -88,7 +88,7 @@ export async function quickChecks(worktree: string, id: string, signal: AbortSig
   if (reasons.length) return reasons.join("\n");
   const types = await shell("node_modules/.bin/tsc", ["--noEmit", "-p", "."], worktree, CHECK_TIMEOUT_MS, signal);
   if (types) return `Type check failed:\n${types}`;
-  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes/processes.test.ts", "src/model/events.test.ts"], worktree, CHECK_TIMEOUT_MS, signal);
+  const tests = await shell("node_modules/.bin/vitest", ["run", EXTENSIONS_FOLDER, "src/model/copy.test.ts", "src/model/processes/processes.test.ts", "src/model/events/events.test.ts"], worktree, CHECK_TIMEOUT_MS, signal);
   return tests ? `Tests failed:\n${tests}` : null;
 }
 

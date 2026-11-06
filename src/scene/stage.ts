@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { curveStrength, EventTrack, illnessSites, MuscleState, muscleStateAt, ResolvedEvent, TrackFrom } from "../model/events";
+import { curveStrength, illnessSites } from "../model/events/curves";
+import { EventTrack, MuscleState, ResolvedEvent, TrackFrom } from "../model/events/types";
+import { muscleStateAt } from "../model/events/muscles";
 import { MUSCLE_GROUPS, MUSCLE_LABEL, MuscleGroup } from "../model/muscleGroups";
 import { LIVER, MUSCLE_RECOVERY, REFERENCE, STOMACH } from "../model/params";
 import type { Process, ProcessStop } from "../model/processes/line";

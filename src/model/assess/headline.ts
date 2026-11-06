@@ -1,4 +1,6 @@
-import { curveStrength, namesOf, ResolvedEvent } from "../events";
+import { curveStrength } from "../events/curves";
+import { namesOf } from "../events/muscles";
+import { ResolvedEvent } from "../events/types";
 import { MUSCLE_RECOVERY, PROCESS, REFERENCE } from "../params";
 import { foodKcalOf } from "../scenario";
 import { inSentence } from "../words";

@@ -1,4 +1,4 @@
-import { curveStrength } from "../model/events";
+import { curveStrength } from "../model/events/curves";
 import { REFERENCE } from "../model/params";
 import { Trajectory, value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";

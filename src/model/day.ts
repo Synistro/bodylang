@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Cycle } from "./cycle";
-import type { BodyEvent } from "./events";
+import type { BodyEvent } from "./events/types";
 import { DAY } from "./params";
 import { ActivitySpan, Body, CustomSubstance, Intake, Posture, postureAt } from "./scenario";
 
