@@ -5,3 +5,5 @@ dist
 /.venv-pipeline/
 __pycache__/
 __pycache__/
+.env
+.env.*

@@ -4,6 +4,7 @@ import { closeupGuidance } from "../src/closeup/list";
 import type { Intake } from "../src/model/scenario";
 import { SYSTEMS } from "../src/model/systems";
 import { formatClock } from "../src/model/words";
+import { buildsAllowed } from "./claude";
 
 export type Mode = "tell" | "ask";
 export type Depth = "simple" | "deep";
@@ -51,7 +52,7 @@ Times: the current time is given below and is always right, and tools take minut
 
 View: leave the screen showing what matters most for this message. After logging something, call show_system for the system it affects most, such as muscles after a workout, immune during an illness or digestion after a meal. When they ask about one organ, call focus_organ instead, and when they ask where one thing has got to or how something works, call show_process with an id from the readout.
 
-If they ask about an organ or a process of the body that the readout has no process for and no tool logs, such as the thyroid or melatonin, answer in a line from what you know, marked as your own knowledge, and call add_process once. A separate session then writes it, and it appears on the body once its tests pass, which takes about ten minutes. Tell them that in your reply. Use it only for a lasting part of how a body works. Something that happened to them is log_event, and a drug is define_substance.
+If they ask about an organ or a process of the body that the readout has no process for and no tool logs, such as the thyroid or melatonin, answer in a line from what you know, marked as your own knowledge.
 
 Numbers: every number in your reply must come from a readout. Each tool returns a readout at the current time, and read_body gives one at any other minute. Don't state physiology figures from memory, because the person is looking at the model's figures and yours must match them. Blood sugar is in mmol/L.
 
@@ -120,8 +121,15 @@ const BRIEF_PROMPT = `
 
 Work in as few messages as you can, because the person is watching and each message costs them seconds. Send every call you can together in one message. Logging tools record and return nothing, so put read_body at the current time in the same message as your last log or view call, and then call reply. A reply alone in the next message is ideal. For a food: find_foods first, then all the log_food and log_dish calls, the view and read_body together, then reply. This overrides what the other instructions say about each tool returning a readout.`;
 
+const BUILDS_PROMPT = `
+
+When you answer from your own knowledge about an organ or a process of the body that the readout has no process for and no tool logs, also call add_process once. A separate session then writes it, and it appears on the body once its tests pass, which takes about ten minutes. Tell them that in your reply. Use it only for a lasting part of how a body works. Something that happened to them is log_event, and a drug is define_substance.`;
+
 export const systemPromptFor = (mode: Mode, depth: Depth, plan: TellPlan) =>
-  SYSTEM_PROMPT + (mode === "ask" ? ASK_PROMPT + DEPTH_PROMPT[depth] : TELL_PROMPT) + (plan.brief ? BRIEF_PROMPT : "");
+  SYSTEM_PROMPT +
+  (mode === "ask" ? ASK_PROMPT + DEPTH_PROMPT[depth] : TELL_PROMPT) +
+  (plan.brief ? BRIEF_PROMPT : "") +
+  (buildsAllowed() ? BUILDS_PROMPT : "");
 
 // set_now moves the clock for the scripted demo. Claude reads the real clock and never gets it.
 export type ToolAction = Exclude<ActionName, "set_now">;

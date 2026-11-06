@@ -190,6 +190,27 @@ describe("what each mode can reach", () => {
     );
   });
 
+  it("offers a process build only when a person turned builds on", () => {
+    const plan = planFor("ask", "simple");
+    const before = process.env.BODYLANG_BUILDS;
+    try {
+      delete process.env.BODYLANG_BUILDS;
+      expect(systemPromptFor("ask", "simple", plan)).not.toContain("add_process");
+      process.env.BODYLANG_BUILDS = "1";
+      expect(systemPromptFor("ask", "simple", plan)).toContain("add_process");
+    } finally {
+      if (before === undefined) delete process.env.BODYLANG_BUILDS;
+      else process.env.BODYLANG_BUILDS = before;
+    }
+  });
+
+  it("has no build tool to call while builds are off", () => {
+    const before = process.env.BODYLANG_BUILDS;
+    delete process.env.BODYLANG_BUILDS;
+    expect(turnOf().turn.tools.map((tool) => tool.name)).not.toContain("add_process");
+    if (before !== undefined) process.env.BODYLANG_BUILDS = before;
+  });
+
   it("gives Claude no clock of its own", () => {
     expect(actionToolsFor("tell")).not.toContain("set_now");
     expect(actionToolsFor("ask")).not.toContain("set_now");

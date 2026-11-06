@@ -104,7 +104,7 @@ export async function runTell(
   } catch (e: unknown) {
     const reason = e instanceof Error ? e.message : String(e);
     console.error("[bodylang] bridge error", reason);
-    send({ type: "error", message: `Claude Code could not run: ${reason}` });
+    send({ type: "error", message: `Claude could not run: ${reason}` });
     measure.subtype = "error";
   }
   send({ type: "done" });

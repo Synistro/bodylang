@@ -126,7 +126,7 @@ export async function handleExplain(req: IncomingMessage, res: ServerResponse) {
     }
   } catch (e: unknown) {
     if (!stopped.signal.aborted)
-      send({ type: "error", message: `Claude Code could not run: ${e instanceof Error ? e.message : String(e)}` });
+      send({ type: "error", message: `Claude could not run: ${e instanceof Error ? e.message : String(e)}` });
   }
   send({ type: "done" });
   res.end();

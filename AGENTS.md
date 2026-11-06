@@ -1,6 +1,6 @@
 # Working in Bodylang
 
-Bodylang is a local app for one person. A per-minute physiology model (`src/model`) computes a whole day from what the person logged, a 3D body and panels (`src/scene`, `src/ui`) draw that result, and Claude reaches the model through the Vite dev server (`server/`). `README.md` says how to run it and where each file is. `PLAN.md` holds the product design. `REFACTOR.md` records how the code got its current shape.
+Bodylang is a local app for one person. A per-minute physiology model (`src/model`) computes a whole day from what the person logged, a 3D body and panels (`src/scene`, `src/ui`) draw that result, and Claude reaches the model through the Vite dev server (`server/`). `README.md` says how to run it and where each file is. `PLAN.md` holds the product design.
 
 Most of this code is written by agents, so the repository checks what an agent would forget. When you add something, the compiler or a test should tell you what is missing. If you find a place where neither does, add the check.
 
@@ -18,7 +18,7 @@ To write formatting changes:
 pnpm format
 ```
 
-To run the app for testing, use a second server with its own data folder. The owner's real days live in `~/.bodylang/days`, and a test must never touch them. Port 5183, which `pnpm dev` uses, is the owner's own server and also feeds the wallpaper. The port is strict, so if 5199 is taken, another session is using it and you should pick another.
+To run the app for testing, use a second server with its own data folder. The person's real days live in `~/.bodylang/days`, and a test must never touch them. Port 5183, which `pnpm dev` uses, is their own server and may also feed a wallpaper. Anything that calls Claude needs `ANTHROPIC_API_KEY` in the server's environment. `pnpm check` and `?demo` don't. The port is strict, so if 5199 is taken, another session is using it and you should pick another.
 
 ```bash
 BODYLANG_DATA=/tmp/bodylang-test pnpm exec vite --port 5199
@@ -27,11 +27,11 @@ BODYLANG_DATA=/tmp/bodylang-test pnpm exec vite --port 5199
 ## Rules
 
 - **Saved days.** Never read or write `~/.bodylang/days`. A saved file is a `DayDoc` (`src/model/day.ts`) with `version: 1`, and it stores `Body`, `Intake`, `ActivitySpan`, `CustomSubstance`, `BodyEvent` and `Cycle` under their own field names. Renaming any of those fields would lose saved days, so it needs a forward migration: raise the version and convert the old shape in `parseDayDoc`, which today rejects every other version. `dayDocSchema` in the same file also names those fields, behind a cast that hides them from the compiler, and `server/tell.ts` validates requests with it.
-- **The look.** Colours, type, spacing and every tuned constant in the scene stay as they are unless the owner asks. A colour change needs the owner's approval on a mock. `WALL_FPS` in `src/wall.ts` stays 90.
+- **The look.** Colours, type, spacing and every tuned constant in the scene stay as they are unless a maintainer asks. A colour change needs a maintainer's approval on a mock. `WALL_FPS` in `src/wall.ts` stays 90.
 - **Tests.** Test backend logic and complicated things. Write no component tests, DOM tests or screenshot suites. When a component holds logic worth testing, move that logic into a plain function and test the function.
-- **Money.** A Tell costs about $0.03 and an Ask about $0.10. You can run those to check your work. A real process build costs about $0.80 and takes minutes, so it needs the owner's go. A build that passes commits to `main` in this checkout from any server, including one on port 5199, because `BODYLANG_DATA` moves only the days and the builds folder. `tools/speed-bench.mjs` defaults to a $12 budget, so ask first and pass `--budget`.
+- **Money.** A Tell costs about $0.03 and an Ask about $0.10. You can run those to check your work. Builds are off unless the server has `BODYLANG_BUILDS=1`. A real process build costs about $0.80 and takes minutes, so it needs a go-ahead from the person you work for. A build that passes commits to the checked-out branch from any server, including one on port 5199, because `BODYLANG_DATA` moves only the days and the builds folder. `tools/speed-bench.mjs` defaults to a $12 budget, so ask first and pass `--budget`.
 - **Failures.** Add no fallback or retry paths. Let a failure show, in words that say what to do about it.
-- **Git.** Several agent sessions may share this checkout, so `HEAD` can move while you work. Run `git status` and `git log -3` before you commit, check `git diff --cached` for what another session staged, and commit with explicit paths: `git commit -m "..." -- <paths>`. Never use `commit -a`. There is one branch, `main`, and no remote.
+- **Git.** Several agent sessions may share this checkout, so `HEAD` can move while you work. Run `git status` and `git log -3` before you commit, check `git diff --cached` for what another session staged, and commit with explicit paths: `git commit -m "..." -- <paths>`. Never use `commit -a`.
 - **Commit messages.** Write one plain sentence in the style of `git log`, saying what is now true. Add no `Co-Authored-By` trailer and no generated-with line.
 
 ## How a sentence becomes a picture
@@ -71,10 +71,10 @@ The dev server loads server files per request through `ssrLoadModule`, so editin
 | Walkthrough | The steps of an Ask answer, which Claude gives through the `guide` tool. Each step moves the view and the time and shows its words |
 | Composed drawing | A close-up Claude designs for one answer from layers and actors, with code doing the layout |
 | Readout | What Claude reads: `readout(trajectory, minute)` in `src/model/readout.ts`, a summary of the body at one minute |
-| Build | A separate Claude session that writes a new process in a throwaway git worktree, started by the `add_process` tool |
+| Build | A separate Claude session that writes a new process in a throwaway git worktree, started by the `add_process` tool, which exists only with `BODYLANG_BUILDS=1` |
 | Gate | The checks a build must pass before its two files land: `server/extendCheck.ts`, `src/model/extensions/check.ts`, then every test |
 | Demo | `?demo`, which replays a scripted day with no Claude call and saves nothing |
-| Wallpaper | The same page at `?wall`, shown on the owner's desktop by the Plash app |
+| Wallpaper | The same page at `?wall`, shown as a desktop wallpaper by the Plash app |
 | Evidence grade | `A`, `B` or `C` beside a number or line, for how strong its source is |
 
 ## Layers
@@ -179,11 +179,13 @@ Photograph the same view before and after your change, and compare by eye or wit
 
 ## What must survive
 
-Removing any of these is a product decision for the owner, as is removing the shared `reduce` or Ask's copy described above.
+Removing any of these is a product decision for a maintainer, as is removing the shared `reduce` or Ask's copy described above.
 
 - Everything on screen is a pure function of the trajectory and the minute. Scene targets are pure, values ease toward them, and ambient phases such as the heartbeat run on their own clocks.
 - `simulate` is bit-deterministic.
 - No API key reaches the browser, and a request from another origin is refused (`server/requestGuard.ts`).
+- Claude runs on the person's own `ANTHROPIC_API_KEY`, with no fallback to a Claude login (`server/claude.ts`).
+- Builds and removing a process stay off unless a person sets `BODYLANG_BUILDS=1`, because each one commits to their checkout.
 - Added processes get a read-only `BodyView`, are one file and its test, and land only as one commit after every test passes.
 - Numbers carry their sources and evidence grades. Ledgers conserve energy, with fibre's energy counted on top. `published.test.ts` pins the model to published figures.
 - `server/numberCheck.ts` marks any number in a reply that the model never returned.

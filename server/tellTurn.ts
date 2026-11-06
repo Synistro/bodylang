@@ -9,6 +9,7 @@ import { readout } from "../src/model/readout";
 import { whereabouts } from "../src/model/whereabouts";
 import { formatClock } from "../src/model/words";
 import { BuildStatus, TellEvent } from "../src/wire";
+import { buildsAllowed } from "./claude";
 import { startBuild } from "./extend";
 import { combineIngredients, Food, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 import { NumberBook, unverifiedNumbers } from "./numberCheck";
@@ -265,21 +266,25 @@ export function startTurn(
       LOG_DISH.shape,
       async (args) => logDish(LOG_DISH.parse(args)),
     ),
-    tool(
-      "add_process",
-      "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for about ten minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
-      {
-        id: z.string().describe("Lowercase letters and underscores, such as thyroid"),
-        title: z.string().max(40).describe("What it is called on screen, such as Thyroid"),
-        what: z.string().max(1000).describe("What the person wants to understand, in a sentence or two"),
-      },
-      async (request) => {
-        const result = startBuild(request, buildChanged);
-        return result.started
-          ? answer("Started. Tell them it is being added and will appear on the body once its tests pass.")
-          : refusal(`Not started. ${result.reason}`);
-      },
-    ),
+    ...(buildsAllowed()
+      ? [
+          tool(
+            "add_process",
+            "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for about ten minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
+            {
+              id: z.string().describe("Lowercase letters and underscores, such as thyroid"),
+              title: z.string().max(40).describe("What it is called on screen, such as Thyroid"),
+              what: z.string().max(1000).describe("What the person wants to understand, in a sentence or two"),
+            },
+            async (request) => {
+              const result = startBuild(request, buildChanged);
+              return result.started
+                ? answer("Started. Tell them it is being added and will appear on the body once its tests pass.")
+                : refusal(`Not started. ${result.reason}`);
+            },
+          ),
+        ]
+      : []),
     tool(
       "read_body",
       "Reads the model's numbers at any minute of the day, now or in the future, without changing anything. Use it to check a forecast before stating it.",

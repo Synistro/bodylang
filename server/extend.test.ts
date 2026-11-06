@@ -2,13 +2,15 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Readable } from "node:stream";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 // Everything here is real except Claude and the two suites: real git, a real worktree and a real commit,
 // in a small repository of its own.
 
 import type { BuildStatus } from "../src/wire";
-import { BuildParts, removeProcess, runBuild } from "./extend";
+import { BuildParts, handleExtend, removeProcess, runBuild } from "./extend";
 
 const git = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, encoding: "utf8" });
 const GOOD_PROCESS =
@@ -182,5 +184,16 @@ describe("building a process", () => {
     expect(commits()[0]).toBe("Remove process: thyroid");
     await expect(removeProcess("thyroid", repo)).rejects.toThrow(/no process/);
     await expect(removeProcess("../api", repo)).rejects.toThrow(/Not a process/);
+  });
+});
+
+describe("removing a process through the app", () => {
+  it("refuses while builds are off, because it would commit to this checkout", async () => {
+    const before = process.env.BODYLANG_BUILDS;
+    delete process.env.BODYLANG_BUILDS;
+    const body = JSON.stringify({ action: "remove", id: "thyroid" });
+    const req = Object.assign(Readable.from([Buffer.from(body)]), { method: "POST" }) as unknown as IncomingMessage;
+    await expect(handleExtend(req, {} as ServerResponse)).rejects.toThrow(/BODYLANG_BUILDS=1/);
+    if (before !== undefined) process.env.BODYLANG_BUILDS = before;
   });
 });

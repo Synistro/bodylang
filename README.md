@@ -1,30 +1,60 @@
 # Bodylang
 
-A 3D human body that shows what is happening inside you. You tell it in plain words what you ate, did or came down with, Claude Code turns that into function calls, and a physiology model redraws the body. The design and roadmap are in [PLAN.md](PLAN.md).
+A 3D human body that shows what is happening inside you. You tell it in plain words what you ate, did or came down with, Claude turns that into function calls, and a physiology model redraws the body. The design and its evidence are in [PLAN.md](PLAN.md).
+
+Bodylang shows estimates for a typical body. It isn't medical advice and can't diagnose anything.
+
+## Beta status
+
+This is an early beta, built and tested on one Mac. Other systems are untested. Expect wrong numbers: many of the model's parameters are estimates, marked as such in `src/model/params.ts`, and the checks against published figures were also used to tune it. `PLAN.md` ends with the known limits. These matter most:
+
+- The female body is a male body warped to her shape, apart from the uterus, ovaries and tubes, which come from another source. No uterine vessels are drawn.
+- Claude estimates portions, and those estimates move every number after them.
+- It has no chronic diseases and no individual gut differences.
 
 ## Run it
 
-Requires Node 20 or newer, pnpm, and Claude Code logged in on this machine.
+Requires Node 20 or newer, pnpm, and an Anthropic API key from [console.anthropic.com](https://console.anthropic.com).
 
 ```bash
 pnpm install
 ```
 
 ```bash
+export ANTHROPIC_API_KEY=your-key
+```
+
+```bash
 pnpm dev
 ```
 
-Then open http://localhost:5183. It opens on today at the real time. Anything you type goes to your local Claude Code through the dev server, so it needs the dev server and doesn't work from a static build. http://localhost:5183/?demo replays a scripted day with no model call, and saves nothing.
+Then open http://localhost:5183. It opens on today at the real time. What you type goes to Claude through the dev server, which holds your key, so the page needs the dev server and doesn't work from a static build. Your key never reaches the browser. http://localhost:5183/?demo replays a scripted day with no Claude call and no key, and saves nothing.
 
-Your days are saved as one file per date in `~/.bodylang/days/`. Set `BODYLANG_DATA` to keep them somewhere else, `BODYLANG_EXPLAIN_MODEL` to explain selected words with something other than `claude-haiku-5-5`, and `BODYLANG_MODEL` to use a model other than `claude-sonnet-5-5`, such as `claude-opus-5-5`.
+Anything you type is billed to your key. In measured runs, a Tell cost about $0.02, a Simple Ask $0.05 to $0.10, and a Deep Ask $0.27 to $0.38.
+
+What you type and your current day go to Anthropic to get an answer. Your days are saved on your machine as one file per date in `~/.bodylang/days/`.
+
+| Setting | What it does |
+|---|---|
+| `BODYLANG_DATA` | Keeps your days and builds in another folder |
+| `BODYLANG_MODEL` | The model for Tell and Simple, `claude-sonnet-5-5` by default |
+| `BODYLANG_DEEP_MODEL` | The model for Deep, `claude-opus-5-5` by default |
+| `BODYLANG_EXPLAIN_MODEL` | The model that explains selected words, `claude-haiku-5-5` by default |
+| `BODYLANG_BUILDS` | Set to `1` to let Claude add processes to the app, as below |
+
+To check the code, which needs no key:
 
 ```bash
 pnpm check
 ```
 
+## Let Claude add processes
+
+This is off by default. With `BODYLANG_BUILDS=1`, asking about something the model doesn't have starts a separate Claude session that writes the process in a throwaway copy of the repository. If every test passes, it lands as one commit on the branch you have checked out. A build costs about $0.80 and takes several minutes, and it starts without asking you first. Remove this process, on the page of an added process, also needs this setting, because removing one is a commit too.
+
 ## Run it as your wallpaper
 
-Install [Plash](https://sindresorhus.com/plash), keep `pnpm dev` running, and add this website in Plash:
+On a Mac, you can keep the body on your desktop. Install [Plash](https://sindresorhus.com/plash), keep `pnpm dev` running, and add this website in Plash:
 
 ```text
 http://localhost:5183/?wall
@@ -64,7 +94,7 @@ open "plash:reload"
 | `src/closeup/` | What Claude can direct in an organ's close-up during an Ask walkthrough, and the drawings it can compose: levels in words, how the model sets them, and the layout rules |
 | `src/wall.ts` | Wallpaper mode |
 | `server/routes.ts`, `server/http.ts`, `server/requestGuard.ts` | The one table of routes, reading requests and streaming events, and which requests are turned away |
-| `server/tell.ts`, `tellTurn.ts`, `tellPrompt.ts`, `claude.ts` | The Claude Code bridge: running a turn, its tools, its prompts, and its settings |
+| `server/tell.ts`, `tellTurn.ts`, `tellPrompt.ts`, `claude.ts` | The Claude bridge: running a turn, its tools, its prompts, and its settings |
 | `server/numberCheck.ts` | Checks every number in Claude's replies against what the model returned |
 | `server/explain.ts`, `src/ui/Explain.tsx` | What selected words mean, from Haiku, in a panel above them |
 | `server/extend.ts`, `extendSession.ts`, `extendCheck.ts` | Adding a process: the steps that land it, the session that writes it, and the checks before it lands |
@@ -129,6 +159,8 @@ The food table comes from two public USDA downloads, which need no account. `pip
 - Anatomy: [Z-Anatomy](https://github.com/Z-Anatomy/Models-of-human-anatomy), CC BY-SA 4.0, derived from [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/desc.html), © The Database Center for Life Science. The bones, muscles, organs and vessels here are rewrapped, decimated and warped, and `public/assets/CREDITS.md` says what that means for reusing them.
 - Uterus, ovaries and tubes: [HuBMAP CCF 3D Reference Object Library](https://hubmapconsortium.github.io/ccf/pages/ccf-3d-reference-library.html), built from the NLM Visible Human data, CC BY 4.0.
 - Body: [Anny](https://github.com/naver/anny) by NAVER Labs Europe, Apache 2.0, using MakeHuman/MPFB2 data, CC0.
-- Colours: [Flexoki](https://stephango.com/flexoki) by Steph Ango.
+- Colours: [Flexoki](https://stephango.com/flexoki) by Steph Ango, MIT.
 
-Bodylang shows estimates for a typical body and isn't medical advice.
+## License
+
+The code is under the [MIT License](LICENSE). The meshes in `public/assets/` are not: most are CC BY-SA 4.0, so anything you make from them must share alike, and `public/assets/CREDITS.md` lists each source. The food table comes from USDA and is public domain.

@@ -1,6 +1,6 @@
-# Bodylang plan
+# Bodylang design
 
-Bodylang is one 3D human body that shows what is happening inside you right now. You say in plain words what you ate, drank, took, did or came down with. Claude Code turns that into function calls, a physiology model recalculates your day, and the body, readings and day chart redraw from the result.
+Bodylang is one 3D human body that shows what is happening inside you right now. You say in plain words what you ate, drank, took, did or came down with. Claude turns that into function calls, a physiology model recalculates your day, and the body, readings and day chart redraw from the result.
 
 It runs on your Mac: `pnpm dev`, then http://localhost:5183, or as your desktop wallpaper through Plash at http://localhost:5183/?wall. You type in the box at the bottom left. It follows the real clock and saves your day, so you can close it and come back. [README.md](README.md) has the setup. "I" in this document is Claude, the session that built it.
 
@@ -26,7 +26,7 @@ Claude Code ── calls functions ──► find_foods(pizza) ──► rows of
 
 The default body is a 30-year-old man, 180 cm and 80 kg. You change it from the line under the clock, or by saying so. http://localhost:5183/?demo replays a scripted day without calling Claude or saving anything: "It's 5 pm. 15 minutes ago I ate a sugar bar with pizza, and I had coffee this morning. I'm sitting." For that body, it gives these results at 17:00. Blood sugar is 4.7 mmol/L and peaks at 6.9 near 17:53. The stomach holds 540 ml and empties near 22:37. Meal fat peaks later, near 19:50, because it reaches the blood through the lymph. The morning coffee has 0.59 mg/L of caffeine left, which blocks about 4 of every 100 tired signals in the brain. A 15 minute walk now would lower the sugar peak by 0.2 mmol/L, which is the kind of alternative Claude can offer under an answer.
 
-The body, readings, sentences and day chart all read this one calculation. What the scene shows is a pure function of that result: targets come from the model, values ease toward them, and ambient phases such as the heartbeat and walking run on their own clocks. This rule comes from the [Teardown](https://x.com/elvar_official/status/2116174609355571402) article you sent. Once the day is calculated, the state of the body at any moment depends only on the time of day, so dragging across the day chart replays it.
+The body, readings, sentences and day chart all read this one calculation. What the scene shows is a pure function of that result: targets come from the model, values ease toward them, and ambient phases such as the heartbeat and walking run on their own clocks. Once the day is calculated, the state of the body at any moment depends only on the time of day, so dragging across the day chart replays it.
 
 ## Your day
 
@@ -66,7 +66,7 @@ Select words in any sentence or diagram, such as TRH in a walkthrough, and a sma
 
 The body stands in the middle of the window. At the top left is the clock, with your measurements under it. Below them is the rail, an outline of the body: the systems as plain text, with the one you are in opened to show where you are. The message box is at the bottom of that column, with the latest answer as plain text above it. On the right is a page for where you are, in a column of the same width, so the body stays centered. Under the body is the day chart.
 
-The look uses the system font at 13 px for most text and 20 px at most, a warm near-black background with hairlines, and no shadows. Only the day chart and the organ diagrams sit on a panel. Icons are for finding your way and for controls everybody knows, so they appear on the list of systems and on the play, skip, send and close buttons, thin and in one quiet tone. What you may feel also has a thin icon, in the colour of the part of the body it comes from. Everything said on the page stays in words. It opens dark, and Light at the bottom right switches to a cream background.
+The look uses the system font at 13 px for most text and 20 px at most, a warm near-black background with hairlines, and no shadows. Only the day chart and the organ diagrams sit on a panel. Icons are for finding your way and for controls everybody knows, so they appear on the list of systems and on the play, skip, send and close buttons, thin and in one quiet tone. What you may feel also has a thin icon, in the colour of the part of the body it comes from. Everything said on the page stays in words. It opens dark, and Light at the bottom right switches to a white background.
 
 Two questions organise everything:
 
@@ -106,7 +106,7 @@ The switch on the message box has two settings. **Tell** is for what happened, a
 
 An Ask runs on a temporary copy of your day, with your real day set aside untouched. Claude's tools act on the copy, so the body, readings, rail and day chart all show the hypothetical. While you are exploring, a dashed frame runs around the window and a line at the top shows your question with Back to your day. A long question gets a short name there from Claude Haiku, asked for beside the answer. Leaving through that link, pressing Esc from the overview, or switching to Tell puts your real day back exactly as it was, and anything still on its way from Claude is dropped. A follow-up builds on the same copy. To make something real, switch to Tell and say it happened.
 
-Ask for "what if I eat a burger and fries now" and Claude logs them on the copy, then answers in two parts. The short answer sits above the message box: "Burger and fries would push your blood sugar peak to 8.1 mmol/L around 18:04." A walkthrough sits above the day chart, and each step moves the view and the time and says what is happening and why. The day chart draws your real day in grey behind the hypothetical, so the difference is the picture. A question about a concept, such as how insulin works, changes nothing in your day and uses the same walkthrough to go through the organs involved. If the model has nothing for that concept, Claude also starts adding it, as the next section describes.
+Ask for "what if I eat a burger and fries now" and Claude logs them on the copy, then answers in two parts. The short answer sits above the message box: "Burger and fries would push your blood sugar peak to 8.1 mmol/L around 18:04." A walkthrough sits above the day chart, and each step moves the view and the time and says what is happening and why. The day chart draws your real day in grey behind the hypothetical, so the difference is the picture. A question about a concept, such as how insulin works, changes nothing in your day and uses the same walkthrough to go through the organs involved. If the model has nothing for that concept and builds are turned on, Claude also starts adding it, as described under Claude adds what's missing.
 
 ## Close-ups
 
@@ -120,7 +120,7 @@ Simple and Deep are two settings beside the Tell and Ask switch. Simple runs on 
 
 ### Ask follows the question
 
-While exploring, the screen shows only what differs from your day. Your day stays in the model, because a meal really does slow how fast alcohol arrives, and it stays off the screen. After a cigarette question, the left list holds the cigarette and nothing you ate, Heart & lungs says "Raised" and the sections it didn't change say nothing. The chart drops curves the question didn't move and ticks for what you already logged, and a page's sentence and readings show only if they read differently from your day.
+While exploring, the screen shows only what differs from your day. Your day stays in the model, because a meal really does slow how fast alcohol arrives, and it stays off the screen. After a cigarette question, the left list holds the cigarette and nothing you ate, Heart & lungs says "Raised" and the sections it didn't change say nothing. The chart drops curves the question didn't move and ticks for what you already logged, and a page's sentence, readings and drawing show only if they read differently from your day. A drawing that a step points into stays, and so does one Claude composed.
 
 One comparison does all of this: Ask keeps your real day beside the copy (`yourDayWhileAsking` in `src/store.ts`), and each part of the screen asks whether what it is about to show is also true of that day. Anything Claude names in a step shows anyway, so it can bring in the pizza where the pizza matters. Outside Ask, everything shows as usual.
 
@@ -236,11 +236,11 @@ Parameters were tuned by hand toward these same targets, so treat every row of t
 
 ## The Claude Code connection
 
-The dev server runs Claude Code through the Claude Agent SDK, using your existing login, on Claude Sonnet 5.5 at low effort. Claude gets 20 tools and no file or shell access:
+The dev server runs Claude Code through the Claude Agent SDK, using your `ANTHROPIC_API_KEY`, on Claude Sonnet 5.5 at low effort. There is no fallback to a Claude login, because Anthropic's terms have apps built on the Agent SDK use an API key. Claude gets up to 20 tools and no file or shell access:
 
 - `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
 - 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.
-- `add_process` asks a separate session to add something the model doesn't have.
+- `add_process` asks a separate session to add something the model doesn't have, and exists only with `BODYLANG_BUILDS=1`.
 - `what_if` offers another choice you could make, in words under the answer and as a line on the day chart, in Tell mode only.
 - `guide` is the walkthrough, in Ask mode only. Each step names what to show and which minute to show it at, and can point at parts of the close-up, as described under Close-ups.
 - `read_body` returns the model's numbers at any time.
@@ -281,7 +281,7 @@ I ran ten questions through Ask on Opus the same way, with the same caveat, incl
 
 ## Claude adds what's missing
 
-Ask about something the model doesn't have, such as how melatonin works, and Claude answers in a line from its own knowledge and starts adding it, without asking first. A separate Claude Code session writes the process, and it appears on the body once every test passes. This changes the app and leaves your day alone, and it can start from Tell or Ask. You can keep using the app in the meantime, and a small line above the message box says how far it has got, with Stop.
+This is off unless the server starts with `BODYLANG_BUILDS=1`, because a build costs about $0.80 and commits to your checkout. With it on, ask about something the model doesn't have, such as how melatonin works, and Claude answers in a line from its own knowledge and starts adding it, without asking first. A separate Claude Code session writes the process, and it appears on the body once every test passes. This changes the app and leaves your day alone, and it can start from Tell or Ask. You can keep using the app in the meantime, and a small line above the message box says how far it has got, with Stop.
 
 ```text
 "How does melatonin work?"
@@ -324,7 +324,7 @@ What keeps this narrow:
 
 **Phase 5: real signals.** Calibrate the model to you from a glucose monitor and wearable data, so "typical body" becomes your body. Done when the forecast's error against your own glucose readings is measured and shown.
 
-Phase 5 needs a glucose monitor and a wearable from you, and is large and open-ended by my judgment, without data behind it.
+Phase 5 needs a glucose monitor and a wearable, and is large and open-ended by my judgment, without data behind it.
 
 Voice input is left out, because Mac dictation already works.
 
@@ -337,12 +337,6 @@ Voice input is left out, because Mac dictation already works.
 | Z-Anatomy for the anatomy | One consistent body with every system in it, and vessels as centrelines with real calibres. Its share-alike licence suits an open-source app, and mixing sources left lungs through the ribs |
 | Own small model | Reruns in milliseconds and tracks each food. [Pulse](https://pulse.kitware.com/_about_pulse.html) is broader, but it is C++ at a 20 ms step and I found no browser build |
 | Channels and effect curves | A differential equation for everything that can happen to a body would never finish |
-
-## Decisions for you
-
-1. **A personal tool or a product?** Your local Claude Code is right for a personal tool. A product needs a hosted API backend and accounts. It would also make health claims and hold health data, which brings regulation I haven't looked into. I'd keep it personal for now.
-2. **What comes next?** I'd use it on your own days for a while, because that will show which gaps matter better than more planning.
-3. **The kidney before anyone sells a build.** Z-Anatomy lists a CC BY-NC kidney among the models it adapted, without saying which meshes it became. That doesn't matter for an open-source app, and it would for a paid one.
 
 ## Limits
 

@@ -5,7 +5,8 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { BuildStage, BuildStatus, extendActionSchema } from "../src/wire";
-import { readJson } from "./http";
+import { buildsAllowed } from "./claude";
+import { BadRequest, readJson } from "./http";
 import { BuildRequest, fullSuite, processPath, quickChecks, SessionContext, testPath } from "./extendCheck";
 
 const run = promisify(execFile);
@@ -176,7 +177,11 @@ export async function handleExtend(req: IncomingMessage, res: ServerResponse) {
   const action = extendActionSchema.parse(await readJson(req, ACTION_MOST_BYTES));
   if (action.action === "stop") stopBuild();
   else if (action.action === "dismiss") dismissBuild();
-  else await removeProcess(action.id);
+  else {
+    if (!buildsAllowed())
+      throw new BadRequest("Removing a process commits to this checkout, so it needs BODYLANG_BUILDS=1 on the server.");
+    await removeProcess(action.id);
+  }
   res.statusCode = 204;
   res.end();
 }

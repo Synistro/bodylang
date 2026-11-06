@@ -1,7 +1,9 @@
 {
   "name": "bodylang",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "A 3D human body that shows what is happening inside you, from what you tell it in plain words",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
