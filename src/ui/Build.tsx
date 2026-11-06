@@ -16,7 +16,8 @@ export function followBuilds() {
 }
 
 export async function removeAddedProcess(processId: string) {
-  await tellServer({ action: "remove", id: processId.replace(/^ext:/, "") });
+  const response = await tellServer({ action: "remove", id: processId.replace(/^ext:/, "") }).catch(() => null);
+  if (!response?.ok) setUi({ dayProblem: `That process could not be removed. ${(await response?.text()) ?? "Is the dev server running?"}` });
 }
 
 const WORKING: Partial<Record<Build["stage"], string>> = {
