@@ -1,5 +1,6 @@
 import type { Trajectory } from "./engine/trajectory";
 import { CAFFEINE, DAY, PROCESS } from "./params";
+import { firstIndexBelow, peakIndex } from "./curve";
 
 export interface Forecast {
   glucosePeak: { at: number; value: number } | null;
@@ -15,15 +16,8 @@ export interface Forecast {
 export function forecast(tr: Trajectory, now: number): Forecast {
   const n = tr.series.glucose.length;
   const start = Math.floor(now);
-  const peak = (s: Float32Array, to: number) => {
-    let best = start;
-    for (let i = start; i < Math.min(to, n); i++) if (s[i] > s[best]) best = i;
-    return best;
-  };
-  const firstBelow = (s: Float32Array, level: number) => {
-    for (let i = start; i < n; i++) if (s[i] < level) return i;
-    return null;
-  };
+  const peak = (s: Float32Array, to: number) => peakIndex(s, start, to);
+  const firstBelow = (s: Float32Array, level: number) => firstIndexBelow(s, start, level);
   const base = tr.anthro.baselineGlucose;
   const gp = peak(tr.series.glucose, start + 300);
   const glucosePeak = tr.series.glucose[gp] > base + 4 ? { at: gp, value: tr.series.glucose[gp] } : null;

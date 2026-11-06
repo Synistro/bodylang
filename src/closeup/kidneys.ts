@@ -1,8 +1,7 @@
 import { BLOOD_FLOW } from "../model/params";
 import { Trajectory, value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+import { clamp01 } from "../model/curve";
 
 // What a level of 1 means in the model's units. The most blood the model sends here, as a multiple of its
 // resting share, stays below bloodFold. The drawing's stream of urine is at its fullest at urineMlPerMin.

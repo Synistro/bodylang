@@ -1,8 +1,7 @@
 import { LIVER } from "../model/params";
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+import { clamp01 } from "../model/curve";
 
 // What a level of 1 means in the model's units. The fastest the model moves sugar, the liver feeding a hard
 // run, stays below this rate.

@@ -7,6 +7,7 @@ import { threadsAt } from "./threads";
 import type { OrganId } from "./ids";
 import { forecast } from "./forecast";
 import { formatClock, inSentence, levelWord } from "./words";
+import { peakIndex } from "./curve";
 
 export interface ReplyLine {
   text: string;
@@ -87,8 +88,7 @@ export function readout(tr: Trajectory, now: number) {
       caffeine_half_life_range_h: `${CAFFEINE.halfLifeH.low} to ${CAFFEINE.halfLifeH.high}`,
     },
     other_substances: [...tr.substances.values()].map(({ substance, series }) => {
-      let peakAt = 0;
-      for (let i = 0; i < series.length; i++) if (series[i] > series[peakAt]) peakAt = i;
+      const peakAt = peakIndex(series, 0);
       const minute = Math.max(0, Math.min(series.length - 1, Math.floor(now)));
       return { id: substance.id, label: substance.label, blood_mg_l: round(series[minute], 2), peak_at: formatClock(peakAt), peak_mg_l: round(series[peakAt], 2) };
     }),

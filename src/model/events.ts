@@ -3,6 +3,7 @@ import { ACTIVITY, DAY, ENERGY, Evidence, HEART, ILLNESS, MUSCLE_MASS_SHARE, MUS
 import type { RouteId, Substance, SystemId, OrganId } from "./ids";
 import type { ActivitySpan, Body } from "./scenario";
 import type { Anthropometrics } from "./engine/anthropometrics";
+import { clamp01 } from "./curve";
 
 // Anything that can happen to a body acts on the model through these quantities, so the rest of the
 // model never needs to know whether a raised heart rate came from a fever or a workout.
@@ -144,7 +145,6 @@ export interface MuscleState {
   glycogenUsed: number; // share of its glycogen burned and not yet refilled
 }
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const decay = (minutes: number, halfLifeMin: number) => 0.5 ** (minutes / halfLifeMin);
 
 // How far along a curve is at minute t, 0 to 1.

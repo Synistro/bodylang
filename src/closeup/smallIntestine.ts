@@ -1,7 +1,7 @@
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
+import { clamp01 } from "../model/curve";
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const FULL = { gutKcal: 200, sugarMgMin: 600, proteinGMin: 2.5, fatGMin: 0.5 };
 
 export const smallIntestineCloseup = defineCloseup({

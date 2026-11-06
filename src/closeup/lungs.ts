@@ -2,8 +2,8 @@ import { curveStrength } from "../model/events";
 import { REFERENCE } from "../model/params";
 import { Trajectory, value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
+import { clamp01 } from "../model/curve";
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const BREATHS = REFERENCE.breathing.scale;
 const COUGH_FEELING = "coughing";
 

@@ -2,8 +2,8 @@ import { REFERENCE } from "../model/params";
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
 import { urineMlPerMin } from "./kidneys";
+import { clamp01 } from "../model/curve";
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const { capacityMl, firstDesireMl, strongDesireMl } = REFERENCE.bladder;
 const share = (ml: number) => (ml / capacityMl).toFixed(1);
 

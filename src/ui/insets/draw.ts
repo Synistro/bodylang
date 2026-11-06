@@ -1,4 +1,4 @@
-export const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+import { clamp01 } from "../../model/curve";
 export const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 export function smoothstep(from: number, to: number, x: number) {

@@ -1,9 +1,8 @@
 import type { ReadingScale, Tone, Trend } from "../model/assess";
 import { SYSTEM_HUE, Theme } from "../look";
+import { clamp01 } from "../model/curve";
 
 const TREND_ANGLE: Record<Trend, number> = { rising: -45, steady: 0, falling: 45 };
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 // The system colours as CSS variables, so markup can name a system and stay out of the palette.
 export function applyHues(theme: Theme) {

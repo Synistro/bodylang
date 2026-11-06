@@ -3,6 +3,7 @@ import { shortText } from "../model/shortText";
 import type { MuscleGroup } from "../model/muscleGroups";
 import type { Trajectory } from "../model/engine/trajectory";
 import type { OrganId } from "../model/ids";
+import { clamp01 } from "../model/curve";
 
 // A close-up is the one drawing of what happens inside an organ, shown beside the body all the time. The
 // model sets its levels, each from 0 to 1. During an Ask walkthrough, a step can point at parts of it and
@@ -81,8 +82,6 @@ export function panelsOf<K extends string>(step: Omit<Directions<K>, "basis"> | 
     { label: compare.other_label, adjustment: { light, set, times: compare.times } },
   ];
 }
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 const mapLevels = <K extends string>(keys: readonly K[], level: (key: K) => number) => Object.fromEntries(keys.map((key) => [key, level(key)])) as Levels<K>;
 

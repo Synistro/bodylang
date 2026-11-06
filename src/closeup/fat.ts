@@ -1,7 +1,6 @@
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+import { clamp01 } from "../model/curve";
 
 // Blood fat over its resting level, in mg/dL: where the droplets are at their fullest, and where the cells start taking fat in.
 export const FAT_OVER = { full: 110, storingFrom: 8 };

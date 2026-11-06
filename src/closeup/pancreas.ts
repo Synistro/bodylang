@@ -1,7 +1,7 @@
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
+import { clamp01 } from "../model/curve";
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const SECRETION_FULL = 4; // above resting, where the drawing's stream of insulin is at its fullest
 const SUGAR = { restingMgDl: 90, fullMgDl: 170 }; // the model keeps blood sugar in mg/dL
 

@@ -1,8 +1,8 @@
 import { FEEL, PROCESS } from "../model/params";
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
+import { clamp01 } from "../model/curve";
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const FULL_SLEEP_PRESSURE = PROCESS.sleepPressureFullH * FEEL.sleepPressurePerHour;
 
 export const brainCloseup = defineCloseup({

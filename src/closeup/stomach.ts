@@ -1,8 +1,7 @@
 import { STOMACH } from "../model/params";
 import { value } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+import { clamp01 } from "../model/curve";
 
 // What a level of 1 means in the model's units. The drawing has room for this much food in pieces, and the
 // fastest meal the model empties stays below this rate.

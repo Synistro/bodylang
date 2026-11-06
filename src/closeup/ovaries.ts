@@ -1,8 +1,8 @@
 import { daysIntoCycle, hormonesAt } from "../model/cycle";
 import { CYCLE } from "../model/params";
 import { defineCloseup } from "./define";
+import { clamp01 } from "../model/curve";
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 const FOLLICLE_AT_REST = 5 / 24; // a follicle starts at about a fifth of the size it reaches before it lets go of the egg

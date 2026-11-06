@@ -2,6 +2,7 @@ import { cycleDay, cyclePhase, liningShare } from "../model/cycle";
 import { Trajectory, value } from "../model/engine/trajectory";
 import type { OrganId, Tint } from "../model/ids";
 import { DAY, STOMACH } from "../model/params";
+import { clamp01 } from "../model/curve";
 
 // What one organ is doing at one instant, which sets how brightly it flushes on the body.
 export interface OrganState {
@@ -13,7 +14,6 @@ export interface OrganState {
   doing: string; // the sentence
 }
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const round = (x: number, by = 1) => Math.round(x / by) * by;
 
 export function organStates(tr: Trajectory, t: number): OrganState[] {

@@ -1,7 +1,6 @@
 import { ledgerAt, Trajectory } from "../model/engine/trajectory";
 import { defineCloseup } from "./define";
-
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+import { clamp01 } from "../model/curve";
 
 // How many kcal held here bring each of the drawing's streams to its fullest.
 export const LARGE_INTESTINE_FULL = { contentsKcal: 83.2, waterKcal: 100.8 };

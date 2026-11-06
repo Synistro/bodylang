@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
-import { clamp01, lerp } from "../draw";
+import { lerp } from "../draw";
+import { clamp01 } from "../../../model/curve";
 import type { Frame } from "../loop";
 
 // One piece of anatomy, drawn the same way in every close-up, so a vessel reads as a vessel wherever it

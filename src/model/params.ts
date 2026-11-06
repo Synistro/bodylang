@@ -329,7 +329,14 @@ export const REFERENCE = {
   trendWindowMin: 5,
   headingHorizonMin: 300,
   eventHeartDrivenFromBpm: 3,
+  // How hard digestion is working, as the system word says it.
+  digestion: { underWayAbove: 0.05, finishingFrom: 0.04, workingFrom: 0.25, workingHardFrom: 0.66 },
+  // How a meal reads, by its energy.
+  mealSize: { snackFromKcal: 25, mealFromKcal: 150, bigMealFromKcal: 450 },
+  // How much each system's reading has to move before the rail calls it busy.
+  systemFullAt: { insulinFold: 5, muscleUptakeGPerMin: 0.7, heartBpm: 40, caffeineFelt: 3, bladderShare: 0.3, crampsShare: 0.5 },
   glucose: {
+    nearBaselineMgDl: 3, // closer than this to your own baseline, sugar has nothing to explain
     fasting: { low: 3.9, high: 5.6, label: "3.9 to 5.6 mmol/L fasting" },
     afterMeal: { low: 3.9, high: 7.8, label: "3.9 to 7.8 mmol/L after a meal" },
     fastingHighMmol: 7.0,
@@ -476,6 +483,9 @@ export const REFERENCE = {
     source: "My estimate",
   },
   alcohol: {
+    clearingNamedFromGPerL: 0.02,
+    busyLiverFromGPerL: 0.05,
+    slowsBrainFromGPerL: 0.1,
     limitGPerL: 0.5,
     riskGPerL: 0.4,
     newDriverLimitGPerL: 0.2,

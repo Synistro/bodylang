@@ -10,6 +10,7 @@ import { CustomSubstance, foodKcalOf, SubstanceRoute, Intake, POSTURES } from ".
 import { OrganId } from "./ids";
 import { formatClock, hoursWord, inSentence, joinAnd, levelWord, startCase, whenWords } from "./words";
 import type { SystemId, RouteId, Substance } from "./ids";
+import { clamp01 } from "./curve";
 
 
 // Named paths through the body, defined in src/scene/flows.ts. A stop lists the ones leading to it.
@@ -56,7 +57,6 @@ interface Draft {
   routes: RouteId[];
 }
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const percent = (x: number) => `${Math.round(x * 100)}%`;
 const clock = formatClock;
 const shareOf = (part: number, total: number) => (total > 0 ? part / total : 0);

@@ -13,6 +13,7 @@ import { forecast as stateForecast } from "./forecast";
 import { formatClock, hoursWord, inSentence, joinAnd, levelWord, theFoods, whenWords } from "./words";
 import { systemById } from "./systems";
 import type { ReadingId } from "./ids";
+import { clamp01 } from "./curve";
 
 // Readings read from a curve in the table below. Muscle summaries are built per group.
 type TableReadingId = Exclude<ReadingId, `muscle:${MuscleGroup}`>;
@@ -231,7 +232,6 @@ interface ReadingSpec {
   forecast: readonly ForecastRule[];
 }
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const clock = formatClock;
 const toMmol = (mgDl: number) => mgDl / REFERENCE.mgDlPerMmolGlucose;
 const identity = (x: number) => x;
@@ -354,7 +354,7 @@ const costsSleep = (c: Context) => caffeinePresent(c) && c.t < DAY.sleepMin && c
 const caffeineDoseMgL = (c: Context, doseMg: number) => doseMg / (CAFFEINE.volumeLPerKg * c.tr.scenario.body.weightKg);
 const nearestMinute = (c: Context) => Math.max(0, Math.min(DAY.minutes, Math.round(c.t)));
 const ownRestBpm = (c: Context, posture: Posture = c.posture) => c.tr.anthro.restingBpm + HEART.byActivity[posture];
-const digesting = (c: Context) => c.v("digestion") > 0.05;
+const digesting = (c: Context) => c.v("digestion") > REFERENCE.digestion.underWayAbove;
 
 const hoursAwake = (c: Context) => c.v("hoursAwake");
 
@@ -496,25 +496,25 @@ const glucoseSpec: ReadingSpec = {
   judge: (c, s) => glucoseVerdict(s.value, { fasting: c.phase === "fasting", withinPeak: c.carbsPeaking, withinMeal: c.carbsActive, afterCarbs: c.afterCarbs }),
   why: [
     [(c, s) => foodsNowArriving(c, "carbs").length > 0 && s.trend === "rising", (c) => `Sugar from ${theFoods(foodsNowArriving(c, "carbs"))} is arriving`],
-    [(c, s) => c.moving && (s.trend === "falling" || s.raw < c.tr.anthro.baselineGlucose - 3), () => "Your moving muscles are pulling sugar out"],
+    [(c, s) => c.moving && (s.trend === "falling" || s.raw < c.tr.anthro.baselineGlucose - REFERENCE.glucose.nearBaselineMgDl), () => "Your moving muscles are pulling sugar out"],
     [(c, s) => foodsNowArriving(c, "carbs").length > 0 && s.trend === "falling", () => "Insulin is moving sugar into muscle and liver"],
     [(c) => foodsNowArriving(c, "carbs").length > 0, () => "Sugar arriving matches what your cells take"],
     [(c) => foodsInStomach(c.tr, c.t).length > 0, () => "Food hasn't reached your intestine yet"],
-    [(c, s) => s.raw < c.tr.anthro.baselineGlucose - 3 && c.lastFood !== null && c.t - c.lastFood.at < REFERENCE.fastingAfterMin, () => "A small dip after the meal"],
-    [(c, s) => s.raw < c.tr.anthro.baselineGlucose - 3 && c.v("liverGlycogen") < REFERENCE.liverGlycogen.low, () => "Your liver is running low on sugar"],
-    [(c, s) => s.raw < c.tr.anthro.baselineGlucose - 3, () => "A small dip. Your liver is topping it up"],
-    [(c, s) => s.raw > c.tr.anthro.baselineGlucose + 3 && startedBy("liverOutput", 0.03)(c), (c) => `Raised a little by ${causeOf(c, "liverOutput", 0.03) ?? ""}`],
-    [(c, s) => s.raw > c.tr.anthro.baselineGlucose + 3 && startedBy("insulinSensitivity", 0.1)(c), (c) => `Slowed by ${causeOf(c, "insulinSensitivity", 0.1) ?? ""}`],
-    [(c, s) => s.raw > c.tr.anthro.baselineGlucose + 3, () => "Insulin is bringing it back down"],
+    [(c, s) => s.raw < c.tr.anthro.baselineGlucose - REFERENCE.glucose.nearBaselineMgDl && c.lastFood !== null && c.t - c.lastFood.at < REFERENCE.fastingAfterMin, () => "A small dip after the meal"],
+    [(c, s) => s.raw < c.tr.anthro.baselineGlucose - REFERENCE.glucose.nearBaselineMgDl && c.v("liverGlycogen") < REFERENCE.liverGlycogen.low, () => "Your liver is running low on sugar"],
+    [(c, s) => s.raw < c.tr.anthro.baselineGlucose - REFERENCE.glucose.nearBaselineMgDl, () => "A small dip. Your liver is topping it up"],
+    [(c, s) => s.raw > c.tr.anthro.baselineGlucose + REFERENCE.glucose.nearBaselineMgDl && startedBy("liverOutput", 0.03)(c), (c) => `Raised a little by ${causeOf(c, "liverOutput", 0.03) ?? ""}`],
+    [(c, s) => s.raw > c.tr.anthro.baselineGlucose + REFERENCE.glucose.nearBaselineMgDl && startedBy("insulinSensitivity", 0.1)(c), (c) => `Slowed by ${causeOf(c, "insulinSensitivity", 0.1) ?? ""}`],
+    [(c, s) => s.raw > c.tr.anthro.baselineGlucose + REFERENCE.glucose.nearBaselineMgDl, () => "Insulin is bringing it back down"],
     [(c) => c.asleep, () => "Your liver feeds your blood while you sleep"],
     [always, (c) => (c.lastFood ? "Your liver is holding it steady between meals" : "Your liver is holding it steady from stores")],
   ],
   forecast: [
     // Climbing back from a dip is a recovery, so only a rise above the resting level is a peak.
-    peaksAt(2, (raw) => `Peaks at ${toMmol(raw).toFixed(1)}`, undefined, (c) => c.tr.anthro.baselineGlucose + 3),
+    peaksAt(2, (raw) => `Peaks at ${toMmol(raw).toFixed(1)}`, undefined, (c) => c.tr.anthro.baselineGlucose + REFERENCE.glucose.nearBaselineMgDl),
     reaches(
-      (c, s) => Math.abs(s.raw - c.tr.anthro.baselineGlucose) > 3,
-      (raw, c) => Math.abs(raw - c.tr.anthro.baselineGlucose) <= 3,
+      (c, s) => Math.abs(s.raw - c.tr.anthro.baselineGlucose) > REFERENCE.glucose.nearBaselineMgDl,
+      (raw, c) => Math.abs(raw - c.tr.anthro.baselineGlucose) <= REFERENCE.glucose.nearBaselineMgDl,
       (raw) => `Back to ${toMmol(raw).toFixed(1)}`,
     ),
   ],
@@ -1424,7 +1424,7 @@ function intensityWord(now: number, later: number): string {
 
 // Food logged within a few minutes of another counts as one sitting.
 function sittingKcal(c: Context, meal: Intake): number {
-  return c.eaten.filter((i) => Math.abs(i.at - meal.at) <= 15).reduce((sum, i) => sum + foodKcalOf(i), 0);
+  return c.eaten.filter((i) => Math.abs(i.at - meal.at) <= PROCESS.sameSittingMin).reduce((sum, i) => sum + foodKcalOf(i), 0);
 }
 
 // The meal doing the most to make you drowsy now, which is often an earlier one than the last.
@@ -1734,7 +1734,7 @@ const OVERVIEW_WORDS: readonly WordRow[] = [
   [(c) => c.asleep, "Asleep"],
   [(c) => c.training !== null, "Training"],
   [(c) => c.moving, (c) => POSTURE_WORD[c.posture]],
-  [(c) => c.v("digestion") >= 0.04, "Digesting"],
+  [(c) => c.v("digestion") >= REFERENCE.digestion.finishingFrom, "Digesting"],
   [(c) => c.events.some((e) => e.preset === "illness" && e.ends === null), "Unwell"],
   [always, "Resting"],
 ];
@@ -1758,7 +1758,7 @@ const mmolText = (c: Context) => toMmol(c.v("glucose")).toFixed(1);
 function digestionSentence(c: Context): string {
   const empties = stateForecast(c.tr, c.t).stomachEmpty;
   if (c.v("stomachKcal") > REFERENCE.stillDigestingKcal) return `Your stomach holds ${tens(c.v("stomachMl"))} ml${empties === null ? "" : ` and empties near ${clock(empties)}`}.`;
-  if (c.v("digestion") >= 0.04) return "Your intestine is absorbing the last of the meal.";
+  if (c.v("digestion") >= REFERENCE.digestion.finishingFrom) return "Your intestine is absorbing the last of the meal.";
   return c.v("stomachMl") > STOMACH.restingVolumeMl + REFERENCE.stomach.emptyAboveRestingMl ? "Liquid is passing through your stomach." : "Your stomach and gut are resting.";
 }
 
@@ -1798,7 +1798,7 @@ function muscleSentence(c: Context): string {
 function brainSentence(c: Context, r: (id: ReadingId) => Reading): string {
   if (c.asleep) return "You are asleep, and sleep is clearing the day's tiredness.";
   if (c.v("jitter") >= FEELING_DISPLAY.negligibleBelow) return "Lots of caffeine, so you may feel jittery.";
-  if (c.v("alcohol") >= 0.1) return `Alcohol is slowing your brain, ${c.v("alcohol").toFixed(2)} g/L in your blood.`;
+  if (c.v("alcohol") >= REFERENCE.alcohol.slowsBrainFromGPerL) return `Alcohol is slowing your brain, ${c.v("alcohol").toFixed(2)} g/L in your blood.`;
   if (stressedNow(c)) return "Stress hormones are keeping your brain on alert.";
   if (c.v("reward") >= PROCESS.liftedFrom) return "Feel-good chemicals are up.";
   const sleepiest = peakAhead(c, "drowsy", 0.02, FEELING_DISPLAY.peakHorizonMin);
@@ -1820,7 +1820,7 @@ function immuneSentence(c: Context): string {
 }
 
 function clearingSentence(c: Context): string {
-  if (c.v("alcohol") >= 0.02) return `Your liver is clearing alcohol, ${c.v("alcohol").toFixed(2)} g/L left.`;
+  if (c.v("alcohol") >= REFERENCE.alcohol.clearingNamedFromGPerL) return `Your liver is clearing alcohol, ${c.v("alcohol").toFixed(2)} g/L left.`;
   if (isDry(c)) return `You are a little dry, down about ${(-c.v("fluidBalance") / 1000).toFixed(1)} L.`;
   if (c.v("caffeine") >= PROCESS.clearingActiveAboveMgL) return `Your liver is clearing caffeine, ${c.v("caffeine").toFixed(2)} mg/L left.`;
   const substance = activeSubstance(c);
@@ -1831,9 +1831,9 @@ function clearingSentence(c: Context): string {
 const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
   digestion: {
     words: [
-      [(c) => c.v("digestion") >= 0.66, "Working hard"],
-      [(c) => c.v("digestion") >= 0.25 || c.v("stomachKcal") > REFERENCE.stillDigestingKcal, "Working"],
-      [(c) => c.v("digestion") >= 0.04, "Finishing"],
+      [(c) => c.v("digestion") >= REFERENCE.digestion.workingHardFrom, "Working hard"],
+      [(c) => c.v("digestion") >= REFERENCE.digestion.workingFrom || c.v("stomachKcal") > REFERENCE.stillDigestingKcal, "Working"],
+      [(c) => c.v("digestion") >= REFERENCE.digestion.finishingFrom, "Finishing"],
       [always, "Quiet"],
     ],
     level: (c) => c.v("digestion"),
@@ -1848,7 +1848,7 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
       [(c) => c.v("tg") - c.tr.anthro.baselineTg >= REFERENCE.triglycerides.arrivedAboveRestMgDl, "Clearing fat"],
       [always, "Steady"],
     ],
-    level: (c, r) => Math.max((r("insulin").value - 1) / 5, (c.v("tg") - c.tr.anthro.baselineTg) / LIPID.baselineMgDl, c.v("muscleUptakeGMin") / 0.7),
+    level: (c, r) => Math.max((r("insulin").value - 1) / REFERENCE.systemFullAt.insulinFold, (c.v("tg") - c.tr.anthro.baselineTg) / LIPID.baselineMgDl, c.v("muscleUptakeGMin") / REFERENCE.systemFullAt.muscleUptakeGPerMin),
     sentence: energySentence,
   },
   circulation: {
@@ -1860,7 +1860,7 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
       [(c, r) => r("hr").verdict === "raised" || eventHeartBpm(c) >= REFERENCE.heart.raisedAboveOwnRestBpm, "Raised"],
       [always, "Steady"],
     ],
-    level: (c) => (c.v("hr") - ownRestBpm(c, "sitting")) / 40,
+    level: (c) => (c.v("hr") - ownRestBpm(c, "sitting")) / REFERENCE.systemFullAt.heartBpm,
     sentence: heartSentence,
   },
   muscles: {
@@ -1878,7 +1878,7 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
     words: [
       [(c) => c.asleep, "Asleep"],
       [(c) => c.v("jitter") >= FEELING_DISPLAY.negligibleBelow, "Jittery"],
-      [(c) => c.v("alcohol") >= 0.1, "Alcohol"],
+      [(c) => c.v("alcohol") >= REFERENCE.alcohol.slowsBrainFromGPerL, "Alcohol"],
       [stressedNow, "Stressed"],
       [(c) => c.v("drowsy") >= PROCESS.sleepyNamedFrom, "Drowsy"],
       [(c) => c.v("reward") >= PROCESS.liftedFrom, "Lifted"],
@@ -1901,13 +1901,13 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
   },
   clearing: {
     words: [
-      [(c) => c.v("alcohol") >= 0.02, "Clearing alcohol"],
+      [(c) => c.v("alcohol") >= REFERENCE.alcohol.clearingNamedFromGPerL, "Clearing alcohol"],
       [isDry, "A little dry"],
       [(c) => c.v("caffeine") >= 1, "Clearing caffeine"],
       [(c) => activeSubstance(c) !== undefined, (c) => `Clearing ${inSentence(activeSubstance(c)?.substance.label ?? "")}`],
       [always, "Quiet"],
     ],
-    level: (c) => Math.max(c.v("alcohol") * 2, c.v("caffeine") / CAFFEINE.feltAboveMgL / 3, (c.v("bladderMl") / REFERENCE.bladder.capacityMl) * 0.3),
+    level: (c) => Math.max(c.v("alcohol") * 2, c.v("caffeine") / CAFFEINE.feltAboveMgL / REFERENCE.systemFullAt.caffeineFelt, (c.v("bladderMl") / REFERENCE.bladder.capacityMl) * REFERENCE.systemFullAt.bladderShare),
     sentence: clearingSentence,
   },
   reproductive: {
@@ -1915,7 +1915,7 @@ const SYSTEM_STATUS: Record<Exclude<SystemId, "overview">, SystemSpec> = {
       [(c) => phaseOf(c) !== null, (c) => PHASE_WORD[phaseOf(c) ?? "follicular"]],
       [always, "Quiet"],
     ],
-    level: (c) => (c.tr.cycle ? CYCLE.cramps.amount * 0.5 : 0),
+    level: (c) => (c.tr.cycle ? CYCLE.cramps.amount * REFERENCE.systemFullAt.crampsShare : 0),
     sentence: (c) => {
       const phase = phaseOf(c);
       if (phase) return `${PHASE_SAYS[phase].day}.`;
@@ -1964,9 +1964,9 @@ function systemsOf(c: Context, reading: (id: ReadingId) => Reading, headline: st
 
 function mealInGut(c: Context): string | null {
   const kcal = c.v("stomachKcal") + c.v("gutKcal");
-  if (kcal < 25) return null;
+  if (kcal < REFERENCE.mealSize.snackFromKcal) return null;
   if (c.lastFood && kcal < foodKcalOf(c.lastFood) * PROCESS.lastOfMealShare) return "the last of a meal";
-  return kcal >= 450 ? "a big meal" : kcal >= 150 ? "a meal" : "a snack";
+  return kcal >= REFERENCE.mealSize.bigMealFromKcal ? "a big meal" : kcal >= REFERENCE.mealSize.mealFromKcal ? "a meal" : "a snack";
 }
 
 function stillWorking(c: Context): string {
@@ -1987,7 +1987,7 @@ const ACTIVITY_ROWS: readonly { test: (c: Context) => boolean; text: (c: Context
   { test: (c) => activeEvent(c, "stress") !== undefined && c.v("stressLevel") >= REFERENCE.stressLevel.high / 100, text: () => "Under stress" },
   { test: (c) => activeEvent(c, "sex") !== undefined, text: (c) => (c.t <= (activeEvent(c, "sex")?.ends ?? c.t) ? "Sexual activity under way" : "Recovering after sexual activity") },
   { test: (c) => activeEvent(c, "poor_sleep") !== undefined, text: () => "Short on sleep" },
-  { test: (c) => c.v("alcohol") >= 0.05, text: () => "Clearing alcohol", about: "alcohol" },
+  { test: (c) => c.v("alcohol") >= REFERENCE.alcohol.busyLiverFromGPerL, text: () => "Clearing alcohol", about: "alcohol" },
   { test: (c) => anyMuscle(c, (s) => s.repair >= REFERENCE.muscleState.repairingFrom), text: (c) => `Repairing your ${namesOf(groupsWhere(c, (s) => s.repair >= REFERENCE.muscleState.repairingFrom))}` },
   { test: (c) => activeEvent(c, "custom") !== undefined, text: (c) => `Dealing with ${activeEvent(c, "custom")?.causeName ?? "something"}` },
 ];
