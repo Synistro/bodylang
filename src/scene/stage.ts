@@ -20,7 +20,7 @@ import { RouteNetwork } from "./routes";
 import { LYMPH_CLUSTERS, LymphCluster, LymphNodes } from "./lymph";
 import { PALETTES, Palette, setContourWeight, setMaterialClock } from "./materials";
 import { BodySide, MuscleLevel, Muscles, loadMuscles } from "./muscles";
-import { Anatomy, OrganPart, PartLook, PartName, PartStyle } from "./anatomy";
+import { Anatomy, glandOfStop, OrganPart, PartLook, PartName, PartStyle } from "./anatomy";
 import { ProcessLine } from "./processLine";
 import { StomachItem, Stomach } from "./stomach";
 import type { Theme } from "../look";
@@ -44,7 +44,17 @@ export interface SceneInput {
 }
 
 // Anything on the body the interface can put a label on.
-export type AnchorId = OrganId | `muscle:${MuscleGroup}` | "thymus" | "airway" | `lymph:${LymphCluster}`;
+export type AnchorId =
+  | OrganId
+  | `muscle:${MuscleGroup}`
+  | "thymus"
+  | "gallbladder"
+  | "adrenal_L"
+  | "airway"
+  | `lymph:${LymphCluster}`;
+
+// The parts with no organ of their own that a page names, and what it calls them. The second adrenal shares the first's label.
+const PART_LABELS = { thymus: "Thymus", gallbladder: "Gallbladder", adrenal_L: "Adrenal glands" } as const;
 
 // What a point on the screen lands on. `onBody` also covers a muscle nobody has a name for.
 export interface PickTarget {
@@ -217,6 +227,7 @@ const SYSTEM_VIEWS: Record<SystemId, SystemView> = {
     width: 0.36,
     azimuth: 0.2,
     polar: LEVEL_POLAR,
+    parts: ["gallbladder"],
   }),
   energy: row({
     center: (places, out) => {
@@ -281,6 +292,7 @@ const SYSTEM_VIEWS: Record<SystemId, SystemView> = {
     width: 0.32,
     azimuth: 2.58, // from a little behind, so the kidneys come before the liver
     polar: LEVEL_POLAR,
+    parts: ["adrenal_L", "adrenal_R", "gallbladder"],
   }),
   reproductive: row({
     center: (places, out) => places.organ("bladder", out),
@@ -355,7 +367,13 @@ const MUSCLE_VIEWS: Record<MuscleGroup, ViewAngle & { both: boolean }> = {
 // What is being shown right now, most specific first: one organ, one process, or a system.
 type View =
   | { kind: "focus"; organ: OrganId; view: FocusView }
-  | { kind: "process"; process: Process; stops: ReadonlyMap<OrganId, ProcessStop>; lit: ProcessStop | null }
+  | {
+      kind: "process";
+      process: Process;
+      stops: ReadonlyMap<OrganId, ProcessStop>;
+      glands: ReadonlyMap<PartName, ProcessStop>;
+      lit: ProcessStop | null;
+    }
   | { kind: "system"; view: SystemView; organs: ReadonlySet<OrganId> };
 
 // A click passes through parts drawn as contour on its way to a part drawn solid.
@@ -373,6 +391,7 @@ const STOMACH_STYLE: PartStyle = {
   normalPasses: 0,
   tinted: true,
   continues: null,
+  seenThrough: false,
   staysOpen: false,
   subjectFill: 0.09,
   contextOpacity: 0.4,
@@ -747,7 +766,13 @@ export class Stage {
     const process = input.process;
     if (process) {
       const stops = new Map<OrganId, ProcessStop>();
+      const glands = new Map<PartName, ProcessStop>();
       for (const stop of process.stops) {
+        const gland = glandOfStop(stop.label);
+        if (gland) {
+          for (const name of gland) glands.set(name, stop);
+          continue;
+        }
         if (!stop.organ) continue;
         const known = stops.get(stop.organ);
         if (!known || stop.share >= known.share) stops.set(stop.organ, stop);
@@ -757,6 +782,7 @@ export class Stage {
         kind: "process",
         process,
         stops,
+        glands,
         lit: spotlight ?? process.stops.find((s) => s.state === "here") ?? null,
       };
     }
@@ -860,9 +886,12 @@ export class Stage {
         return;
       case "process": {
         // A process is drawn in lines: its stops are outlines, and only the current one has colour.
-        const stop = organ ? view.stops.get(organ) : undefined;
+        const stop = organ ? view.stops.get(organ) : name ? view.glands.get(name) : undefined;
         if (!stop) return recede(1);
-        const lit = view.lit !== null && view.lit.organ === organ && !view.lit.muscle;
+        const lit =
+          view.lit !== null &&
+          !view.lit.muscle &&
+          (organ ? view.lit.organ === organ && !glandOfStop(view.lit.label) : view.lit === stop);
         if (!lit || (organ === "lungs" && name !== "airway")) {
           this.tintForWork(0, out, ramp);
           out.ghost = 1;
@@ -1293,7 +1322,9 @@ export class Stage {
 
   anchorOf(id: AnchorId, out = new THREE.Vector3()): THREE.Vector3 {
     const set = this.currentSet();
-    if (id === "thymus" || id === "airway") return this.partAnchor(set, id, out);
+    if (id === "thymus" || id === "airway" || id === "gallbladder" || id === "adrenal_L") {
+      return this.partAnchor(set, id, out);
+    }
     const group = MUSCLE_GROUPS.find((g) => `muscle:${g}` === id);
     if (group) return this.muscles.anchorOf(group, out);
     const cluster = LYMPH_CLUSTERS.find((c) => `lymph:${c}` === id);
@@ -1318,7 +1349,9 @@ export class Stage {
       return lit;
     }
     for (const organ of view.organs) if (organ !== "fat") lit.push({ id: organ, name: ORGAN_NAME[organ] });
-    if (view.view.parts.includes("thymus")) lit.push({ id: "thymus", name: "Thymus" });
+    for (const [id, name] of Object.entries(PART_LABELS) as [keyof typeof PART_LABELS, string][]) {
+      if (view.view.parts.includes(id)) lit.push({ id, name });
+    }
     if (view.view.lymph > 0) {
       if (this.refreshWork(input.trajectory, input.t).cough > 0) lit.push({ id: "airway", name: "Windpipe" });
       for (const cluster of LYMPH_CLUSTERS) lit.push({ id: `lymph:${cluster}`, name: LYMPH_NAME[cluster] });
@@ -1338,6 +1371,11 @@ export class Stage {
     for (let hops = 0; cursor && hops <= stops.length; hops++) {
       const last = cursor.routes.length ? set.network.route(cursor.routes[cursor.routes.length - 1]).points : null;
       const routeEnd = last ? this.routeEnd.copy(last[last.length - 1]).applyMatrix4(set.torso.matrixWorld) : null;
+      const gland = glandOfStop(cursor.label);
+      if (gland) {
+        const [first, second] = gland;
+        return second ? this.sideNearest(set, first, second, out, routeEnd) : this.partAnchor(set, first, out);
+      }
       if (cursor.muscle) return this.muscleAnchor(cursor.muscle, out, routeEnd);
       if (cursor.organ) return this.organAnchor(set, cursor.organ, out, routeEnd);
       if (routeEnd) return out.copy(routeEnd);

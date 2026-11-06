@@ -10,6 +10,16 @@ describe("what a straight line through the body crosses", () => {
     }
   });
 
+  it("can name a gland in its way", () => {
+    const sides = ["front", "back", "left", "right", "above", "below"] as const;
+    const crossed = new Set(
+      (["liver", "kidneys", "heart", "pancreas", "spleen", "brain", "bladder", "stomach"] as const).flatMap((organ) =>
+        sides.flatMap((side) => names(organ, side, "male")),
+      ),
+    );
+    expect([...crossed].some((name) => /gland|gallbladder/.test(name))).toBe(true);
+  });
+
   it("reaches things in order from the side it came in", () => {
     const organs = (from: "front" | "back") =>
       traceTrack("liver", from, "male").flatMap((part) => (part.organ ? [part.name] : []));

@@ -1,8 +1,11 @@
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import type { Sex } from "../model/scenario";
-import { Anatomy } from "./anatomy";
+import { simulate } from "../model/engine/simulate";
+import { processesAt } from "../model/processes/processes";
+import type { Scenario, Sex } from "../model/scenario";
+import { SCENARIOS } from "../model/testScenarios";
+import { Anatomy, glandOfStop } from "./anatomy";
 import type { BodyAsset, LimbRouteId, OrganAsset } from "./assets";
 import { Figure } from "./figure";
 import { PALETTES } from "./materials";
@@ -98,5 +101,35 @@ describe.each<Sex>(["male", "female"])("the anatomy of the %s body", (sex) => {
         expect(index[v * 4]).toBeLessThan(19);
       }
     }
+  });
+});
+
+describe("glands a process stops at", () => {
+  const stopLabels = (scenario: Scenario, minute: number) =>
+    processesAt(simulate(scenario), minute).flatMap((process) => process.stops.map((stop) => stop.label));
+
+  it("are named exactly as the model names them, so a renamed stop can't silently lose its gland", () => {
+    const labels = Object.values(SCENARIOS).flatMap((scenario) => stopLabels(scenario, 12 * 60));
+    expect(labels).toContain("Thyroid");
+    expect(labels).toContain("Adrenal glands");
+    expect(glandOfStop("Thyroid")).toEqual(["thyroid"]);
+    expect(glandOfStop("Adrenal glands")).toEqual(["adrenal_L", "adrenal_R"]);
+    expect(glandOfStop("Liver")).toBeNull();
+    expect(glandOfStop("constructor")).toBeNull();
+  });
+
+  it.each<Sex>(["male", "female"])("sit where they belong in the %s body", (sex) => {
+    const { organs } = rigged(sex);
+    const part = (name: string) => new THREE.Vector3().fromArray(organs.meta.organs[name].center);
+    for (const [adrenal, kidney] of [
+      ["adrenal_L", "kidney_L"],
+      ["adrenal_R", "kidney_R"],
+    ]) {
+      expect(part(adrenal).y).toBeGreaterThan(part(kidney).y);
+      expect(part(adrenal).distanceTo(part(kidney))).toBeLessThan(0.1);
+    }
+    expect(Math.abs(part("thyroid").y - organs.meta.organs.airway.max[1])).toBeLessThan(0.04);
+    expect(Math.abs(part("thyroid").x)).toBeLessThan(0.01);
+    expect(part("gallbladder").distanceTo(part("liver"))).toBeLessThan(0.1);
   });
 });

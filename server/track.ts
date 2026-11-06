@@ -46,6 +46,10 @@ const MESHES: Record<string, { organ: OrganId | null; name: string }> = {
   ovary_L: { organ: "ovaries", name: "left ovary" },
   ovary_R: { organ: "ovaries", name: "right ovary" },
   spinal_cord: { organ: null, name: "spinal cord" },
+  thyroid: { organ: null, name: "thyroid gland" },
+  adrenal_L: { organ: null, name: "left adrenal gland" },
+  adrenal_R: { organ: null, name: "right adrenal gland" },
+  gallbladder: { organ: null, name: "gallbladder" },
 };
 const AIM_MESHES: Partial<Record<OrganId, string[]>> = {
   lungs: ["lung_R", "lung_L"],

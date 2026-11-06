@@ -18,7 +18,7 @@ OUT = Path(sys.argv[sys.argv.index("--") + 1])
 CURVE_SAMPLES = 12  # per Bezier segment
 LEAST_FACES = 4  # the label pointers are one or two faces
 # These are open tubes given a wall by a Solidify modifier. Without it, their open ends can be capped to give a solid.
-WITHOUT_WALL = ("Ascending colon", "Transverse colon", "Descending colon", "Sigmoid colon")
+WITHOUT_WALL = ("Ascending colon", "Transverse colon", "Descending colon", "Sigmoid colon", "Thyroid gland")
 
 collection_path = {}
 

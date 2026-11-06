@@ -89,6 +89,7 @@ describe.each<Sex>(["male", "female"])("routes on the %s body", (sex) => {
     expect(last("to_bladder_L").distanceTo(center("bladder"))).toBeLessThan(0.001);
     expect(last("portal_liver").distanceTo(center("liver"))).toBeLessThan(0.001);
     expect(last("carotid").distanceTo(center("brain"))).toBeLessThan(0.001);
+    expect(last("to_neck").distanceTo(center("thyroid"))).toBeLessThan(0.001);
     // A renal artery has to start on the aorta and end at its own kidney, without crossing the far one.
     for (const point of network.route("to_kidney_L").points) expect(point.x).toBeGreaterThan(-0.01);
     for (const point of network.route("to_kidney_R").points) expect(point.x).toBeLessThan(0.05);

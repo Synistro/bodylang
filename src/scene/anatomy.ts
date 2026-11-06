@@ -19,6 +19,7 @@ export interface PartStyle {
   contextOpacity: number; // how far it recedes when something else is the subject
   bareOpacity: number; // what stays when the muscle figure takes over the view
   continues: OrganId | null; // it carries on from this organ, so that organ's close-up keeps it in view
+  seenThrough: boolean; // it lies behind a solid organ, so its contour draws over that organ
 }
 
 const part = (
@@ -35,6 +36,7 @@ const part = (
   subjectFill: 0.09,
   bareOpacity: 0,
   continues: null,
+  seenThrough: false,
   ...style,
 });
 
@@ -98,6 +100,33 @@ const PARTS = {
   prostate: part({ organ: "prostate", ghost: 0, subjectGhost: 0, contextOpacity: 0.55 }),
   spinal_cord: part({ organ: null, ghost: 1, restOpacity: 0.5, subjectGhost: 1, contextOpacity: 0.25 }),
   thymus: part({ organ: null, worksWith: "spleen", ghost: 1, restOpacity: 0.4, subjectGhost: 0, contextOpacity: 0.25 }),
+  thyroid: part({ organ: null, ghost: 1, restOpacity: 0.5, subjectGhost: 0, contextOpacity: 0.3 }),
+  adrenal_L: part({
+    organ: null,
+    continues: "kidneys",
+    ghost: 1,
+    restOpacity: 0.5,
+    subjectGhost: 0,
+    contextOpacity: 0.3,
+  }),
+  adrenal_R: part({
+    organ: null,
+    continues: "kidneys",
+    ghost: 1,
+    restOpacity: 0.5,
+    subjectGhost: 0,
+    contextOpacity: 0.3,
+  }),
+  gallbladder: part({
+    organ: null,
+    worksWith: "liver",
+    continues: "liver",
+    seenThrough: true,
+    ghost: 1,
+    restOpacity: 0.5,
+    subjectGhost: 1,
+    contextOpacity: 0.3,
+  }),
   // The gut starts as contour so it doesn't wall off the abdomen, and when it is the subject it is a
   // flat pale tone with fine lines, a little open so the pancreas behind it still reads.
   small_intestine: part({
@@ -134,6 +163,17 @@ const PARTS = {
 
 export type PartName = keyof typeof PARTS;
 
+// A gland has no organ of its own in the model, so it is a stop's words that say it is the place: a process stop with
+// this label sits on the gland and lights it, whichever organ the stop is otherwise filed under.
+const GLAND_OF_STOP: Readonly<Record<string, readonly [PartName, PartName] | readonly [PartName]>> = {
+  Thyroid: ["thyroid"],
+  "Adrenal glands": ["adrenal_L", "adrenal_R"],
+};
+
+export function glandOfStop(label: string) {
+  return Object.hasOwn(GLAND_OF_STOP, label) ? GLAND_OF_STOP[label] : null;
+}
+
 // Where a stop or a label attaches to a shape whose middle is empty space: the mesh point nearest a
 // landmark. A click there always lands on the part.
 const ANCHOR_NEAR: Partial<Record<PartName, string>> = {
@@ -163,6 +203,10 @@ const PART_NAMES: PartName[] = [
   "prostate",
   "spinal_cord",
   "thymus",
+  "thyroid",
+  "adrenal_L",
+  "adrenal_R",
+  "gallbladder",
   "small_intestine",
   "duodenum",
   "large_intestine",
@@ -301,6 +345,7 @@ export class Anatomy {
       const material = createOrganMaterial(palette);
       const outlineMaterial = createOutlineMaterial(palette, resolution);
       material.uniforms.uGhost.value = style.ghost;
+      material.depthTest = !style.seenThrough;
       material.uniforms.uSoft.value = style.soft;
       material.uniforms.uHatchRound.value = meta.along === undefined ? 0 : 1;
       const mesh = new THREE.Mesh(geometry, material);

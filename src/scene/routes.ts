@@ -257,7 +257,7 @@ function buildRoutes(
       vessel(carotidRoot, ["left_common_carotid_artery_a", "internal_carotid_artery_L", brain]),
       { feeders: ["arch"] },
     ),
-    to_neck: asVessel("to_neck", vessel(carotidRoot, ["left_common_carotid_artery_a", lm("thyroid_cartilage")]), {
+    to_neck: asVessel("to_neck", vessel(carotidRoot, ["left_common_carotid_artery_a", center("thyroid")]), {
       feeders: ["arch"],
     }),
     descending: asVessel("descending", aorta, { trunk: true, feeders: ["arch"] }),

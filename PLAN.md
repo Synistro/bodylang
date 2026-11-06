@@ -353,7 +353,7 @@ Voice input is left out, because Mac dictation already works.
 - Known gap in the model: two apples peak slightly below the target, because the fibre effect stays close to Benini 1995. A smaller fibre effect would hit the apple target and move further from that study. How far insulin falls and the stomach slows on a hard run is my estimate. Only the direction comes from published work.
 - Some sources were read only as a secondary reference or search snippet, including the running core temperature and the 10 mmHg per MET figure. `src/model/params.ts` keeps a source note beside each value.
 - Organs and muscles are warped from other bodies onto the Anny shape, so the fit is approximate and gets less accurate at extreme sizes. At very low or high BMI, a plain girth scale makes up the remaining weight, so those bodies look less natural.
-- A process Claude adds has no mesh of its own, so the thyroid is a numbered stop at the throat with no gland drawn. It also can't change other numbers: a thyroid process can't raise your heart rate on screen.
+- A process Claude adds can't add a mesh, so its stops sit on anatomy that already exists. It also can't change other numbers: a thyroid process can't raise your heart rate on screen.
 - The female body's organs are male shapes warped to her, apart from the uterus, ovaries and tubes, and she has no uterine vessels drawn, because no view asks for vessels that thin.
 - Under 820 px wide, the layout stacks and hides the organ name labels and the lines from stop numbers to the body.
 - Inside an exploration, changing the body's measurements with the sliders changes the copy, so it goes when you leave.

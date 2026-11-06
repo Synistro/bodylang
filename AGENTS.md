@@ -137,6 +137,10 @@ A tool that leaves the day and the view alone, such as `find_foods`, `read_body`
 3. `closeup/organs.test.ts` then fails until the organ has a close-up. Follow the next recipe.
 4. Nothing asks for these: the mesh (`src/scene/anatomy.ts`, `ORGANS` in `pipeline/build_atlas.py`, `public/assets/`), `MESHES` in `server/track.ts` so an injury's path can cross it, the `organs` of a system in `SYSTEMS` in `model/systems.ts`, the `ORGANS` list in `scene/stage.ts`, and how brightly it lights on the body in `scene/organStates.ts`.
 
+### A part with no organ of its own, such as a gland
+
+Nothing asks for any of this. Add it to `ORGANS` in `pipeline/build_atlas.py` and rebuild, to `PARTS` and `PART_NAMES` in `src/scene/anatomy.ts`, and to `MESHES` in `server/track.ts`. To light it on a page, add it to that view's `parts` in `scene/stage.ts`, and to `PART_LABELS` if the page should name it. To make a process stop on it, add the stop's label to `GLAND_OF_STOP` in `anatomy.ts`. `scene/anatomy.test.ts` fails if no process uses that label any more.
+
 ### A close-up
 
 1. Write `src/closeup/<organ>.ts` with `defineCloseup`. Each level runs from 0 to 1 and has a meaning in words. Nothing in this file draws, because the server loads it to check a walkthrough.

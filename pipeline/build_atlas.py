@@ -39,10 +39,14 @@ ORGANS = {
     "spinal_cord": (["White matter of spinal cord", "Anterior horn of spinal cord", "Posterior horn of spinal cord"], 0.0012, 2, 0.8, 1600),
     "thymus": (["Left lobe of thymus", "Right lobe of thymus"], 0.001, 1, 0.8, 1600),
     "prostate": (["Prostate"], 0.0008, 1, 0.8, 1600),
+    "thyroid": (["Thyroid gland"], 0.0007, 3, 0.9, 1200),
+    "adrenal_L": (["Suprarenal gland.l"], 0.0006, 1, 0.9, 900),
+    "adrenal_R": (["Suprarenal gland.r"], 0.0006, 1, 0.9, 900),
+    "gallbladder": (["Gallbladder"], 0.0008, 1, 0.9, 900),
 }
 ONLY_MALE = ("prostate",)
 # Shapes in more than one piece, which keep every piece.
-SEVERAL_PIECES = ("thymus", "lung_L", "lung_R", "heart", "spinal_cord")
+SEVERAL_PIECES = ("thymus", "lung_L", "lung_R", "heart", "spinal_cord", "thyroid")
 
 # Coils and folds so fine that decimating leaves little facets, which would shade as flecks, take this many passes.
 SMOOTHING_PASSES = {"large_intestine": 24, "heart": 16}
@@ -637,7 +641,6 @@ def build(sex, source, parts, trachea, fit, sk, female, cache):
         ureter = fit(source.main_spline(f"Ureter.{side.lower()}")[0])
         L[f"ureteral_orifice_{side}"] = rounded(ureter[np.argmin(ureter[:, 1])])
     L["trachea"] = rounded(fit(source.mesh("Trachea")[0][::5]).mean(0))
-    L["thyroid_cartilage"] = rounded(fit(source.mesh("Thyroid cartilage")[0][::9]).mean(0))
     stomach_centre = stomach.mean(0)
     L["esophageal_impression_of_liver"] = rounded(cardia)
     L["gastric_surface_of_spleen"] = rounded(nearest(placed["spleen"][0], stomach_centre))
