@@ -94,6 +94,49 @@ describe("camera flight", () => {
     }
   });
 
+  describe("framing something below the chin", () => {
+    const INSET: Insets = { left: 290, right: 290, top: 30, bottom: 80 };
+    const FREE = HEIGHT - INSET.top - INSET.bottom;
+    const CHIN = 1.56;
+    const TOP = 1.8;
+
+    function framed(targetY: number, height: number) {
+      const camera = new THREE.PerspectiveCamera(21, WIDTH / HEIGHT, 0.1, 30);
+      camera.position.set(0, targetY, 4);
+      const controls = { target: new THREE.Vector3(0, targetY, 0), minDistance: 0.45, maxDistance: 14 };
+      const rig = new CameraRig(camera, controls);
+      rig.setViewport(WIDTH, HEIGHT);
+      rig.snap((out) => {
+        out.target.set(0, targetY, 0);
+        out.height = height;
+        out.width = height;
+        out.azimuth = 0;
+        out.polar = Math.PI / 2;
+        out.head.top = TOP;
+        out.head.chin = CHIN;
+        out.headroom = null;
+      }, INSET);
+      rig.update(FRAME, INSET, true);
+      camera.lookAt(controls.target);
+      camera.updateMatrixWorld(true);
+      const place = (y: number) => toPixels(new THREE.Vector3(0, y, 0), camera).y;
+      return { subject: place(targetY), chin: place(CHIN), top: place(TOP) };
+    }
+
+    it("keeps a neck stop well inside the picture by showing the whole head", () => {
+      const { subject, top } = framed(1.53, 0.36);
+      expect(subject).toBeGreaterThan(INSET.top + FREE * 0.25);
+      expect(subject).toBeLessThan(HEIGHT - INSET.bottom);
+      expect(top).toBeGreaterThanOrEqual(0);
+    });
+
+    it("still crops below the chin for something further down", () => {
+      const { subject, chin } = framed(1.3, 0.5);
+      expect(chin).toBeCloseTo(0, -1);
+      expect(subject).toBeGreaterThan(INSET.top + FREE * 0.25);
+    });
+  });
+
   it("leaves the view alone once the viewer has dragged", () => {
     const { rig, step, controls } = rigAt(new THREE.Vector3(1, 1.3, 3));
     rig.snap(goal, INSETS);

@@ -30,6 +30,7 @@ const FLIGHT = {
 const INSET_RATE = 7;
 const LEAST_FREE_SHARE = 0.35; // of the canvas, however large the panels are
 const HEAD_CLEARANCE = 0.012; // metres the edge of the picture stays clear of a head it shows whole
+const LEAST_ROOM_ABOVE_SUBJECT = 0.25; // of the free area: cropping below the chin may not leave what is framed any higher
 
 // A critically damped spring: starts and stops gently, and a new goal mid-flight doesn't kick.
 class Damped {
@@ -206,8 +207,9 @@ export class CameraRig {
     return THREE.MathUtils.clamp(Math.max(byHeight, byWidth), this.controls.minDistance, this.controls.maxDistance);
   }
 
-  // Where to aim so the top edge of the picture never crosses the face: the whole head is in, or the
-  // crop is below the chin. A framing can also fix how much room stays above the head.
+  // Where to aim so the top edge of the picture never crosses the face: the crop is below the chin, or
+  // the whole head is in when that crop would push what is framed up against the edge, as with something
+  // in the neck. A framing can also fix how much room stays above the head.
   private aimedY(framing: Framing, distance: number) {
     const slope = 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const metresPerPixel = (slope * distance) / this.height;
@@ -220,7 +222,8 @@ export class CameraRig {
     if (framing.headroom !== null) return top + (framing.headroom - 0.5) * freeHeight * metresPerPixel;
     const edge = framing.target.y + toTopEdge;
     if (edge <= chin || edge >= top + HEAD_CLEARANCE) return framing.target.y;
-    return framing.target.y + (framing.target.y < chin ? chin - edge : top + HEAD_CLEARANCE - edge);
+    const room = LEAST_ROOM_ABOVE_SUBJECT * freeHeight * metresPerPixel;
+    return framing.target.y + (framing.target.y < chin - room ? chin - edge : top + HEAD_CLEARANCE - edge);
   }
 
   private readPose() {
