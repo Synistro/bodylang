@@ -2,18 +2,18 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Which part of the code may import which. Folders of files that may import each other count as one part.
+// Which part of the code may import which, counting type imports. A part is a folder or a single file in src.
 const MAY_IMPORT: Record<string, readonly string[]> = {
   model: [],
   look: ["model"],
-  actions: ["closeup", "look", "model"],
-  closeup: ["actions", "model"],
-  server: ["actions", "closeup", "model"],
-  scene: ["look", "model", "wall"],
+  closeup: ["model"],
+  actions: ["closeup", "model"],
   wall: [],
-  store: ["actions", "look", "model", "scene"],
+  scene: ["look", "model", "wall"],
+  store: ["actions", "look", "model"],
   ui: ["actions", "closeup", "look", "model", "scene", "store", "wall"],
   main: ["ui"],
+  server: ["actions", "closeup", "model"],
 };
 
 const partOf = (path: string) => {
