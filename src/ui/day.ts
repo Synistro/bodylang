@@ -4,6 +4,7 @@ import { dayDocOf, getState, restoreDay, setClock, setUi, subscribe } from "../s
 import { WALL } from "../wall";
 import { followBuilds } from "./ProcessBuild";
 import { playOpening } from "./demoOpening";
+import { EMBED, listenToHost } from "./embed";
 
 const lookSchema = z.object({
   theme: z.enum(["light", "dark"]),
@@ -135,6 +136,10 @@ export function rememberLook() {
 }
 
 export function startDay() {
+  if (EMBED) {
+    listenToHost();
+    return;
+  }
   followBuilds();
   if (DEMO) {
     playOpening();

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { CameraRig, Framing, Insets } from "./camera";
+import { CameraRig, Framing, Insets, wheelIsSideways } from "./camera";
 
 const WIDTH = 1310;
 const HEIGHT = 900;
@@ -152,5 +152,14 @@ describe("camera flight", () => {
     rig.setViewport(WIDTH, HEIGHT);
     step(0.5);
     expect(controls.target.distanceTo(at)).toBe(0);
+  });
+});
+
+describe("a two-finger swipe on the body", () => {
+  it("goes to the browser when it is sideways, and to the camera otherwise", () => {
+    expect(wheelIsSideways({ deltaX: 30, deltaY: 2, ctrlKey: false })).toBe(true);
+    expect(wheelIsSideways({ deltaX: -30, deltaY: 2, ctrlKey: false })).toBe(true);
+    expect(wheelIsSideways({ deltaX: 2, deltaY: 30, ctrlKey: false })).toBe(false);
+    expect(wheelIsSideways({ deltaX: 30, deltaY: 2, ctrlKey: true })).toBe(false);
   });
 });

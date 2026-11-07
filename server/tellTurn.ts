@@ -9,7 +9,7 @@ import { readout } from "../src/model/readout";
 import { whereabouts } from "../src/model/whereabouts";
 import { formatClock } from "../src/model/words";
 import { BuildStatus, TellEvent } from "../src/wire";
-import { buildsAllowed } from "./claude";
+import { buildsAllowed } from "./llm";
 import { startBuild } from "./extend";
 import { combineIngredients, Food, foodById, foodLine, nutrientsOf, searchFoods, sourceOf } from "./foods";
 import { NumberBook, unverifiedNumbers } from "./numberCheck";
@@ -270,7 +270,7 @@ export function startTurn(
       ? [
           tool(
             "add_process",
-            "Asks a separate Claude session to add a process the model doesn't have. It runs on its own for about ten minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
+            "Asks a separate session to add a process the model doesn't have. It runs on its own for about ten minutes, and the process appears on the body only if every test passes. You can't write it yourself. Returns whether it started.",
             {
               id: z.string().describe("Lowercase letters and underscores, such as thyroid"),
               title: z.string().max(40).describe("What it is called on screen, such as Thyroid"),

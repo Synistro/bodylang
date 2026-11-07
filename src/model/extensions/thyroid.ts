@@ -140,7 +140,7 @@ export const extension: ProcessExtension = {
   system: "energy",
   evidence: "C",
   source:
-    "Typical adult TSH, free T4 and free T3 are mid-range laboratory reference values. The night TSH surge near 02:00-03:00, and its rise when sleep is lost, follow Brabant et al. 1990 (J Clin Endocrinol Metab) and Parker et al. 1987. T3 trailing TSH by about 90 minutes follows Russell et al. 2008. The fall of T3 in illness, from slower T4-to-T3 conversion, follows the review by Fliers, Bianco, Langouche and Boelen (Lancet Diabetes Endocrinol 2015). The sizes of the swing and the illness drop are Claude's estimates. The model has no thyroid of its own: these levels follow its clock, posture and inflammation, and its heart rate and burn rate do not respond to them. Iodine intake, slow feedback over weeks and thyroid disease are left out.",
+    "Typical adult TSH, free T4 and free T3 are mid-range laboratory reference values. The night TSH surge near 02:00-03:00, and its rise when sleep is lost, follow Brabant et al. 1990 (J Clin Endocrinol Metab) and Parker et al. 1987. T3 trailing TSH by about 90 minutes follows Russell et al. 2008. The fall of T3 in illness, from slower T4-to-T3 conversion, follows the review by Fliers, Bianco, Langouche and Boelen (Lancet Diabetes Endocrinol 2015). The sizes of the swing and the illness drop are the AI's estimates. The model has no thyroid of its own: these levels follow its clock, posture and inflammation, and its heart rate and burn rate do not respond to them. Iodine intake, slow feedback over weeks and thyroid disease are left out.",
   params,
   at,
 };

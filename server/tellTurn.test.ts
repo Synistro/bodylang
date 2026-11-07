@@ -5,6 +5,7 @@ import type { TellEvent } from "../src/wire";
 import { searchFoods } from "./foods";
 import { PRESETS } from "../src/model/events/types";
 import { ACTION_DESCRIPTIONS, actionToolsFor, planFor, systemPromptFor, TellPlan } from "./tellPrompt";
+import { toolSpec } from "./codex";
 import { startTurn, TellInput } from "./tellTurn";
 
 // A turn with no Claude in it: each test calls the tools the way Claude would, in the order it would.
@@ -221,5 +222,19 @@ describe("what each mode can reach", () => {
     expect(actionToolsFor("tell")).not.toContain("guide");
     expect(actionToolsFor("ask")).toContain("guide");
     expect(actionToolsFor("ask")).not.toContain("what_if");
+  });
+});
+
+describe("the tools on OpenAI", () => {
+  it("can all be described to Codex", () => {
+    const { tools } = startTurn(
+      input(),
+      BRIEF,
+      () => {},
+      () => {},
+    );
+    const specs = tools.map(toolSpec);
+    expect(specs.map((spec) => spec.name)).toContain("reply");
+    for (const spec of specs) expect(spec.inputSchema).toMatchObject({ type: "object" });
   });
 });

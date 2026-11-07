@@ -1,12 +1,12 @@
-import { createSdkMcpServer, query } from "@anthropic-ai/claude-agent-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import type { BodyState } from "../src/actions/reduce";
 import { DATE_PATTERN, dayContentSchema } from "../src/model/day";
 import { BuildStatus, TellEvent } from "../src/wire";
-import { claudeDefaults } from "./claude";
 import { openEventStream, readJson } from "./http";
 import type { Notify } from "./http";
+import { runFailure } from "./llm";
+import { runLlm } from "./runLlm";
 import { planFor, TellPlan } from "./tellPrompt";
 import { startTurn, TellInput } from "./tellTurn";
 
@@ -39,6 +39,7 @@ export interface TellMeasure {
   replyMs: number | null;
   turns: number;
   costUsd: number;
+  usage: string;
 }
 
 export async function handleTell(req: IncomingMessage, res: ServerResponse, { buildChanged }: Notify) {
@@ -46,7 +47,7 @@ export async function handleTell(req: IncomingMessage, res: ServerResponse, { bu
   const stream = openEventStream(res);
   const measured = await runTell(input, planFor(input.mode, input.depth), stream.send, stream.stopped, buildChanged);
   console.log(
-    `[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, $${measured.costUsd.toFixed(4)}`,
+    `[bodylang] ${measured.subtype} in ${measured.totalMs} ms, first thing on screen at ${measured.firstActionMs ?? "-"} ms, ${measured.turns} turns, ${measured.usage}`,
   );
   res.end();
 }
@@ -69,6 +70,7 @@ export async function runTell(
     replyMs: null,
     turns: 0,
     costUsd: 0,
+    usage: "",
   };
   const send = (event: TellEvent) => {
     if (event.type === "action" && measure.firstActionMs === null) measure.firstActionMs = elapsed();
@@ -77,34 +79,29 @@ export async function runTell(
   };
   const turn = startTurn(input, plan, send, buildChanged);
   try {
-    const run = query({
+    const result = await runLlm({
+      system: turn.systemPrompt,
       prompt: turn.prompt,
-      options: {
-        ...claudeDefaults(),
-        model: plan.model,
-        effort: plan.effort,
-        maxTurns: MAX_TURNS,
-        systemPrompt: turn.systemPrompt,
-        allowedTools: ["mcp__body__*"],
-        mcpServers: { body: createSdkMcpServer({ name: "body", version: "0.0.0", tools: turn.tools }) },
-        abortController: abort,
+      model: plan.model,
+      effort: plan.effort,
+      maxTurns: MAX_TURNS,
+      tools: turn.tools,
+      abort,
+      onOutput: () => {
+        measure.firstOutputMs = elapsed();
       },
     });
-    for await (const message of run) {
-      if (message.type === "assistant" && measure.firstOutputMs === null) measure.firstOutputMs = elapsed();
-      if (message.type === "result") {
-        measure.turns = message.num_turns;
-        measure.costUsd = message.total_cost_usd;
-        measure.subtype = message.subtype;
-        if (message.subtype !== "success")
-          send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
-      }
-    }
-    if (!turn.replied()) console.warn("[bodylang] finished without calling reply");
+    measure.turns = result.turns;
+    measure.costUsd = result.costUsd;
+    measure.usage = result.usage;
+    measure.subtype = result.subtype;
+    if (result.subtype !== "success") send({ type: "error", message: `The LLM stopped early: ${result.subtype}.` });
+    if (!turn.replied())
+      console.warn(`[bodylang] finished without calling reply. It said: ${result.text.slice(0, 400) || "nothing"}`);
   } catch (e: unknown) {
     const reason = e instanceof Error ? e.message : String(e);
     console.error("[bodylang] bridge error", reason);
-    send({ type: "error", message: `Claude could not run: ${reason}` });
+    send({ type: "error", message: runFailure(reason) });
     measure.subtype = "error";
   }
   send({ type: "done" });

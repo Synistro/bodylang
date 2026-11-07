@@ -143,7 +143,7 @@ const guideStep = z
     closeup: closeupSpec
       .nullable()
       .describe(
-        "What this step points at in the close-up beside the body. Every step on an organ listed under close-ups needs one, unless it composes a drawing. Null otherwise",
+        "What this step points at in the close-up beside the body. It names its organ again, the same as the step's organ. Every step on an organ listed under close-ups needs one, unless it composes a drawing. Null otherwise",
       ),
     composed: composedSpec
       .nullable()

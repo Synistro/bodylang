@@ -17,6 +17,10 @@ import {
   Leaf,
   Lightning,
   Moon,
+  CaretUpDown,
+  Check,
+  Copy,
+  GithubLogo,
   Pause,
   PersonSimple,
   Play,
@@ -116,4 +120,4 @@ export const FEELING_LOOK: Record<string, { glyph: Glyph; system: SystemId }> = 
 
 export const FEELING_FROM_CLAUDE = Sparkle;
 
-export { ArrowUp, Pause, Play, SkipBack, SkipForward, X };
+export { ArrowUp, CaretUpDown, Check, Copy, GithubLogo, Pause, Play, SkipBack, SkipForward, X };

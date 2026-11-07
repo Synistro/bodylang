@@ -19,11 +19,11 @@ const WHAT_IF_PEAK_WINDOW_MINUTES = 360;
 const WHAT_IF_MIN_PEAK_CHANGE = 0.05;
 const MG_DL_PER_MMOL = 18.016;
 
-const NUMBER_ORIGIN: Origin = { kind: "model", detail: "This number is one the model returned to Claude." };
+const NUMBER_ORIGIN: Origin = { kind: "model", detail: "This number is one the model returned to the AI." };
 const ADDED_ORIGIN: Origin = {
   kind: "claude",
   detail:
-    "A number with a dotted line in Claude's answer is one the model never returned. Claude worked it out or added it from its own knowledge.",
+    "A number with a dotted line in the AI's answer is one the model never returned. The AI worked it out or added it from its own knowledge.",
 };
 const SAID_NUMBER = /(?<![\w.:,])(\d{1,2}:\d{2}|\d+(?:\.\d+)?%?)(?![\w:]|\.\d)/g;
 
@@ -127,7 +127,7 @@ function WalkAgain() {
 
 const NUMBER_ORIGIN_WHAT_IF: Origin = {
   kind: "model",
-  detail: "Claude suggested this alternative, and the model computed the difference.",
+  detail: "The AI suggested this alternative, and the model computed the difference.",
 };
 
 // An alternative Claude offered, in words, at the foot of what it said.

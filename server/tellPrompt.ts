@@ -4,12 +4,12 @@ import { closeupGuidance } from "../src/closeup/list";
 import type { Intake } from "../src/model/scenario";
 import { SYSTEMS } from "../src/model/systems";
 import { formatClock } from "../src/model/words";
-import { buildsAllowed } from "./claude";
+import { buildsAllowed, modelFor } from "./llm";
 
 export type Mode = "tell" | "ask";
 export type Depth = "simple" | "deep";
 
-// Which model answers, and how. tools/speed-bench.mjs measured these, and PLAN.md has the results. In a
+// Which model answers, and how. tools/speed-bench.mjs measured these, and ARCHITECTURE.md has the results. In a
 // brief run the tools just record, and Claude reads the numbers once, when it needs them.
 export interface TellPlan {
   model: string;
@@ -17,16 +17,13 @@ export interface TellPlan {
   brief: boolean;
 }
 
-const MODEL = process.env.BODYLANG_MODEL ?? "claude-sonnet-5-5";
-const DEEP_MODEL = process.env.BODYLANG_DEEP_MODEL ?? "claude-opus-5-5";
-const TELL_PLAN: TellPlan = { model: MODEL, effort: "low", brief: true };
 // Being brief made it skip the walkthrough for a concept, so an explanation takes the turns it needs.
-const ASK_PLANS: Record<"simple" | "deep", TellPlan> = {
-  simple: { model: MODEL, effort: "low", brief: false },
-  deep: { model: DEEP_MODEL, effort: "medium", brief: false },
-};
-
-export const planFor = (mode: Mode, depth: Depth) => (mode === "ask" ? ASK_PLANS[depth] : TELL_PLAN);
+export function planFor(mode: Mode, depth: Depth): TellPlan {
+  if (mode === "tell") return { model: modelFor("talk"), effort: "low", brief: true };
+  return depth === "deep"
+    ? { model: modelFor("deep"), effort: "medium", brief: false }
+    : { model: modelFor("talk"), effort: "low", brief: false };
+}
 
 export const REPLY_WORDS_UNDER = 18;
 

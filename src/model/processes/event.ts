@@ -64,7 +64,7 @@ function eventHeadline(event: ResolvedEvent, t: number): string {
     case "poor_sleep":
       return "Insulin works less well today, and you may feel hungrier";
     case "custom":
-      return running ? "Claude's estimate, still going on" : "Claude's estimate, fading";
+      return running ? "The AI's estimate, still going on" : "The AI's estimate, fading";
     default: {
       const exhaustive: never = event.preset;
       return exhaustive;

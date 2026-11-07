@@ -66,3 +66,23 @@ export async function* readEvents<T>(response: Response, schema: z.ZodType<T>): 
     }
   }
 }
+
+// What a page that embeds the app, such as the landing page, hands it: a day to show, and example questions with
+// the answers recorded for them, which replay through the same code that reads a live answer. Each action and
+// event is checked again where it is applied.
+const recordedEventSchema = z.object({ ms: z.number().nonnegative(), event: z.unknown() });
+const exampleSchema = z.object({
+  text: z.string().min(1),
+  depth: z.enum(["simple", "deep"]),
+  body: z.unknown().optional(),
+  events: z.array(recordedEventSchema),
+});
+export const embedMessageSchema = z.object({
+  type: z.literal("bodylang:show"),
+  now: z.number(),
+  actions: z.array(z.object({ name: z.string(), args: z.unknown() })),
+  examples: z.array(exampleSchema),
+});
+export type EmbedMessage = z.infer<typeof embedMessageSchema>;
+export type Example = z.infer<typeof exampleSchema>;
+export type RecordedEvent = z.infer<typeof recordedEventSchema>;

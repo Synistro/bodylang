@@ -23,6 +23,9 @@ import { AtlasKeys } from "./AtlasKeys";
 import { BodyTrace } from "./BodyTrace";
 import { Explain } from "./Explain";
 import { Answer, Composer } from "./Conversation";
+import { EMBED } from "./embed";
+import { EmbedHeader, EmbedLinks, EmbedRun } from "./EmbedChrome";
+import { ExamplePicker } from "./ExamplePicker";
 import { Header, ViewControls } from "./Controls";
 import { freeArea, useFreeArea } from "./freeArea";
 import { assessmentAt } from "./hooks";
@@ -302,11 +305,11 @@ export function App() {
       <div ref={sheet} className="sheet">
         <aside className="left">
           <Skeleton className="header-slot" loading={!stage && !failed} label="Loading the body" error={failed}>
-            <Header />
+            {EMBED ? <EmbedHeader /> : <Header />}
           </Skeleton>
           <Rail />
           <Answer />
-          <Composer />
+          {EMBED ? <ExamplePicker /> : <Composer />}
         </aside>
         <div className="center">
           <AskBar />
@@ -319,15 +322,20 @@ export function App() {
           </div>
         </div>
         <main className="right">
+          {EMBED ? <EmbedLinks /> : null}
           <PageHead />
           <div className="panel-stack">
             <SystemPage />
             <OrganPage />
           </div>
-          <div className="right-foot">
-            <ViewControls />
-            <Foot />
-          </div>
+          {EMBED ? (
+            <EmbedRun />
+          ) : (
+            <div className="right-foot">
+              <ViewControls />
+              <Foot />
+            </div>
+          )}
         </main>
       </div>
       <Explain />

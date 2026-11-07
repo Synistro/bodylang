@@ -21,8 +21,8 @@ export interface Origin {
 
 export const ORIGIN_HEADING: Record<OriginKind, string> = {
   model: "Computed by the model",
-  "claude-input": "Computed by the model, from Claude's numbers",
-  claude: "Added by Claude",
+  "claude-input": "Computed by the model, from the AI's numbers",
+  claude: "Added by the AI",
   usda: "From the USDA food table",
   you: "You said this",
 };
@@ -47,7 +47,7 @@ export const SENTENCE_ORIGIN: Origin = {
 
 export const CLAUDE_WORDS: Origin = {
   kind: "claude",
-  detail: "Claude wrote this. Any number in it that the model returned is plain, and one it didn't is underlined.",
+  detail: "The AI wrote this. Any number in it that the model returned is plain, and one it didn't is underlined.",
 };
 
 // What can move each reading: which channels of an event, so a sauna only marks what a sauna touches, and whether
@@ -124,16 +124,16 @@ export function readingOrigin(reading: Reading, tr: Trajectory, t: number): Orig
   const estimatedFoods = foods.filter(composedByClaude);
   const named = [...events.map((event) => event.label), ...estimatedFoods.map((intake) => intake.label)];
   if (named.length)
-    return { kind: "claude-input", detail: `${[...new Set(named)].join(", ")}: Claude's estimate. ${base}` };
+    return { kind: "claude-input", detail: `${[...new Set(named)].join(", ")}: the AI's estimate. ${base}` };
   return {
     kind: "model",
-    detail: foods.length ? `Portions are Claude's estimates unless you corrected them. ${base}` : base,
+    detail: foods.length ? `Portions are the AI's estimates unless you corrected them. ${base}` : base,
   };
 }
 
 export function feelingOrigin(feeling: Feeling): Origin {
   if (feeling.byClaude)
-    return { kind: "claude", detail: "Claude described this for something the model has no built-in curve for." };
+    return { kind: "claude", detail: "The AI described this for something the model has no built-in curve for." };
   return {
     kind: "model",
     detail: "Worked out by the app's rules from the model's numbers. What a person actually feels varies a lot.",
@@ -141,17 +141,17 @@ export function feelingOrigin(feeling: Feeling): Origin {
 }
 
 export function foodOrigin(intake: Intake): Origin {
-  const portion = intake.portionBy === "you" ? "You corrected the portion." : "Claude estimated the portion.";
+  const portion = intake.portionBy === "you" ? "You corrected the portion." : "The AI estimated the portion.";
   if (intake.source?.kind === "table")
     return { kind: "usda", detail: `${intake.source.name}. ${portion} The model computes what happens to it.` };
   if (intake.source?.kind === "recipe")
     return {
       kind: "claude-input",
-      detail: `Claude estimated the recipe: ${recipeWords(intake.source.ingredients)}. Each ingredient's composition is from USDA. ${portion} The model computes what happens to it.`,
+      detail: `The AI estimated the recipe: ${recipeWords(intake.source.ingredients)}. Each ingredient's composition is from USDA. ${portion} The model computes what happens to it.`,
     };
   return {
     kind: "claude-input",
-    detail: `Claude estimated what this contains. ${portion} The model computes what happens to it.`,
+    detail: `The AI estimated what this contains. ${portion} The model computes what happens to it.`,
   };
 }
 
@@ -164,7 +164,7 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
     const extension = EXTENSIONS.find((e) => e.id === id);
     return {
       kind: "claude",
-      detail: `A separate Claude session wrote this process, and its tests passed. It reads the model and can't change it. ${extension ? `${EVIDENCE_WORDS[extension.evidence]} ${extension.source}` : ""}`,
+      detail: `A separate session wrote this process, and its tests passed. It reads the model and can't change it. ${extension ? `${EVIDENCE_WORDS[extension.evidence]} ${extension.source}` : ""}`,
     };
   }
   if (kind === "event") {
@@ -172,7 +172,7 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
     if (event?.preset === "custom")
       return {
         kind: "claude-input",
-        detail: `Claude chose the numbers and wrote the words for this. Its source: ${event.source || "its own estimate"}.`,
+        detail: `The AI chose the numbers and wrote the words for this. Its source: ${event.source || "its own estimate"}.`,
       };
     if (event) return modelOrigin(event.evidence, event.source);
   }
@@ -180,7 +180,7 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
     const substance = tr.substances.get(id)?.substance;
     return {
       kind: "claude-input",
-      detail: `The model moves this through the body, using the half-life and dose Claude supplied. Its source: ${substance?.source || "its own knowledge"}.`,
+      detail: `The model moves this through the body, using the half-life and dose the AI supplied. Its source: ${substance?.source || "its own knowledge"}.`,
     };
   }
   const foods =
@@ -190,7 +190,7 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
   if (foods.some(composedByClaude))
     return {
       kind: "claude-input",
-      detail: `Claude estimated what ${foods
+      detail: `The AI estimated what ${foods
         .filter(composedByClaude)
         .map((intake) => intake.label)
         .join(" and ")} contains. The model computes where it goes.`,
@@ -198,7 +198,7 @@ export function processOrigin(tr: Trajectory, process: Process): Origin {
   if (foods.length)
     return {
       kind: "usda",
-      detail: `${foods.map((intake) => (intake.source?.kind === "table" ? intake.source.name : intake.label)).join(" and ")}. Claude estimated the portion unless you corrected it. The model computes where it goes.`,
+      detail: `${foods.map((intake) => (intake.source?.kind === "table" ? intake.source.name : intake.label)).join(" and ")}. The AI estimated the portion unless you corrected it. The model computes where it goes.`,
     };
   return SENTENCE_ORIGIN;
 }

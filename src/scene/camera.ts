@@ -254,3 +254,8 @@ export class CameraRig {
     this.camera.setViewOffset(this.width, this.height, offsetX, offsetY, this.width, this.height);
   }
 }
+
+// A two-finger swipe sideways belongs to the browser, which turns it into back and forward. A pinch arrives as a wheel
+// with ctrl held, and that stays with the camera.
+export const wheelIsSideways = (e: Pick<WheelEvent, "deltaX" | "deltaY" | "ctrlKey">) =>
+  !e.ctrlKey && Math.abs(e.deltaX) > Math.abs(e.deltaY);

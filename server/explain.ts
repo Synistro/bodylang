@@ -1,4 +1,3 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { z } from "zod";
 import { dayContentSchema, DayContent } from "../src/model/day";
@@ -6,10 +5,10 @@ import { readout } from "../src/model/readout";
 import { simulate } from "../src/model/engine/simulate";
 import { formatClock } from "../src/model/words";
 import { nameRequestSchema } from "../src/wire";
-import { claudeDefaults } from "./claude";
 import { openEventStream, readJson } from "./http";
+import { modelFor, runFailure } from "./llm";
+import { runLlm } from "./runLlm";
 
-const MODEL = process.env.BODYLANG_EXPLAIN_MODEL ?? "claude-haiku-5-5";
 const MAX_REQUEST_BYTES = 200_000;
 
 // Someone selected a few words on screen, wanting to know what they mean. This session has no tools at
@@ -44,16 +43,16 @@ export function cleanName(raw: string): string | null {
 // Runs beside the answer to an Ask, and has no tools, so all it can do is come up with a few words.
 export async function handleNameQuestion(req: IncomingMessage, res: ServerResponse) {
   const { text } = nameRequestSchema.parse(await readJson(req, MAX_REQUEST_BYTES));
-  let answer = "";
-  const run = query({
+  const { subtype, text: answer } = await runLlm({
+    system: NAME_PROMPT,
     prompt: `<question>\n${text}\n</question>`,
-    options: { ...claudeDefaults(), model: MODEL, effort: "low", maxTurns: 1, systemPrompt: NAME_PROMPT },
+    model: modelFor("small"),
+    effort: "low",
+    maxTurns: 1,
+    abort: new AbortController(),
   });
-  for await (const message of run) {
-    if (message.type === "result" && message.subtype === "success") answer = message.result;
-  }
   res.setHeader("content-type", "application/json");
-  res.end(JSON.stringify({ name: cleanName(answer) }));
+  res.end(JSON.stringify({ name: subtype === "success" ? cleanName(answer) : null }));
 }
 
 const turnSchema = z.object({ role: z.enum(["you", "claude"]), text: z.string().max(2000) });
@@ -95,38 +94,25 @@ export async function handleExplain(req: IncomingMessage, res: ServerResponse) {
   const started = performance.now();
   let firstMs: number | null = null;
   try {
-    const run = query({
+    const result = await runLlm({
+      system: SYSTEM_PROMPT,
       prompt: renderExplainPrompt(request),
-      options: {
-        ...claudeDefaults(),
-        model: MODEL,
-        effort: "low",
-        maxTurns: 1,
-        systemPrompt: SYSTEM_PROMPT,
-        includePartialMessages: true,
-        abortController: stopped,
+      model: modelFor("small"),
+      effort: "low",
+      maxTurns: 1,
+      abort: stopped,
+      onText: (text) => {
+        firstMs ??= Math.round(performance.now() - started);
+        send({ type: "text", text });
       },
     });
-    for await (const message of run) {
-      if (
-        message.type === "stream_event" &&
-        message.event.type === "content_block_delta" &&
-        message.event.delta.type === "text_delta"
-      ) {
-        firstMs ??= Math.round(performance.now() - started);
-        send({ type: "text", text: message.event.delta.text });
-      }
-      if (message.type === "result") {
-        console.log(
-          `[bodylang] explained "${request.term}": first words at ${firstMs ?? "-"} ms, done at ${Math.round(performance.now() - started)} ms, $${message.total_cost_usd.toFixed(4)}`,
-        );
-        if (message.subtype !== "success")
-          send({ type: "error", message: `Claude stopped early: ${message.subtype}.` });
-      }
-    }
+    console.log(
+      `[bodylang] explained "${request.term}": first words at ${firstMs ?? "-"} ms, done at ${Math.round(performance.now() - started)} ms, ${result.usage}`,
+    );
+    if (result.subtype !== "success") send({ type: "error", message: `The LLM stopped early: ${result.subtype}.` });
   } catch (e: unknown) {
     if (!stopped.signal.aborted)
-      send({ type: "error", message: `Claude could not run: ${e instanceof Error ? e.message : String(e)}` });
+      send({ type: "error", message: runFailure(e instanceof Error ? e.message : String(e)) });
   }
   send({ type: "done" });
   res.end();

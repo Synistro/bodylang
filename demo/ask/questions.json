@@ -1,0 +1,78 @@
+[
+ {
+  "id": "covid",
+  "depth": "deep",
+  "text": "What happens with my body during coronavirus?"
+ },
+ {
+  "id": "coffee",
+  "depth": "simple",
+  "text": "What if I had skipped that second coffee?"
+ },
+ {
+  "id": "bullet",
+  "depth": "deep",
+  "text": "What does a bullet through the liver do to me?"
+ },
+ {
+  "id": "blood",
+  "depth": "simple",
+  "text": "What happens when I donate blood?"
+ },
+ {
+  "id": "sex",
+  "depth": "simple",
+  "text": "What happens in my body during sex?"
+ },
+ {
+  "id": "cigarette",
+  "depth": "deep",
+  "text": "What does a cigarette do to me?"
+ },
+ {
+  "id": "cannabis",
+  "depth": "deep",
+  "text": "What does cannabis do to my brain?"
+ },
+ {
+  "id": "marathon",
+  "depth": "simple",
+  "text": "What happens to me during a marathon?"
+ },
+ {
+  "id": "beers",
+  "depth": "simple",
+  "text": "What do five beers do to me?"
+ },
+ {
+  "id": "butterflies",
+  "depth": "deep",
+  "text": "Why do I get butterflies when I'm nervous?"
+ },
+ {
+  "id": "spicy",
+  "depth": "deep",
+  "text": "Why does spicy food feel hot?"
+ },
+ {
+  "id": "sleep",
+  "depth": "simple",
+  "text": "What happens if I don't sleep for two days?"
+ },
+ {
+  "id": "legs",
+  "depth": "simple",
+  "text": "Why do my legs hurt two days after squats?"
+ },
+ {
+  "id": "period",
+  "depth": "simple",
+  "text": "What happens inside me during a period?",
+  "body": {
+   "sex": "female",
+   "age": 30,
+   "heightCm": 168,
+   "weightKg": 62
+  }
+ }
+]

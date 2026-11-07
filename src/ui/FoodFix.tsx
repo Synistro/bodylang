@@ -61,8 +61,8 @@ const sourceWords = (intake: Intake) =>
   intake.source?.kind === "table"
     ? `USDA: ${intake.source.name}`
     : intake.source?.kind === "recipe"
-      ? "Claude's recipe, USDA ingredients"
-      : "Claude's estimate";
+      ? "The AI's recipe, USDA ingredients"
+      : "The AI's estimate";
 
 function Stepper({
   text,

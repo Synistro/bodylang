@@ -65,14 +65,14 @@ describe("where a reading comes from", () => {
     const tr = run([meal({ source: { kind: "estimate" } })]);
     const during = reading(tr, "glucose", 820);
     expect(during.kind).toBe("claude-input");
-    expect(during.detail).toMatch(/Pizza: Claude's estimate/);
+    expect(during.detail).toMatch(/Pizza: the AI's estimate/);
     expect(reading(tr, "glucose", 1700).kind).toBe("model");
   });
 
   it("stays the model's for a table food, and says the portion is an estimate", () => {
     const during = reading(run([meal({ source: TABLE })]), "glucose", 820);
     expect(during.kind).toBe("model");
-    expect(during.detail).toMatch(/Portions are Claude's estimates/);
+    expect(during.detail).toMatch(/Portions are the AI's estimates/);
   });
 
   it("leaves a reading food can't touch alone", () => {
@@ -93,7 +93,7 @@ describe("where a food comes from", () => {
     const origin = foodOrigin(meal({ source: TABLE }));
     expect(origin.kind).toBe("usda");
     expect(origin.detail).toMatch(/Pizza, cheese/);
-    expect(origin.detail).toMatch(/Claude estimated the portion/);
+    expect(origin.detail).toMatch(/The AI estimated the portion/);
     expect(foodOrigin(meal({ source: TABLE, portionBy: "you" })).detail).toMatch(/You corrected the portion/);
   });
 

@@ -14,7 +14,7 @@ import { ORGAN_NAME, SYSTEMS, systemById } from "../model/systems";
 import { ACCENT_SYSTEM, organHue, viewSystemOf } from "../look";
 import { WALL, WALL_FPS, WALL_PIXEL_RATIO } from "../wall";
 import { OrganAsset, loadBody, loadOrgans } from "./assets";
-import { CameraRig, FramingSource, Insets } from "./camera";
+import { CameraRig, FramingSource, Insets, wheelIsSideways } from "./camera";
 import { Figure } from "./figure";
 import { RouteNetwork } from "./routes";
 import { LYMPH_CLUSTERS, LymphCluster, LymphNodes } from "./lymph";
@@ -568,6 +568,14 @@ export class Stage {
     this.renderer.setClearColor(0x000000, 0);
     this.camera = new THREE.PerspectiveCamera(LENS_FOV, 1, 0.1, 30);
     this.camera.position.set(1.15, 1.32, 3.25);
+    // Registered first, because the controls cancel every wheel event they see, which would block the browser's swipe.
+    canvas.addEventListener(
+      "wheel",
+      (e) => {
+        if (wheelIsSideways(e)) e.stopImmediatePropagation();
+      },
+      { capture: true, passive: true },
+    );
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;

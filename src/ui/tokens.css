@@ -1,0 +1,59 @@
+/* The app's type, spacing and two palettes, shared with the landing page in site/. */
+:root {
+  --u: clamp(0.9px, min(max(1px, calc(1px + (100vw - 1600px) * 0.00057)), calc(1px + (100vh - 900px) * 0.001)), 2.4px);
+
+  --font-ui: -apple-system, BlinkMacSystemFont, system-ui, "Inter", sans-serif;
+  --font-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --t-time: 2rem;
+  --t-headline: 1.6rem;
+  --t-name: 1.5rem;
+  --t-body: 1.3rem;
+  --t-small: 1.2rem;
+  --t-tiny: 1.1rem;
+
+  --gutter: 2rem;
+  --safe-top: 0px;
+  --side: clamp(25rem, 20vw, 30rem);
+  --figure-fade: 3.2rem;
+  --row: 2.4rem;
+  --free-left: 0px;
+  --free-right: 0px;
+  --free-bottom: 0px;
+  --free-top: 0px;
+}
+/* Paper */
+:root, :root[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f1f1f1;
+  --ink: #17181a;
+  --ink-2: #5c5b56;
+  --ink-3: #6f6e68;
+  --faint: #a3a29c;
+  --line: rgba(23, 24, 26, 0.1);
+  --line-strong: rgba(23, 24, 26, 0.2);
+  --band: rgba(23, 24, 26, 0.12);
+  --note: #8f6c00;
+  --concern: #af3029;
+  --skullet-base: rgba(23, 24, 26, 0.07);
+  --skullet-highlight: rgba(255, 255, 255, 0.6);
+  --skullet-radius: 0.4rem;
+}
+/* Black */
+:root[data-theme="dark"] {
+  --bg: #110f0e;
+  --surface: #1d1b1a;
+  --ink: #d0cec6;
+  --ink-2: #a19e97;
+  --ink-3: #8a8782;
+  --faint: #595652;
+  --line: rgba(208, 206, 198, 0.09);
+  --line-strong: rgba(208, 206, 198, 0.18);
+  --band: rgba(208, 206, 198, 0.16);
+  --note: #d0a215;
+  --concern: #d14d41;
+  --skullet-base: rgba(208, 206, 198, 0.08);
+  --skullet-highlight: rgba(208, 206, 198, 0.1);
+  color-scheme: dark;
+}

@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Explaining, getState, setUi, useStore } from "../store";
+import { EMBED } from "./embed";
 import { X } from "./icons";
 import { explainEventSchema, readEvents } from "../wire";
 
@@ -20,6 +21,8 @@ interface Turn {
 
 // The words selected in the text on screen, if they are worth explaining.
 function selectedWords(): { explaining: Explaining; range: Range } | null {
+  // Explaining asks a live LLM, which an embedded page doesn't have.
+  if (EMBED) return null;
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed || !selection.rangeCount) return null;
   const term = selection.toString().trim().replace(/\s+/g, " ");
@@ -195,8 +198,8 @@ export function Explain() {
       <form onSubmit={send}>
         <input
           value={draft}
-          placeholder={`Ask Claude about ${explaining.term}`}
-          aria-label={`Ask Claude about ${explaining.term}`}
+          placeholder={`Ask about ${explaining.term}`}
+          aria-label={`Ask about ${explaining.term}`}
           onChange={(e) => setDraft(e.target.value)}
         />
       </form>

@@ -124,7 +124,7 @@ const sauna: BodyEvent = {
   from: hm(18),
   until: hm(18, 20),
   intensity: 1,
-  source: "Claude's estimate",
+  source: "The AI's estimate",
   custom: {
     systems: ["circulation"],
     effects: [
@@ -599,7 +599,7 @@ describe("a custom story", () => {
 
   it("is marked as an estimate and moves the model", () => {
     expect(tr.events[0].evidence).toBe("C");
-    expect(tr.events[0].source).toBe("Claude's estimate");
+    expect(tr.events[0].source).toBe("The AI's estimate");
     expect(addedBy(tr, plain, "hr", hm(18, 15))).toBeCloseTo(40, 0);
     expect(value(tr, "fluidBalance", hm(18, 20))).toBeLessThan(-150);
   });
@@ -610,7 +610,7 @@ describe("a custom story", () => {
     expect(a.feelings.map((f) => f.id)).toContain("flushed");
     expect(a.headline).toContain("Dealing with sauna");
     const line = processesAt(tr, hm(18, 5)).find((p) => p.id === "event:sauna");
-    expect(line?.headline).toBe("Claude's estimate, still going on");
+    expect(line?.headline).toBe("The AI's estimate, still going on");
     expect(line?.stops[0].state).toBe("here");
   });
 

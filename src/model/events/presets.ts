@@ -744,7 +744,7 @@ export function resolveEvent(event: BodyEvent, who: EventBody): ResolvedEvent {
         ends: event.until,
         causeName: event.label.toLowerCase(),
         substance: "other",
-        source: event.source || "Claude's estimate",
+        source: event.source || "The AI's estimate",
         liveStops: false,
       };
     }

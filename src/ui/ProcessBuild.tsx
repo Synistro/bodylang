@@ -24,7 +24,7 @@ export async function removeAddedProcess(processId: string) {
 }
 
 const WORKING: Partial<Record<BuildStage, string>> = {
-  writing: "A separate Claude session is writing it.",
+  writing: "A separate session is writing it.",
   testing: "Running its tests.",
   final: "Running every test before it goes in.",
 };

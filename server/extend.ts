@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { BuildStage, BuildStatus, extendActionSchema } from "../src/wire";
-import { buildsAllowed } from "./claude";
+import { buildsAllowed } from "./llm";
 import { BadRequest, readJson } from "./http";
 import { BuildRequest, fullSuite, processPath, quickChecks, SessionContext, testPath } from "./extendCheck";
 

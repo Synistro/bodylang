@@ -231,7 +231,7 @@ const sauna: BodyEvent = {
   from: hm(18),
   until: hm(18, 20),
   intensity: 1,
-  source: "Claude's estimate",
+  source: "The AI's estimate",
   custom: {
     systems: ["circulation"],
     effects: [{ channel: "heartRate", amount: 40, riseMin: 10, halfLifeMin: 10 }],

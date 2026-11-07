@@ -316,7 +316,7 @@ export function ComposedInset({ spec }: { spec: ComposedSpec }) {
     <div
       {...sourced({
         kind: "claude-input",
-        detail: `Claude composed this drawing and the app laid it out. It isn't to scale, and how much of each thing it shows is Claude's illustration. Its basis: ${spec.basis}`,
+        detail: `The AI composed this drawing and the app laid it out. It isn't to scale, and how much of each thing it shows is the AI's illustration. Its basis: ${spec.basis}`,
       })}
     >
       <ComposedPlate key={compositionOf(spec)} spec={spec} />

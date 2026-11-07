@@ -1,3 +1,5 @@
+@import "./tokens.css";
+
 /* One body in the middle of the window. On its left an outline of the body that shows where you are,
    and the message box under it. On its right the page for where you are. Under it the day. Text sits
    directly on the ground with hairlines between things, and only the day and the figures get a panel.
@@ -8,64 +10,6 @@
 @property --keys-left { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --keys-right { syntax: "<length>"; inherits: true; initial-value: 0px; }
 
-:root {
-  --u: clamp(0.9px, min(max(1px, calc(1px + (100vw - 1600px) * 0.00057)), calc(1px + (100vh - 900px) * 0.001)), 2.4px);
-
-  --font-ui: -apple-system, BlinkMacSystemFont, system-ui, "Inter", sans-serif;
-  --font-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
-  --ease: cubic-bezier(0.2, 0, 0, 1);
-
-  --t-time: 2rem;
-  --t-headline: 1.6rem;
-  --t-name: 1.5rem;
-  --t-body: 1.3rem;
-  --t-small: 1.2rem;
-  --t-tiny: 1.1rem;
-
-  --gutter: 2rem;
-  --safe-top: 0px;
-  --side: clamp(25rem, 20vw, 30rem);
-  --figure-fade: 3.2rem;
-  --row: 2.4rem;
-  --free-left: 0px;
-  --free-right: 0px;
-  --free-bottom: 0px;
-  --free-top: 0px;
-}
-/* Paper */
-:root, :root[data-theme="light"] {
-  --bg: #ffffff;
-  --surface: #f1f1f1;
-  --ink: #17181a;
-  --ink-2: #5c5b56;
-  --ink-3: #6f6e68;
-  --faint: #a3a29c;
-  --line: rgba(23, 24, 26, 0.1);
-  --line-strong: rgba(23, 24, 26, 0.2);
-  --band: rgba(23, 24, 26, 0.12);
-  --note: #8f6c00;
-  --concern: #af3029;
-  --skullet-base: rgba(23, 24, 26, 0.07);
-  --skullet-highlight: rgba(255, 255, 255, 0.6);
-  --skullet-radius: 0.4rem;
-}
-/* Black */
-:root[data-theme="dark"] {
-  --bg: #110f0e;
-  --surface: #1d1b1a;
-  --ink: #d0cec6;
-  --ink-2: #a19e97;
-  --ink-3: #8a8782;
-  --faint: #595652;
-  --line: rgba(208, 206, 198, 0.09);
-  --line-strong: rgba(208, 206, 198, 0.18);
-  --band: rgba(208, 206, 198, 0.16);
-  --note: #d0a215;
-  --concern: #d14d41;
-  --skullet-base: rgba(208, 206, 198, 0.08);
-  --skullet-highlight: rgba(208, 206, 198, 0.1);
-  color-scheme: dark;
-}
 :root[data-wall] { --safe-top: 33px; }
 
 * { box-sizing: border-box; }
@@ -236,6 +180,37 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 .composer:focus-within { border-color: var(--ink-3); }
 .composer textarea { flex: 1; min-width: 0; resize: none; border: 0; background: transparent; outline: none; line-height: 1.4; max-height: 9rem; display: block; scrollbar-width: none; padding: 0; }
 .composer textarea::placeholder { color: var(--ink-3); }
+/* The landing page's name, links and commands, in place of the clock, the view controls and the footnotes. */
+.header h1.clock { margin: 0; font: inherit; }
+.tagline { margin-top: 0.5rem; font-size: var(--t-small); color: var(--ink-3); }
+.embed-demo { color: var(--hue-digestion); font-weight: 500; }
+/* Only the run commands need more room, so their block reaches left past the right column, and the day chart beside
+   it gives up the same width. Both columns keep their widths. */
+:root[data-embed] { --run-reach: clamp(10rem, 9vw, 16rem); }
+:root[data-embed] .console { margin-right: var(--run-reach); }
+.embed-run { margin-left: calc(-1 * var(--run-reach)); }
+.embed-links { flex: none; display: flex; justify-content: flex-end; gap: 1.6rem; margin-bottom: 1.6rem; font-size: var(--t-small); }
+.embed-links a { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink-2); text-decoration: none; transition: color 120ms; }
+.embed-links a:hover { color: var(--ink); }
+.embed-links svg { width: 1.4rem; height: 1.4rem; }
+.embed-run { gap: 0.9rem; }
+.embed-run-title { font-size: var(--t-name); font-weight: 500; color: var(--ink); }
+.embed-run .foot { font-size: var(--t-small); line-height: 1.45; }
+.embed-run { min-width: 0; }
+.embed-run-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.embed-run-head button { display: inline-flex; align-items: center; gap: 0.4rem; font-size: var(--t-small); color: var(--ink-3); transition: color 120ms; }
+.embed-run-head button:hover { color: var(--ink); }
+.embed-run-head svg { width: 1.3rem; height: 1.3rem; }
+.embed-commands { min-width: 0; margin: 0; padding: 1.2rem 1.4rem; border-radius: 0.8rem; background: var(--surface); font: var(--t-small) / 1.75 var(--font-data); white-space: pre; overflow-x: auto; scrollbar-width: none; }
+/* The embedded page's example questions, in the message box's place. */
+.example-picker { position: relative; }
+.example-choice { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; width: 100%; line-height: 1.4; color: var(--ink); }
+.example-choice[data-empty] { color: var(--ink-3); }
+.example-choice svg { flex: none; width: 1.4rem; height: 1.4rem; color: var(--ink-3); }
+.example-note { font-size: var(--t-small); color: var(--ink-3); }
+.example-list { position: absolute; left: -1px; right: -1px; bottom: calc(100% + 0.6rem); z-index: 10; padding: 0.4rem 0; border: 1px solid var(--line-strong); border-radius: 0.8rem; background: var(--surface); }
+.example-list button { display: block; width: 100%; padding: 0.7rem 1rem; line-height: 1.35; color: var(--ink-2); transition: color 120ms; }
+.example-list button:hover, .example-list button[aria-selected="true"] { color: var(--ink); }
 .send { flex: none; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 0.4rem; color: var(--bg); background: var(--ink); opacity: 0; pointer-events: none; transition: opacity 120ms, scale 120ms; }
 .send svg { width: 1rem; height: 1rem; }
 .send[data-shown] { opacity: 1; pointer-events: auto; }

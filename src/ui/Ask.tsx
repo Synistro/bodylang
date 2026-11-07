@@ -84,7 +84,7 @@ export function Guide() {
   if (!guide || !step) return null;
 
   return (
-    <aside className="tour" aria-label="Claude's explanation">
+    <aside className="tour" aria-label="The explanation">
       <div className="tour-head">
         <span className="tour-label">{step.title}</span>
         <span className="tour-count">
@@ -110,7 +110,7 @@ export function Guide() {
       </div>
       {auto && !isLast ? (
         <i
-          key={index}
+          key={`progress-${index}`}
           className="tour-progress"
           style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }}
           aria-hidden="true"

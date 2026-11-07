@@ -1,0 +1,23 @@
+/* The landing page is the app itself, filling the window. A screen too narrow for the app gets a short page
+   in the app's own type and palette. */
+* { box-sizing: border-box; }
+html { font-size: calc(var(--u) * 10); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--t-body) / 1.5 var(--font-ui); }
+
+.app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.narrow { display: none; }
+
+@media (max-width: 860px) {
+  .app { display: none; }
+  .narrow { display: block; padding: var(--gutter); }
+  .narrow header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3.2rem; }
+  .mark { font-size: var(--t-time); font-weight: 700; letter-spacing: -0.03em; }
+  .narrow a { color: var(--ink-2); text-decoration: none; }
+  .narrow h1, .narrow h2, .narrow p { margin: 0; font-weight: inherit; font-size: inherit; }
+  .narrow h1 { font-size: var(--t-time); font-weight: 500; letter-spacing: -0.02em; line-height: 1.3; }
+  .narrow p { margin-top: 0.8rem; color: var(--ink-2); }
+  .narrow img { display: block; width: 100%; height: auto; margin-block: 2.4rem; border-radius: 0.8rem; }
+  .narrow h2 { color: var(--ink-3); margin-bottom: 1rem; }
+  .narrow pre { margin: 0; padding: 1.2rem 1.4rem; border-radius: 0.8rem; background: var(--surface); font: var(--t-small) / 1.7 var(--font-data); overflow-x: auto; }
+  .narrow footer { margin-top: 3.2rem; padding-top: 1.6rem; border-top: 1px solid var(--line); color: var(--ink-3); font-size: var(--t-small); }
+}

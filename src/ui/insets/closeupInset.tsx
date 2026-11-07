@@ -33,7 +33,7 @@ const sourcesOf = (about: string | undefined, basis: string | null | undefined) 
   if (basis)
     return sourced({
       kind: "claude-input",
-      detail: `${about ? `${about} ` : ""}Some levels here are Claude's illustration. Its basis: ${basis}`,
+      detail: `${about ? `${about} ` : ""}Some levels here are the AI's illustration. Its basis: ${basis}`,
     });
   return about ? sourced({ kind: "model", detail: about }) : {};
 };

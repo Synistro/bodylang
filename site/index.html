@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Bodylang</title>
+    <meta name="description" content="A 3D body that shows what is happening inside you. Tell it what happened, or ask it anything, in plain words." />
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body>
+    <iframe class="app" title="Bodylang, replaying recorded answers" allow="clipboard-write; fullscreen"></iframe>
+
+    <div class="narrow">
+      <header>
+        <span class="mark">Bodylang</span>
+        <a href="https://github.com/yahorbarkouski/bodylang">GitHub</a>
+      </header>
+      <main>
+        <h1>A 3D body that shows what is happening inside you.</h1>
+        <p>Tell it what happened, or ask it anything, in plain words. It runs on your own computer, on your ChatGPT or Claude subscription. Open this page on a computer to try it.</p>
+        <img src="../docs/readme/hero.gif" alt="One day on the body: the camera moves from the brain to the liver, the thighs and the stomach, then shows the whole body" loading="lazy" />
+        <h2>Run it</h2>
+        <pre><code>git clone https://github.com/yahorbarkouski/bodylang
+cd bodylang && pnpm install && pnpm dev</code></pre>
+      </main>
+      <footer>Estimates for a typical body. It isn't medical advice and can't diagnose anything.</footer>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -242,7 +242,7 @@ Parameters were tuned by hand toward these same targets, so treat every row of t
 
 ## The Claude Code connection
 
-The dev server runs Claude Code through the Claude Agent SDK, using your `ANTHROPIC_API_KEY`, on Claude Sonnet 5.5 at low effort. There is no fallback to a Claude login, because Anthropic's terms have apps built on the Agent SDK use an API key. Claude gets up to 20 tools and no file or shell access:
+The dev server runs Claude Code through the Claude Agent SDK, on Claude Sonnet 5.5 at low effort. It runs on your Claude subscription login, or on `ANTHROPIC_API_KEY` if that is set, which wins over the login. With `BODYLANG_LLM=openai`, OpenAI's models run instead through a pinned copy of Codex on a ChatGPT login kept for Bodylang alone, and process builds stay on Claude. Anthropic's terms ask developers of products on the Agent SDK to use API keys and don't address a local app on your own login, so the key stays as the option clearly inside them. Claude gets up to 20 tools and no file or shell access:
 
 - `find_foods` searches the USDA table, and `log_food` records a row of it with the portion Claude decided.
 - 13 tools change the simulation or the view: `log_intake` for a food the table lacks, `correct_intake`, `remove_intake`, `set_activity`, `set_sleep`, `set_cycle`, `set_body`, `define_substance`, `log_event`, `end_event`, `show_system`, `show_process` and `focus_organ`. They run through the same state code on the server and in the browser, and each call streams to the page, so the body changes while Claude is still working.

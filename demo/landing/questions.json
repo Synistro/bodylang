@@ -1,0 +1,38 @@
+[
+ {
+  "id": "covid",
+  "depth": "deep",
+  "text": "What happens with my body during coronavirus?"
+ },
+ {
+  "id": "bullet",
+  "depth": "deep",
+  "text": "What does a bullet through the liver do to me?"
+ },
+ {
+  "id": "blood",
+  "depth": "deep",
+  "text": "What happens when I donate blood?"
+ },
+ {
+  "id": "cannabis",
+  "depth": "deep",
+  "text": "What does cannabis do to my brain?"
+ },
+ {
+  "id": "butterflies",
+  "depth": "deep",
+  "text": "Why do I get butterflies when I'm nervous?"
+ },
+ {
+  "id": "period",
+  "depth": "deep",
+  "text": "What happens inside me during a period?",
+  "body": {
+   "sex": "female",
+   "age": 30,
+   "heightCm": 168,
+   "weightKg": 62
+  }
+ }
+]

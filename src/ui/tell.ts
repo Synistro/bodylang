@@ -18,7 +18,7 @@ function isActionName(name: string): name is ActionName {
   return name in ACTION_SCHEMAS;
 }
 
-function parseAction(name: string, args: unknown): Action {
+export function parseAction(name: string, args: unknown): Action {
   if (!isActionName(name)) throw new Error(`Unknown action ${name}`);
   return { name, args: ACTION_SCHEMAS[name].parse(args) } as Action;
 }
@@ -43,12 +43,23 @@ async function nameQuestion(id: number, text: string) {
   }
 }
 
-// Sends the sentence and the body it is about to the local Claude Code bridge, and applies each tool
-// call to the store as it streams back, so the body changes while Claude is still thinking.
+export type AskFor = (request: object, signal: AbortSignal) => Promise<Response>;
+
+const askServer: AskFor = (request, signal) =>
+  fetch("/api/tell", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(request),
+    signal,
+  });
+
+// Sends the sentence and the body it is about to the local LLM bridge, and applies each tool
+// call to the store as it streams back, so the body changes while the LLM is still thinking. An embedded
+// page passes its own askFor, which streams a recorded answer in the same form.
 //
 // In Tell mode that body is your real day. In Ask mode it is a copy, and if you leave before the answer
 // is finished, whatever is still on its way is dropped, so it can never land on your real day.
-export async function tell(text: string) {
+export async function tell(text: string, askFor: AskFor = askServer) {
   const { mode } = getState();
   const session = mode === "ask" ? enterAsk() : null;
   if (mode === "tell") leaveAsk();
@@ -64,20 +75,11 @@ export async function tell(text: string) {
   if (session !== null) setAskCancel(() => stop.abort());
   const stillAsking = () => session === null || getState().asking?.id === session;
   try {
-    const response = await fetch("/api/tell", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        text,
-        state: bodyOf(s),
-        mode,
-        depth: s.depth,
-        history: s.asking?.history ?? [],
-        date: s.date,
-      }),
-      signal: stop.signal,
-    });
-    if (!response.ok) throw new Error(`The Claude Code bridge answered ${response.status}.`);
+    const response = await askFor(
+      { text, state: bodyOf(s), mode, depth: s.depth, history: s.asking?.history ?? [], date: s.date },
+      stop.signal,
+    );
+    if (!response.ok) throw new Error(`The server answered ${response.status}.`);
     let replied = false;
     let failed = false;
     for await (const event of readEvents(response, tellEventSchema)) {
@@ -105,7 +107,7 @@ export async function tell(text: string) {
       }
     }
     if (!replied && !failed && stillAsking())
-      updateExchange(id, { status: "error", error: "Claude finished without an answer. Try saying it again." });
+      updateExchange(id, { status: "error", error: "The AI finished without an answer. Try saying it again." });
   } catch (e: unknown) {
     // Past a failure this page stops following the stream, so the server shouldn't keep working or paying.
     stop.abort();
