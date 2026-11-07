@@ -6,9 +6,7 @@ Bodylang is a 3D human body that shows what's going on inside you. Tell it anyth
 
 ![One day on the body, from 08:00 to 21:10. The camera sits on the brain while caffeine holds off tiredness, moves to the liver and blood sugar in the afternoon, to the thighs as they recover from a leg day, and to a stomach full of dinner, then pulls back to the whole body with every curve of the day on the chart below it](docs/readme/hero.gif)
 
-The whole app in 90 seconds, with sound:
-
-https://github.com/user-attachments/assets/MAIN-FILM
+[Watch the whole app in 90 seconds](https://bodylang.vercel.app/films/bodylang.mp4), with sound.
 
 ## Customize it!
 
@@ -74,9 +72,7 @@ Switch the message box from Tell to Ask, and ask whatever you are curious about.
 
 ![Six questions, each on the body for a moment. What does a bullet through the liver do to me? What happens when I donate blood? What does cannabis do to my brain? What happens in my body during sex? Why do I get butterflies when I'm nervous? What happens inside me during a period?](docs/readme/ask-anything.gif)
 
-Asking, in a minute and a half, with sound:
-
-https://github.com/user-attachments/assets/ASK-FILM
+[Watch it answer questions in a minute and a half](https://bodylang.vercel.app/films/ask.mp4), with sound.
 
 The LLM answers with a walkthrough. Each step moves the camera to where the thing is happening, sets the clock, and says what is happening and why. Click Next to go on, or let it play.
 
