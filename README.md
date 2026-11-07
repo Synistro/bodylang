@@ -2,7 +2,7 @@
 
 Bodylang is a 3D human body that shows what's going on inside you. Tell it anything that's happened to you (a workout, a bad night, a cold, a late dinner, all the things could happen to a human), and it'll run a physiology model to reflect and explain it. [Ask it](#ask-it-anything) anything you're truly curious about (what happens when you smoke a cigarette? what happens when you get a bullet through the liver?) and your LLM [via API key or subscription] will walk you through the answer in a visual way.
 
-**[Run it](#run-it)** · Node and a ChatGPT or Claude subscription · A scripted demo runs with no login
+**[Try the demo](https://bodylang.vercel.app)** · **[Run it](#run-it)** with Node and a ChatGPT or Claude subscription
 
 ![One day on the body, from 08:00 to 21:10. The camera sits on the brain while caffeine holds off tiredness, moves to the liver and blood sugar in the afternoon, to the thighs as they recover from a leg day, and to a stomach full of dinner, then pulls back to the whole body with every curve of the day on the chart below it](docs/readme/hero.gif)
 
