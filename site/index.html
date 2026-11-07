@@ -10,6 +10,47 @@
   <body>
     <iframe class="app" title="Bodylang, replaying recorded answers" allow="clipboard-write; fullscreen"></iframe>
 
+    <dialog class="film" aria-label="A film of Bodylang">
+      <div class="film-head">
+        <div class="film-tabs" role="group" aria-label="Which film">
+          <button type="button" class="film-tab" data-film="app" aria-selected="true">The whole app <span>1:36</span></button>
+          <button type="button" class="film-tab" data-film="ask" aria-selected="false">Asking questions <span>1:40</span></button>
+        </div>
+        <button type="button" class="film-close" data-close aria-label="Close the film">
+          <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" /></svg>
+        </button>
+      </div>
+
+      <div class="film-stage" data-playing="false" data-muted="false" data-awake tabindex="-1" autofocus>
+        <video playsinline preload="metadata"></video>
+        <div class="film-start">
+          <button type="button" class="film-start-play">
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z" /></svg>
+            Play the film
+          </button>
+          <button type="button" class="film-start-try" data-close>
+            Try the demo
+            <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z" /></svg>
+          </button>
+        </div>
+        <button type="button" class="film-play" aria-label="Play">
+          <svg class="icon-play" viewBox="0 0 256 256" aria-hidden="true"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z" /></svg>
+          <svg class="icon-pause" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z" /></svg>
+        </button>
+        <button type="button" class="film-sound" aria-label="Turn sound on">
+            <svg class="icon-muted" viewBox="0 0 256 256" aria-hidden="true"><path d="M53.92,34.62A8,8,0,1,0,42.08,45.38L73.55,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V175.09l42.08,46.29a8,8,0,1,0,11.84-10.76ZM32,96H72v64H32ZM144,207.64,88,164.09V95.89l56,61.6Zm42-63.77a24,24,0,0,0,0-31.72,8,8,0,1,1,12-10.57,40,40,0,0,1,0,52.88,8,8,0,0,1-12-10.59Zm-80.16-76a8,8,0,0,1,1.4-11.23l39.85-31A8,8,0,0,1,160,32v74.83a8,8,0,0,1-16,0V48.36l-26.94,21A8,8,0,0,1,105.84,67.91ZM248,128a79.9,79.9,0,0,1-20.37,53.34,8,8,0,0,1-11.92-10.67,64,64,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67A79.83,79.83,0,0,1,248,128Z" /></svg>
+            <svg class="icon-sound" viewBox="0 0 256 256" aria-hidden="true"><path d="M155.51,24.81a8,8,0,0,0-8.42.88L77.25,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H77.25l69.84,54.31A8,8,0,0,0,160,224V32A8,8,0,0,0,155.51,24.81ZM32,96H72v64H32ZM144,207.64,88,164.09V91.91l56-43.55Zm54-106.08a40,40,0,0,1,0,52.88,8,8,0,0,1-12-10.58,24,24,0,0,0,0-31.72,8,8,0,0,1,12-10.58ZM248,128a79.9,79.9,0,0,1-20.37,53.34,8,8,0,0,1-11.92-10.67,64,64,0,0,0,0-85.33,8,8,0,1,1,11.92-10.67A79.83,79.83,0,0,1,248,128Z" /></svg>
+            <span>Sound on</span>
+          </button>
+        <button type="button" class="film-stage-try" data-close>
+          Try the demo
+          <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z" /></svg>
+        </button>
+        <div class="film-track" role="slider" tabindex="0" aria-label="Position in the film" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+      </div>
+
+    </dialog>
+
     <div class="narrow">
       <header>
         <span class="mark">Bodylang</span>
@@ -17,13 +58,20 @@
       </header>
       <main>
         <h1>A 3D body that shows what is happening inside you.</h1>
-        <p>Tell it what happened, or ask it anything, in plain words. It runs on your own computer, on your ChatGPT or Claude subscription. Open this page on a computer to try it.</p>
-        <img src="../docs/readme/hero.gif" alt="One day on the body: the camera moves from the brain to the liver, the thighs and the stomach, then shows the whole body" loading="lazy" />
-        <h2>Run it</h2>
-        <pre><code>git clone https://github.com/yahorbarkouski/bodylang
-cd bodylang && pnpm install && pnpm dev</code></pre>
+        <p>Tell it what happened, or ask it anything, in plain words. It runs on your own computer, on your ChatGPT or Claude subscription. Open this page on a computer to try the demo.</p>
+        <section class="phone-film" aria-label="Films of Bodylang">
+          <div class="film-tabs" role="group" aria-label="Which film">
+            <button type="button" class="film-tab" data-film="app" aria-selected="true">The whole app <span>1:36</span></button>
+            <button type="button" class="film-tab" data-film="ask" aria-selected="false">Asking questions <span>1:40</span></button>
+          </div>
+          <div class="phone-stage">
+            <video playsinline preload="none" poster="films/bodylang.jpg" src="films/bodylang.mp4"></video>
+            <button type="button" class="phone-play" aria-label="Play the film">
+              <svg viewBox="0 0 256 256" aria-hidden="true"><path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z" /></svg>
+            </button>
+          </div>
+        </section>
       </main>
-      <footer>Estimates for a typical body. It isn't medical advice and can't diagnose anything.</footer>
     </div>
 
     <script type="module" src="./main.ts"></script>

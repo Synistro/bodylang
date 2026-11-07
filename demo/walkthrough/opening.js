@@ -15,8 +15,8 @@
   const moments = [
     { at: atOf("coffee").at, text: "Coffee and oatmeal" },
     { at: atOf("chicken").at, text: "Chicken and rice" },
-    { at: atOf("leg_day").from, text: "A heavy leg day" },
-    { at: atOf("pizza").at, text: "Pizza and beer" },
+    { at: atOf("leg_day").from, text: "Heavy leg day?" },
+    { at: atOf("pizza").at, text: "... pizza and beer" },
   ];
   // Each moment gets the same time on screen, so the clock runs faster through the long gaps.
   const EACH = RUNS_FOR / moments.length;
@@ -32,7 +32,7 @@
     caption: `${clockOf(moment.at)}  ${moment.text}`,
     look: "whole",
   }));
-  shots.push({ start: RUNS_FOR, end: window.__length, caption: "Your whole body, through the whole day.", look: "whole" });
+  shots.push({ start: RUNS_FOR, end: window.__length, caption: "Your whole body, through the whole day", look: "whole" });
   window.__film = { seconds: window.__length, shots };
 
   const system = (id) => () => {

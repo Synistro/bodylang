@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Copy, GithubLogo } from "./icons";
+import { Check, Copy, GithubLogo, Play } from "./icons";
 
 // What the app shows in place of its clock, its view controls and its footnotes when it is the landing page:
 // the product's name, where to find it, and how to run it.
@@ -11,7 +11,7 @@ export function EmbedHeader() {
     <header className="header">
       <h1 className="clock">
         <span className="clock-time">Bodylang</span>
-        <span className="clock-state embed-demo">Demo</span>
+        <span className="clock-state embed-demo">Alpha, demo</span>
       </h1>
       <p className="tagline">See what is happening inside your body</p>
     </header>
@@ -21,9 +21,10 @@ export function EmbedHeader() {
 export function EmbedLinks() {
   return (
     <nav className="embed-links" aria-label="Bodylang">
-      <a href={`${REPOSITORY}#run-it`} target="_top">
-        Run it
-      </a>
+      <button type="button" onClick={() => window.parent.postMessage({ type: "bodylang:film" }, location.origin)}>
+        <Play weight="fill" />
+        Watch the film
+      </button>
       <a href={REPOSITORY} target="_top">
         <GithubLogo />
         GitHub

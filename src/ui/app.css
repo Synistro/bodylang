@@ -183,15 +183,28 @@ input[type="range"]::-moz-range-thumb { width: 1rem; height: 1rem; border-radius
 /* The landing page's name, links and commands, in place of the clock, the view controls and the footnotes. */
 .header h1.clock { margin: 0; font: inherit; }
 .tagline { margin-top: 0.5rem; font-size: var(--t-small); color: var(--ink-3); }
-.embed-demo { color: var(--hue-digestion); font-weight: 500; }
+/* The landing's label runs through the systems' own colours, drifting slowly. */
+.embed-demo {
+  font-weight: 500;
+  background: linear-gradient(90deg, #d14d41, #d97540, #d0a215, #879a39, #3aa99f, #4385be, #8b7ec8, #ce5d97, #d14d41) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: embed-rainbow 8s linear infinite;
+}
+@keyframes embed-rainbow { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .embed-demo { animation: none; } }
 /* Only the run commands need more room, so their block reaches left past the right column, and the day chart beside
    it gives up the same width. Both columns keep their widths. */
 :root[data-embed] { --run-reach: clamp(10rem, 9vw, 16rem); }
+/* The landing page asked for pure white text, which the app itself keeps warmer. */
+:root[data-embed][data-theme="dark"] { --ink: #ffffff; }
 :root[data-embed] .console { margin-right: var(--run-reach); }
 .embed-run { margin-left: calc(-1 * var(--run-reach)); }
 .embed-links { flex: none; display: flex; justify-content: flex-end; gap: 1.6rem; margin-bottom: 1.6rem; font-size: var(--t-small); }
-.embed-links a { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink-2); text-decoration: none; transition: color 120ms; }
-.embed-links a:hover { color: var(--ink); }
+.embed-links a, .embed-links button { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink-2); text-decoration: none; transition: color 120ms; }
+.embed-links a:hover, .embed-links button:hover { color: var(--ink); }
+.embed-links button svg { width: 1.2rem; height: 1.2rem; }
 .embed-links svg { width: 1.4rem; height: 1.4rem; }
 .embed-run { gap: 0.9rem; }
 .embed-run-title { font-size: var(--t-name); font-weight: 500; color: var(--ink); }

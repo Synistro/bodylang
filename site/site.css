@@ -1,5 +1,7 @@
 /* The landing page is the app itself, filling the window. A screen too narrow for the app gets a short page
    in the app's own type and palette. */
+/* The landing asked for pure white text, which the app itself keeps warmer. */
+:root[data-theme="dark"] { --ink: #ffffff; }
 * { box-sizing: border-box; }
 html { font-size: calc(var(--u) * 10); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--t-body) / 1.5 var(--font-ui); }
@@ -8,16 +10,185 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--t-bo
 .narrow { display: none; }
 
 @media (max-width: 860px) {
+  /* The app's type scale is tuned for a desktop. A phone reads it a size larger. */
+  html { font-size: 11px; }
   .app { display: none; }
   .narrow { display: block; padding: var(--gutter); }
   .narrow header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3.2rem; }
   .mark { font-size: var(--t-time); font-weight: 700; letter-spacing: -0.03em; }
   .narrow a { color: var(--ink-2); text-decoration: none; }
-  .narrow h1, .narrow h2, .narrow p { margin: 0; font-weight: inherit; font-size: inherit; }
+  .narrow h1, .narrow p { margin: 0; font-weight: inherit; font-size: inherit; }
   .narrow h1 { font-size: var(--t-time); font-weight: 500; letter-spacing: -0.02em; line-height: 1.3; }
   .narrow p { margin-top: 0.8rem; color: var(--ink-2); }
-  .narrow img { display: block; width: 100%; height: auto; margin-block: 2.4rem; border-radius: 0.8rem; }
-  .narrow h2 { color: var(--ink-3); margin-bottom: 1rem; }
-  .narrow pre { margin: 0; padding: 1.2rem 1.4rem; border-radius: 0.8rem; background: var(--surface); font: var(--t-small) / 1.7 var(--font-data); overflow-x: auto; }
-  .narrow footer { margin-top: 3.2rem; padding-top: 1.6rem; border-top: 1px solid var(--line); color: var(--ink-3); font-size: var(--t-small); }
+  .phone-film { margin-block: 2.4rem 3.2rem; }
+  .phone-film .film-tabs { margin-bottom: 1rem; }
+  .phone-film .film-tab { flex: 1; display: flex; align-items: baseline; gap: 0.6rem; border-radius: 0.8rem; white-space: nowrap; justify-content: center; padding: 0.9rem 0.8rem; font: inherit; font-size: var(--t-body); color: var(--ink-3); background: none; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .phone-film .film-tab[aria-selected="true"] { background: rgba(208, 206, 198, 0.1); color: var(--ink); }
+  .phone-stage { position: relative; aspect-ratio: 1280 / 896; border-radius: 1rem; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line-strong); }
+  .phone-stage video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .phone-play { position: absolute; inset: 0; display: grid; place-items: center; width: 100%; border: 0; padding: 0; background: rgba(10, 9, 8, 0.38); color: #110f0e; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .phone-play svg { box-sizing: content-box; width: 2.2rem; height: 2.2rem; padding: 1.7rem 1.6rem 1.7rem 1.9rem; border-radius: 50%; background: #f2f0ea; fill: currentColor; box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.4); transition: transform 160ms var(--ease); }
+  .phone-play:active svg { transform: scale(0.94); }
+  .phone-film[data-started] .phone-play { display: none; }
 }
+
+/* The film that opens a first visit. It floats over the demo, which keeps loading behind a blur, so closing the
+   film lands straight in the app. */
+.film {
+  --film-w: min(calc(100vw - 12rem), calc((100vh - 13rem) * 1280 / 896), 132rem);
+  width: var(--film-w);
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  background: transparent;
+  color: var(--ink);
+  font: 400 var(--t-body) / 1.5 var(--font-ui);
+}
+/* A backdrop can't read the page's variables in every browser, so it names the dark theme's --bg itself. */
+.film::backdrop {
+  background: rgba(17, 15, 14, 0.74);
+  backdrop-filter: blur(1.4rem) saturate(0.85);
+}
+.film[open] { animation: film-in 420ms var(--ease) both; }
+.film[open]::backdrop { animation: film-fade 420ms cubic-bezier(0.2, 0, 0, 1) both; }
+.film[data-closing] { animation: film-out 220ms var(--ease) both; }
+.film[data-closing]::backdrop { animation: film-fade 220ms cubic-bezier(0.2, 0, 0, 1) reverse both; }
+@keyframes film-in { from { opacity: 0; transform: translateY(1.6rem) scale(0.985); } }
+@keyframes film-out { to { opacity: 0; transform: translateY(0.8rem) scale(0.99); } }
+@keyframes film-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .film[open], .film[open]::backdrop { animation-name: film-fade; animation-duration: 160ms; }
+}
+
+.film button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.film svg { width: 1.4rem; height: 1.4rem; fill: currentColor; flex: none; }
+.film :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.film-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+.film-tabs { display: flex; gap: 0.2rem; padding: 0.3rem; border-radius: 1.1rem; background: rgba(208, 206, 198, 0.05); box-shadow: inset 0 0 0 1px var(--line); }
+.film .film-tab { display: inline-flex; align-items: baseline; gap: 0.8rem; padding: 0.7rem 1.4rem; border-radius: 0.8rem; color: var(--ink-3); font-size: var(--t-body); transition: color 120ms, background 160ms; }
+.film-tab span { font-size: var(--t-small); font-variant-numeric: tabular-nums; color: var(--faint); transition: color 120ms; }
+.film .film-tab:hover { color: var(--ink); }
+.film .film-tab[aria-selected="true"] { background: rgba(208, 206, 198, 0.1); color: var(--ink); }
+.film-tab[aria-selected="true"] span { color: var(--ink-3); }
+.film-close { display: grid; place-items: center; width: 3.2rem; height: 3.2rem; border-radius: 50%; color: var(--ink-3); transition: color 120ms, background 160ms; }
+.film-close:hover { color: var(--ink); background: var(--surface); }
+.film-close svg { width: 1.6rem; height: 1.6rem; }
+
+.film-stage {
+  position: relative;
+  aspect-ratio: 1280 / 896;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 0 0 1px var(--line-strong), 0 3rem 9rem rgba(0, 0, 0, 0.55);
+}
+.film .film-stage:focus-visible { outline: none; }
+.film-stage video { display: block; width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+.film-stage:not([data-awake]) { cursor: none; }
+.film-stage:not([data-awake]) video { cursor: none; }
+
+/* The film carries its own captions along the bottom, so the controls stay off them: a thin line on the bottom edge
+   to scrub, a play button only while paused, and the sound button in the empty corner beside the captions. */
+.film .film-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 7.2rem;
+  height: 7.2rem;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: rgba(17, 15, 14, 0.55);
+  backdrop-filter: blur(1rem);
+  box-shadow: 0 0 0 1px rgba(242, 240, 234, 0.14);
+  color: #f2f0ea;
+  transition: opacity 240ms var(--ease), scale 240ms var(--ease);
+}
+.film-play svg { width: 2.4rem; height: 2.4rem; margin-left: 0.3rem; }
+.film-play .icon-pause { display: none; }
+.film-stage[data-playing="true"] .film-play, .film-stage[data-playing="true"] .film-play:hover { opacity: 0; scale: 0.92; pointer-events: none; }
+.film .film-play:hover { scale: 1.04; }
+
+.film-track { position: absolute; inset: auto 0 0 0; height: 1.6rem; cursor: pointer; touch-action: none; transition: opacity 320ms var(--ease); }
+.film-track::before, .film-track span { content: ""; position: absolute; left: 0; bottom: 0; height: 0.3rem; transition: height 160ms var(--ease); }
+.film-track::before { right: 0; background: rgba(242, 240, 234, 0.16); }
+.film-track span { width: calc(var(--played, 0) * 100%); background: rgba(242, 240, 234, 0.9); }
+.film-track:hover::before, .film-track:hover span, .film-track:focus-visible::before, .film-track:focus-visible span { height: 0.6rem; }
+.film-stage:not([data-awake]) .film-track { opacity: 0.45; }
+.film .film-track:focus-visible { outline: none; }
+
+.film .film-sound {
+  position: absolute;
+  right: 1.6rem;
+  bottom: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3.2rem;
+  padding: 0 0.8rem;
+  border-radius: 1.6rem;
+  background: rgba(242, 240, 234, 0.12);
+  backdrop-filter: blur(0.8rem);
+  color: #f2f0ea;
+  transition: background 160ms, opacity 320ms var(--ease);
+}
+.film .film-sound:hover { background: rgba(242, 240, 234, 0.22); }
+.film-sound svg { width: 1.6rem; height: 1.6rem; }
+.film-sound span { display: none; font-size: var(--t-small); font-weight: 500; }
+.film-stage[data-muted="true"] .icon-sound, .film-stage[data-muted="false"] .icon-muted { display: none; }
+/* While the film is silent the button says so in words and stays in view. With sound on it is an icon that hides
+   with the cursor. */
+.film-stage[data-muted="true"] .film-sound { padding: 0 1.3rem 0 1.1rem; }
+.film-stage[data-muted="true"] .film-sound span { display: inline; }
+.film-stage[data-muted="false"]:not([data-awake]) .film-sound { opacity: 0; }
+
+/* Before the film starts, its first frame sits under a dark veil with the two choices in the middle: play it, or go
+   straight to the demo. The round play button and the rest of the controls take over once it has started. */
+.film-start {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  background: rgba(10, 9, 8, 0.58);
+  transition: opacity 280ms var(--ease);
+}
+.film[data-started] .film-start { opacity: 0; pointer-events: none; }
+.film:not([data-started]) .film-play, .film:not([data-started]) .film-track, .film:not([data-started]) .film-sound, .film:not([data-started]) .film-stage-try { opacity: 0; pointer-events: none; }
+.film .film-start button { display: inline-flex; align-items: center; gap: 0.9rem; height: 4.8rem; border-radius: 2.4rem; font-size: var(--t-name); font-weight: 500; transition: transform 160ms var(--ease), background 160ms, opacity 160ms; }
+.film .film-start button:active { transform: scale(0.97); }
+.film .film-start-play { padding: 0 2.4rem 0 2rem; background: #f2f0ea; color: #110f0e; }
+.film .film-start-play:hover { opacity: 0.9; }
+.film .film-start-play svg { width: 1.6rem; height: 1.6rem; }
+.film .film-start-try { padding: 0 2rem 0 2.4rem; background: rgba(242, 240, 234, 0.14); backdrop-filter: blur(1rem); color: #f2f0ea; box-shadow: inset 0 0 0 1px rgba(242, 240, 234, 0.12); }
+.film .film-start-try:hover { background: rgba(242, 240, 234, 0.22); }
+.film .film-start-try svg { width: 1.6rem; height: 1.6rem; transition: translate 200ms var(--ease); }
+.film .film-start-try:hover svg { translate: 0.2rem 0; }
+
+/* Once the film plays, the way to the demo sits in its bottom-left corner, across from the sound button. */
+.film .film-stage-try {
+  position: absolute;
+  left: 1.6rem;
+  bottom: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  height: 3.2rem;
+  padding: 0 1.2rem 0 1.4rem;
+  border-radius: 1.6rem;
+  background: rgba(242, 240, 234, 0.12);
+  backdrop-filter: blur(0.8rem);
+  color: #f2f0ea;
+  font-size: var(--t-small);
+  font-weight: 500;
+  transition: background 160ms, opacity 320ms var(--ease);
+}
+.film .film-stage-try:hover { background: rgba(242, 240, 234, 0.22); }
+.film-stage-try svg { transition: translate 200ms var(--ease); }
+.film-stage-try:hover svg { translate: 0.2rem 0; }
+.film-stage:not([data-awake]) .film-stage-try { opacity: 0; }
