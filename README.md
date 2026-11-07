@@ -130,16 +130,16 @@ The limits that matter most:
 
 ![What you tell it or ask it goes to your LLM, which chooses tools and fills them in. It logs five kinds of things: workouts, illness, sex and stress; medicines, caffeine and alcohol; sleep and activity; food and drink, from the USDA table; and your body and cycle. They make up your day, which the physiology model works through minute by minute: muscles and recovery, sugar, insulin and blood fat, digestion, hormones and the cycle, stress, immunity, alertness and mood, and the heart, lungs, fluids and temperature. That becomes the body, its readings, the day chart and walkthroughs](docs/readme/how-it-works.svg)
 
-The LLM never calculates. It turns your words into calls to about twenty tools, such as `log_food`, `log_event` and `guide`, and each call changes your day through one function, `reduce`, that the page and the server share. The physiology model then reruns the whole day in a few milliseconds, and everything on screen reads that one result.
+You type what happened, in your own words. The LLM works out what that means, such as which food, how much and when, and records it by calling a few of its twenty or so tools, such as `log_food` or `log_event`. Each call updates your day. The physiology model then recalculates the whole day, minute by minute, in a few milliseconds, and everything you see on screen comes from that one calculation.
 
-**Everything is a template.** Each kind of thing the app knows follows a template, so adding one means writing a short file shaped like the others:
+**Built from templates.** Every kind of thing in the app has a template, so adding a new one means writing a short file like the ones already there:
 
-- **Events** are curves that push on body signals such as heart rate, temperature and stress. Training, illness, sex, stress and a short night are ready-made, and the LLM composes anything else, such as a sauna, from the same signals.
-- **Processes** are lines through the body with numbered stops. One that reads the model's curves is a single file following a contract, plus its test, and the app finds it by itself. The thyroid and melatonin lines are built this way.
-- **Close-ups** are the moving drawings inside each organ. Each one has a few levels from 0 to 1, each with a meaning in words, so the model can drive them and the LLM can point at them.
-- **Readings, systems and organs** are one entry in a list each. The compiler then names every other place that needs one. A new system such as skin is an organ, its close-up and a system entry.
+- **Events** are curves that push on body signals such as heart rate, temperature and stress. A workout, a cold, sex, stress and a short night come ready-made. For anything else, such as a sauna, the LLM builds an event from the same signals.
+- **Processes** are the lines through the body with numbered stops. A new one is a single file plus its test, and the app picks it up by itself. The thyroid and melatonin lines were added this way.
+- **Close-ups** are the moving drawings inside each organ. Each one has a few levels from 0 to 1, each described in words, so the model can drive them and the LLM can point at them.
+- **Readings, systems and organs** are one entry in a list each, and the compiler then lists every other place that needs updating. Skin, for example, would be a new organ, its close-up and a system entry.
 
-**How Ask works.** Ask runs the same tools on a copy of your day. The LLM logs an example on the copy if the question needs one, then calls `guide` with the steps of its answer. Each step names an organ, a minute, the close-up levels to show and the words to say, and the app moves the camera and the clock. In Deep, the LLM can describe a new drawing from layers and actors, and code lays it out. Code checks every number in the answer against what the model returned.
+**How Ask works.** Ask uses the same tools on a copy of your day, so nothing it does is saved. If the question needs an example, the LLM logs one on the copy. Then it builds its answer as a series of steps. Each step says which organ to show, at what time, what the close-up should show and what to say, and the app moves the camera and the clock to match. In Deep, the LLM can also sketch a new drawing from simple parts, and the app lays it out. Every number in the answer is checked against what the model calculated.
 
 ### Grow it
 
