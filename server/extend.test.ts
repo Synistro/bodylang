@@ -67,7 +67,7 @@ describe("building a process", () => {
     const result = await go({ session: writes() });
     expect(result.stage).toBe("ready");
     expect(added()).toBe(true);
-    expect(commits()[0]).toBe("Add process: Thyroid");
+    expect(commits()[0]).toBe("Add Thyroid process");
     expect(git(repo, "show", "--name-only", "--format=", "HEAD").trim().split("\n").sort()).toEqual([
       "src/model/extensions/thyroid.test.ts",
       "src/model/extensions/thyroid.ts",
@@ -181,7 +181,7 @@ describe("building a process", () => {
     await go({ session: writes() });
     await removeProcess("thyroid", repo);
     expect(added()).toBe(false);
-    expect(commits()[0]).toBe("Remove process: thyroid");
+    expect(commits()[0]).toBe("Remove thyroid process");
     await expect(removeProcess("thyroid", repo)).rejects.toThrow(/no process/);
     await expect(removeProcess("../api", repo)).rejects.toThrow(/Not a process/);
   });

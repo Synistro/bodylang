@@ -118,7 +118,7 @@ export async function runBuild(
     if (signal.aborted) return say("stopped");
     if (suite) return say("failed", `It broke other tests. ${firstLine(suite)}`);
 
-    await landFiles(parts.repo, worktree, expected, `Add process: ${title}`);
+    await landFiles(parts.repo, worktree, expected, `Add ${title} process`);
     return say("ready");
   } catch (e: unknown) {
     if (signal.aborted) return say("stopped");
@@ -164,7 +164,7 @@ export async function removeProcess(id: string, repo = process.cwd()) {
   const paths = [processPath(id), testPath(id)];
   if (!existsSync(join(repo, paths[0]))) throw new Error(`There is no process ${id}`);
   await git(repo, "rm", "-f", "--", ...paths);
-  await git(repo, "commit", "-m", `Remove process: ${id}`, "--", ...paths);
+  await git(repo, "commit", "-m", `Remove ${id} process`, "--", ...paths);
 }
 
 export async function handleExtend(req: IncomingMessage, res: ServerResponse) {
