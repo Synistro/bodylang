@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAFFEINE, GLUCOSE, INSULIN, LABS } from "./params";
+import { CAFFEINE, LABS } from "./params";
 import { simulate } from "./engine/simulate";
 import { foodKcalOf, Scenario } from "./scenario";
 import { caffeineLedgerAt, ledgerAt, LEDGER_KEYS, value } from "./engine/trajectory";
@@ -78,10 +78,7 @@ describe("glucose", () => {
       peakOf(simulate({ ...ogtt.scenario, body: { ...body, labs } }).series.glucose, 540, 800).value;
     const without = peakWith();
     expect(peakWith({ fastingGlucoseMmol: 6.1, fastingInsulinUuMl: 18 })).toBeGreaterThan(without);
-    const reference = peakWith({
-      fastingGlucoseMmol: GLUCOSE.baselineMgDl / LABS.mgDlPerMmolGlucose,
-      fastingInsulinUuMl: INSULIN.baselineUUPerMl,
-    });
+    const reference = peakWith(LABS.referencePanel);
     expect(Math.abs(reference / without - 1)).toBeLessThan(0.02);
   });
 

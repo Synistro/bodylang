@@ -131,8 +131,11 @@ export const LABS = {
   mgDlPerMmolGlucose: MG_DL_PER_MMOL_GLUCOSE,
   mgDlPerMmolTg: 88.57,
   homaDivisor: HOMA_DIVISOR,
-  // The HOMA-IR the model's typical body implies: its own fasting glucose and resting insulin.
-  referenceHoma: ((GLUCOSE.baselineMgDl / MG_DL_PER_MMOL_GLUCOSE) * INSULIN.baselineUUPerMl) / HOMA_DIVISOR,
+  // A typical lab panel reads the model's typical body: fasting glucose 5.0 mmol/L and insulin 6 µU/mL,
+  // so HOMA-IR 1.33. The model's resting insulin (INSULIN.baselineUUPerMl) sits above typical lab values,
+  // so it is not used here: a typical panel then leaves sensitivity unchanged. Evidence C.
+  referencePanel: { fastingGlucoseMmol: 5.0, fastingInsulinUuMl: 6 },
+  referenceHoma: (5.0 * 6) / HOMA_DIVISOR,
   sensitivityRatioRange: { low: 0.25, high: 1.6 },
 } as const;
 
