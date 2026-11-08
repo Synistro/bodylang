@@ -5,6 +5,7 @@
       "src/**/*.ts",
       "src/**/*.tsx",
       "server/**/*.ts",
+      "bilan/**/*.ts",
       "tools/**/*.mjs",
       "vite.config.ts",
       "!src/model/extensions/*",

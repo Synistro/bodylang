@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:site": "tsc --noEmit && vite build --config site/vite.config.ts && vite build --base ./ --outDir dist/site/app --emptyOutDir",
+    "build:site": "tsc --noEmit && vite build --config site/vite.config.ts && vite build --base ./ --outDir dist/site/app --emptyOutDir && vite build --config bilan/vite.config.ts",
     "test": "vitest run",
     "check": "tsc --noEmit && biome format && vitest run",
     "format": "biome format --write",

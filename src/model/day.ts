@@ -60,7 +60,22 @@ const eventSchema = z.looseObject({
 const dayDocSchema = z.object({
   version: z.literal(1),
   date: z.string().regex(DATE_PATTERN),
-  body: z.object({ sex: z.enum(["male", "female"]), age: z.number(), heightCm: z.number(), weightKg: z.number() }),
+  body: z.object({
+    sex: z.enum(["male", "female"]),
+    age: z.number(),
+    heightCm: z.number(),
+    weightKg: z.number(),
+    labs: z
+      .object({
+        fastingGlucoseMmol: z.number().positive().optional(),
+        fastingInsulinUuMl: z.number().positive().optional(),
+        triglyceridesMmol: z.number().positive().optional(),
+        hba1cPct: z.number().positive().optional(),
+        ldlMmol: z.number().positive().optional(),
+        hdlMmol: z.number().positive().optional(),
+      })
+      .optional(),
+  }),
   intakes: z.array(intakeSchema),
   activities: z.array(
     z.object({ from: z.number().finite(), posture: z.enum(["sleeping", "sitting", "standing", "walking", "running"]) }),

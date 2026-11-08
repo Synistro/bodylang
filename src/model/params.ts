@@ -121,6 +121,21 @@ export const INSULIN = {
   afterglowDecayMin: 160,
 } as const;
 
+// Turning a lab panel into the model's own units, and what a fasting glucose and insulin say about
+// insulin sensitivity. HOMA-IR is glucose (mmol/L) times insulin (µU/mL) over 22.5 (Matthews et al.,
+// Diabetologia 1985). The step from HOMA-IR to this model's SI is my mapping, evidence grade C: HOMA
+// reads the fasting state, and SI here acts after a meal, so the ratio is only a rough guide.
+const MG_DL_PER_MMOL_GLUCOSE = 18.016;
+const HOMA_DIVISOR = 22.5;
+export const LABS = {
+  mgDlPerMmolGlucose: MG_DL_PER_MMOL_GLUCOSE,
+  mgDlPerMmolTg: 88.57,
+  homaDivisor: HOMA_DIVISOR,
+  // The HOMA-IR the model's typical body implies: its own fasting glucose and resting insulin.
+  referenceHoma: ((GLUCOSE.baselineMgDl / MG_DL_PER_MMOL_GLUCOSE) * INSULIN.baselineUUPerMl) / HOMA_DIVISOR,
+  sensitivityRatioRange: { low: 0.25, high: 1.6 },
+} as const;
+
 export const LIVER = {
   lowGlycogenG: 5, // under this, its output falls to lowGlycogenOutputShare
   lowGlycogenOutputShare: 0.4,

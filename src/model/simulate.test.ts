@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAFFEINE } from "./params";
+import { CAFFEINE, GLUCOSE, INSULIN, LABS } from "./params";
 import { simulate } from "./engine/simulate";
 import { foodKcalOf, Scenario } from "./scenario";
 import { caffeineLedgerAt, ledgerAt, LEDGER_KEYS, value } from "./engine/trajectory";
@@ -71,6 +71,18 @@ describe("glucose", () => {
     expect(p.at - 540).toBeGreaterThan(25);
     expect(p.at - 540).toBeLessThan(80);
     expect(value(ogtt, "glucose", 540 + 120)).toBeLessThan(140); // WHO cutoff for normal at 2 h
+  });
+
+  it("peaks higher for a body whose panel shows insulin resistance, and not for a reference panel", () => {
+    const peakWith = (labs?: Scenario["body"]["labs"]) =>
+      peakOf(simulate({ ...ogtt.scenario, body: { ...body, labs } }).series.glucose, 540, 800).value;
+    const without = peakWith();
+    expect(peakWith({ fastingGlucoseMmol: 6.1, fastingInsulinUuMl: 18 })).toBeGreaterThan(without);
+    const reference = peakWith({
+      fastingGlucoseMmol: GLUCOSE.baselineMgDl / LABS.mgDlPerMmolGlucose,
+      fastingInsulinUuMl: INSULIN.baselineUUPerMl,
+    });
+    expect(Math.abs(reference / without - 1)).toBeLessThan(0.02);
   });
 
   it("releases insulin into a plausible range", () => {

@@ -1,4 +1,4 @@
-import { ALCOHOL, BODY_COMPOSITION, CAFFEINE, GLUCOSE, HEART, INSULIN, LIPID, MUSCLE } from "../params";
+import { ALCOHOL, BODY_COMPOSITION, CAFFEINE, GLUCOSE, HEART, INSULIN, LABS, LIPID, MUSCLE } from "../params";
 import type { Body } from "../scenario";
 
 export interface Anthropometrics {
@@ -27,7 +27,20 @@ export function anthropometrics(b: Body): Anthropometrics {
     : 0.3561 * hM ** 3 + 0.03308 * b.weightKg + 0.1833;
   const bmrKcalPerDay = 10 * b.weightKg + 6.25 * b.heightCm - 5 * b.age + (male ? 5 : -161);
   const restingBpm = (male ? HEART.restBpmMale : HEART.restBpmFemale) + HEART.bmiGain * Math.max(0, bmi - 24);
+  const labs = b.labs;
+  const glucoseMmol = labs?.fastingGlucoseMmol;
+  const insulinUuMl = labs?.fastingInsulinUuMl;
+  const homa =
+    glucoseMmol !== undefined && insulinUuMl !== undefined ? (glucoseMmol * insulinUuMl) / LABS.homaDivisor : null;
+  const labSensitivity =
+    homa === null
+      ? 1
+      : Math.min(
+          LABS.sensitivityRatioRange.high,
+          Math.max(LABS.sensitivityRatioRange.low, LABS.referenceHoma / Math.max(homa, 1e-6)),
+        );
   const sensitivity =
+    labSensitivity *
     INSULIN.sensitivity *
     (INSULIN.sensitivityRefBmi / Math.max(bmi, 18)) ** INSULIN.sensitivityBmiPower *
     (1 - INSULIN.sensitivityAgeLoss * Math.max(0, b.age - 30)) *
@@ -41,10 +54,15 @@ export function anthropometrics(b: Body): Anthropometrics {
     caffeineHalfLifeH: CAFFEINE.halfLifeH.mid,
     sensitivity,
     baselineGlucose:
-      GLUCOSE.baselineMgDl +
-      GLUCOSE.baselineAgeGain * Math.max(0, b.age - 40) +
-      GLUCOSE.baselineBmiGain * Math.max(0, bmi - 25),
-    baselineTg: LIPID.baselineMgDl + LIPID.baselineBmiGain * Math.max(0, bmi - 24),
+      glucoseMmol !== undefined
+        ? glucoseMmol * LABS.mgDlPerMmolGlucose
+        : GLUCOSE.baselineMgDl +
+          GLUCOSE.baselineAgeGain * Math.max(0, b.age - 40) +
+          GLUCOSE.baselineBmiGain * Math.max(0, bmi - 25),
+    baselineTg:
+      labs?.triglyceridesMmol !== undefined
+        ? labs.triglyceridesMmol * LABS.mgDlPerMmolTg
+        : LIPID.baselineMgDl + LIPID.baselineBmiGain * Math.max(0, bmi - 24),
     muscleGlycogenMaxG: leanKg * MUSCLE.glycogenPerKgLean,
   };
 }

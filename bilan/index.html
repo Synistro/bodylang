@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Ton bilan sanguin et ta glycémie</title>
+    <meta name="color-scheme" content="dark" />
+    <style>
+      :root {
+        --bg: #110f0e;
+        --surface: #1d1b1a;
+        --ink: #d0cec6;
+        --ink-2: #a19e97;
+        --ink-3: #8a8782;
+        --faint: #595652;
+        --line: rgba(208, 206, 198, 0.09);
+        --line-strong: rgba(208, 206, 198, 0.18);
+        --band: rgba(208, 206, 198, 0.16);
+        --you: #4385be;
+        --typical: #a19e97;
+        --note: #d0a215;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1rem/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-variant-numeric: tabular-nums; }
+      main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; display: grid; gap: 1.6rem; }
+      h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.3rem; }
+      h2 { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 0.7rem; }
+      p { margin: 0; }
+      .lede { color: var(--ink-2); }
+      .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 0.8rem; padding: 1rem; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+      .grid.two { grid-template-columns: repeat(2, 1fr); }
+      .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      label { display: grid; gap: 0.2rem; font-size: 0.85rem; color: var(--ink-2); }
+      input, select, button { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line-strong); border-radius: 0.5rem; padding: 0.5rem 0.6rem; min-height: 2.5rem; width: 100%; }
+      input[type="checkbox"] { width: auto; min-height: 0; accent-color: var(--you); }
+      label.check { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.7rem; }
+      button { cursor: pointer; width: auto; text-align: center; }
+      button:hover, button[aria-pressed="true"] { border-color: var(--you); }
+      button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+      .presets { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+      .hint { font-size: 0.85rem; color: var(--ink-3); margin-top: 0.7rem; }
+      figure { margin: 0; }
+      svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+      .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.85rem; color: var(--ink-2); margin-bottom: 0.5rem; }
+      .legend i { display: inline-block; width: 1.4rem; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 0.4rem; }
+      .legend i.dash { border-top-style: dashed; }
+      .legend i.band { height: 0.6rem; border: 0; background: var(--band); }
+      .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 0.5rem; padding: 0.4rem 0.6rem; font-size: 0.85rem; white-space: nowrap; z-index: 2; }
+      .tip strong { font-weight: 600; }
+      .plot { position: relative; }
+      .reads { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+      .read { border-top: 1px solid var(--line-strong); padding-top: 0.6rem; }
+      .read .big { font-size: 1.35rem; font-weight: 600; }
+      .read .what { font-size: 0.85rem; color: var(--ink-2); }
+      .markers { display: grid; gap: 0.4rem; font-size: 0.9rem; color: var(--ink-2); }
+      details { margin-top: 0.8rem; font-size: 0.85rem; color: var(--ink-2); }
+      table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+      th, td { text-align: right; padding: 0.2rem 0.4rem; border-bottom: 1px solid var(--line); }
+      th:first-child, td:first-child { text-align: left; }
+      footer { font-size: 0.85rem; color: var(--ink-3); display: grid; gap: 0.5rem; }
+      a { color: var(--you); }
+      @media (max-width: 700px) {
+        .grid, .grid.two, .inputs, .reads { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Ton bilan sanguin et ta glycémie</h1>
+        <p class="lede">Le même repas, deux corps : un corps typique, et le tien tel que ton bilan le décrit. La courbe vient du vrai modèle de Bodylang, calculée dans ta page.</p>
+      </header>
+
+      <section class="panel" aria-labelledby="h-bilan">
+        <h2 id="h-bilan">Ton bilan</h2>
+        <div class="presets">
+          <button type="button" id="preset-typique">Bilan typique</button>
+          <button type="button" id="preset-surveiller">Bilan à surveiller : exemple fictif</button>
+        </div>
+        <div class="grid" id="labs"></div>
+        <p class="hint" id="homa"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-corps">
+        <h2 id="h-corps">Ton corps et ton repas</h2>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr))" id="body"></div>
+        <div class="inputs" style="margin-top: 0.9rem">
+          <label>Petit-déjeuner à 07:45 <select id="breakfast"></select></label>
+        </div>
+        <label class="check"><input type="checkbox" id="coffee" /> Un café à 08:30</label>
+        <p class="hint">Déjeuner à 12:30 et dîner à 19:30 fixes. Les quantités des repas sont des estimations.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-courbe">
+        <h2 id="h-courbe">Glycémie de la journée (mmol/L)</h2>
+        <div class="legend" id="legend"></div>
+        <figure class="plot" id="plot"></figure>
+        <details>
+          <summary>Voir les valeurs en tableau</summary>
+          <table id="table"></table>
+        </details>
+      </section>
+
+      <section class="panel" aria-labelledby="h-lecture">
+        <h2 id="h-lecture">Ce que ça change</h2>
+        <div class="reads" id="reads"></div>
+        <div class="markers" id="markers" style="margin-top: 1rem"></div>
+      </section>
+
+      <footer>
+        <p>Estimations d'un modèle, pas un avis médical. Bilan fictif. Aucune donnée réelle.</p>
+        <p><a href="../app/?demo">Voir le corps en 3D</a></p>
+      </footer>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

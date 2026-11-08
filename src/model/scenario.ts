@@ -6,11 +6,23 @@ import { DAY, KCAL_PER_G } from "./params";
 export type Sex = "male" | "female";
 export type Posture = "sleeping" | "sitting" | "standing" | "walking" | "running";
 
+// A blood panel, as the lab prints it. Glucose, insulin and triglycerides shape the model; the rest is
+// carried to be shown.
+export interface Labs {
+  fastingGlucoseMmol?: number;
+  fastingInsulinUuMl?: number;
+  triglyceridesMmol?: number;
+  hba1cPct?: number;
+  ldlMmol?: number;
+  hdlMmol?: number;
+}
+
 export interface Body {
   sex: Sex;
   age: number;
   heightCm: number;
   weightKg: number;
+  labs?: Labs;
 }
 
 export interface Nutrients {

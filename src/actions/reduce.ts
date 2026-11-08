@@ -157,6 +157,7 @@ export function reduce(state: BodyState, action: Action): BodyState {
       const a = action.args;
       return inDay(state, {
         body: {
+          ...day.body,
           sex: a.sex ?? day.body.sex,
           age: a.age ?? day.body.age,
           heightCm: a.height_cm ?? day.body.heightCm,

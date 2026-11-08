@@ -24,6 +24,7 @@
     "src",
     "server",
     "site",
+    "bilan",
     "vite.config.ts"
   ]
 }
